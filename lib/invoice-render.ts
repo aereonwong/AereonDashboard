@@ -124,9 +124,18 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
   const net = Number(rec.amount ?? 0)
   const list = Number(m.list_price ?? net)
 
-  const deliverables = (Array.isArray(m.deliverables) ? m.deliverables : []).map(String).join('\n')
+  const deliverableList = (Array.isArray(m.deliverables) ? m.deliverables : []).map(String)
   const terms = String(m.terms ?? '').trim()
   const discount = Number(m.discount ?? 0)
+  const hasTime = !!(m.event_time && m.event_time !== '-')
+
+  // A discount prints as the LAST scope-of-work bullet, not a note near the
+  // top — matching Aereon's old invoices. Price/Qty/Amount need to skip down
+  // exactly that many lines to land level with it: JOB, Venue, Date, Time
+  // (if any), a blank line, "Scope of Work:", then one line per deliverable
+  // ahead of the discount bullet itself.
+  const discountLineGap = discount ? 5 + (hasTime ? 1 : 0) + deliverableList.length : 0
+  const deliverables = [...deliverableList, ...(discount ? ['Discount Offer'] : [])].join('\n')
 
   const ops: Operation[] = [
     { type: 'update_title', title: `${m.invoice_no} - ${m.job ?? rec.title}` },
@@ -168,13 +177,6 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
       : [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: 'Time: {{TIME}}\n', replace_text: '' }]),
     fill(FIELDS.description, 'DELIVERABLES', deliverables),
     fill(FIELDS.description, 'TERMS', terms),
-    // A discount gets its own row, not a note — a second line under the job
-    // title, level with the second line the price/qty/amount boxes below
-    // gain for the same reason. No new elements, just breaklines in the ones
-    // already there, the way Aereon's old Canva invoices did it by hand.
-    ...(discount
-      ? [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: '\nVenue:', replace_text: '\nDiscount Offer\nVenue:' }]
-      : []),
     ...(isQuote
       ? [
           fill(
@@ -192,11 +194,13 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     { type: 'format_text', locator_id: FIELDS.qty, formatting: { text_align: 'center' } },
     { type: 'format_text', locator_id: FIELDS.qtyHeader, formatting: { text_align: 'center' } },
     // The template's qty cell is a bare "1", not a token — a second "1" is
-    // appended the same way the discount row is: a breakline, not a new box.
-    ...(discount ? [{ type: 'find_and_replace_text', locator_id: FIELDS.qty, find_text: '1', replace_text: '1\n1' }] : []),
-    fill(FIELDS.price, 'PRICE', discount ? `${money(list, cur)}\n(${money(discount, cur)})` : money(list, cur)),
+    // appended the same way the discount row is: breaklines, not a new box,
+    // enough of them to land level with the discount bullet however far down
+    // the scope-of-work list it ends up.
+    ...(discount ? [{ type: 'find_and_replace_text', locator_id: FIELDS.qty, find_text: '1', replace_text: `1${'\n'.repeat(discountLineGap)}1` }] : []),
+    fill(FIELDS.price, 'PRICE', discount ? `${money(list, cur)}${'\n'.repeat(discountLineGap)}(${money(discount, cur)})` : money(list, cur)),
     ...strip(FIELDS.price),
-    fill(FIELDS.lineAmount, 'AMOUNT', discount ? `${money(list, cur)}\n(${money(discount, cur)})` : money(list, cur)),
+    fill(FIELDS.lineAmount, 'AMOUNT', discount ? `${money(list, cur)}${'\n'.repeat(discountLineGap)}(${money(discount, cur)})` : money(list, cur)),
     ...strip(FIELDS.lineAmount),
     fill(FIELDS.subtotal, 'SUBTOTAL', money(discount ? net : list, cur)),
     ...strip(FIELDS.subtotal),
