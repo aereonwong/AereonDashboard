@@ -27,7 +27,9 @@ export type Draft = {
   client?: { name: string; contact?: string; address?: string; reg?: string; isNew?: boolean }
   job?: string
   venue?: string
-  eventDate?: string // YYYY-MM-DD
+  eventDate?: string // YYYY-MM-DD — the first day
+  eventDates?: string[] // every day the job covers
+  eventDateLabel?: string // as printed: "1st to 3rd September 2026"
   eventTime?: string
   deliverables?: string[]
   amount?: number
@@ -226,7 +228,7 @@ export function ask(draft: Draft): Ask {
     case 'venue':
       return { text: 'Where is it?\n\n<i>e.g. Sime Motors, Ara Damansara</i>' }
     case 'event_date':
-      return { text: 'What date is the job itself?\n\n<i>e.g. 22/10/26</i>', buttons: [[b('Same as the invoice date', 'inv:edate:same')]] }
+      return { text: 'What date is the job itself? One day, a range, or several days.\n\n<i>e.g. 22/10/26 · 1st September 2026 · 1st to 3rd September 2026 · 31st Aug, 3rd Sept 2026 · 31st Dec 2025 and 1st Jan 2026</i>', buttons: [[b('Same as the invoice date', 'inv:edate:same')]] }
     case 'event_time':
       return { text: 'How long, and when?\n\n<i>e.g. 4 hours (4:00pm – 8:00pm)</i>' }
     case 'deliverables':
@@ -276,7 +278,7 @@ export function summary(d: Draft): string {
     d.client?.contact ? `<b>Attn</b>  ${d.client.contact}` : '',
     `<b>Job</b>  ${d.job ?? '—'}`,
     d.venue ? `<b>Venue</b>  ${d.venue}` : '',
-    d.eventDate ? `<b>Job date</b>  ${d.eventDate}` : '',
+    d.eventDate ? `<b>Job date</b>  ${d.eventDateLabel ?? d.eventDate}` : '',
     d.eventTime ? `<b>Time</b>  ${d.eventTime}` : '',
     '',
     ...(d.deliverables ?? []).map(x => `  • ${x}`),
@@ -351,6 +353,8 @@ export async function fileInvoice(draft: Draft): Promise<{ no: string; id: numbe
         job: draft.job,
         venue: draft.venue,
         event_date: draft.eventDate,
+        event_dates: draft.eventDates && draft.eventDates.length > 1 ? draft.eventDates : undefined,
+        event_date_label: draft.eventDateLabel || undefined,
         event_time: draft.eventTime,
         terms: draft.terms,
         quotation_no: draft.quotation || undefined,

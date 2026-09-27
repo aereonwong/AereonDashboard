@@ -11,6 +11,7 @@ import {
   TERMS,
   type Draft,
 } from './invoice-intake'
+import { parseEventDates } from './event-dates'
 import type { DocKind } from './invoice-render'
 
 // 👉 The Telegram side of the invoice interview: it owns the conversation, and
@@ -122,12 +123,15 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
       return true
 
     case 'event_date': {
-      const iso = parseDate(text)
-      if (!iso) {
-        await sendMessage(chatId, 'Send the date as <code>DD/MM/YY</code>, or tap the button.')
+      const ev = parseEventDates(text)
+      if (!ev) {
+        await sendMessage(
+          chatId,
+          "I couldn't read that date. Try <code>22/10/26</code>, <code>1st to 3rd September 2026</code>, <code>31st Aug, 3rd Sept 2026</code> or <code>31st Dec 2025 and 1st Jan 2026</code> — or tap the button.",
+        )
         return true
       }
-      await put(chatId, advance({ ...d, eventDate: iso }))
+      await put(chatId, advance({ ...d, eventDate: ev.dates[0], eventDates: ev.dates, eventDateLabel: ev.label }))
       return true
     }
 
@@ -236,7 +240,8 @@ export async function handleInvoiceCallback(chatId: number, data: string): Promi
     return true
   }
   if (kind === 'edate') {
-    await put(chatId, advance({ ...d, eventDate: d.date ?? todayKL() }))
+    const ev = parseEventDates(d.date ?? todayKL())!
+    await put(chatId, advance({ ...d, eventDate: ev.dates[0], eventDates: ev.dates, eventDateLabel: ev.label }))
     return true
   }
   if (kind === 'date') {
