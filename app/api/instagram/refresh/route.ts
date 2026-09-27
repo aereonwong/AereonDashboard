@@ -41,7 +41,10 @@ export async function POST() {
     await logRun('instagram', 'ok', { posts: snap.posts.length, username: snap.username })
     return Response.json({ ok: true, posts: snap.posts.length, captured_at: snap.captured_at })
   } catch (e) {
-    const message = e instanceof Error ? e.message : String(e)
+    // Composio hides a rejected API key behind "Unable to retrieve tool with slug …";
+    // the real reason (e.g. "Invalid API key") is on `cause`, so show that too.
+    const cause = e instanceof Error && e.cause instanceof Error ? ` — ${e.cause.message}` : ''
+    const message = (e instanceof Error ? e.message : String(e)) + cause
     console.error('[CFO] instagram refresh failed:', message)
     await logRun('instagram', 'failed', { error: message.slice(0, 300) })
     return Response.json({ ok: false, error: message.slice(0, 300) }, { status: 500 })
