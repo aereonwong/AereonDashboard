@@ -177,8 +177,6 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // Client — ATTN and company stay bold, the address stays normal. The
     // registration number is appended to the company name, the way it appears
     // on the client's own letterhead, rather than living in a field of its own.
-    // With the header's blank line above gone, the two blocks land level
-    // without needing any extra line added on this side.
     fill(FIELDS.client, 'CLIENT_ADDRESS', String(m.address ?? '')),
     fill(FIELDS.client, 'CONTACT', String(m.contact ?? '')),
     // A reg number that already carries its own parenthetical (e.g. a company
@@ -189,6 +187,19 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
       'CLIENT',
       String(m.customer ?? '') + (m.reg ? (String(m.reg).includes('(') ? ` ${m.reg}` : ` (${m.reg})`) : ''),
     ),
+    // The template leads this box with one blank line, there to keep the client
+    // block level with the QUOTATION No. header — which is one line taller than
+    // the invoice header (its own leading blank line only gets closed up above
+    // when the doc IS an invoice; see numberAndDate's "\nINVOICE No." fix). So on
+    // an invoice a 2-line address still lands level with the date as-is, but a
+    // 3-line address overshoots it — Aereon found this on Dex Ventures' 3-line
+    // address (27 Sep 2026) and closed the gap by hand. Do it here instead: drop
+    // this box's own blank line only when it's an invoice AND the address runs
+    // to 3+ lines. A quotation never drops it — its header keeps its own blank
+    // line, so the two stay level no matter how long the address is.
+    ...(!isQuote && String(m.address ?? '').split('\n').length >= 3
+      ? [{ type: 'find_and_replace_text', locator_id: FIELDS.client, find_text: '\nATTN:', replace_text: 'ATTN:' }]
+      : []),
     ...strip(FIELDS.client),
 
     // Body — job, the venue/date/time highlights, scope, terms. A blank time
