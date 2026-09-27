@@ -38,7 +38,7 @@ handing over instructions — except for passwords and secret keys, which are al
   concentration, dormant clients, movers, seasonality, and the two classifiers (`service()` /
   `sector()`). Order matters in both classifiers — the comments say why. If a figure appears on v2,
   the function that produced it is in here; nothing on that page is estimated.
-- `app/api/` — `telegram` (bot webhook), `cron-daily` (agent sweep; brief disabled), `cron-news` (9am digest),
+- `app/api/` — `telegram` (bot webhook), `cron-daily` (unscheduled since 27 Sep 2026; route kept), `cron-news` (9am digest),
   `instagram/refresh`, `demo` (password-guarded demo switch), `login`.
 - Charts are hand-built client components: `InteractiveBars`, `Donut`, `AreaChart`, `RowBars`.
   **Server components may not pass functions to them** — pass `unit`/`suffix` flags instead.
@@ -68,11 +68,12 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 
 ## Scheduled
 
-- 8:30am MYT — `cron-daily`. The **morning brief is OFF** (Aereon turned it off on 22 Sep 2026;
-  `MORNING_BRIEF_ENABLED` in the route flips it back). The cron still runs, because the same job
-  sweeps the scheduled agents and creates proposals — that part is deliberately still on.
+- **`cron-daily` is no longer scheduled** — Aereon removed the 8:30am job on 27 Sep 2026. The
+  route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
+  it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
+  proposes chasers for overdue invoices) runs.
 - 9:00am MYT — tech & travel news digest via Claude web search, owner only
-- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — both are used.
+- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — one is free now.
 
 ## Dashboard v3 — the creator studio
 
