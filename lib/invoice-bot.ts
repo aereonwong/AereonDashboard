@@ -107,7 +107,9 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
             name: name || d.client?.name || 'Unknown',
             reg: reg && reg !== '-' ? reg : undefined,
             contact: contact && contact !== '-' ? contact : undefined,
-            address: rest.join(', ') || undefined,
+            // Kept as separate lines, not joined by comma, so Aereon controls
+            // exactly where the address wraps on the printed invoice.
+            address: rest.join('\n') || undefined,
           },
         }),
       )
