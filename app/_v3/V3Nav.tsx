@@ -12,6 +12,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
       { href: '/invoices', label: 'Invoice Summary', icon: 'invoice' },
+      { href: '/invoices/details', label: 'Invoice Details', icon: 'tasks' },
       { href: '/clients', label: 'Clients', icon: 'clients' },
     ],
   },
@@ -44,7 +45,10 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
   },
 ]
 
-const isCurrent = (path: string, href: string) => path === href || path.startsWith(`${href}/`)
+const HREFS = V3_NAV.flatMap(g => g.items.map(i => i.href))
+// A tab is current on its own page and its sub-pages — unless a sub-page has a tab of its own.
+const isCurrent = (path: string, href: string) =>
+  path === href || (path.startsWith(`${href}/`) && !HREFS.some(h => h !== href && (path === h || path.startsWith(`${h}/`)) && h.length > href.length))
 
 export function V3Nav({ pending }: { pending: number }) {
   const path = usePathname() ?? ''

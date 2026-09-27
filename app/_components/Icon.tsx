@@ -7,6 +7,7 @@ export type IconName =
   | 'chart' | 'calendar' | 'trend' | 'eye' | 'heart' | 'share' | 'bookmark' | 'sparkle'
   | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet'
   | 'news' | 'play' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
+  | 'drive' | 'upload' | 'download' | 'design' | 'plus' | 'alert' | 'undo'
 
 const P: Record<IconName, React.ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="2" /><rect x="14" y="3" width="7" height="5" rx="2" /><rect x="14" y="12" width="7" height="9" rx="2" /><rect x="3" y="16" width="7" height="5" rx="2" /></>,
@@ -45,6 +46,13 @@ const P: Record<IconName, React.ReactNode> = {
   search: <><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></>,
   external: <><path d="M14 4h6v6" /><path d="M20 4 11 13" /><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" /></>,
   chevron: <><path d="m9 6 6 6-6 6" /></>,
+  drive: <><path d="M8.5 3.5h7l6 10.5-3.5 6h-12L2.5 14l6-10.5Z" /><path d="m8.5 3.5 6 10.5h7M15.5 3.5l-9.5 16.5M2.5 14h12" /></>,
+  upload: <><path d="M7 17.5a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8" /><path d="M12 20v-8M8.8 14.8 12 11.6l3.2 3.2" /></>,
+  download: <><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 19.5h14" /></>,
+  design: <><rect x="3.5" y="3.5" width="17" height="17" rx="4" /><path d="M15.5 9.2a4 4 0 1 0 0 5.6" /></>,
+  plus: <><path d="M12 5v14M5 12h14" /></>,
+  alert: <><path d="M12 4 21 19.5H3L12 4Z" /><path d="M12 10v4.2M12 17h.01" /></>,
+  undo: <><path d="M9 14 4.5 9.5 9 5" /><path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3" /></>,
 }
 
 export default function Icon({ name, className = 'ico-svg' }: { name: IconName; className?: string }) {

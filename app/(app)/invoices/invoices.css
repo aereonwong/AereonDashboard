@@ -1,0 +1,198 @@
+/* 👉 Invoice Details, the Create Invoice dialog and the status strip on Invoice
+   Summary. Built only from tokens BOTH chromes define (classic globals.css and
+   v3's v3.css), with the classic name as the fallback, so it follows every
+   palette, world and light/dark without a second stylesheet. */
+
+.idt {
+  --i-ink: var(--ink);
+  --i-dim: var(--ink-3, var(--ink-soft));
+  --i-line: var(--line);
+  --i-line2: var(--line-2, var(--line));
+  --i-pos: var(--pos, #2e7d4f);
+  --i-neg: var(--neg, #b3452c);
+  --i-warn: var(--warn, #b7791f);
+  --i-accent: var(--accent, var(--clay, #c2410c));
+  --i-ground: var(--ground, var(--paper, #fff));
+  color: var(--i-ink);
+  min-width: 0;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.idt-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.idt-head h1 { margin: 0; }
+.idt-head p { margin: 4px 0 0; color: var(--i-dim); font-size: 14px; }
+.idt-create {
+  display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
+  padding: 10px 18px; border-radius: 999px; font: inherit; font-weight: 650; font-size: 15px;
+  background: var(--i-accent); color: #fff; box-shadow: 0 1px 0 rgb(0 0 0 / .08);
+  transition: transform .15s ease, filter .15s ease;
+}
+.idt-create:hover { filter: brightness(1.06); }
+.idt-create:active { transform: translateY(1px); }
+.idt-create:focus-visible, .idt-btn:focus-visible, .idt-act:focus-visible { outline: 2px solid var(--i-accent); outline-offset: 2px; }
+.idt-create .ico-svg { width: 18px; height: 18px; stroke-width: 2.4; }
+
+/* ── compact figures ────────────────────────────────────────────────────── */
+.idt-figs {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+  border: 1px solid var(--i-line2); border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.idt-fig { padding: 12px 14px; min-width: 0; border-left: 1px solid var(--i-line); }
+.idt-fig:first-child { border-left: 0; }
+.idt-fig-label { font-size: 12px; color: var(--i-dim); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.idt-fig-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idt-fig-note { font-size: 12px; color: var(--i-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idt-fig.neg .idt-fig-value { color: var(--i-neg); }
+.idt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.idt-meter { height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--i-ink) 10%, transparent); margin-top: 7px; overflow: hidden; }
+.idt-meter i { display: block; height: 100%; background: var(--i-pos); border-radius: inherit; }
+@media (max-width: 1100px) {
+  .idt-figs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .idt-fig:nth-child(4) { border-left: 0; }
+  .idt-fig:nth-child(n + 4) { border-top: 1px solid var(--i-line); }
+}
+@media (max-width: 560px) {
+  .idt-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .idt-fig { border-left: 1px solid var(--i-line); }
+  .idt-fig:nth-child(odd) { border-left: 0; }
+  .idt-fig:nth-child(n + 3) { border-top: 1px solid var(--i-line); }
+}
+
+/* ── filters ────────────────────────────────────────────────────────────── */
+.idt-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.idt-filters select, .idt-filters input, .idt-form input, .idt-form select, .idt-form textarea {
+  font: inherit; font-size: 14px; color: var(--i-ink); background: color-mix(in srgb, var(--i-ground) 70%, transparent);
+  border: 1px solid var(--i-line2); border-radius: 9px; padding: 7px 10px; min-width: 0;
+}
+.idt-filters select:focus-visible, .idt-filters input:focus-visible, .idt-form :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--i-accent); outline-offset: 0; border-color: transparent;
+}
+.idt-filters input[type='search'] { flex: 1 1 200px; }
+.idt-filters .idt-reset { font-size: 13px; color: var(--i-dim); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 4px; }
+.idt-count { font-size: 13px; color: var(--i-dim); margin-left: auto; white-space: nowrap; }
+
+/* ── table ──────────────────────────────────────────────────────────────── */
+.idt-wrap { overflow-x: auto; border: 1px solid var(--i-line2); border-radius: 14px; }
+.idt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.idt-table th {
+  text-align: left; font-weight: 600; font-size: 12px; color: var(--i-dim); white-space: nowrap;
+  padding: 9px 10px; border-bottom: 1px solid var(--i-line2); position: sticky; top: 0;
+  background: color-mix(in srgb, var(--i-ground) 92%, transparent);
+}
+.idt-table th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; gap: 3px; align-items: center; }
+.idt-table th[aria-sort] { color: var(--i-ink); }
+.idt-table td { padding: 8px 10px; border-bottom: 1px solid var(--i-line); vertical-align: middle; }
+.idt-table tbody tr:last-child td { border-bottom: 0; }
+.idt-table tbody tr:hover { background: color-mix(in srgb, var(--i-ink) 4%, transparent); }
+.idt-table .r { text-align: right; }
+.idt-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.idt-no { font-family: var(--f-code, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12.5px; white-space: nowrap; }
+.idt-sub { display: block; font-size: 12px; color: var(--i-dim); margin-top: 1px; }
+.idt-proj { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idt-client { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idt-fx { font-size: 10.5px; border: 1px solid var(--i-line2); border-radius: 99px; padding: 0 5px; margin-right: 4px; color: var(--i-dim); }
+
+.idt-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.idt-pill.paid { color: var(--i-pos); }
+.idt-pill.outstanding { color: var(--i-warn); }
+.idt-pill.overdue { color: var(--i-neg); }
+.idt-pill.untracked { color: var(--i-dim); font-weight: 500; }
+.idt-pill.paid .idt-dot { background: var(--i-pos); }
+.idt-pill.outstanding .idt-dot { background: var(--i-warn); }
+.idt-pill.overdue .idt-dot { background: var(--i-neg); }
+.idt-pill.untracked .idt-dot { background: transparent; border: 1.5px solid var(--i-dim); width: 7px; height: 7px; }
+
+/* ── row actions: icon buttons ──────────────────────────────────────────── */
+.idt-acts { display: flex; gap: 2px; justify-content: flex-end; }
+.idt-act {
+  width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
+  background: none; color: var(--i-dim); cursor: pointer; text-decoration: none; position: relative;
+}
+.idt-act:hover { background: color-mix(in srgb, var(--i-ink) 8%, transparent); color: var(--i-ink); }
+.idt-act[aria-disabled='true'], .idt-act:disabled { opacity: .3; cursor: not-allowed; background: none; }
+.idt-act .ico-svg { width: 17px; height: 17px; }
+.idt-act.on { color: var(--i-pos); }
+.idt-act.bad { color: var(--i-neg); }
+.idt-act.go { color: var(--i-accent); }
+.idt-act.busy .ico-svg { animation: idt-spin 1s linear infinite; }
+@keyframes idt-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .idt-act.busy .ico-svg { animation: none; opacity: .5; } }
+
+.idt-drive { display: inline-flex; align-items: center; gap: 2px; min-width: 112px; font-size: 12px; white-space: nowrap; }
+.idt-drive.uploaded { color: var(--i-pos); }
+.idt-drive.none { color: var(--i-dim); }
+.idt-drive.failed { color: var(--i-neg); }
+.idt-drive.uploading { color: var(--i-warn); }
+.idt-drive .ico-svg { width: 15px; height: 15px; }
+
+.idt-empty { padding: 28px; text-align: center; color: var(--i-dim); }
+.idt-toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; max-width: min(560px, calc(100vw - 32px));
+  background: var(--i-ink); color: var(--i-ground); padding: 10px 16px; border-radius: 12px; font-size: 14px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / .25);
+}
+.idt-toast.bad { background: var(--i-neg); color: #fff; }
+.idt-banner { border: 1px solid var(--i-line2); border-left: 3px solid var(--i-warn); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 12px; }
+
+/* ── status strip on Invoice Summary ────────────────────────────────────── */
+.idt-strip { margin: 0 0 16px; }
+.idt-strip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; flex-wrap: wrap; }
+.idt-strip-head h2 { margin: 0; font-size: 16px; }
+.idt-strip-head a { font-size: 13.5px; }
+
+/* ── Create Invoice dialog ──────────────────────────────────────────────── */
+.idt-dialog {
+  width: min(860px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 1px solid var(--i-line2);
+  border-radius: 18px; background: var(--i-ground); color: var(--i-ink); box-shadow: 0 30px 80px rgb(0 0 0 / .35);
+}
+.idt-dialog::backdrop { background: rgb(10 10 12 / .5); backdrop-filter: blur(3px); }
+.idt-dialog-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--i-line); position: sticky; top: 0; background: var(--i-ground); z-index: 1; }
+.idt-dialog-head h2 { margin: 0; font-size: 18px; }
+.idt-dialog-body { padding: 18px 20px; }
+.idt-dialog-foot { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--i-line); position: sticky; bottom: 0; background: var(--i-ground); flex-wrap: wrap; }
+.idt-dialog-foot .idt-spacer { margin-right: auto; font-size: 13px; color: var(--i-dim); }
+
+.idt-form { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 14px; }
+.idt-form fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 4px 0 0; display: contents; }
+.idt-form legend, .idt-section { grid-column: 1 / -1; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--i-dim); padding-top: 6px; border-top: 1px solid var(--i-line); margin-top: 4px; }
+.idt-section:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.idt-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; grid-column: span 3; }
+.idt-field.s2 { grid-column: span 2; }
+.idt-field.s6 { grid-column: 1 / -1; }
+.idt-field label { font-size: 13px; font-weight: 600; }
+.idt-field label .opt { font-weight: 400; color: var(--i-dim); }
+.idt-field .hint { font-size: 12px; color: var(--i-dim); }
+.idt-form textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
+.idt-total { grid-column: 1 / -1; font-size: 14px; color: var(--i-dim); }
+.idt-total b { color: var(--i-ink); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .idt-field, .idt-field.s2 { grid-column: 1 / -1; }
+}
+
+.idt-btn {
+  font: inherit; font-size: 14px; font-weight: 600; border-radius: 999px; padding: 9px 16px; cursor: pointer;
+  border: 1px solid var(--i-line2); background: none; color: var(--i-ink); display: inline-flex; align-items: center; gap: 7px;
+}
+.idt-btn:hover { background: color-mix(in srgb, var(--i-ink) 6%, transparent); }
+.idt-btn.primary { background: var(--i-accent); border-color: transparent; color: #fff; }
+.idt-btn.primary:hover { filter: brightness(1.06); background: var(--i-accent); }
+.idt-btn:disabled { opacity: .55; cursor: progress; }
+.idt-btn .ico-svg { width: 16px; height: 16px; }
+.idt-error { grid-column: 1 / -1; color: var(--i-neg); font-size: 14px; margin: 0 0 12px; display: flex; gap: 8px; align-items: flex-start; }
+.idt-error .ico-svg { width: 18px; height: 18px; flex: none; }
+
+.idt-preview { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.idt-preview-img { border: 1px solid var(--i-line2); border-radius: 10px; overflow: hidden; background: #fff; aspect-ratio: 794 / 1123; }
+.idt-preview-img img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.idt-preview dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+.idt-preview dt { color: var(--i-dim); }
+.idt-preview dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.idt-preview .note { font-size: 13px; color: var(--i-dim); margin-top: 14px; line-height: 1.5; }
+@media (max-width: 700px) { .idt-preview { grid-template-columns: 1fr; } }
+
+.idt-wait { display: grid; place-items: center; gap: 12px; padding: 60px 0; color: var(--i-dim); text-align: center; }
+.idt-wait .ico-svg { width: 28px; height: 28px; animation: idt-spin 1.2s linear infinite; }
+.idt .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+a.idt-fig { color: inherit; text-decoration: none; transition: background .15s ease; }
+a.idt-fig:hover { background: color-mix(in srgb, var(--i-ink) 5%, transparent); }
+a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2px; }
