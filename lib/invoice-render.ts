@@ -129,9 +129,11 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
   const discount = Number(m.discount ?? 0)
   const hasTime = !!(m.event_time && m.event_time !== '-')
 
-  // A discount prints as the LAST scope-of-work bullet, not a note near the
-  // top — matching Aereon's old invoices. Price/Qty/Amount need to skip down
-  // exactly that many lines to land level with it: JOB, Venue, Date, Time
+  // A discount prints as the LAST scope-of-work bullet, plain weight — not
+  // bold. Bold only survives a find-and-replace when the new text extends an
+  // existing bold run; tried here, right before "Payment Terms:", it instead
+  // strips the bold off "Payment Terms:" itself (confirmed by testing, not
+  // assumed). Price/Qty/Amount skip down to match: JOB, Venue, Date, Time
   // (if any), a blank line, "Scope of Work:", then one line per deliverable
   // ahead of the discount bullet itself.
   const discountLineGap = discount ? 5 + (hasTime ? 1 : 0) + deliverableList.length : 0
