@@ -71,6 +71,7 @@ export const FIELDS = {
   description: `${PAGE}-LB9DT0m1PNrmts7w`,
   price: `${PAGE}-LBBbkYJgmJD49hf9`,
   qty: `${PAGE}-LB2N80sgNgMB5fjk`,
+  qtyHeader: `${PAGE}-LB53KwQrxw8K1wC7`, // the static "QTY" column heading
   lineAmount: `${PAGE}-LB1pMj0cQ4zv02w0`,
   subtotal: `${PAGE}-LBqP0hvs588mJgRF`,
   total: `${PAGE}-LB2WPPKpqK756JyQ`,
@@ -129,22 +130,34 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
   const ops: Operation[] = [
     { type: 'update_title', title: `${m.invoice_no} - ${m.job ?? rec.title}` },
 
-    // Header — number and issue date.
+    // Header — number and issue date. The template's own leading blank line
+    // (there to leave room for a quotation reference that's never actually
+    // printed) is closed up so "INVOICE No." sits right under "Invoice", not
+    // a line below it.
     fill(FIELDS.numberAndDate, 'NUMBER', String(m.invoice_no ?? '')),
     fill(FIELDS.numberAndDate, 'DATE', stamp(String(m.invoice_date))),
+    { type: 'find_and_replace_text', locator_id: FIELDS.numberAndDate, find_text: '\nINVOICE No.', replace_text: 'INVOICE No.' },
     ...strip(FIELDS.numberAndDate),
 
-    // Client — ATTN and company stay bold, the address stays normal.
+    // Client — ATTN and company stay bold, the address stays normal. The
+    // registration number is appended to the company name, the way it appears
+    // on the client's own letterhead, rather than living in a field of its own.
+    // With the header's blank line above gone, the two blocks land level
+    // without needing any extra line added on this side.
     fill(FIELDS.client, 'CLIENT_ADDRESS', String(m.address ?? '')),
     fill(FIELDS.client, 'CONTACT', String(m.contact ?? '')),
-    fill(FIELDS.client, 'CLIENT', String(m.customer ?? '')),
+    fill(FIELDS.client, 'CLIENT', String(m.customer ?? '') + (m.reg ? ` (${m.reg})` : '')),
     ...strip(FIELDS.client),
 
-    // Body — job, the venue/date/time highlights, scope, terms.
+    // Body — job, the venue/date/time highlights, scope, terms. A blank time
+    // is dropped as a whole line (not just an empty value), so the gap before
+    // "Scope of Work" stays the same single blank line as when it's filled.
     fill(FIELDS.description, 'JOB', String(m.job ?? rec.title)),
     fill(FIELDS.description, 'VENUE', String(m.venue ?? '—')),
     fill(FIELDS.description, 'EVENT_DATE', m.event_date_label ? String(m.event_date_label) : m.event_date ? longDate(String(m.event_date)) : '—'),
-    fill(FIELDS.description, 'TIME', String(m.event_time ?? '—')),
+    ...(m.event_time && m.event_time !== '-'
+      ? [fill(FIELDS.description, 'TIME', String(m.event_time))]
+      : [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: 'Time: {{TIME}}\n', replace_text: '' }]),
     fill(FIELDS.description, 'DELIVERABLES', deliverables),
     fill(FIELDS.description, 'TERMS', terms),
     ...(isQuote
@@ -158,7 +171,11 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
       : []),
     ...strip(FIELDS.description),
 
-    // Money.
+    // Money. Qty and its header are both centred in their (near-identical)
+    // column boxes, so the value sits directly under the word "QTY" rather
+    // than the two being centred in slightly different places.
+    { type: 'format_text', locator_id: FIELDS.qty, formatting: { text_align: 'center' } },
+    { type: 'format_text', locator_id: FIELDS.qtyHeader, formatting: { text_align: 'center' } },
     fill(FIELDS.price, 'PRICE', money(list, cur)),
     ...strip(FIELDS.price),
     fill(FIELDS.lineAmount, 'AMOUNT', money(list, cur)),
