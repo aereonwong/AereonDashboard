@@ -54,11 +54,34 @@ export type DocKind = keyof typeof TEMPLATES
 /** Where a finished document belongs. Quotations must never land in the
  *  Invoices folder — mixing the two is what made the old back catalogue so hard
  *  to audit, and it is the same separation the database enforces by filing a
- *  quotation as a `doc` rather than `cash_in`. */
+ *  quotation as a `doc` rather than `cash_in`.
+ *
+ *  Invoices moved off a single flat folder (27 Sep 2026, ~200 items hit
+ *  Canva's 200-per-folder cap) into "Invoices" → one "Invoices (YYYY)"
+ *  subfolder per year, picked by the invoice's own date, not by when it
+ *  happens to be filed. `invoiceYearFolders` below holds the ones that exist
+ *  so far; add the next year's as soon as it's created. A superseded draft
+ *  (re-rendered after a fix) goes to "TODO: Delete" at the account root
+ *  (FAHWX1OiB6Q) instead of staying in its year folder — Claude has no way to
+ *  delete a Canva design outright, so Aereon clears that folder by hand.
+ *  Quotations were left on their original flat folder; only invoices had the
+ *  volume to need this. */
 export const FOLDERS = {
-  invoice: 'FAE8mD8bgIw', // "Invoices"
+  invoice: 'FAHWXzGiKeY', // "Invoices" (parent) — do not file directly here, use invoiceYearFolders
   quotation: 'FAE09QXvOvk', // "Quotation"
+  todoDelete: 'FAHWX1OiB6Q', // "TODO: Delete", at the account root
 } as const
+
+/** Year-subfolder ids under FOLDERS.invoice, keyed by the invoice's own
+ *  4-digit year (from meta.invoice_date), not the filing date. */
+export const invoiceYearFolders: Record<string, string> = {
+  '2021': 'FAHWX8VDasI',
+  '2022': 'FAHWX433-kw',
+  '2023': 'FAHWX6rjp9Q',
+  '2024': 'FAHWX77QEh8',
+  '2025': 'FAHWX6zUwiE',
+  '2026': 'FAHWX-2apUY',
+}
 
 /** Page id of the templates — every locator is prefixed with it. */
 const PAGE = 'PBCY2tSg9MmB06fp'
