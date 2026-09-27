@@ -115,6 +115,33 @@ export async function sendWithButtons(
   return body.result?.message_id ?? null
 }
 
+// Send a picture (by URL — Telegram fetches it itself) with a caption and
+// buttons. Used for the invoice preview: the Canva thumbnail URL goes straight
+// to Telegram, so the image never passes through this server.
+export async function sendPhotoWithButtons(
+  chatId: string | number,
+  photoUrl: string,
+  caption: string,
+  inlineKeyboard: InlineKeyboard,
+): Promise<boolean> {
+  const url = api('sendPhoto')
+  if (!url) return false
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      caption,
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: inlineKeyboard },
+    }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || !body.ok) console.error('[CFO] Telegram sendPhoto failed:', body.description || res.status)
+  return !!(res.ok && body.ok)
+}
+
 // Acknowledge a button tap so Telegram stops the little spinner on the user's
 // button. Optional toast text. Never throws.
 export async function answerCallbackQuery(callbackId: string, text?: string) {

@@ -39,6 +39,8 @@ export type Draft = {
   quotation?: string
   validityDays?: number
   date?: string // YYYY-MM-DD
+  /** The Canva document drawn for this draft but not yet saved (step 'preview'). */
+  preview?: { no: string; designId: string; transactionId: string; viewUrl?: string }
   /** Candidate clients from the last search, so a numeric reply can pick one. */
   matches?: { name: string; contact?: string; address?: string; reg?: string }[]
 }
@@ -58,6 +60,8 @@ export const STEPS = [
   'validity',
   'date',
   'confirm',
+  // After Create it: Canva has drawn it and the photo is waiting for Save / Discard.
+  'preview',
 ] as const
 export type Step = (typeof STEPS)[number]
 
@@ -211,38 +215,70 @@ export type Ask = { text: string; buttons?: InlineKeyboard }
 
 const b = (text: string, data: string) => ({ text, callback_data: data })
 
-/** What to ask for the step the draft is currently on. */
+/** What to ask for the step the draft is currently on. Every question says
+ *  what to send, in what shape, with a real example — so no reply has to be
+ *  guessed at, and a wrong shape is caught by the parser with a clear retry. */
 export function ask(draft: Draft): Ask {
+  const doc = draft.kind === 'quotation' ? 'quotation' : 'invoice'
   switch (draft.step) {
     case 'client':
       return {
         text:
-          `🧾 <b>New ${draft.kind === 'quotation' ? 'quotation' : 'invoice'}</b>\n\n` +
-          "Who is it for? Type part of the company name — I'll check who you've worked with before.\n\n" +
+          `🧾 <b>New ${doc}</b> — 10 short questions, then a Canva preview before anything is saved.\n\n` +
+          '<b>1 · Client</b>\nType part of the company name. If you have invoiced them before, their address, contact and registration number are filled in for you.\n\n' +
+          '<i>e.g.</i> <code>Fusion Works</code> · <code>Red Flame</code>\n\n' +
           '<i>Send /cancel any time to stop.</i>',
       }
     case 'client_details':
-      return { text: 'New client. Send their details in one message, one per line:\n\n<code>Company legal name\nRegistration no (or -)\nContact person (or -)\nFull address</code>' }
+      return {
+        text:
+          '<b>New client</b> — send their details in ONE message, one item per line, in this order:\n\n' +
+          '<code>Company legal name\nRegistration no.\nContact person\nAddress line 1\nAddress line 2 …</code>\n\n' +
+          'Use <code>-</code> for anything you don\'t have. The address can take as many lines as you like — it prints exactly as you break it.\n\n' +
+          '<i>e.g.</i>\n<code>Fusion Works Sdn Bhd\n201901012345 (1330000-X)\nPhilip Varges\nB-5-1, Ativo Plaza, No. 1, Jln. PJU 9/1\nDamansara Avenue, Bandar Sri Damansara\n52200 Kuala Lumpur, Malaysia</code>',
+      }
     case 'job':
-      return { text: 'What is the job called?\n\n<i>e.g. Awards Ceremony Photography</i>' }
+      return {
+        text:
+          '<b>2 · Job name</b>\nThe headline of the job, as it should print. Keep it short — it also names the PDF.\n\n' +
+          '<i>e.g.</i> <code>KLCC Merdeka Drone Show</code> · <code>Vivo X300 Campaign</code>',
+      }
     case 'venue':
-      return { text: 'Where is it?\n\n<i>e.g. Sime Motors, Ara Damansara</i>' }
+      return {
+        text: '<b>3 · Venue</b>\nWhere the job happens. Send <code>-</code> if there isn\'t one (e.g. a remote social post).\n\n<i>e.g.</i> <code>KLCC Park, Kuala Lumpur</code>',
+      }
     case 'event_date':
-      return { text: 'What date is the job itself? One day, a range, or several days.\n\n<i>e.g. 22/10/26 · 1st September 2026 · 1st to 3rd September 2026 · 31st Aug, 3rd Sept 2026 · 31st Dec 2025 and 1st Jan 2026</i>', buttons: [[b('Same as the invoice date', 'inv:edate:same')]] }
+      return {
+        text:
+          '<b>4 · Job date</b>\nOne day, a range, or several days — it prints the way you write it.\n\n' +
+          '<i>e.g.</i> <code>22/10/26</code> · <code>1st September 2026</code> · <code>1st to 3rd September 2026</code> · <code>31st Aug, 3rd Sept 2026</code>',
+        buttons: [[b('Same as the invoice date', 'inv:edate:same')]],
+      }
     case 'event_time':
-      return { text: 'How long, and when?\n\n<i>e.g. 4 hours (4:00pm – 8:00pm)</i>' }
+      return {
+        text: '<b>5 · Time</b>\nHow long and when. Send <code>-</code> to leave the Time line off the document.\n\n<i>e.g.</i> <code>4 hours (4:00pm – 8:00pm)</code> · <code>Full day</code>',
+      }
     case 'deliverables':
-      return { text: 'What are you delivering? One per line.\n\n<i>e.g.\n1 x IG reel synced to TikTok\n1 x IG story\n1 month usage rights</i>' }
+      return {
+        text:
+          '<b>6 · Scope of work</b>\nWhat you are delivering — <b>one item per line</b>, in one message. Each line prints as a bullet.\n\n' +
+          '<i>e.g.</i>\n<code>1 x IG reel synced to TikTok\n1 x IG story\n1 month usage rights</code>',
+      }
     case 'amount':
-      return { text: 'How much? Currency optional — MYR is assumed.\n\n<i>e.g. 2500 · RM 3,200 · USD 1150</i>' }
+      return {
+        text:
+          '<b>7 · Price</b>\nThe full price BEFORE any discount. Ringgit is assumed; put the currency first for anything else (USD, SGD, EUR, RMB).\n\n' +
+          '<i>e.g.</i> <code>2500</code> · <code>RM 3,200</code> · <code>USD 1150</code>',
+      }
     case 'discount':
       return {
-        text: 'Any discount off that? It goes on the invoice as its own line, not hidden in the price.',
+        text:
+          '<b>8 · Discount</b>\nThe amount taken off, as a number in the same currency. It prints as its own line — never hidden in the price.\n\n<i>e.g.</i> <code>500</code>',
         buttons: [[b('No discount', 'inv:disc:0')]],
       }
     case 'terms':
       return {
-        text: 'Payment terms?',
+        text: '<b>9 · Payment terms</b>\nTap one, or type your own wording exactly as it should print.',
         buttons: [
           [b('50% deposit / 50% on delivery', 'inv:terms:half')],
           [b('Full payment on delivery', 'inv:terms:ondelivery')],
@@ -251,21 +287,29 @@ export function ask(draft: Draft): Ask {
       }
     case 'quotation':
       return {
-        text: 'Is there a quotation reference for this?',
+        text: '<b>Quotation reference</b>\nThe quotation number this invoice follows, if there was one.\n\n<i>e.g.</i> <code>SYCP-Q-202609-002</code>',
         buttons: [[b('No quotation', 'inv:quote:none')]],
       }
     case 'validity':
       return {
-        text: 'How long should this quotation stay valid?',
+        text: '<b>Validity</b>\nHow many days this quotation stays valid. Tap one, or send a number.',
         buttons: [[b('14 days', 'inv:valid:14'), b('30 days', 'inv:valid:30')]],
       }
     case 'date':
       return {
-        text: 'Invoice date?',
+        text: `<b>10 · ${doc === 'quotation' ? 'Quotation' : 'Invoice'} date</b>\nThe date printed on it — it also decides the number (SYCP-YYYYMM-…). Tap Today, or send <code>DD/MM/YY</code>.\n\n<i>e.g.</i> <code>27/09/26</code>`,
         buttons: [[b('Today', 'inv:date:today')]],
       }
     case 'confirm':
-      return { text: summary(draft), buttons: [[b('✅ Create it', 'inv:go'), b('✖️ Discard', 'inv:cancel')]] }
+      return {
+        text: summary(draft),
+        buttons: [[b('🎨 Create it in Canva', 'inv:go'), b('✖️ Discard', 'inv:cancel')]],
+      }
+    case 'preview':
+      return {
+        text: 'Check the preview above, then tap <b>Save</b> or <b>Discard</b>.',
+        buttons: [[b('✅ Save', 'inv:save'), b('✖️ Discard', 'inv:discard')]],
+      }
   }
 }
 
@@ -290,7 +334,7 @@ export function summary(d: Draft): string {
     d.quotation ? `<b>Quotation ref</b>  ${d.quotation}` : '',
     d.validityDays ? `<b>Valid for</b>  ${d.validityDays} days` : '',
     '',
-    `<i>The ${d.kind === 'quotation' ? 'quotation' : 'invoice'} number is issued when you confirm, so it can never clash.</i>`,
+    `<i>Nothing is saved yet. Create it draws the ${d.kind === 'quotation' ? 'quotation' : 'invoice'} in Canva and shows you a preview first — the number is issued then, so it can never clash.</i>`,
   ]
   return lines.filter(Boolean).join('\n')
 }
@@ -316,12 +360,32 @@ export function advance(draft: Draft): Draft {
  * import produced, so every tab, chart and total picks it up with no special
  * casing. `render.status = 'pending'` marks it as awaiting its Canva document.
  */
-export async function fileInvoice(draft: Draft): Promise<{ no: string; id: number } | null> {
+export async function fileInvoice(
+  draft: Draft,
+  opts: {
+    /** A number already issued and printed on a Canva preview. */
+    no?: string
+    status?: string
+    dueDate?: string | null
+    /** Extra meta — the Canva design id once the document exists. */
+    meta?: Record<string, unknown>
+  } = {},
+): Promise<{ no: string; id: number } | null> {
   if (!supabaseConfigured) return null
   const date = draft.date ?? new Date().toISOString().slice(0, 10)
-  const no = await nextInvoiceNo(date, draft.kind)
+  const no = opts.no ?? (await nextInvoiceNo(date, draft.kind))
+  const row = invoiceRow(draft, no)
 
-  const { data, error } = await supabase.from('records').insert(invoiceRow(draft, no)).select('id').single()
+  const { data, error } = await supabase
+    .from('records')
+    .insert({
+      ...row,
+      ...(opts.status ? { status: opts.status } : {}),
+      ...(opts.dueDate !== undefined ? { due_date: opts.dueDate } : {}),
+      meta: { ...row.meta, ...opts.meta },
+    })
+    .select('id')
+    .single()
 
   if (error || !data) return null
   if (draft.client?.name) await rememberClient(draft.client).catch(() => {})

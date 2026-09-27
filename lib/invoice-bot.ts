@@ -1,4 +1,4 @@
-import { sendMessage, sendWithButtons } from './telegram'
+import { sendMessage, sendWithButtons, sendPhotoWithButtons } from './telegram'
 import {
   ask,
   advance,
@@ -8,11 +8,17 @@ import {
   findClients,
   parseMoney,
   fileInvoice,
+  invoiceRow,
+  nextInvoiceNo,
   TERMS,
   type Draft,
 } from './invoice-intake'
 import { parseEventDates } from './event-dates'
 import type { DocKind } from './invoice-render'
+import type { Rec } from './records'
+import { startRender, commitRender, discardRender } from './invoice-canva'
+import { uploadInvoiceToDrive } from './invoice-drive-upload'
+import { composioReady } from './composio-exec'
 
 // 👉 The Telegram side of the invoice interview: it owns the conversation, and
 // lib/invoice-intake.ts owns the rules. Every reply routes through here while a
@@ -52,12 +58,14 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
   const d = open.draft
 
   if (/^\/cancel$/i.test(text)) {
+    if (d.preview) await discardRender(d.preview).catch(() => {})
     await clearDraft(chatId)
     await sendMessage(chatId, 'Dropped it. Nothing was filed.')
     return true
   }
   // Any other command aborts the interview rather than being swallowed.
   if (text.startsWith('/') && !/^\/(invoice|quote|quotation)$/i.test(text)) {
+    if (d.preview) await discardRender(d.preview).catch(() => {})
     await clearDraft(chatId)
     await sendMessage(chatId, 'Invoice cancelled — you sent another command.')
     return false
@@ -121,7 +129,7 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
       return true
 
     case 'venue':
-      await put(chatId, advance({ ...d, venue: text.trim() }))
+      await put(chatId, advance({ ...d, venue: text.trim() === '-' ? '—' : text.trim() }))
       return true
 
     case 'event_date': {
@@ -200,11 +208,13 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
       return true
     }
 
-    case 'confirm': {
-      // A number here picks from an earlier client shortlist; otherwise nudge.
-      await sendMessage(chatId, 'Tap <b>Create it</b> or <b>Discard</b> above.')
+    case 'confirm':
+      await sendMessage(chatId, 'Tap <b>Create it in Canva</b> or <b>Discard</b> above — or /cancel to start over.')
       return true
-    }
+
+    case 'preview':
+      await sendMessage(chatId, 'Tap <b>Save</b> or <b>Discard</b> under the preview — or /cancel to throw it away.')
+      return true
   }
   return true
 }
@@ -212,6 +222,21 @@ export async function handleInvoiceText(chatId: number, text: string): Promise<b
 /** Handles inv:* button taps. Returns true if it was ours. */
 export async function handleInvoiceCallback(chatId: number, data: string): Promise<boolean> {
   if (!data.startsWith('inv:')) return false
+
+  // ☁️ Upload to Drive on an invoice that's already saved — no draft involved.
+  if (data.startsWith('inv:drive:')) {
+    const id = Number(data.split(':')[2])
+    await sendMessage(chatId, '☁️ Uploading the PDF to Google Drive…')
+    const res = await uploadInvoiceToDrive(id)
+    await sendMessage(
+      chatId,
+      res.ok
+        ? `✅ In Google Drive: <a href="${res.drive.url}">open the PDF</a>`
+        : `⚠️ Drive upload failed: ${res.error}\nYou can retry from Invoice Details.`,
+    )
+    return true
+  }
+
   const open = await loadDraft(chatId)
   if (!open) {
     await sendMessage(chatId, 'That invoice is no longer open. Send /invoice to start again.')
@@ -220,7 +245,8 @@ export async function handleInvoiceCallback(chatId: number, data: string): Promi
   const d = open.draft
   const [, kind, value] = data.split(':')
 
-  if (kind === 'cancel') {
+  if (kind === 'cancel' || kind === 'discard') {
+    if (d.preview) await discardRender(d.preview).catch(() => {})
     await clearDraft(chatId)
     await sendMessage(chatId, 'Discarded. Nothing was filed.')
     return true
@@ -251,21 +277,92 @@ export async function handleInvoiceCallback(chatId: number, data: string): Promi
     return true
   }
   if (kind === 'go') {
-    const filed = await fileInvoice({ ...d, date: d.date ?? todayKL() })
+    // Only from the summary — a second tap while Canva is drawing is ignored.
+    if (d.step !== 'confirm') return true
+    const draft = { ...d, date: d.date ?? todayKL() }
+
+    // No Canva connection on this server: file it the old way, document pending.
+    if (!composioReady()) {
+      const filed = await fileInvoice(draft)
+      await clearDraft(chatId)
+      await sendMessage(
+        chatId,
+        filed
+          ? `✅ Filed as <b>${filed.no}</b>. Canva isn't connected here, so its document is queued as <i>pending</i>.`
+          : '⚠️ Could not file that — the database refused it. Nothing was saved.',
+      )
+      return true
+    }
+
+    await saveDraft(chatId, { ...draft, step: 'preview' })
+    await sendMessage(chatId, '🎨 Drawing it in Canva… about 15 seconds.')
+    try {
+      const no = await nextInvoiceNo(draft.date, draft.kind)
+      const row = invoiceRow(draft, no)
+      const p = await startRender({ ...row, id: 0 } as unknown as Rec, draft.kind)
+      await saveDraft(chatId, { ...draft, step: 'preview', preview: { no, designId: p.designId, transactionId: p.transactionId, viewUrl: p.viewUrl } })
+      const caption =
+        `<b>${no}</b> — check it over.\nNothing is saved yet: <b>Save</b> keeps this Canva design and files the ${draft.kind === 'quotation' ? 'quotation' : 'invoice'}.`
+      const buttons = [[{ text: '✅ Save', callback_data: 'inv:save' }, { text: '✖️ Discard', callback_data: 'inv:discard' }]]
+      const sent = p.previewUrl && (await sendPhotoWithButtons(chatId, p.previewUrl, caption, buttons))
+      if (!sent) await sendWithButtons(chatId, `${caption}\n\n(Canva sent no preview picture.)`, buttons)
+    } catch (e) {
+      await saveDraft(chatId, { ...draft, step: 'confirm', preview: undefined })
+      await sendWithButtons(chatId, `⚠️ Canva couldn't draw it: ${e instanceof Error ? e.message : e}\n\nNothing was saved. Try again?`, [
+        [{ text: '🎨 Try again', callback_data: 'inv:go' }, { text: '✖️ Discard', callback_data: 'inv:cancel' }],
+      ])
+    }
+    return true
+  }
+
+  if (kind === 'save') {
+    const p = d.preview
+    if (d.step !== 'preview' || !p) return true
+    await saveDraft(chatId, { ...d, step: 'confirm', preview: undefined }) // a double tap can't save twice
+    const date = d.date ?? todayKL()
+
+    // The number is printed on the design, so it must still be the next free one.
+    if ((await nextInvoiceNo(date, d.kind)) !== p.no) {
+      await discardRender(p).catch(() => {})
+      await sendWithButtons(chatId, `⚠️ ${p.no} was taken by another document meanwhile. Nothing was saved — draw it again for the next number.`, [
+        [{ text: '🎨 Draw it again', callback_data: 'inv:go' }, { text: '✖️ Discard', callback_data: 'inv:cancel' }],
+      ])
+      return true
+    }
+    try {
+      await commitRender({ designId: p.designId, transactionId: p.transactionId, invoiceDate: date, kind: d.kind })
+    } catch (e) {
+      await sendWithButtons(chatId, `⚠️ Canva couldn't save the design: ${e instanceof Error ? e.message : e}. Nothing was filed.`, [
+        [{ text: '🎨 Draw it again', callback_data: 'inv:go' }, { text: '✖️ Discard', callback_data: 'inv:cancel' }],
+      ])
+      return true
+    }
+    const now = new Date().toISOString()
+    const canvaUrl = p.viewUrl ?? `https://www.canva.com/design/${p.designId}/view`
+    const filed = await fileInvoice(
+      { ...d, date },
+      {
+        no: p.no,
+        meta: {
+          canva_design: p.designId,
+          canva_url: canvaUrl,
+          render: { status: 'done', design_id: p.designId, rendered_at: now, source: 'telegram' },
+        },
+      },
+    )
     await clearDraft(chatId)
     if (!filed) {
-      await sendMessage(chatId, '⚠️ Could not file that — the database refused it. Nothing was saved.')
+      await sendMessage(chatId, `⚠️ The Canva design was saved (<a href="${canvaUrl}">open it</a>) but the database refused the row. Tell Claude.`)
       return true
     }
     const isQuote = d.kind === 'quotation'
-    await sendMessage(
-      chatId,
-      `✅ Filed as <b>${filed.no}</b>.\n\n` +
-        (isQuote
-          ? 'Quotations are kept out of your income totals, so nothing on the Dashboard moved.'
-          : "It's already in your Invoice Summary and counted on the Dashboard.") +
-        `\n\nThe Canva document is still to be made — it's queued as <i>pending</i>.`,
-    )
+    const text =
+      `✅ <b>${filed.no}</b> saved — <a href="${canvaUrl}">open in Canva</a>.\n\n` +
+      (isQuote
+        ? 'Filed in Canva\'s Quotation folder. Quotations stay out of your income totals.'
+        : `Filed in Canva's Invoices (${date.slice(0, 4)}) folder and counted in Invoice Summary.\nThe PDF is not in Google Drive yet — tap below when you want it there.`)
+    if (isQuote) await sendMessage(chatId, text)
+    else await sendWithButtons(chatId, text, [[{ text: '☁️ Upload PDF to Google Drive', callback_data: `inv:drive:${filed.id}` }]])
     return true
   }
   return true
