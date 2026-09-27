@@ -126,6 +126,7 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
 
   const deliverables = (Array.isArray(m.deliverables) ? m.deliverables : []).map(String).join('\n')
   const terms = String(m.terms ?? '').trim()
+  const discount = Number(m.discount ?? 0)
 
   const ops: Operation[] = [
     { type: 'update_title', title: `${m.invoice_no} - ${m.job ?? rec.title}` },
@@ -146,7 +147,14 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // without needing any extra line added on this side.
     fill(FIELDS.client, 'CLIENT_ADDRESS', String(m.address ?? '')),
     fill(FIELDS.client, 'CONTACT', String(m.contact ?? '')),
-    fill(FIELDS.client, 'CLIENT', String(m.customer ?? '') + (m.reg ? ` (${m.reg})` : '')),
+    // A reg number that already carries its own parenthetical (e.g. a company
+    // with both a new and an old registration number) isn't wrapped again —
+    // that would print as a confusing double set of parens.
+    fill(
+      FIELDS.client,
+      'CLIENT',
+      String(m.customer ?? '') + (m.reg ? (String(m.reg).includes('(') ? ` ${m.reg}` : ` (${m.reg})`) : ''),
+    ),
     ...strip(FIELDS.client),
 
     // Body — job, the venue/date/time highlights, scope, terms. A blank time
@@ -160,6 +168,13 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
       : [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: 'Time: {{TIME}}\n', replace_text: '' }]),
     fill(FIELDS.description, 'DELIVERABLES', deliverables),
     fill(FIELDS.description, 'TERMS', terms),
+    // A discount gets its own row, not a note — a second line under the job
+    // title, level with the second line the price/qty/amount boxes below
+    // gain for the same reason. No new elements, just breaklines in the ones
+    // already there, the way Aereon's old Canva invoices did it by hand.
+    ...(discount
+      ? [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: '\nVenue:', replace_text: '\nDiscount Offer\nVenue:' }]
+      : []),
     ...(isQuote
       ? [
           fill(
@@ -176,11 +191,14 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // than the two being centred in slightly different places.
     { type: 'format_text', locator_id: FIELDS.qty, formatting: { text_align: 'center' } },
     { type: 'format_text', locator_id: FIELDS.qtyHeader, formatting: { text_align: 'center' } },
-    fill(FIELDS.price, 'PRICE', money(list, cur)),
+    // The template's qty cell is a bare "1", not a token — a second "1" is
+    // appended the same way the discount row is: a breakline, not a new box.
+    ...(discount ? [{ type: 'find_and_replace_text', locator_id: FIELDS.qty, find_text: '1', replace_text: '1\n1' }] : []),
+    fill(FIELDS.price, 'PRICE', discount ? `${money(list, cur)}\n(${money(discount, cur)})` : money(list, cur)),
     ...strip(FIELDS.price),
-    fill(FIELDS.lineAmount, 'AMOUNT', money(list, cur)),
+    fill(FIELDS.lineAmount, 'AMOUNT', discount ? `${money(list, cur)}\n(${money(discount, cur)})` : money(list, cur)),
     ...strip(FIELDS.lineAmount),
-    fill(FIELDS.subtotal, 'SUBTOTAL', money(list, cur)),
+    fill(FIELDS.subtotal, 'SUBTOTAL', money(discount ? net : list, cur)),
     ...strip(FIELDS.subtotal),
     fill(FIELDS.total, 'TOTAL', money(net, cur)),
     ...strip(FIELDS.total),
