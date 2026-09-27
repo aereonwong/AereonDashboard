@@ -38,7 +38,7 @@ export type Draft = {
   validityDays?: number
   date?: string // YYYY-MM-DD
   /** Candidate clients from the last search, so a numeric reply can pick one. */
-  matches?: { name: string; contact?: string; address?: string }[]
+  matches?: { name: string; contact?: string; address?: string; reg?: string }[]
 }
 
 export const STEPS = [
@@ -136,19 +136,53 @@ export async function nextInvoiceNo(date: string, kind: DocKind = 'invoice'): Pr
 
 // -------------------------------------------------------------- client lookup
 
-/** Clients he has invoiced before, matched loosely on name. */
-export async function findClients(q: string): Promise<{ name: string; contact?: string; address?: string }[]> {
+type Known = { name: string; contact?: string; address?: string; reg?: string }
+
+/** Clients he has invoiced before, matched loosely on name. Details are gathered
+ *  from the client record AND from every earlier invoice, newest last, so an
+ *  address typed once is remembered even for clients that pre-date the bot. */
+export async function findClients(q: string): Promise<Known[]> {
   if (!supabaseConfigured || q.trim().length < 2) return []
-  const { data } = await supabase.from('records').select('title, meta').eq('category', 'customer').limit(500)
   const needle = q.toLowerCase().trim()
-  return (data ?? [])
-    .filter(r => String(r.title).toLowerCase().includes(needle))
-    .slice(0, 6)
-    .map(r => ({
-      name: String(r.title),
-      contact: (r.meta as any)?.contact || undefined,
-      address: (r.meta as any)?.address || undefined,
-    }))
+  const [cust, docs] = await Promise.all([
+    supabase.from('records').select('title, meta').eq('category', 'customer').limit(1000),
+    supabase
+      .from('records')
+      .select('meta, created_at')
+      .in('category', ['cash_in', 'doc'])
+      .not('meta->>address', 'is', null)
+      .order('created_at', { ascending: true })
+      .limit(1000),
+  ])
+  const byName = new Map<string, Known>()
+  const merge = (name: string, m: any) => {
+    const key = name.toLowerCase().trim()
+    const cur = byName.get(key) ?? { name }
+    byName.set(key, {
+      name: cur.name,
+      contact: m?.contact || cur.contact,
+      address: m?.address || cur.address,
+      reg: m?.reg || cur.reg,
+    })
+  }
+  for (const r of cust.data ?? []) merge(String(r.title), r.meta)
+  for (const r of docs.data ?? []) {
+    const name = (r.meta as any)?.customer
+    if (name) merge(String(name), r.meta)
+  }
+  return [...byName.values()].filter(c => c.name.toLowerCase().includes(needle)).slice(0, 6)
+}
+
+/** Remember a client so the next invoice needs no retyping. */
+async function rememberClient(c: NonNullable<Draft['client']>) {
+  const { data } = await supabase.from('records').select('id, meta').eq('category', 'customer').ilike('title', c.name).limit(1)
+  const patch = { contact: c.contact, address: c.address, reg: c.reg }
+  const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v))
+  if (data?.[0]) {
+    if (Object.keys(clean).length) await supabase.from('records').update({ meta: { ...(data[0].meta as object), ...clean } }).eq('id', data[0].id)
+  } else {
+    await supabase.from('records').insert({ category: 'customer', status: 'active', title: c.name, meta: clean })
+  }
 }
 
 // ------------------------------------------------------------------ the money
@@ -264,7 +298,8 @@ export function advance(draft: Draft): Draft {
   const order = [...STEPS]
   let next = order[Math.min(order.indexOf(draft.step) + 1, order.length - 1)]
   const skip = (s: Step) =>
-    (s === 'client_details' && !draft.client?.isNew) ||
+    // Ask for details only when the client is new or we hold no address for them.
+    (s === 'client_details' && !draft.client?.isNew && !!draft.client?.address) ||
     // A quotation has no quotation reference; an invoice has no validity period.
     (s === 'quotation' && draft.kind === 'quotation') ||
     (s === 'validity' && draft.kind !== 'quotation')
@@ -306,6 +341,7 @@ export async function fileInvoice(draft: Draft): Promise<{ no: string; id: numbe
         customer: draft.client?.name,
         contact: draft.client?.contact || undefined,
         address: draft.client?.address || undefined,
+        reg: draft.client?.reg || undefined,
         invoice_no: no,
         invoice_date: date,
         currency: cur === 'MYR' ? undefined : cur,
@@ -328,5 +364,6 @@ export async function fileInvoice(draft: Draft): Promise<{ no: string; id: numbe
     .single()
 
   if (error || !data) return null
+  if (draft.client?.name) await rememberClient(draft.client).catch(() => {})
   return { no, id: data.id }
 }
