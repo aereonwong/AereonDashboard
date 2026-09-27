@@ -143,7 +143,7 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // Body — job, the venue/date/time highlights, scope, terms.
     fill(FIELDS.description, 'JOB', String(m.job ?? rec.title)),
     fill(FIELDS.description, 'VENUE', String(m.venue ?? '—')),
-    fill(FIELDS.description, 'EVENT_DATE', m.event_date ? longDate(String(m.event_date)) : '—'),
+    fill(FIELDS.description, 'EVENT_DATE', m.event_date_label ? String(m.event_date_label) : m.event_date ? longDate(String(m.event_date)) : '—'),
     fill(FIELDS.description, 'TIME', String(m.event_time ?? '—')),
     fill(FIELDS.description, 'DELIVERABLES', deliverables),
     fill(FIELDS.description, 'TERMS', terms),
