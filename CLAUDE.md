@@ -133,6 +133,25 @@ it. `lib/invoice-render.ts` holds the locator map and `buildOperations()`, which
 four cheap calls instead of a 9,000-token re-read of the element tree each time. Read the header of
 that file before touching it; it explains the token arithmetic.
 
+**After the Canva document is committed, export it and file the PDF in Google Drive** — this is a
+separate, near-free step from the edit above, and doesn't need Aereon to ask each time:
+
+1. Canva's `export-design` (format `pdf`) returns a presigned download URL for the finished page.
+2. Hand that URL straight to `GOOGLEDRIVE_UPLOAD_FROM_URL` (via `composio execute`, not the app) as
+   `source_url` — Google's own servers fetch the PDF directly from Canva's URL. **No PDF bytes ever
+   pass through Claude or a local download**; routing them through `curl`/base64 first is a wasted,
+   slower detour (tried once, 27 Sep 2026 — don't repeat it).
+3. File into the Google Drive folder from `getInvoiceExportConfig()` in `lib/invoice-export.ts`
+   (reads the `invoice_export` row via `lib/settings.ts` — a generic key/value store in the same
+   `records` table, so changing the destination is `setSetting('invoice_export', {...})`, never a
+   code change). It currently points at **"SYCP Client Invoice"** (Drive folder id
+   `1NQJsEAXTN6iSiuiNG_DhQ7aeUU2b9srW`) — the flat top-level folder, not a year subfolder. Aereon's
+   accountant checks that folder and sorts each PDF into its own year folder from there, so Claude
+   never guesses a year on the Drive side (Canva's own year-subfolder filing is unrelated and still
+   applies — see above).
+4. Use `exportFilename(invoiceNo, job)` from the same file for the name, matching the back
+   catalogue's existing `SYCP-YYYYMM-NNN - Job Name.pdf` convention.
+
 ## House rules
 
 - Never print Aereon's passwords or keys into chat. Point at the file/line instead.
