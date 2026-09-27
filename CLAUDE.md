@@ -38,7 +38,7 @@ handing over instructions — except for passwords and secret keys, which are al
   concentration, dormant clients, movers, seasonality, and the two classifiers (`service()` /
   `sector()`). Order matters in both classifiers — the comments say why. If a figure appears on v2,
   the function that produced it is in here; nothing on that page is estimated.
-- `app/api/` — `telegram` (bot webhook), `cron-daily` (unscheduled since 27 Sep 2026; route kept), `cron-news` (9am digest),
+- `app/api/` — `telegram` (bot webhook), `cron-daily` (unscheduled since 27 Sep 2026; route kept), `cron-news` (9am digest, unscheduled since 27 Sep 2026; route kept),
   `instagram/refresh`, `demo` (password-guarded demo switch), `login`.
 - Charts are hand-built client components: `InteractiveBars`, `Donut`, `AreaChart`, `RowBars`.
   **Server components may not pass functions to them** — pass `unit`/`suffix` flags instead.
@@ -72,8 +72,11 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
   route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
   it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
   proposes chasers for overdue invoices) runs.
-- 9:00am MYT — tech & travel news digest via Claude web search, owner only
-- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — one is free now.
+- **`cron-news` is paused too** — Aereon turned off the 9:00am MYT news digest on 27 Sep 2026
+  (it had been failing on a low Anthropic credit balance, and it was the costliest Claude call:
+  Opus with web search). `vercel.json` now has no crons; add
+  `{ "path": "/api/cron-news", "schedule": "0 1 * * *" }` back to restore it.
+- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — both are free now.
 
 ## Dashboard v3 — the creator studio
 
