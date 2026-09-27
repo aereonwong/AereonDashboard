@@ -115,9 +115,17 @@ The two-step `{{TOKEN}}` pattern in that file exists solely to avoid this. Its h
 counts from zero for any month with no filed quote. Importing the quotation history would close that
 gap and give quote→win-rate analysis.
 
-**Finished documents are filed by type** — `FOLDERS` in `lib/invoice-render.ts`: invoices into
-Canva's "Invoices" folder, quotations into "Quotation". Never put a quotation in Invoices; that
-mixing is exactly what made the 2021–2026 back catalogue so hard to audit.
+**Finished documents are filed by type** — `FOLDERS` in `lib/invoice-render.ts`: quotations into
+Canva's "Quotation" folder. Never put a quotation in Invoices; that mixing is exactly what made the
+2021–2026 back catalogue so hard to audit.
+
+**Invoices are filed by year**, not into one flat folder — the original single "Invoices" folder
+hit Canva's 200-item-per-folder cap on 27 Sep 2026. The structure is now "Invoices" (parent) →
+"Invoices (YYYY)" per year, picked by the invoice's own date; `invoiceYearFolders` in
+`lib/invoice-render.ts` holds the ids and needs a new entry each January. A draft re-rendered to fix
+something goes to "TODO: Delete" (`FOLDERS.todoDelete`, at the account root) instead of sitting in
+its year folder next to the good copy — Claude has no tool to delete a Canva design outright, so
+Aereon clears that folder by hand periodically.
 
 The Canva document is a **separate, Claude-driven step**. Canva's design-editing API exists only in
 the MCP connector — Composio and the public Connect API cannot edit a design — so the app cannot do
