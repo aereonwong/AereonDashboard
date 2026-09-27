@@ -44,11 +44,34 @@ function monthBars(list: Invoice[], f: Filters): MonthBar[] {
   return out
 }
 
+/** Months from one date to another, both inclusive, partial months by their share of days. */
+function monthsBetween(from: string, to: string): number {
+  let [y, m, d] = from.split('-').map(Number)
+  const [ey, em, ed] = to.split('-').map(Number)
+  let n = 0
+  while (y < ey || (y === ey && m <= em)) {
+    const days = new Date(Date.UTC(y, m, 0)).getUTCDate()
+    const last = y === ey && m === em ? ed : days
+    n += (last - d + 1) / days
+    d = 1
+    m += 1
+    if (m > 12) {
+      m = 1
+      y += 1
+    }
+  }
+  return n
+}
+
 export type Ledger = {
   rows: LedgerRow[]
   total: number
   count: number
   average: number
+  /** Ringgit per month across the range, quiet months counted as zero. */
+  perMonth: number
+  /** How long the range is in months, partial months counted part-way. */
+  spanMonths: number
   biggest: LedgerRow | null
   months: MonthBar[]
   mix: { kind: WorkKind; total: number; count: number; share: number }[]
@@ -90,13 +113,22 @@ export function buildLedger(recs: Rec[], f: Filters, sort: Sort = 'date', q = ''
     fx.set(i.currency, { total: c.total + i.amount, count: c.count + 1 })
   }
 
+  const months = monthBars(rm, f)
+  // Whole calendar months count as one, partial ones by the share of their days:
+  // "Last 12 months" is 12, not the 13 months its two partial ends touch.
+  // All time runs from the first invoice to today.
+  const start = f.range === 'all' ? ([...rm].map(i => i.date).sort()[0] ?? f.to) : f.from
+  const spanMonths = rm.length ? monthsBetween(start, f.to) : 0
+
   return {
     rows: sorted,
     total,
     count: rm.length,
     average: rm.length ? total / rm.length : 0,
+    perMonth: spanMonths ? total / spanMonths : 0,
+    spanMonths,
     biggest: [...rmOnly(inR)].sort((a, b) => b.amount - a.amount)[0] ?? null,
-    months: monthBars(rm, f),
+    months,
     mix: KINDS.map(kind => {
       const xs = rm.filter(i => i.kind === kind)
       return { kind, total: sum(xs), count: xs.length, share: total ? sum(xs) / total : 0 }

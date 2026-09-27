@@ -14,6 +14,12 @@ import { rmFull, money, longDate } from '../fmt'
 
 type Params = Record<string, string | string[] | undefined>
 
+// "12 months", "8.9 months" — whole numbers stay whole.
+const spanLabel = (m: number) => {
+  const r = Math.round(m * 10) / 10
+  return `${Number.isInteger(r) ? r : r.toFixed(1)} month${r === 1 ? '' : 's'}`
+}
+
 export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
   const l = buildLedger(rows, filters)
   const rangeLabel = RANGES.find(r => r.id === filters.range)?.label ?? ''
@@ -40,7 +46,7 @@ export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filt
 
       <div className="v3-grid">
         <section className="v3-panel v3-span-12" aria-label="Figures">
-          <div className="v3-kpis">
+          <div className="v3-kpis v3-kpis-5">
             <div>
               <div className="v3-kpi-label">Invoiced</div>
               <div className="v3-kpi-value num">{rmFull(l.total)}</div>
@@ -51,6 +57,18 @@ export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filt
               <div className="v3-kpi-value num">{rmFull(l.average)}</div>
               <div className="v3-kpi-note">
                 Biggest {l.biggest ? `${rmFull(l.biggest.amount)}, ${l.biggest.client}` : '—'}
+              </div>
+            </div>
+            <div>
+              <div className="v3-kpi-label">Average month</div>
+              {/* Under a month, a monthly rate would be a guess scaled up — say so instead. */}
+              <div className="v3-kpi-value num">{l.spanMonths >= 1 ? rmFull(l.perMonth) : '—'}</div>
+              <div className="v3-kpi-note">
+                {l.spanMonths >= 1
+                  ? `over ${spanLabel(l.spanMonths)}, ${(l.count / l.spanMonths).toFixed(1)} invoices a month`
+                  : l.count
+                    ? 'range is shorter than a month'
+                    : 'no invoices in range'}
               </div>
             </div>
             <div>
