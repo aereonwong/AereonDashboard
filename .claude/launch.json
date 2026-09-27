@@ -1,6 +1,31 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "AereonDashboard", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--", "-p", "3007"], "port": 3007 }
+    {
+      "name": "AereonDashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3007"
+      ],
+      "port": 3007
+    },
+    {
+      "name": "AereonDashboard (no passcode)",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "APP_PASSCODE=",
+        "npm",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3008"
+      ],
+      "port": 3008
+    }
   ]
 }

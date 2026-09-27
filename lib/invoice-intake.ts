@@ -176,7 +176,7 @@ export async function findClients(q: string): Promise<Known[]> {
 }
 
 /** Remember a client so the next invoice needs no retyping. */
-async function rememberClient(c: NonNullable<Draft['client']>) {
+export async function rememberClient(c: NonNullable<Draft['client']>) {
   const { data } = await supabase.from('records').select('id, meta').eq('category', 'customer').ilike('title', c.name).limit(1)
   const patch = { contact: c.contact, address: c.address, reg: c.reg }
   const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v))
@@ -318,56 +318,64 @@ export function advance(draft: Draft): Draft {
  */
 export async function fileInvoice(draft: Draft): Promise<{ no: string; id: number } | null> {
   if (!supabaseConfigured) return null
-  const isQuote = draft.kind === 'quotation'
   const date = draft.date ?? new Date().toISOString().slice(0, 10)
   const no = await nextInvoiceNo(date, draft.kind)
+
+  const { data, error } = await supabase.from('records').insert(invoiceRow(draft, no)).select('id').single()
+
+  if (error || !data) return null
+  if (draft.client?.name) await rememberClient(draft.client).catch(() => {})
+  return { no, id: data.id }
+}
+
+/**
+ * The row a draft becomes, before it is inserted. The bot inserts it as-is;
+ * the dashboard's Create Invoice builds the same row first to render the Canva
+ * preview from it, then inserts it once the preview is approved — so the two
+ * routes can never file differently shaped invoices.
+ */
+export function invoiceRow(draft: Draft, no: string) {
+  const isQuote = draft.kind === 'quotation'
+  const date = draft.date ?? new Date().toISOString().slice(0, 10)
   const cur = draft.currency ?? 'MYR'
   const net = netOf(draft)
   const project = [draft.job, ...(draft.deliverables ?? [])].filter(Boolean).join(' — ')
   const short = project.length > 60 ? project.slice(0, 57) + '…' : project
 
-  const { data, error } = await supabase
-    .from('records')
-    .insert({
-      // A quotation is NOT income. It is filed as a `doc` so no total, chart or
-      // brief can ever mistake a quoted figure for money earned — the mistake the
-      // old Canva folder made by keeping quotations beside invoices.
-      category: isQuote ? 'doc' : 'cash_in',
-      status: isQuote ? 'quotation' : 'issued',
-      amount: net,
-      due_date: null,
-      created_at: `${date}T09:00:00+08:00`,
-      title: `${no} · ${short}`,
-      notes: project,
-      meta: {
-        customer: draft.client?.name,
-        contact: draft.client?.contact || undefined,
-        address: draft.client?.address || undefined,
-        reg: draft.client?.reg || undefined,
-        invoice_no: no,
-        invoice_date: date,
-        currency: cur === 'MYR' ? undefined : cur,
-        list_price: draft.discount ? draft.amount : undefined,
-        discount: draft.discount || undefined,
-        deliverables: draft.deliverables,
-        job: draft.job,
-        venue: draft.venue,
-        event_date: draft.eventDate,
-        event_dates: draft.eventDates && draft.eventDates.length > 1 ? draft.eventDates : undefined,
-        event_date_label: draft.eventDateLabel || undefined,
-        event_time: draft.eventTime,
-        terms: draft.terms,
-        quotation_no: draft.quotation || undefined,
-        validity_days: draft.validityDays || undefined,
-        source: 'telegram',
-        payment_tracked: false,
-        render: { status: 'pending' },
-      },
-    })
-    .select('id')
-    .single()
-
-  if (error || !data) return null
-  if (draft.client?.name) await rememberClient(draft.client).catch(() => {})
-  return { no, id: data.id }
+  return {
+    // A quotation is NOT income. It is filed as a `doc` so no total, chart or
+    // brief can ever mistake a quoted figure for money earned — the mistake the
+    // old Canva folder made by keeping quotations beside invoices.
+    category: isQuote ? 'doc' : 'cash_in',
+    status: isQuote ? 'quotation' : 'issued',
+    amount: net,
+    due_date: null as string | null,
+    created_at: `${date}T09:00:00+08:00`,
+    title: `${no} · ${short}`,
+    notes: project,
+    meta: {
+      customer: draft.client?.name,
+      contact: draft.client?.contact || undefined,
+      address: draft.client?.address || undefined,
+      reg: draft.client?.reg || undefined,
+      invoice_no: no,
+      invoice_date: date,
+      currency: cur === 'MYR' ? undefined : cur,
+      list_price: draft.discount ? draft.amount : undefined,
+      discount: draft.discount || undefined,
+      deliverables: draft.deliverables,
+      job: draft.job,
+      venue: draft.venue,
+      event_date: draft.eventDate,
+      event_dates: draft.eventDates && draft.eventDates.length > 1 ? draft.eventDates : undefined,
+      event_date_label: draft.eventDateLabel || undefined,
+      event_time: draft.eventTime,
+      terms: draft.terms,
+      quotation_no: draft.quotation || undefined,
+      validity_days: draft.validityDays || undefined,
+      source: 'telegram' as string,
+      payment_tracked: false,
+      render: { status: 'pending' } as Record<string, unknown>,
+    } as Record<string, any>,
+  }
 }

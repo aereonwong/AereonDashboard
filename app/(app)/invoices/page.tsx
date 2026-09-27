@@ -1,7 +1,10 @@
 // 👉 Invoice Summary — the money view of the work you've invoiced, built from the
 // same `records` table (cash_in rows that carry meta.invoice_no, imported from Canva).
+// Summary only: the invoice-by-invoice table lives on Invoice Details.
 import { getRecords, rm } from '@/lib/records'
 import { summarize } from '@/lib/invoices'
+import { toDetailRows } from '@/lib/invoice-details'
+import StatusStrip from './StatusStrip'
 import Stat from '@/app/_components/Stat'
 import Empty from '@/app/_components/Empty'
 import InteractiveBars from '@/app/_components/InteractiveBars'
@@ -59,11 +62,12 @@ export default async function InvoiceSummary({
         {s.bestMonth ? <Stat label={`Best month (${s.bestMonth.month})`} value={rm(s.bestMonth.total)} icon="calendar" /> : null}
       </div>
 
-      {s.otherCurrency.length > 0 || s.untracked > 0 ? (
+      <StatusStrip rows={toDetailRows(rows)} />
+
+      {s.otherCurrency.length > 0 ? (
         <p className="metahint">
           {s.otherCurrency.map(c => `${c.count} invoice${c.count > 1 ? 's' : ''} in ${c.currency} (${c.currency} ${c.total.toLocaleString('en-MY')})`).join(' · ')}
-          {s.otherCurrency.length > 0 && s.untracked > 0 ? ' · ' : ''}
-          {s.untracked > 0 ? `${s.untracked} invoices have no payment status yet — RM totals here are what you invoiced, not what landed.` : ''}
+          {' '}— kept out of the RM totals.
         </p>
       ) : null}
 
@@ -116,40 +120,6 @@ export default async function InvoiceSummary({
         <Stat label="Top-client concentration" value={pct(s.topClientShare)} yes={s.topClientShare >= 40} icon="pie" />
       </div>
 
-      <div className="chart-card">
-        <h2><Icon name="invoice" /> All invoices</h2>
-        <p className="sub">Newest first · the number links to the Canva document</p>
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>Invoice</th>
-              <th>Date</th>
-              <th>Client</th>
-              <th>Work</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {s.invoices.map(i => (
-              <tr key={i.id}>
-                <td data-label="Invoice">
-                  {i.url ? (
-                    <a href={i.url} target="_blank" rel="noopener noreferrer">{i.no}</a>
-                  ) : (
-                    i.no
-                  )}
-                </td>
-                <td data-label="Date">{i.date}</td>
-                <td data-label="Client">{i.client}</td>
-                <td data-label="Work"><span className="pill">{i.kind}</span></td>
-                <td data-label="Amount">
-                  {i.currency === 'MYR' ? rm(i.amount) : `${i.currency} ${i.amount.toLocaleString('en-MY')}`}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </>
   )
 }

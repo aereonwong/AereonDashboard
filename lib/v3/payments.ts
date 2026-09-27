@@ -12,16 +12,22 @@ import { supabase, supabaseConfigured } from '@/lib/supabase'
 // changes revenue: every tab counts an invoice by its number, whatever its status.
 
 const refresh = () => {
-  for (const p of ['/dashboard', '/invoices', '/clients']) revalidatePath(p)
+  for (const p of ['/dashboard', '/invoices', '/invoices/details', '/clients']) revalidatePath(p)
 }
 
 export async function markPaid(id: number): Promise<{ ok: boolean; error?: string }> {
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
-  const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
+  const { data } = await supabase.from('records').select('meta, status').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
+  // Remember what it was, so undo returns an "awaiting payment" invoice to
+  // awaiting rather than to "not tracked".
+  const before = data.status === 'paid' ? data.meta?.status_before_paid : data.status
   const { error } = await supabase
     .from('records')
-    .update({ status: 'paid', meta: { ...data.meta, paid_at: new Date().toISOString(), payment_tracked: true } })
+    .update({
+      status: 'paid',
+      meta: { ...data.meta, paid_at: new Date().toISOString(), payment_tracked: true, status_before_paid: before ?? 'issued' },
+    })
     .eq('id', id)
   refresh()
   return error ? { ok: false, error: error.message } : { ok: true }
@@ -31,8 +37,12 @@ export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: str
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
-  const { paid_at: _drop, ...meta } = data.meta ?? {}
-  const { error } = await supabase.from('records').update({ status: 'issued', meta }).eq('id', id)
+  const { paid_at: _drop, status_before_paid: before, ...meta } = data.meta ?? {}
+  const status = before && before !== 'paid' ? String(before) : 'issued'
+  const { error } = await supabase
+    .from('records')
+    .update({ status, meta: { ...meta, payment_tracked: status !== 'issued' } })
+    .eq('id', id)
   refresh()
   return error ? { ok: false, error: error.message } : { ok: true }
 }

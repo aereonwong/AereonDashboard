@@ -1,30 +1,26 @@
 import type { Rec } from '@/lib/records'
-import { buildLedger, type Sort } from '@/lib/v3/ledger'
+import { buildLedger } from '@/lib/v3/ledger'
 import { RANGES, withParam, type Filters } from '@/lib/v3/filters'
 import FilterBar from '../FilterBar'
 import Bars from '../Bars'
-import Search from '../Search'
+import StatusStrip from '@/app/(app)/invoices/StatusStrip'
+import { toDetailRows } from '@/lib/invoice-details'
 import { rmFull, money, longDate } from '../fmt'
 
-// 👉 v3 Invoice Summary. Everything the v2 page did — totals, the monthly
-// chart, top clients, work type, repeat and concentration figures, the full
-// table linked to Canva — now filterable, sortable, searchable, with payment
-// status.
+// 👉 v3 Invoice Summary. Totals, the monthly chart, top clients, work type,
+// repeat and concentration figures, and the payment & Drive status strip —
+// all following the range filter. Summary only: the invoice-by-invoice table
+// (sortable, searchable, with the Drive/PDF actions) is Invoice Details.
 
 type Params = Record<string, string | string[] | undefined>
-const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
-export default function Invoices({ rows, filters, sp }: { rows: Rec[]; filters: Filters; sp: Params }) {
-  const sort = (['date', 'amount', 'client'].includes(one(sp.sort) ?? '') ? one(sp.sort) : 'date') as Sort
-  const q = one(sp.q) ?? ''
-  const l = buildLedger(rows, filters, sort, q)
+export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
+  const l = buildLedger(rows, filters)
   const rangeLabel = RANGES.find(r => r.id === filters.range)?.label ?? ''
-  const sortHref = (s: Sort) => {
-    const p = new URLSearchParams(withParam(filters, 'sort', s === 'date' ? undefined : s).slice(1))
-    if (q) p.set('q', q)
-    const str = p.toString()
-    return str ? `?${str}` : '?'
-  }
+  // The status strip covers exactly the invoices the rest of the page is showing.
+  const inView = new Set(l.rows.map(r => r.id))
+  const details = toDetailRows(rows).filter(r => inView.has(r.id))
+  const oneYear = filters.from.slice(0, 4) === filters.to.slice(0, 4) ? filters.from.slice(0, 4) : undefined
 
   return (
     <div>
@@ -39,6 +35,8 @@ export default function Invoices({ rows, filters, sp }: { rows: Rec[]; filters: 
       </header>
 
       <FilterBar filters={filters} clients={l.allClients} />
+
+      <StatusStrip rows={details} year={oneYear} />
 
       <div className="v3-grid">
         <section className="v3-panel v3-span-12" aria-label="Figures">
@@ -142,67 +140,6 @@ export default function Invoices({ rows, filters, sp }: { rows: Rec[]; filters: 
           </div>
         </section>
 
-        <section className="v3-panel v3-span-12" aria-labelledby="t-all">
-          <div className="v3-toolbar">
-            <h2 className="v3-panel-title" id="t-all">
-              All invoices
-            </h2>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="v3-count">
-                {l.rows.length} shown · {l.paid} confirmed paid
-              </span>
-              <Search placeholder="Search number, client or job" />
-            </div>
-          </div>
-          <div className="v3-table-wrap">
-            <table className="v3-table">
-              <thead>
-                <tr>
-                  <th>Invoice</th>
-                  <th aria-sort={sort === 'date' ? 'descending' : undefined}>
-                    <a href={sortHref('date')}>Date</a>
-                  </th>
-                  <th aria-sort={sort === 'client' ? 'ascending' : undefined}>
-                    <a href={sortHref('client')}>Client</a>
-                  </th>
-                  <th>Work</th>
-                  <th>Status</th>
-                  <th className="r" aria-sort={sort === 'amount' ? 'descending' : undefined}>
-                    <a href={sortHref('amount')}>Amount</a>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {l.rows.map(i => (
-                  <tr key={i.id}>
-                    <td className="code">
-                      {i.url ? (
-                        <a href={i.url} target="_blank" rel="noopener noreferrer">
-                          {i.no}
-                        </a>
-                      ) : (
-                        i.no
-                      )}
-                    </td>
-                    <td className="num dim">{i.date}</td>
-                    <td>{i.client}</td>
-                    <td>
-                      <span className="v3-tag">{i.kind}</span>
-                    </td>
-                    <td>
-                      <span className={`v3-tag${i.status === 'paid' ? ' paid' : ''}`}>{i.status === 'paid' ? 'Paid' : 'Unconfirmed'}</span>
-                    </td>
-                    <td className="r num">
-                      {i.currency !== 'MYR' ? <span className="v3-tag fx" style={{ marginRight: 6 }}>{i.currency}</span> : null}
-                      {money(i.amount, i.currency)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {l.rows.length === 0 ? <p className="v3-empty">No invoices match. Try a wider range or clear the search.</p> : null}
-          </div>
-        </section>
       </div>
     </div>
   )

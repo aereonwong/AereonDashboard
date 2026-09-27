@@ -1,0 +1,494 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Icon from '@/app/_components/Icon'
+import type { FormOptions } from '@/lib/invoice-figures'
+import type { RenderPreview } from '@/lib/invoice-canva'
+import { previewInvoice, saveInvoice, discardInvoice, type InvoiceForm } from './actions'
+import './invoices.css'
+
+// 👉 Create Invoice: a form → Canva draws it → Aereon checks the picture → Save.
+// Nothing is filed until Save; Discard (or closing the dialog) throws the Canva
+// copy away. Filing the PDF in Google Drive is NOT part of this — that stays a
+// separate click on the invoice's row.
+//
+// Every choice the database already knows is offered rather than retyped:
+// clients (with their address, contact and registration number), venues used
+// before, quotations on file, and the three payment terms the bot uses.
+
+// The same wording the Telegram interview writes (lib/invoice-intake.ts TERMS).
+const TERMS: { key: InvoiceForm['termsKey']; label: string; text: string; days?: number }[] = [
+  {
+    key: 'half',
+    label: '50% deposit, 50% on delivery',
+    text: 'A non-refundable deposit of 50% is required to commence the work\nremaining 50% balance is due upon project delivered and signed off',
+  },
+  { key: 'ondelivery', label: 'Full payment on delivery', text: 'Full payment is due upon delivery of the content' },
+  { key: 'net30', label: 'Within 30 days', text: 'Payment to be initiated within 30 days of posting', days: 30 },
+  { key: 'custom', label: 'Other — write my own', text: '' },
+]
+const CURRENCIES = ['MYR', 'USD', 'SGD', 'EUR', 'RMB'] as const
+
+const addDays = (iso: string, n: number) => {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+const fmt = (n: number, cur: string) => `${cur} ${n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+type Phase = 'form' | 'rendering' | 'preview' | 'saving'
+
+export default function CreateInvoice({
+  options,
+  disabled,
+  disabledReason,
+  onSaved,
+}: {
+  options: FormOptions
+  disabled?: boolean
+  disabledReason?: string
+  onSaved: (no: string) => void
+}) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const [phase, setPhase] = useState<Phase>('form')
+  const [error, setError] = useState<string | null>(null)
+  const [preview, setPreview] = useState<{ no: string; preview: RenderPreview } | null>(null)
+
+  const blank = () => ({
+    client: '',
+    contact: '',
+    address: '',
+    reg: '',
+    job: '',
+    venue: '',
+    eventDate: options.today,
+    eventDateLabel: '',
+    eventTime: '',
+    deliverables: '',
+    amount: '',
+    currency: 'MYR' as InvoiceForm['currency'],
+    discount: '',
+    termsKey: 'ondelivery' as InvoiceForm['termsKey'],
+    terms: TERMS[1].text,
+    quotation: '',
+    date: options.today,
+    dueDate: '',
+    dueTouched: false,
+    status: 'waiting' as InvoiceForm['status'],
+  })
+  const [f, setF] = useState(blank)
+  const set = <K extends keyof ReturnType<typeof blank>>(k: K, v: ReturnType<typeof blank>[K]) => setF(s => ({ ...s, [k]: v }))
+
+  const clientByName = useMemo(() => new Map(options.clients.map(c => [c.name.toLowerCase(), c])), [options.clients])
+
+  // Picking a known client fills in what the database already holds for them.
+  const pickClient = (name: string) => {
+    const known = clientByName.get(name.trim().toLowerCase())
+    setF(s => ({
+      ...s,
+      client: name,
+      ...(known ? { contact: known.contact ?? '', address: known.address ?? '', reg: known.reg ?? '' } : {}),
+    }))
+  }
+
+  // Terms with a fixed period set the due date, unless it was typed by hand.
+  useEffect(() => {
+    if (f.dueTouched) return
+    const t = TERMS.find(x => x.key === f.termsKey)
+    set('dueDate', t?.days && f.date ? addDays(f.date, t.days) : '')
+  }, [f.termsKey, f.date, f.dueTouched])
+
+  const amount = Number(f.amount) || 0
+  const discount = Number(f.discount) || 0
+  const net = Math.max(amount - discount, 0)
+  const known = clientByName.get(f.client.trim().toLowerCase())
+
+  const toForm = (): InvoiceForm => ({
+    client: { name: f.client.trim(), contact: f.contact, address: f.address.replace(/\s*\n\s*/g, ', '), reg: f.reg },
+    job: f.job,
+    venue: f.venue,
+    eventDate: f.eventDate || undefined,
+    eventDateLabel: f.eventDateLabel || undefined,
+    eventTime: f.eventTime || undefined,
+    deliverables: f.deliverables.split('\n'),
+    amount,
+    currency: f.currency,
+    discount: discount || undefined,
+    termsKey: f.termsKey,
+    terms: f.terms,
+    quotation: f.quotation || undefined,
+    date: f.date,
+    dueDate: f.dueDate || undefined,
+    status: f.status,
+  })
+
+  const open = () => {
+    setError(null)
+    setPhase('form')
+    dialog.current?.showModal()
+  }
+
+  // Closing with a preview on screen means "no" — never leave a stray open edit.
+  const close = async () => {
+    if (phase === 'rendering' || phase === 'saving') return
+    if (preview) {
+      const p = preview.preview
+      setPreview(null)
+      discardInvoice(p).catch(() => {})
+    }
+    dialog.current?.close()
+  }
+
+  const generate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setPhase('rendering')
+    const res = await previewInvoice(toForm()).catch(err => ({ ok: false as const, error: String(err) }))
+    if (!res.ok) {
+      setError(res.error)
+      setPhase('form')
+      return
+    }
+    setPreview({ no: res.no, preview: res.preview })
+    setPhase('preview')
+  }
+
+  const backToEdit = async () => {
+    if (preview) discardInvoice(preview.preview).catch(() => {})
+    setPreview(null)
+    setPhase('form')
+  }
+
+  const save = async () => {
+    if (!preview) return
+    setError(null)
+    setPhase('saving')
+    const res = await saveInvoice(toForm(), preview.no, preview.preview).catch(err => ({ ok: false as const, error: String(err) }))
+    if (!res.ok) {
+      setError(res.error)
+      // A taken number means the preview is gone; anything else can be retried.
+      if (/was taken/.test(res.error)) {
+        setPreview(null)
+        setPhase('form')
+      } else setPhase('preview')
+      return
+    }
+    setPreview(null)
+    setF(blank())
+    dialog.current?.close()
+    setPhase('form')
+    onSaved(res.no)
+  }
+
+  const busy = phase === 'rendering' || phase === 'saving'
+
+  return (
+    <>
+      <button type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
+        <Icon name="plus" /> Create invoice
+      </button>
+
+      <dialog
+        ref={dialog}
+        className="idt-dialog idt"
+        aria-labelledby="idt-dialog-title"
+        onCancel={e => {
+          e.preventDefault()
+          close()
+        }}
+      >
+        <div className="idt-dialog-head">
+          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : 'Create invoice'}</h2>
+          <button type="button" className="idt-act" onClick={close} aria-label="Close" disabled={busy}>
+            <Icon name="close" />
+          </button>
+        </div>
+
+        {phase === 'rendering' ? (
+          <div className="idt-dialog-body">
+            <div className="idt-wait" role="status">
+              <Icon name="refresh" />
+              <div>
+                <b>Drawing the invoice in Canva…</b>
+                <br />
+                Copying the template and filling it in. About 15 seconds.
+              </div>
+            </div>
+          </div>
+        ) : phase === 'preview' || phase === 'saving' ? (
+          <>
+            <div className="idt-dialog-body">
+              {error ? (
+                <p className="idt-error" role="alert">
+                  <Icon name="alert" /> {error}
+                </p>
+              ) : null}
+              <div className="idt-preview">
+                <div className="idt-preview-img">
+                  {preview?.preview.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={preview.preview.previewUrl} alt={`Preview of invoice ${preview.no}`} />
+                  ) : (
+                    <div className="idt-wait">Canva sent no preview image.</div>
+                  )}
+                </div>
+                <div>
+                  <dl>
+                    <dt>Number</dt>
+                    <dd className="idt-no">{preview?.no}</dd>
+                    <dt>Client</dt>
+                    <dd>{f.client}</dd>
+                    <dt>Job</dt>
+                    <dd>{f.job}</dd>
+                    <dt>Total</dt>
+                    <dd className="idt-num">
+                      <b>{fmt(net, f.currency)}</b>
+                      {discount ? <span className="idt-sub">after {fmt(discount, f.currency)} discount</span> : null}
+                    </dd>
+                    <dt>Dated</dt>
+                    <dd>{f.date}</dd>
+                    <dt>Due</dt>
+                    <dd>{f.dueDate || '—'}</dd>
+                    <dt>Payment</dt>
+                    <dd>{f.status === 'paid' ? 'Already paid' : f.status === 'waiting' ? 'Awaiting payment' : 'Not tracked'}</dd>
+                  </dl>
+                  <p className="note">
+                    Nothing is saved yet. <b>Save invoice</b> keeps this Canva design, files it in Canva&apos;s
+                    Invoices ({f.date.slice(0, 4)}) folder and adds the invoice to your records. Uploading the PDF to
+                    Google Drive is a separate step on the invoice&apos;s row.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="idt-dialog-foot">
+              <button type="button" className="idt-btn" onClick={backToEdit} disabled={busy}>
+                <Icon name="undo" /> Back to edit
+              </button>
+              <button type="button" className="idt-btn" onClick={close} disabled={busy}>
+                Discard
+              </button>
+              <button type="button" className="idt-btn primary" onClick={save} disabled={busy}>
+                <Icon name="check" /> {phase === 'saving' ? 'Saving…' : 'Save invoice'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <form onSubmit={generate}>
+            <div className="idt-dialog-body">
+              {error ? (
+                <p className="idt-error" role="alert">
+                  <Icon name="alert" /> {error}
+                </p>
+              ) : null}
+              <div className="idt-form">
+                <div className="idt-section">Client</div>
+                <div className="idt-field">
+                  <label htmlFor="ci-client">Company</label>
+                  <input
+                    id="ci-client"
+                    list="ci-clients"
+                    required
+                    autoComplete="off"
+                    value={f.client}
+                    onChange={e => pickClient(e.target.value)}
+                    placeholder="Start typing — known clients fill in their details"
+                  />
+                  <datalist id="ci-clients">
+                    {options.clients.map(c => (
+                      <option key={c.name} value={c.name} />
+                    ))}
+                  </datalist>
+                  <span className="hint">{f.client.trim() ? (known ? 'On file — details filled in' : 'New client — saved for next time') : ' '}</span>
+                </div>
+                <div className="idt-field">
+                  <label htmlFor="ci-reg">
+                    Registration no. <span className="opt">(optional)</span>
+                  </label>
+                  <input id="ci-reg" value={f.reg} onChange={e => set('reg', e.target.value)} placeholder="e.g. 201901012345" />
+                </div>
+                <div className="idt-field">
+                  <label htmlFor="ci-contact">
+                    Attention <span className="opt">(optional)</span>
+                  </label>
+                  <input id="ci-contact" value={f.contact} onChange={e => set('contact', e.target.value)} placeholder="Contact person" />
+                </div>
+                <div className="idt-field">
+                  <label htmlFor="ci-address">Address</label>
+                  <textarea
+                    id="ci-address"
+                    rows={2}
+                    value={f.address}
+                    onChange={e => set('address', e.target.value)}
+                    placeholder="Street, postcode city, country"
+                  />
+                </div>
+
+                <div className="idt-section">Job</div>
+                <div className="idt-field">
+                  <label htmlFor="ci-job">Job name</label>
+                  <input id="ci-job" required value={f.job} onChange={e => set('job', e.target.value)} placeholder="e.g. KLCC Drone Show" />
+                </div>
+                <div className="idt-field">
+                  <label htmlFor="ci-venue">
+                    Venue <span className="opt">(optional)</span>
+                  </label>
+                  <input id="ci-venue" list="ci-venues" value={f.venue} onChange={e => set('venue', e.target.value)} />
+                  <datalist id="ci-venues">
+                    {options.venues.map(v => (
+                      <option key={v} value={v} />
+                    ))}
+                  </datalist>
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-edate">Job date</label>
+                  <input id="ci-edate" type="date" value={f.eventDate} onChange={e => set('eventDate', e.target.value)} />
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-elabel">
+                    Print date as <span className="opt">(optional)</span>
+                  </label>
+                  <input
+                    id="ci-elabel"
+                    value={f.eventDateLabel}
+                    onChange={e => set('eventDateLabel', e.target.value)}
+                    placeholder="1st to 3rd Sept 2026"
+                  />
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-time">
+                    Time <span className="opt">(optional)</span>
+                  </label>
+                  <input id="ci-time" value={f.eventTime} onChange={e => set('eventTime', e.target.value)} placeholder="4 hours (4pm – 8pm)" />
+                </div>
+                <div className="idt-field s6">
+                  <label htmlFor="ci-deliv">Scope of work — one per line</label>
+                  <textarea
+                    id="ci-deliv"
+                    required
+                    rows={3}
+                    value={f.deliverables}
+                    onChange={e => set('deliverables', e.target.value)}
+                    placeholder={'1 x IG reel synced to TikTok\n1 x IG story'}
+                  />
+                </div>
+
+                <div className="idt-section">Money</div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-cur">Currency</label>
+                  <select id="ci-cur" value={f.currency} onChange={e => set('currency', e.target.value as InvoiceForm['currency'])}>
+                    {CURRENCIES.map(c => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-amount">Price</label>
+                  <input
+                    id="ci-amount"
+                    type="number"
+                    inputMode="decimal"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    value={f.amount}
+                    onChange={e => set('amount', e.target.value)}
+                  />
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-disc">
+                    Discount <span className="opt">(own line)</span>
+                  </label>
+                  <input
+                    id="ci-disc"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={f.discount}
+                    onChange={e => set('discount', e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <p className="idt-total">
+                  Invoice total <b>{fmt(net, f.currency)}</b>
+                  {f.currency !== 'MYR' ? ' — kept out of ringgit totals' : ''}
+                </p>
+                <div className="idt-field">
+                  <label htmlFor="ci-terms">Payment terms</label>
+                  <select
+                    id="ci-terms"
+                    value={f.termsKey}
+                    onChange={e => {
+                      const t = TERMS.find(x => x.key === e.target.value)!
+                      setF(s => ({ ...s, termsKey: t.key, terms: t.key === 'custom' ? '' : t.text }))
+                    }}
+                  >
+                    {TERMS.map(t => (
+                      <option key={t.key} value={t.key}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="idt-field">
+                  <label htmlFor="ci-status">Payment status</label>
+                  <select id="ci-status" value={f.status} onChange={e => set('status', e.target.value as InvoiceForm['status'])}>
+                    <option value="waiting">Awaiting payment</option>
+                    <option value="paid">Already paid</option>
+                    <option value="issued">Don&apos;t track payment</option>
+                  </select>
+                </div>
+                {f.termsKey === 'custom' ? (
+                  <div className="idt-field s6">
+                    <label htmlFor="ci-tterms">Terms as printed</label>
+                    <textarea id="ci-tterms" required rows={2} value={f.terms} onChange={e => set('terms', e.target.value)} />
+                  </div>
+                ) : null}
+
+                <div className="idt-section">Dates &amp; reference</div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-date">Invoice date</label>
+                  <input id="ci-date" type="date" required value={f.date} onChange={e => set('date', e.target.value)} />
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-due">
+                    Due date <span className="opt">(optional)</span>
+                  </label>
+                  <input
+                    id="ci-due"
+                    type="date"
+                    min={f.date}
+                    value={f.dueDate}
+                    onChange={e => setF(s => ({ ...s, dueDate: e.target.value, dueTouched: true }))}
+                  />
+                </div>
+                <div className="idt-field s2">
+                  <label htmlFor="ci-quote">
+                    Quotation ref <span className="opt">(optional)</span>
+                  </label>
+                  <input id="ci-quote" list="ci-quotes" value={f.quotation} onChange={e => set('quotation', e.target.value)} />
+                  <datalist id="ci-quotes">
+                    {options.quotations.map(q => (
+                      <option key={q.no} value={q.no}>
+                        {q.client}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+            </div>
+            <div className="idt-dialog-foot">
+              <span className="idt-spacer">The number is issued automatically.</span>
+              <button type="button" className="idt-btn" onClick={close}>
+                Cancel
+              </button>
+              <button type="submit" className="idt-btn primary">
+                <Icon name="eye" /> Preview in Canva
+              </button>
+            </div>
+          </form>
+        )}
+      </dialog>
+    </>
+  )
+}
