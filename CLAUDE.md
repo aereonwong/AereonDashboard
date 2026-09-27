@@ -152,3 +152,7 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Folder move (27 Sep 2026)
+The project folder was renamed from `~/cashflowos-aereon` to `~/AereonDashboard`. A symlink at the old path
+still points here so old references keep working; it can be deleted once nothing uses it.
