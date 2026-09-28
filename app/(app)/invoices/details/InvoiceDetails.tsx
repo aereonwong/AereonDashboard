@@ -6,7 +6,7 @@ import Icon from '@/app/_components/Icon'
 import { statusFigures, type DetailRow, type FormOptions, type Payment } from '@/lib/invoice-figures'
 import type { DriveStatus } from '@/lib/invoice-drive'
 import { markPaid, markUnpaid } from '@/lib/v3/payments'
-import { uploadToDrive } from '../actions'
+import { uploadToDrive, reuploadToDrive } from '../actions'
 import CreateInvoice from '../CreateInvoice'
 import '../invoices.css'
 
@@ -108,15 +108,21 @@ export default function InvoiceDetails({
   const sortBy = (key: SortKey) => setSort(x => ({ key, desc: x.key === key ? !x.desc : key !== 'client' }))
   const ariaSort = (key: SortKey) => (sort.key === key ? (sort.desc ? 'descending' : 'ascending') : undefined)
 
-  const withBusy = async (id: number, fn: () => Promise<{ ok: boolean; error?: string }>, done: string) => {
+  const withBusy = async (id: number, fn: () => Promise<{ ok: boolean; error?: string; warning?: string }>, done: string) => {
     setBusy(b => new Set(b).add(id))
-    const res = await fn().catch(e => ({ ok: false, error: String(e) }))
+    const res: { ok: boolean; error?: string; warning?: string } = await fn().catch(e => ({ ok: false, error: String(e) }))
     setBusy(b => {
       const n = new Set(b)
       n.delete(id)
       return n
     })
-    setToast(res.ok ? { text: done } : { text: res.error ?? 'Something went wrong', bad: true })
+    setToast(
+      res.ok
+        ? res.warning
+          ? { text: res.warning, bad: true }
+          : { text: done }
+        : { text: res.error ?? 'Something went wrong', bad: true },
+    )
     startTransition(() => router.refresh())
   }
 
@@ -307,15 +313,28 @@ export default function InvoiceDetails({
                   </td>
                   <td>
                     {r.drive === 'uploaded' ? (
-                      <a
-                        className="idt-drive uploaded"
-                        href={r.driveUrl ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Open the PDF in Google Drive"
-                      >
-                        <Icon name="drive" /> In Drive
-                      </a>
+                      <span className="idt-drive uploaded">
+                        <a href={r.driveUrl ?? undefined} target="_blank" rel="noopener noreferrer" title="Open the PDF in Google Drive">
+                          <Icon name="drive" /> In Drive
+                        </a>
+                        <button
+                          type="button"
+                          className={`idt-act idt-reup${isBusy ? ' busy' : ''}`}
+                          disabled={isBusy || !!locked || !ready || !r.hasDesign}
+                          onClick={() => {
+                            if (!confirm(`Re-upload ${r.no}?\n\nThe Canva design is exported again and uploaded to Google Drive. The old PDF is moved to Drive's trash (kept 30 days).`)) return
+                            withBusy(r.id, () => reuploadToDrive(r.id), `${r.no} re-uploaded — old PDF moved to Drive trash`)
+                          }}
+                          aria-label={`Re-upload ${r.no} to Google Drive`}
+                          title={
+                            locked ??
+                            offline ??
+                            (!r.hasDesign ? 'No Canva design linked — nothing to re-upload' : 'Re-upload from Canva after a fix (replaces the Drive PDF)')
+                          }
+                        >
+                          <Icon name="refresh" />
+                        </button>
+                      </span>
                     ) : (
                       <span className={`idt-drive ${r.drive}`}>
                         <button

@@ -10,6 +10,7 @@ import type { Rec } from './records'
 //     uploaded_at: ISO timestamp
 //     source:      'dashboard' | 'reconciled' | 'bot'
 //     error:       last failure, when status = 'failed'
+//     replaced_file_id: the older PDF a re-upload moved to Drive's trash
 //   }
 //
 // Filled three ways: the dashboard's upload button (lib/invoice-drive-upload.ts),
@@ -27,6 +28,7 @@ export type DriveMeta = {
   started_at?: string
   source?: 'dashboard' | 'reconciled' | 'bot'
   error?: string
+  replaced_file_id?: string
 }
 
 /** An upload still "uploading" after this long died mid-way; allow a retry. */
