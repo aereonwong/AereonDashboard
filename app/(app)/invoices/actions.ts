@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { supabase, supabaseConfigured } from '@/lib/supabase'
+import { supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
-import { invoiceRow, nextInvoiceNo, rememberClient, TERMS, type Draft, type Currency } from '@/lib/invoice-intake'
+import { invoiceRow, nextInvoiceNo, fileInvoice, TERMS, type Draft, type Currency } from '@/lib/invoice-intake'
 import { startRender, commitRender, discardRender, type RenderPreview } from '@/lib/invoice-canva'
 import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
@@ -136,34 +136,23 @@ export async function saveInvoice(form: InvoiceForm, no: string, preview: Render
     return fail(`Canva could not save the design: ${msg(e)}. Generate the preview again.`)
   }
 
-  const draft = toDraft(form)
-  const row = invoiceRow(draft, no)
   const now = new Date().toISOString()
-  const { data, error } = await supabase
-    .from('records')
-    .insert({
-      ...row,
-      status: form.status,
-      due_date: form.dueDate || null,
-      meta: {
-        ...row.meta,
-        source: 'dashboard',
-        payment_tracked: form.status !== 'issued',
-        paid_at: form.status === 'paid' ? now : undefined,
-        canva_design: preview.designId,
-        canva_url: preview.viewUrl ?? `https://www.canva.com/design/${preview.designId}/view`,
-        render: { status: 'done', design_id: preview.designId, rendered_at: now, source: 'dashboard' },
-      },
-    })
-    .select('id')
-    .single()
-
-  if (error || !data) {
-    return fail(`The Canva design was saved (${preview.designId}) but the invoice row was not: ${error?.message ?? 'unknown error'}`)
-  }
-  if (draft.client?.name) await rememberClient(draft.client).catch(() => {})
+  const filed = await fileInvoice(toDraft(form), {
+    no,
+    status: form.status,
+    dueDate: form.dueDate || null,
+    meta: {
+      source: 'dashboard',
+      payment_tracked: form.status !== 'issued',
+      paid_at: form.status === 'paid' ? now : undefined,
+      canva_design: preview.designId,
+      canva_url: preview.viewUrl ?? `https://www.canva.com/design/${preview.designId}/view`,
+      render: { status: 'done', design_id: preview.designId, rendered_at: now, source: 'dashboard' },
+    },
+  })
+  if (!filed) return fail(`The Canva design was saved (${preview.designId}) but the invoice row was not.`)
   refresh()
-  return { ok: true, id: data.id, no }
+  return { ok: true, id: filed.id, no }
 }
 
 /** Aereon rejected the preview: nothing is saved, the copy is parked for deletion. */

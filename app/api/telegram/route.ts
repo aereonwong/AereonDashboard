@@ -76,7 +76,7 @@ const HELP_CARD =
   `🧾 <b>/invoice</b> and <b>/quote</b> — the same eight questions, one files an invoice, ` +
   `the other a quotation. Numbers are issued by the system (SYCP-YYYYMM-NNN and SYCP-Q-YYYYMM-NNN, ` +
   `each restarting every month), so they can never clash. Quotations stay out of your income totals. ` +
-  `<code>/pending</code> lists documents still waiting to be drawn in Canva.\n\n` +
+  `<code>/pending</code> lists older documents still waiting to be drawn in Canva (new ones are drawn as you create them).\n\n` +
   `I can also <b>DO</b> things — "log RM45 Grab", "add task chase supplier Friday", ` +
   `"add lead Angela 8000", "mark ABC invoice paid", "move Koochester to appointment".\n` +
   `Small stuff I just do (reply <code>/undo-&lt;id&gt;</code> to reverse). Money stuff I propose ` +
@@ -157,9 +157,14 @@ async function handleCallback(cb: any): Promise<Response> {
 
   // Invoice interview buttons own the `inv:` namespace — handled before the
   // approve/reject parser, which would otherwise reject them as unknown.
+  // They run inside after(): drawing in Canva takes ~15s, and Telegram must get
+  // its 200 first or it retries the tap.
   if (data.startsWith('inv:')) {
     await answerCallbackQuery(cbId)
-    if (chatId) await handleInvoiceCallback(chatId, data)
+    if (chatId)
+      after(() =>
+        handleInvoiceCallback(chatId, data).catch(e => sendMessage(chatId, `⚠️ ${e instanceof Error ? e.message : e}`)),
+      )
     return Response.json({ ok: true })
   }
 
