@@ -4,28 +4,16 @@
     {
       "name": "AereonDashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "--",
-        "-p",
-        "3007"
-      ],
-      "port": 3007
+      "runtimeArgs": ["run", "dev"],
+      "port": 3007,
+      "autoPort": true
     },
     {
       "name": "AereonDashboard (no passcode)",
       "runtimeExecutable": "env",
-      "runtimeArgs": [
-        "APP_PASSCODE=",
-        "npm",
-        "run",
-        "dev",
-        "--",
-        "-p",
-        "3008"
-      ],
-      "port": 3008
+      "runtimeArgs": ["APP_PASSCODE=", "npm", "run", "dev"],
+      "port": 3008,
+      "autoPort": true
     }
   ]
 }
