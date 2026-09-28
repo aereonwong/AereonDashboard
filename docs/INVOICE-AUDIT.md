@@ -138,3 +138,19 @@ three jobs — now appears under its real name, which matters because it is a to
 last twelve months.
 
 Totals are unchanged: 185 invoices, RM 579,957.47, 131 clients.
+
+## Job date (`meta.job_date`), added 28 Sep 2026
+
+The date the job actually happened, beside the invoice date. When a job runs
+over several days (rehearsal + show, a trip), `job_date` is the **final** day,
+since that's usually the finale. Stored as YYYY-MM-DD.
+
+- New invoices from the bot or the Create Invoice form write it automatically
+  (the last of `event_dates`, else `event_date`).
+- 2026 invoices were backfilled: 11 bot-raised ones from their stored event
+  dates, 17 Canva imports read by hand from the design text. The other 28 2026
+  Canva invoices state no usable day ("Dec 2025", "final week of August", or
+  nothing at all) and were left blank on purpose, not guessed. SYCP-202604-003
+  (Sabah MATTA) uses its stated posting date; SYCP-202601-013 (Merdeka 118
+  licence) was left blank because its only date is when the licence was signed.
+- Invoices from 2021 to 2025 have not been backfilled yet.

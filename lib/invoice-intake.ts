@@ -369,6 +369,8 @@ export function invoiceRow(draft: Draft, no: string) {
       event_date: draft.eventDate,
       event_dates: draft.eventDates && draft.eventDates.length > 1 ? draft.eventDates : undefined,
       event_date_label: draft.eventDateLabel || undefined,
+      // The job date the numbers use: the LAST day, since that's usually the finale.
+      job_date: draft.eventDates?.[draft.eventDates.length - 1] ?? draft.eventDate,
       event_time: draft.eventTime,
       terms: draft.terms,
       quotation_no: draft.quotation || undefined,
