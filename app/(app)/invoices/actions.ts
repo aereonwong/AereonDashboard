@@ -5,7 +5,7 @@ import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
 import { invoiceRow, nextInvoiceNo, rememberClient, TERMS, type Draft, type Currency } from '@/lib/invoice-intake'
 import { startRender, commitRender, discardRender, type RenderPreview } from '@/lib/invoice-canva'
-import { uploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
+import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
 
 // 👉 The dashboard's invoice buttons. Each goes database → app → (Canva or
@@ -13,6 +13,7 @@ import { composioReady } from '@/lib/composio-exec'
 //
 //   Create Invoice:  previewInvoice → (Aereon looks) → saveInvoice | discardInvoice
 //   Upload to Drive: uploadToDrive — a separate, manual click, never automatic.
+//   Re-upload:       reuploadToDrive — after a hand fix in Canva, replace the PDF.
 
 export type InvoiceForm = {
   client: { name: string; contact?: string; address?: string; reg?: string }
@@ -177,6 +178,17 @@ export async function uploadToDrive(id: number) {
   if (blocked) return blocked
   if (!composioReady()) return fail('Google Drive is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
   const res = await uploadInvoiceToDrive(id)
+  refresh()
+  return res
+}
+
+/** After a hand fix in the Canva design: export again, upload the new PDF, then
+ *  move the old Drive copy to trash. Manual click only, like uploadToDrive. */
+export async function reuploadToDrive(id: number) {
+  const blocked = await guard()
+  if (blocked) return blocked
+  if (!composioReady()) return fail('Google Drive is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
+  const res = await reuploadInvoiceToDrive(id)
   refresh()
   return res
 }

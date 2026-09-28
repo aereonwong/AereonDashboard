@@ -124,6 +124,9 @@
 .idt-drive.failed { color: var(--i-neg); }
 .idt-drive.uploading { color: var(--i-warn); }
 .idt-drive .ico-svg { width: 15px; height: 15px; }
+.idt-drive.uploaded a { display: inline-flex; align-items: center; gap: 4px; color: inherit; }
+.idt-reup { width: 26px; height: 26px; opacity: .55; }
+.idt-reup:hover, .idt-reup:focus-visible, .idt-reup.busy { opacity: 1; }
 
 .idt-empty { padding: 28px; text-align: center; color: var(--i-dim); }
 .idt-toast {
