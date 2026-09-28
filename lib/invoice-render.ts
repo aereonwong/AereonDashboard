@@ -118,6 +118,43 @@ const longDate = (iso: string) =>
     timeZone: 'UTC',
   })
 
+/** Break a client address into short lines instead of one line running into
+ *  the payment-info block on the right. Confirmed with Aereon on 27 Sep 2026
+ *  against his own manual line breaks for Fusion Works Sdn Bhd:
+ *
+ *    B-5-1, Ativo Plaza, No. 1, Jln. PJU 9/1,
+ *    Damansara Avenue, Bandar Sri Damansara,
+ *    52200 Kuala Lumpur, Malaysia
+ *
+ *  The postcode (and everything after it — city, state, country) always stays
+ *  together on its own final line. Everything before that is greedily packed,
+ *  comma by comma, into lines no longer than 42 characters — the width that
+ *  reproduced his exact line breaks above. */
+const formatAddress = (address: string): string => {
+  // Already broken into lines by hand (e.g. Dex Ventures') — keep them as typed.
+  if (address.includes('\n')) return address
+  const parts = address.split(',').map(p => p.trim()).filter(Boolean)
+  const postcodeIdx = parts.findIndex(p => /\b\d{5}\b/.test(p))
+  const body = postcodeIdx === -1 ? parts : parts.slice(0, postcodeIdx)
+  const tail = postcodeIdx === -1 ? [] : parts.slice(postcodeIdx)
+
+  const MAX_LINE = 42
+  const lines: string[] = []
+  let current = ''
+  for (const part of body) {
+    const candidate = current ? `${current}, ${part}` : part
+    if (candidate.length > MAX_LINE && current) {
+      lines.push(`${current},`)
+      current = part
+    } else {
+      current = candidate
+    }
+  }
+  if (current) lines.push(tail.length ? `${current},` : current)
+  if (tail.length) lines.push(tail.join(', '))
+  return lines.join('\n')
+}
+
 export type Operation = Record<string, unknown>
 
 const fill = (locator: string, token: string, value: string): Operation => ({
@@ -143,6 +180,8 @@ const strip = (locator: string): Operation[] => [
 export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[] {
   const m = rec.meta ?? {}
   const isQuote = kind === 'quotation'
+  // Laid out once, so the blank-line check below counts the lines actually printed.
+  const address = formatAddress(String(m.address ?? ''))
   const cur = String(m.currency ?? 'MYR')
   const net = Number(rec.amount ?? 0)
   const list = Number(m.list_price ?? net)
@@ -177,7 +216,7 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // Client — ATTN and company stay bold, the address stays normal. The
     // registration number is appended to the company name, the way it appears
     // on the client's own letterhead, rather than living in a field of its own.
-    fill(FIELDS.client, 'CLIENT_ADDRESS', String(m.address ?? '')),
+    fill(FIELDS.client, 'CLIENT_ADDRESS', address),
     fill(FIELDS.client, 'CONTACT', String(m.contact ?? '')),
     // A reg number that already carries its own parenthetical (e.g. a company
     // with both a new and an old registration number) isn't wrapped again —
@@ -197,7 +236,7 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // this box's own blank line only when it's an invoice AND the address runs
     // to 3+ lines. A quotation never drops it — its header keeps its own blank
     // line, so the two stay level no matter how long the address is.
-    ...(!isQuote && String(m.address ?? '').split('\n').length >= 3
+    ...(!isQuote && address.split('\n').length >= 3
       ? [{ type: 'find_and_replace_text', locator_id: FIELDS.client, find_text: '\nATTN:', replace_text: 'ATTN:' }]
       : []),
     ...strip(FIELDS.client),
