@@ -9,6 +9,7 @@ export type Invoice = {
   id: number
   no: string
   date: string // YYYY-MM-DD
+  jobDate?: string // YYYY-MM-DD, the job's final day (meta.job_date) — only where the invoice states one
   client: string
   contact?: string
   address?: string
@@ -39,6 +40,7 @@ export function toInvoices(rows: Rec[]): Invoice[] {
       id: r.id,
       no: String(r.meta?.invoice_no),
       date: String(r.meta?.invoice_date || r.created_at).slice(0, 10),
+      jobDate: r.meta?.job_date ? String(r.meta.job_date) : undefined,
       client: String(r.meta?.customer || '—'),
       contact: r.meta?.contact ? String(r.meta.contact) : undefined,
       address: r.meta?.address ? String(r.meta.address) : undefined,
