@@ -12,6 +12,18 @@ export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from
 
 const PAID = ['paid', 'received']
 
+/** The link Invoice Details opens: `meta.canva_url` when it's there (the
+ *  dashboard's own Create Invoice writes it), else whatever the Telegram bot
+ *  recorded instead — `render.view_url`, or a canonical `/design/<id>/view`
+ *  built from whichever field carries the design id. Same fields `hasDesign`
+ *  below already checks; this just turns them into an openable URL too. */
+function canvaUrlOf(m: Rec['meta']): string | null {
+  if (m?.canva_url) return String(m.canva_url)
+  if (m?.render?.view_url) return String(m.render.view_url)
+  const id = m?.canva_design ?? m?.render?.design_id
+  return id ? `https://www.canva.com/design/${id}/view` : null
+}
+
 export function paymentOf(r: Pick<Rec, 'status' | 'due_date'>, today = new Date().toISOString().slice(0, 10)): Payment {
   const s = (r.status || '').toLowerCase()
   if (PAID.includes(s)) return 'paid'
@@ -39,7 +51,7 @@ export function toDetailRows(rows: Rec[], today?: string): DetailRow[] {
       drive: driveStatus(r),
       driveUrl: d?.url ?? null,
       driveError: d?.status === 'failed' ? d.error ?? null : null,
-      canvaUrl: i.url ?? null,
+      canvaUrl: canvaUrlOf(m),
       hasDesign: !!(m.canva_design || m.render?.design_id || /\/design\/D/.test(String(m.canva_url ?? ''))),
       createdAt: String(r.created_at).slice(0, 10),
       source: String(m.source ?? '—'),

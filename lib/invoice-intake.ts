@@ -347,7 +347,7 @@ export function invoiceRow(draft: Draft, no: string) {
     // brief can ever mistake a quoted figure for money earned — the mistake the
     // old Canva folder made by keeping quotations beside invoices.
     category: isQuote ? 'doc' : 'cash_in',
-    status: isQuote ? 'quotation' : 'issued',
+    status: isQuote ? 'quotation' : 'waiting',
     amount: net,
     due_date: null as string | null,
     created_at: `${date}T09:00:00+08:00`,
