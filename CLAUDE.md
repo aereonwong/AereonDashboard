@@ -99,6 +99,39 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
 
+## Motion skills (installed 2 Oct 2026)
+
+From https://github.com/kevinbadi/claude-motion-skills (an index of 16 packs by iart.ai, MIT).
+Two packs copied into `.claude/skills/` — load on new chat start:
+
+- **Web motion** (`iart-ai/web-animation-skills`): `gsap-web`, `micro-interaction`,
+  `accessible-animation`, `svg-animation`, `lottie-animation`, `page-transition-animation`,
+  `glassmorphism`, `ascii-animation`, `60fps-animation`.
+- **Motion design** (`iart-ai/motion-design-skills`): `animation-principles`, `motion-art-direction`,
+  `motion-background`, `color-motion`, `logo-animation`, `shot-composition`, `remotion-video`,
+  `beat-sync-editing`, `after-effects`.
+
+**Use them when implementing any animation, transition, hover/scroll effect or video in the app.**
+Read the matching `SKILL.md` first, honour `prefers-reduced-motion` (`accessible-animation`), keep
+animation to `transform`/`opacity` (`60fps-animation`), and follow the skill's render → screenshot →
+check loop before claiming it works.
+
+Ten more packs installed for content/video work (not dashboard UI) — read the matching `SKILL.md` first:
+
+- **Short-form / YouTube:** `short-form-video`, `caption-animation`, `countdown-video`, `lower-thirds`,
+  `audiogram`, `youtube-intro-outro`.
+- **Ads / products:** `ad-creative-video`, `launch-video`, `testimonial-video`, `promo-video`,
+  `product-demo-video`, `photo-slideshow`.
+- **Data / explainers:** `chart-animation`, `animated-infographic`, `presentation-video`,
+  `explainer-video`, `diagram-animation`, `isometric-animation`, `whiteboard-animation`, `wrapped-video`.
+- **Maps / type / 3D:** `map-animation` (travel routes), `kinetic-typography`, `threejs-animation`,
+  `shader-glsl`, `particle-system`.
+- **Client work (SY Creative):** `creative-brief`, `brand-motion-guidelines`, `client-revisions`,
+  `motion-pricing`, `video-delivery-specs`.
+
+Skipped as niche: `text-message-video-skills`, `manim-skills`, `generative-illustration-skills`,
+`javascript-animation-skills` — add with `npx skills add iart-ai/<pack-name>`.
+
 ## Reading documents
 
 `markitdown <file>` converts PDF, Word, Excel, PowerPoint, CSV, HTML and images into Markdown.
