@@ -9,8 +9,7 @@ customised since; older docs may still mention the template by its original name
 platform requires lowercase it is `aereondashboard` (the Vercel project, the npm package).
 **Aereon Dashboard** (with a space) is the display name, for anything a person reads.
 
-**Aereon is not a developer.** Explain in plain words, avoid jargon, do the work rather than
-handing over instructions — except for passwords and secret keys, which are always theirs to type.
+**Aereon have developer background.** Optimise the code and reasoning, execute the work when possible without keep asking instructions unless required — except for passwords and secret keys, which are always theirs to type.
 
 ## Live
 
