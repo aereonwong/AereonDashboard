@@ -153,6 +153,8 @@
 .idt-dialog-head h2 { margin: 0; font-size: 18px; }
 .idt-dialog-body { padding: 18px 20px; }
 .idt-dialog-foot { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--i-line); position: sticky; bottom: 0; background: var(--i-ground); flex-wrap: wrap; }
+.idt-confirm { width: min(520px, calc(100vw - 24px)); }
+.idt-confirm ul { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; line-height: 1.45; }
 .idt-dialog-foot .idt-spacer { margin-right: auto; font-size: 13px; color: var(--i-dim); }
 
 .idt-form { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 14px; }

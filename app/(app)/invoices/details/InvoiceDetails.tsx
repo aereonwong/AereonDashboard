@@ -8,6 +8,7 @@ import type { DriveStatus } from '@/lib/invoice-drive'
 import { markPaid, markUnpaid } from '@/lib/v3/payments'
 import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
+import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
 import '../invoices.css'
 
 // 👉 Invoice Details — the operational table. Every row, filter and figure here
@@ -64,6 +65,10 @@ export default function InvoiceDetails({
   const [busy, setBusy] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState<{ text: string; bad?: boolean } | null>(null)
   const [editing, setEditing] = useState<EditTarget | null>(null)
+  const [ask, setAsk] = useState<ConfirmAsk | null>(null)
+  /** Ask first, run on "yes". */
+  const confirmThen = (a: Omit<ConfirmAsk, 'onConfirm'>, run: () => void) =>
+    setAsk({ ...a, onConfirm: () => (setAsk(null), run()) })
 
   // Keep the filters in the address bar so a refresh or a bookmark keeps them.
   useEffect(() => {
@@ -172,6 +177,8 @@ export default function InvoiceDetails({
           }}
         />
       ) : null}
+
+      {ask ? <ConfirmDialog ask={ask} onCancel={() => setAsk(null)} /> : null}
 
       {!ready && !demo ? (
         <p className="idt-banner" role="status">
@@ -336,8 +343,17 @@ export default function InvoiceDetails({
                           className={`idt-act idt-reup${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready || !r.hasDesign}
                           onClick={() => {
-                            if (!confirm(`Re-upload ${r.no}?\n\nThe Canva design is exported again and uploaded to Google Drive. The old PDF is moved to Drive's trash (kept 30 days).`)) return
-                            withBusy(r.id, () => reuploadToDrive(r.id), `${r.no} re-uploaded — old PDF moved to Drive trash`)
+                            confirmThen(
+                              {
+                                title: `Re-upload ${r.no}?`,
+                                lines: [
+                                  'The Canva design is exported again and uploaded to Google Drive.',
+                                  "The old PDF is moved to Drive's trash (kept 30 days).",
+                                ],
+                                confirmLabel: 'Re-upload',
+                              },
+                              () => withBusy(r.id, () => reuploadToDrive(r.id), `${r.no} re-uploaded — old PDF moved to Drive trash`),
+                            )
                           }}
                           aria-label={`Re-upload ${r.no} to Google Drive`}
                           title={
@@ -396,13 +412,18 @@ export default function InvoiceDetails({
                           className={`idt-act${busy.has(r.id) ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready}
                           onClick={() => {
-                            if (
-                              !confirm(
-                                `Undo the last edit of ${r.no} (made ${r.undo!.at.slice(0, 16).replace('T', ' ')})?\n\nThe invoice goes back exactly as it was before that edit — details, amount and payment status. Its old Canva design comes back, the edited one moves to "TODO: Delete", the old Drive PDF is restored from trash and any PDF uploaded since is trashed.`,
-                              )
+                            confirmThen(
+                              {
+                                title: `Undo the last edit of ${r.no}?`,
+                                lines: [
+                                  `Edited ${r.undo!.at.slice(0, 16).replace('T', ' ')}. The invoice goes back exactly as it was before: details, amount and payment status.`,
+                                  'Canva: the old design comes back to its year folder; the edited one moves to "TODO: Delete".',
+                                  "Google Drive: the old PDF is restored from trash; any PDF uploaded since the edit is trashed.",
+                                ],
+                                confirmLabel: 'Undo edit',
+                              },
+                              () => withBusy(r.id, () => undoEdit(r.id), `${r.no} restored to before the edit`),
                             )
-                              return
-                            withBusy(r.id, () => undoEdit(r.id), `${r.no} restored to before the edit`)
                           }}
                           aria-label={`Undo last edit of ${r.no}`}
                           title={locked ?? offline ?? 'Undo last edit'}

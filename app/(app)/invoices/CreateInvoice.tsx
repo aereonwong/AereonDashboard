@@ -5,6 +5,7 @@ import Icon from '@/app/_components/Icon'
 import type { FormOptions, EditValues } from '@/lib/invoice-figures'
 import type { RenderPreview } from '@/lib/invoice-canva'
 import { previewInvoice, saveInvoice, discardInvoice, previewEdit, saveEdit, type InvoiceForm } from './actions'
+import ConfirmDialog from './ConfirmDialog'
 import './invoices.css'
 
 // 👉 Create Invoice: a form → Canva draws it → Aereon checks the picture → Save.
@@ -64,6 +65,7 @@ export default function CreateInvoice({
   const [phase, setPhase] = useState<Phase>('form')
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ no: string; preview: RenderPreview } | null>(null)
+  const [asking, setAsking] = useState(false)
 
   const blank = () => ({
     client: '',
@@ -181,24 +183,7 @@ export default function CreateInvoice({
 
   const save = async () => {
     if (!preview) return
-    if (
-      edit &&
-      !confirm(
-        [
-          `Replace ${edit.no} with this version?`,
-          '',
-          '• Canva: this new design becomes the invoice; the old one moves to "TODO: Delete".',
-          edit.driveUploaded
-            ? "• Google Drive: the old PDF moves to Drive's trash (kept 30 days) and the row goes back to “Not uploaded” — upload the new PDF from its row."
-            : '• Google Drive: nothing uploaded yet, nothing to remove.',
-          '• Records: amount, dates and payment status update everywhere.',
-          wasPaid ? '\n⚠ This invoice is marked PAID — check the amount still matches what was received.' : '',
-          '',
-          'You can undo this from the invoice’s row.',
-        ].join('\n'),
-      )
-    )
-      return
+    setAsking(false)
     setError(null)
     setPhase('saving')
     const res = await (edit ? saveEdit(edit.id, toForm(), preview.preview, edit.designId) : saveInvoice(toForm(), preview.no, preview.preview)).catch(
@@ -222,6 +207,9 @@ export default function CreateInvoice({
   }
 
   const busy = phase === 'rendering' || phase === 'saving'
+
+  // Edits replace what's in Canva and Drive, so they ask first; a new invoice doesn't.
+  const askThenSave = () => (edit ? setAsking(true) : save())
 
   return (
     <>
@@ -318,7 +306,7 @@ export default function CreateInvoice({
               <button type="button" className="idt-btn" onClick={close} disabled={busy}>
                 Discard
               </button>
-              <button type="button" className="idt-btn primary" onClick={save} disabled={busy}>
+              <button type="button" className="idt-btn primary" onClick={askThenSave} disabled={busy}>
                 <Icon name="check" /> {phase === 'saving' ? 'Saving…' : edit ? 'Save changes' : 'Save invoice'}
               </button>
             </div>
@@ -546,6 +534,26 @@ export default function CreateInvoice({
           </form>
         )}
       </dialog>
+
+      {asking && edit ? (
+        <ConfirmDialog
+          onCancel={() => setAsking(false)}
+          ask={{
+            title: `Replace ${edit.no} with this version?`,
+            lines: [
+              'Canva: this new design becomes the invoice. The old one moves to "TODO: Delete".',
+              edit.driveUploaded
+                ? 'Google Drive: the old PDF moves to Drive\'s trash (kept 30 days) and the row goes back to "Not uploaded". Upload the new PDF from its row.'
+                : 'Google Drive: nothing uploaded yet, nothing to remove.',
+              'Records: amount, dates and payment status update everywhere.',
+              'You can undo this from the invoice\'s row.',
+            ],
+            warning: wasPaid ? 'This invoice is marked paid. Check the amount still matches what was received.' : undefined,
+            confirmLabel: 'Yes, replace',
+            onConfirm: save,
+          }}
+        />
+      ) : null}
     </>
   )
 }
