@@ -6,14 +6,15 @@ import Icon from '@/app/_components/Icon'
 import { statusFigures, type DetailRow, type FormOptions, type Payment } from '@/lib/invoice-figures'
 import type { DriveStatus } from '@/lib/invoice-drive'
 import { markPaid, markUnpaid } from '@/lib/v3/payments'
-import { uploadToDrive, reuploadToDrive } from '../actions'
-import CreateInvoice from '../CreateInvoice'
+import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
+import CreateInvoice, { type EditTarget } from '../CreateInvoice'
+import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
 import '../invoices.css'
 
 // 👉 Invoice Details — the operational table. Every row, filter and figure here
 // comes from the records the server already loaded; filtering and sorting run
 // in the browser, so changing a filter makes no request at all. Only the row
-// actions (Drive upload, PDF, mark paid) reach out, and only when clicked.
+// actions (Drive upload, PDF, mark paid, edit, undo edit) reach out, and only when clicked.
 
 type Filters = { year: string; month: string; client: string; payment: string; drive: string; q: string }
 type SortKey = 'no' | 'date' | 'client' | 'amount' | 'due'
@@ -63,6 +64,11 @@ export default function InvoiceDetails({
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'date', desc: true })
   const [busy, setBusy] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState<{ text: string; bad?: boolean } | null>(null)
+  const [editing, setEditing] = useState<EditTarget | null>(null)
+  const [ask, setAsk] = useState<ConfirmAsk | null>(null)
+  /** Ask first, run on "yes". */
+  const confirmThen = (a: Omit<ConfirmAsk, 'onConfirm'>, run: () => void) =>
+    setAsk({ ...a, onConfirm: () => (setAsk(null), run()) })
 
   // Keep the filters in the address bar so a refresh or a bookmark keeps them.
   useEffect(() => {
@@ -158,6 +164,21 @@ export default function InvoiceDetails({
           }}
         />
       </header>
+
+      {editing ? (
+        <CreateInvoice
+          key={editing.id}
+          options={options}
+          edit={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(no, warning) => {
+            setToast(warning ? { text: warning, bad: true } : { text: `${no} updated. Upload the new PDF to Google Drive from its row.` })
+            router.refresh()
+          }}
+        />
+      ) : null}
+
+      {ask ? <ConfirmDialog ask={ask} onCancel={() => setAsk(null)} /> : null}
 
       {!ready && !demo ? (
         <p className="idt-banner" role="status">
@@ -322,8 +343,17 @@ export default function InvoiceDetails({
                           className={`idt-act idt-reup${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready || !r.hasDesign}
                           onClick={() => {
-                            if (!confirm(`Re-upload ${r.no}?\n\nThe Canva design is exported again and uploaded to Google Drive. The old PDF is moved to Drive's trash (kept 30 days).`)) return
-                            withBusy(r.id, () => reuploadToDrive(r.id), `${r.no} re-uploaded — old PDF moved to Drive trash`)
+                            confirmThen(
+                              {
+                                title: `Re-upload ${r.no}?`,
+                                lines: [
+                                  'The Canva design is exported again and uploaded to Google Drive.',
+                                  "The old PDF is moved to Drive's trash (kept 30 days).",
+                                ],
+                                confirmLabel: 'Re-upload',
+                              },
+                              () => withBusy(r.id, () => reuploadToDrive(r.id), `${r.no} re-uploaded — old PDF moved to Drive trash`),
+                            )
                           }}
                           aria-label={`Re-upload ${r.no} to Google Drive`}
                           title={
@@ -361,6 +391,47 @@ export default function InvoiceDetails({
                   </td>
                   <td>
                     <div className="idt-acts">
+                      <button
+                        type="button"
+                        className="idt-act"
+                        disabled={isBusy || !!locked || !ready || !r.edit || !r.designId}
+                        onClick={() =>
+                          r.edit &&
+                          r.designId &&
+                          setEditing({ id: r.id, no: r.no, designId: r.designId, values: r.edit, driveUploaded: r.drive === 'uploaded' })
+                        }
+                        aria-label={`Edit ${r.no}`}
+                        title={locked ?? offline ?? r.editBlock ?? 'Edit invoice'}
+                      >
+                        <Icon name="edit" />
+                      </button>
+
+                      {r.undo ? (
+                        <button
+                          type="button"
+                          className={`idt-act${busy.has(r.id) ? ' busy' : ''}`}
+                          disabled={isBusy || !!locked || !ready}
+                          onClick={() => {
+                            confirmThen(
+                              {
+                                title: `Undo the last edit of ${r.no}?`,
+                                lines: [
+                                  `Edited ${r.undo!.at.slice(0, 16).replace('T', ' ')}. The invoice goes back exactly as it was before: details, amount and payment status.`,
+                                  'Canva: the old design comes back to its year folder; the edited one moves to "TODO: Delete".',
+                                  "Google Drive: the old PDF is restored from trash; any PDF uploaded since the edit is trashed.",
+                                ],
+                                confirmLabel: 'Undo edit',
+                              },
+                              () => withBusy(r.id, () => undoEdit(r.id), `${r.no} restored to before the edit`),
+                            )
+                          }}
+                          aria-label={`Undo last edit of ${r.no}`}
+                          title={locked ?? offline ?? 'Undo last edit'}
+                        >
+                          <Icon name={busy.has(r.id) ? 'refresh' : 'undo'} />
+                        </button>
+                      ) : null}
+
                       {r.canvaUrl ? (
                         <a className="idt-act" href={r.canvaUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.no} in Canva`} title="Open in Canva">
                           <Icon name="design" />

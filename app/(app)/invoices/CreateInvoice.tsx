@@ -2,15 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Icon from '@/app/_components/Icon'
-import type { FormOptions } from '@/lib/invoice-figures'
+import type { FormOptions, EditValues } from '@/lib/invoice-figures'
 import type { RenderPreview } from '@/lib/invoice-canva'
-import { previewInvoice, saveInvoice, discardInvoice, type InvoiceForm } from './actions'
+import { previewInvoice, saveInvoice, discardInvoice, previewEdit, saveEdit, type InvoiceForm } from './actions'
+import ConfirmDialog from './ConfirmDialog'
 import './invoices.css'
 
 // 👉 Create Invoice: a form → Canva draws it → Aereon checks the picture → Save.
 // Nothing is filed until Save; Discard (or closing the dialog) throws the Canva
 // copy away. Filing the PDF in Google Drive is NOT part of this — that stays a
 // separate click on the invoice's row.
+//
+// Edit mode (the `edit` prop) is the same dialog opened from a row, filled in
+// with that invoice: same number, a fresh Canva drawing, and a confirm before
+// the old design and Drive PDF are replaced. Undo lives on the row.
 //
 // Every choice the database already knows is offered rather than retyped:
 // clients (with their address, contact and registration number), venues used
@@ -38,21 +43,29 @@ const fmt = (n: number, cur: string) => `${cur} ${n.toLocaleString('en-MY', { mi
 
 type Phase = 'form' | 'rendering' | 'preview' | 'saving'
 
+export type EditTarget = { id: number; no: string; designId: string; values: EditValues; driveUploaded: boolean }
+
 export default function CreateInvoice({
   options,
   disabled,
   disabledReason,
   onSaved,
+  edit,
+  onClose,
 }: {
   options: FormOptions
   disabled?: boolean
   disabledReason?: string
-  onSaved: (no: string) => void
+  onSaved: (no: string, warning?: string) => void
+  /** Open straight away, filled in with this invoice, and save over it. */
+  edit?: EditTarget
+  onClose?: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [phase, setPhase] = useState<Phase>('form')
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ no: string; preview: RenderPreview } | null>(null)
+  const [asking, setAsking] = useState(false)
 
   const blank = () => ({
     client: '',
@@ -76,7 +89,15 @@ export default function CreateInvoice({
     dueTouched: false,
     status: 'waiting' as InvoiceForm['status'],
   })
-  const [f, setF] = useState(blank)
+  // Editing keeps the due date as filed rather than recomputing it from the terms.
+  const [f, setF] = useState(() => (edit ? { ...blank(), ...edit.values, dueTouched: true } : blank()))
+  const wasPaid = edit?.values.status === 'paid'
+  // Field ids differ per dialog: Create and Edit can both be on the page at once.
+  const px = edit ? `ce${edit.id}` : 'ci'
+
+  useEffect(() => {
+    if (edit) dialog.current?.showModal()
+  }, [edit])
   const set = <K extends keyof ReturnType<typeof blank>>(k: K, v: ReturnType<typeof blank>[K]) => setF(s => ({ ...s, [k]: v }))
 
   const clientByName = useMemo(() => new Map(options.clients.map(c => [c.name.toLowerCase(), c])), [options.clients])
@@ -137,13 +158,14 @@ export default function CreateInvoice({
       discardInvoice(p).catch(() => {})
     }
     dialog.current?.close()
+    onClose?.()
   }
 
   const generate = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setPhase('rendering')
-    const res = await previewInvoice(toForm()).catch(err => ({ ok: false as const, error: String(err) }))
+    const res = await (edit ? previewEdit(edit.id, toForm()) : previewInvoice(toForm())).catch(err => ({ ok: false as const, error: String(err) }))
     if (!res.ok) {
       setError(res.error)
       setPhase('form')
@@ -161,13 +183,16 @@ export default function CreateInvoice({
 
   const save = async () => {
     if (!preview) return
+    setAsking(false)
     setError(null)
     setPhase('saving')
-    const res = await saveInvoice(toForm(), preview.no, preview.preview).catch(err => ({ ok: false as const, error: String(err) }))
+    const res = await (edit ? saveEdit(edit.id, toForm(), preview.preview, edit.designId) : saveInvoice(toForm(), preview.no, preview.preview)).catch(
+      err => ({ ok: false as const, error: String(err) }),
+    )
     if (!res.ok) {
       setError(res.error)
-      // A taken number means the preview is gone; anything else can be retried.
-      if (/was taken/.test(res.error)) {
+      // A taken number (or a changed invoice) means the preview is gone; anything else can be retried.
+      if (/was taken|changed while|View only|not found/.test(res.error)) {
         setPreview(null)
         setPhase('form')
       } else setPhase('preview')
@@ -177,16 +202,22 @@ export default function CreateInvoice({
     setF(blank())
     dialog.current?.close()
     setPhase('form')
-    onSaved(res.no)
+    onSaved(res.no, 'warning' in res ? res.warning : undefined)
+    onClose?.()
   }
 
   const busy = phase === 'rendering' || phase === 'saving'
 
+  // Edits replace what's in Canva and Drive, so they ask first; a new invoice doesn't.
+  const askThenSave = () => (edit ? setAsking(true) : save())
+
   return (
     <>
-      <button type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
-        <Icon name="plus" /> Create invoice
-      </button>
+      {edit ? null : (
+        <button type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
+          <Icon name="plus" /> Create invoice
+        </button>
+      )}
 
       <dialog
         ref={dialog}
@@ -198,7 +229,7 @@ export default function CreateInvoice({
         }}
       >
         <div className="idt-dialog-head">
-          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : 'Create invoice'}</h2>
+          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : edit ? `Edit ${edit.no}` : 'Create invoice'}</h2>
           <button type="button" className="idt-act" onClick={close} aria-label="Close" disabled={busy}>
             <Icon name="close" />
           </button>
@@ -209,7 +240,7 @@ export default function CreateInvoice({
             <div className="idt-wait" role="status">
               <Icon name="refresh" />
               <div>
-                <b>Drawing the invoice in Canva…</b>
+                <b>{edit ? 'Redrawing the invoice in Canva…' : 'Drawing the invoice in Canva…'}</b>
                 <br />
                 Copying the template and filling it in. About 15 seconds.
               </div>
@@ -252,11 +283,19 @@ export default function CreateInvoice({
                     <dt>Payment</dt>
                     <dd>{f.status === 'paid' ? 'Already paid' : f.status === 'waiting' ? 'Awaiting payment' : 'Not tracked'}</dd>
                   </dl>
+                  {edit ? (
+                    <p className="note">
+                      Nothing is changed yet. <b>Save changes</b> asks you to confirm, then replaces the invoice&apos;s
+                      Canva design, moves its old Drive PDF to trash and updates your records. Same number:{' '}
+                      <b>{edit.no}</b>.
+                    </p>
+                  ) : (
                   <p className="note">
                     Nothing is saved yet. <b>Save invoice</b> keeps this Canva design, files it in Canva&apos;s
                     Invoices ({f.date.slice(0, 4)}) folder and adds the invoice to your records. Uploading the PDF to
                     Google Drive is a separate step on the invoice&apos;s row.
                   </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -267,8 +306,8 @@ export default function CreateInvoice({
               <button type="button" className="idt-btn" onClick={close} disabled={busy}>
                 Discard
               </button>
-              <button type="button" className="idt-btn primary" onClick={save} disabled={busy}>
-                <Icon name="check" /> {phase === 'saving' ? 'Saving…' : 'Save invoice'}
+              <button type="button" className="idt-btn primary" onClick={askThenSave} disabled={busy}>
+                <Icon name="check" /> {phase === 'saving' ? 'Saving…' : edit ? 'Save changes' : 'Save invoice'}
               </button>
             </div>
           </>
@@ -280,20 +319,26 @@ export default function CreateInvoice({
                   <Icon name="alert" /> {error}
                 </p>
               ) : null}
+              {wasPaid ? (
+                <p className="idt-error idt-warn" role="note">
+                  <Icon name="alert" /> {edit?.no} is marked paid. Edit only to correct it — the amount should still match
+                  what was received.
+                </p>
+              ) : null}
               <div className="idt-form">
                 <div className="idt-section">Client</div>
                 <div className="idt-field">
-                  <label htmlFor="ci-client">Company</label>
+                  <label htmlFor={`${px}-client`}>Company</label>
                   <input
-                    id="ci-client"
-                    list="ci-clients"
+                    id={`${px}-client`}
+                    list={`${px}-clients`}
                     required
                     autoComplete="off"
                     value={f.client}
                     onChange={e => pickClient(e.target.value)}
                     placeholder="Start typing — known clients fill in their details"
                   />
-                  <datalist id="ci-clients">
+                  <datalist id={`${px}-clients`}>
                     {options.clients.map(c => (
                       <option key={c.name} value={c.name} />
                     ))}
@@ -301,21 +346,21 @@ export default function CreateInvoice({
                   <span className="hint">{f.client.trim() ? (known ? 'On file — details filled in' : 'New client — saved for next time') : ' '}</span>
                 </div>
                 <div className="idt-field">
-                  <label htmlFor="ci-reg">
+                  <label htmlFor={`${px}-reg`}>
                     Registration no. <span className="opt">(optional)</span>
                   </label>
-                  <input id="ci-reg" value={f.reg} onChange={e => set('reg', e.target.value)} placeholder="e.g. 201901012345" />
+                  <input id={`${px}-reg`} value={f.reg} onChange={e => set('reg', e.target.value)} placeholder="e.g. 201901012345" />
                 </div>
                 <div className="idt-field">
-                  <label htmlFor="ci-contact">
+                  <label htmlFor={`${px}-contact`}>
                     Attention <span className="opt">(optional)</span>
                   </label>
-                  <input id="ci-contact" value={f.contact} onChange={e => set('contact', e.target.value)} placeholder="Contact person" />
+                  <input id={`${px}-contact`} value={f.contact} onChange={e => set('contact', e.target.value)} placeholder="Contact person" />
                 </div>
                 <div className="idt-field">
-                  <label htmlFor="ci-address">Address</label>
+                  <label htmlFor={`${px}-address`}>Address</label>
                   <textarea
-                    id="ci-address"
+                    id={`${px}-address`}
                     rows={2}
                     value={f.address}
                     onChange={e => set('address', e.target.value)}
@@ -325,45 +370,45 @@ export default function CreateInvoice({
 
                 <div className="idt-section">Job</div>
                 <div className="idt-field">
-                  <label htmlFor="ci-job">Job name</label>
-                  <input id="ci-job" required value={f.job} onChange={e => set('job', e.target.value)} placeholder="e.g. KLCC Drone Show" />
+                  <label htmlFor={`${px}-job`}>Job name</label>
+                  <input id={`${px}-job`} required value={f.job} onChange={e => set('job', e.target.value)} placeholder="e.g. KLCC Drone Show" />
                 </div>
                 <div className="idt-field">
-                  <label htmlFor="ci-venue">
+                  <label htmlFor={`${px}-venue`}>
                     Venue <span className="opt">(optional)</span>
                   </label>
-                  <input id="ci-venue" list="ci-venues" value={f.venue} onChange={e => set('venue', e.target.value)} />
-                  <datalist id="ci-venues">
+                  <input id={`${px}-venue`} list={`${px}-venues`} value={f.venue} onChange={e => set('venue', e.target.value)} />
+                  <datalist id={`${px}-venues`}>
                     {options.venues.map(v => (
                       <option key={v} value={v} />
                     ))}
                   </datalist>
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-edate">Job date</label>
-                  <input id="ci-edate" type="date" value={f.eventDate} onChange={e => set('eventDate', e.target.value)} />
+                  <label htmlFor={`${px}-edate`}>Job date</label>
+                  <input id={`${px}-edate`} type="date" value={f.eventDate} onChange={e => set('eventDate', e.target.value)} />
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-elabel">
+                  <label htmlFor={`${px}-elabel`}>
                     Print date as <span className="opt">(optional)</span>
                   </label>
                   <input
-                    id="ci-elabel"
+                    id={`${px}-elabel`}
                     value={f.eventDateLabel}
                     onChange={e => set('eventDateLabel', e.target.value)}
                     placeholder="1st to 3rd Sept 2026"
                   />
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-time">
+                  <label htmlFor={`${px}-time`}>
                     Time <span className="opt">(optional)</span>
                   </label>
-                  <input id="ci-time" value={f.eventTime} onChange={e => set('eventTime', e.target.value)} placeholder="4 hours (4pm – 8pm)" />
+                  <input id={`${px}-time`} value={f.eventTime} onChange={e => set('eventTime', e.target.value)} placeholder="4 hours (4pm – 8pm)" />
                 </div>
                 <div className="idt-field s6">
-                  <label htmlFor="ci-deliv">Scope of work — one per line</label>
+                  <label htmlFor={`${px}-deliv`}>Scope of work — one per line</label>
                   <textarea
-                    id="ci-deliv"
+                    id={`${px}-deliv`}
                     required
                     rows={3}
                     value={f.deliverables}
@@ -374,17 +419,17 @@ export default function CreateInvoice({
 
                 <div className="idt-section">Money</div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-cur">Currency</label>
-                  <select id="ci-cur" value={f.currency} onChange={e => set('currency', e.target.value as InvoiceForm['currency'])}>
+                  <label htmlFor={`${px}-cur`}>Currency</label>
+                  <select id={`${px}-cur`} value={f.currency} onChange={e => set('currency', e.target.value as InvoiceForm['currency'])}>
                     {CURRENCIES.map(c => (
                       <option key={c}>{c}</option>
                     ))}
                   </select>
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-amount">Price</label>
+                  <label htmlFor={`${px}-amount`}>Price</label>
                   <input
-                    id="ci-amount"
+                    id={`${px}-amount`}
                     type="number"
                     inputMode="decimal"
                     min="0.01"
@@ -395,11 +440,11 @@ export default function CreateInvoice({
                   />
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-disc">
+                  <label htmlFor={`${px}-disc`}>
                     Discount <span className="opt">(own line)</span>
                   </label>
                   <input
-                    id="ci-disc"
+                    id={`${px}-disc`}
                     type="number"
                     inputMode="decimal"
                     min="0"
@@ -414,9 +459,9 @@ export default function CreateInvoice({
                   {f.currency !== 'MYR' ? ' — kept out of ringgit totals' : ''}
                 </p>
                 <div className="idt-field">
-                  <label htmlFor="ci-terms">Payment terms</label>
+                  <label htmlFor={`${px}-terms`}>Payment terms</label>
                   <select
-                    id="ci-terms"
+                    id={`${px}-terms`}
                     value={f.termsKey}
                     onChange={e => {
                       const t = TERMS.find(x => x.key === e.target.value)!
@@ -431,8 +476,8 @@ export default function CreateInvoice({
                   </select>
                 </div>
                 <div className="idt-field">
-                  <label htmlFor="ci-status">Payment status</label>
-                  <select id="ci-status" value={f.status} onChange={e => set('status', e.target.value as InvoiceForm['status'])}>
+                  <label htmlFor={`${px}-status`}>Payment status</label>
+                  <select id={`${px}-status`} value={f.status} onChange={e => set('status', e.target.value as InvoiceForm['status'])}>
                     <option value="waiting">Awaiting payment</option>
                     <option value="paid">Already paid</option>
                     <option value="issued">Don&apos;t track payment</option>
@@ -440,22 +485,22 @@ export default function CreateInvoice({
                 </div>
                 {f.termsKey === 'custom' ? (
                   <div className="idt-field s6">
-                    <label htmlFor="ci-tterms">Terms as printed</label>
-                    <textarea id="ci-tterms" required rows={2} value={f.terms} onChange={e => set('terms', e.target.value)} />
+                    <label htmlFor={`${px}-tterms`}>Terms as printed</label>
+                    <textarea id={`${px}-tterms`} required rows={2} value={f.terms} onChange={e => set('terms', e.target.value)} />
                   </div>
                 ) : null}
 
                 <div className="idt-section">Dates &amp; reference</div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-date">Invoice date</label>
-                  <input id="ci-date" type="date" required value={f.date} onChange={e => set('date', e.target.value)} />
+                  <label htmlFor={`${px}-date`}>Invoice date</label>
+                  <input id={`${px}-date`} type="date" required value={f.date} onChange={e => set('date', e.target.value)} />
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-due">
+                  <label htmlFor={`${px}-due`}>
                     Due date <span className="opt">(optional)</span>
                   </label>
                   <input
-                    id="ci-due"
+                    id={`${px}-due`}
                     type="date"
                     min={f.date}
                     value={f.dueDate}
@@ -463,11 +508,11 @@ export default function CreateInvoice({
                   />
                 </div>
                 <div className="idt-field s2">
-                  <label htmlFor="ci-quote">
+                  <label htmlFor={`${px}-quote`}>
                     Quotation ref <span className="opt">(optional)</span>
                   </label>
-                  <input id="ci-quote" list="ci-quotes" value={f.quotation} onChange={e => set('quotation', e.target.value)} />
-                  <datalist id="ci-quotes">
+                  <input id={`${px}-quote`} list={`${px}-quotes`} value={f.quotation} onChange={e => set('quotation', e.target.value)} />
+                  <datalist id={`${px}-quotes`}>
                     {options.quotations.map(q => (
                       <option key={q.no} value={q.no}>
                         {q.client}
@@ -478,7 +523,7 @@ export default function CreateInvoice({
               </div>
             </div>
             <div className="idt-dialog-foot">
-              <span className="idt-spacer">The number is issued automatically.</span>
+              <span className="idt-spacer">{edit ? `The number stays ${edit.no}.` : 'The number is issued automatically.'}</span>
               <button type="button" className="idt-btn" onClick={close}>
                 Cancel
               </button>
@@ -489,6 +534,26 @@ export default function CreateInvoice({
           </form>
         )}
       </dialog>
+
+      {asking && edit ? (
+        <ConfirmDialog
+          onCancel={() => setAsking(false)}
+          ask={{
+            title: `Replace ${edit.no} with this version?`,
+            lines: [
+              'Canva: this new design becomes the invoice. The old one moves to "TODO: Delete".',
+              edit.driveUploaded
+                ? 'Google Drive: the old PDF moves to Drive\'s trash (kept 30 days) and the row goes back to "Not uploaded". Upload the new PDF from its row.'
+                : 'Google Drive: nothing uploaded yet, nothing to remove.',
+              'Records: amount, dates and payment status update everywhere.',
+              'You can undo this from the invoice\'s row.',
+            ],
+            warning: wasPaid ? 'This invoice is marked paid. Check the amount still matches what was received.' : undefined,
+            confirmLabel: 'Yes, replace',
+            onConfirm: save,
+          }}
+        />
+      ) : null}
     </>
   )
 }

@@ -68,11 +68,14 @@ export async function startRender(rec: Rec, kind: DocKind = 'invoice'): Promise<
 /** Save the previewed edit and file the design into its year folder. */
 export async function commitRender(p: { designId: string; transactionId: string; invoiceDate: string; kind?: DocKind }) {
   await composioExec('CANVA_MCP_COMMIT_EDITING_TRANSACTION', { transaction_id: p.transactionId, user_intent: intent })
-  const folder =
-    p.kind === 'quotation' ? FOLDERS.quotation : invoiceYearFolders[p.invoiceDate.slice(0, 4)] ?? FOLDERS.invoice
-  await composioExec('CANVA_MCP_MOVE_ITEM_TO_FOLDER', { item_id: p.designId, to_folder_id: folder, user_intent: intent }).catch(
-    () => {}, // filing is tidy-up; a committed design is already safe
-  )
+  await fileDesign(p.designId, p.invoiceDate, p.kind)
+}
+
+/** Move a design into its year folder. Tidy-up only — a committed design is
+ *  already safe — so it never throws. Undo uses it to bring a parked design back. */
+export async function fileDesign(designId: string, invoiceDate: string, kind: DocKind = 'invoice') {
+  const folder = kind === 'quotation' ? FOLDERS.quotation : invoiceYearFolders[invoiceDate.slice(0, 4)] ?? FOLDERS.invoice
+  await composioExec('CANVA_MCP_MOVE_ITEM_TO_FOLDER', { item_id: designId, to_folder_id: folder, user_intent: intent }).catch(() => {})
 }
 
 /** Throw the preview away: nothing saved, and the copy parked for deletion. */
@@ -85,7 +88,8 @@ async function cancelQuietly(transactionId: string) {
   await composioExec('CANVA_MCP_CANCEL_EDITING_TRANSACTION', { transaction_id: transactionId, user_intent: intent }).catch(() => {})
 }
 
-async function parkForDeletion(designId: string) {
+/** Park a design in "TODO: Delete" — the API cannot delete one outright. */
+export async function parkForDeletion(designId: string) {
   await composioExec('CANVA_MCP_MOVE_ITEM_TO_FOLDER', {
     item_id: designId,
     to_folder_id: FOLDERS.todoDelete,

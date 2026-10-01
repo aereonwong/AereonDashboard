@@ -1,7 +1,7 @@
 {
   ".claude/launch.json": {
-    "mtime": 1790605741.198156,
-    "seen": 1790605799.679372,
+    "mtime": 1790605932.76306,
+    "seen": 1790835508.745482,
     "ast_hash": "4ff45821a38f35e32aee33bf12ae3021",
     "semantic_hash": ""
   },
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "app/_components/Icon.tsx": {
-    "mtime": 1790516412.4399846,
-    "seen": 1790605799.679415,
-    "ast_hash": "15678aedfe7408fd8420e26070dbc2fe",
+    "mtime": 1790835290.500832,
+    "seen": 1790835508.746513,
+    "ast_hash": "a5a45b11602de44c25de866fe2a314b6",
     "semantic_hash": ""
   },
   "app/_components/InteractiveBars.tsx": {
@@ -330,9 +330,9 @@
     "semantic_hash": ""
   },
   "app/api/telegram/route.ts": {
-    "mtime": 1790519384.3333435,
-    "seen": 1790605799.679452,
-    "ast_hash": "bb3e311f08ab82ee4fbcd2420ccd5253",
+    "mtime": 1790834893.4951994,
+    "seen": 1790835508.747432,
+    "ast_hash": "c93817ba07aa8065a3621feb042c5b57",
     "semantic_hash": ""
   },
   "app/layout.tsx": {
@@ -408,20 +408,20 @@
     "semantic_hash": ""
   },
   "lib/invoice-bot.ts": {
-    "mtime": 1790519384.3338826,
-    "seen": 1790605799.6794639,
-    "ast_hash": "ef26fbff9430cb3f1d6ba729502617ed",
+    "mtime": 1790834893.4956293,
+    "seen": 1790835508.747703,
+    "ast_hash": "1a07797899e9b6b37afdd515be2acf6b",
     "semantic_hash": ""
   },
   "lib/invoice-intake.ts": {
-    "mtime": 1790605741.1274319,
-    "seen": 1790605799.679469,
-    "ast_hash": "0a2277d35e3337f8ed9b6ae69e472ec9",
+    "mtime": 1790835302.0328588,
+    "seen": 1790835508.747766,
+    "ast_hash": "16ba305afd0a7c95046a01502dbf21e0",
     "semantic_hash": ""
   },
   "lib/invoice-render.ts": {
-    "mtime": 1790605760.8130317,
-    "seen": 1790605799.67947,
+    "mtime": 1790605932.7704363,
+    "seen": 1790835508.747767,
     "ast_hash": "17d9a8c19b51e6be3b72115612cd3e45",
     "semantic_hash": ""
   },
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "lib/telegram.ts": {
-    "mtime": 1790519384.3361588,
-    "seen": 1790605799.679477,
-    "ast_hash": "1c4f31f9b9841944bd7fbbf0093e8bcd",
+    "mtime": 1790834893.4965546,
+    "seen": 1790835508.747901,
+    "ast_hash": "96a90827cf360b9d3ce25306a0cc13b3",
     "semantic_hash": ""
   },
   "lib/vision.ts": {
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790605780.7786214,
-    "seen": 1790605799.679512,
-    "ast_hash": "c6bc6c8424aed0f98dde1864776f50fe",
+    "mtime": 1790834947.991044,
+    "seen": 1790835508.7487879,
+    "ast_hash": "9e9d8258d09bffcd4cc227d7ade85b81",
     "semantic_hash": ""
   },
   "README.md": {
@@ -900,9 +900,9 @@
     "semantic_hash": ""
   },
   "app/(app)/invoices/CreateInvoice.tsx": {
-    "mtime": 1790516412.4355245,
-    "seen": 1790605799.6793962,
-    "ast_hash": "069f3de3f1a6e18169f953e6d7998a36",
+    "mtime": 1790835466.2752109,
+    "seen": 1790835508.746047,
+    "ast_hash": "3479ae30d3c7137f01f64c4c1558cb93",
     "semantic_hash": ""
   },
   "app/(app)/invoices/StatusStrip.tsx": {
@@ -912,15 +912,15 @@
     "semantic_hash": ""
   },
   "app/(app)/invoices/actions.ts": {
-    "mtime": 1790605741.1236665,
-    "seen": 1790605799.679397,
-    "ast_hash": "d8a21279dfb65fb2ff98362a6d5b5788",
+    "mtime": 1790835364.713005,
+    "seen": 1790835508.746072,
+    "ast_hash": "3f19231141acb83645da785d1395edf9",
     "semantic_hash": ""
   },
   "app/(app)/invoices/details/InvoiceDetails.tsx": {
-    "mtime": 1790605741.1241188,
-    "seen": 1790605799.6793978,
-    "ast_hash": "9b03259ce127dcdd5c6b6619439d8c62",
+    "mtime": 1790835408.05939,
+    "seen": 1790835508.746073,
+    "ast_hash": "bce8ac3ffa87d5428c148782db2fcba2",
     "semantic_hash": ""
   },
   "app/(app)/invoices/details/page.tsx": {
@@ -1110,15 +1110,15 @@
     "semantic_hash": ""
   },
   "lib/invoice-canva.ts": {
-    "mtime": 1790516412.442117,
-    "seen": 1790605799.679465,
-    "ast_hash": "f361ae7e3a852cd074f65785af75709c",
+    "mtime": 1790835323.218159,
+    "seen": 1790835508.747704,
+    "ast_hash": "e0101b818eee6507a39ef78401b39204",
     "semantic_hash": ""
   },
   "lib/invoice-details.ts": {
-    "mtime": 1790516412.442617,
-    "seen": 1790605799.679465,
-    "ast_hash": "a581226dea252272b28659fea4a2cf38",
+    "mtime": 1790835314.529968,
+    "seen": 1790835508.747705,
+    "ast_hash": "d25caed52ff1f49bf59f424ecb3b2cde",
     "semantic_hash": ""
   },
   "lib/invoice-drive-upload.ts": {
@@ -1140,9 +1140,9 @@
     "semantic_hash": ""
   },
   "lib/invoice-figures.ts": {
-    "mtime": 1790516412.4434595,
-    "seen": 1790605799.679469,
-    "ast_hash": "902d39222f32351b279af128b78e3afe",
+    "mtime": 1790835302.0331447,
+    "seen": 1790835508.747765,
+    "ast_hash": "e509728685a050ac8b7e5d917a637caa",
     "semantic_hash": ""
   },
   "lib/news-catalog.ts": {
@@ -1236,8 +1236,8 @@
     "semantic_hash": ""
   },
   ".claude/skills/raise-invoice/SKILL.md": {
-    "mtime": 1790605780.778879,
-    "seen": 1790605799.679509,
+    "mtime": 1790605932.763428,
+    "seen": 1790835508.7487202,
     "ast_hash": "bea81cf555ea7a41492febb68370f6b7",
     "semantic_hash": ""
   },
@@ -1266,8 +1266,8 @@
     "semantic_hash": ""
   },
   "app/_v3/CLAUDE.md": {
-    "mtime": 1790605741.2256737,
-    "seen": 1790605799.67953,
+    "mtime": 1790605932.7641954,
+    "seen": 1790835508.749239,
     "ast_hash": "807486b065a876af5aaa59f0765bb020",
     "semantic_hash": ""
   },
@@ -1341,6 +1341,12 @@
     "mtime": 1790405030.6690233,
     "seen": 1790605799.6795552,
     "ast_hash": "f58af6e6ef88497d197b0556304526ee",
+    "semantic_hash": ""
+  },
+  "lib/invoice-edit.ts": {
+    "mtime": 1790835352.7506378,
+    "seen": 1790835508.747746,
+    "ast_hash": "96f3f43e9c680befe9af2fba82b7b5c5",
     "semantic_hash": ""
   }
 }

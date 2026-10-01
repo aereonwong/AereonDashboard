@@ -7,7 +7,7 @@ export type IconName =
   | 'chart' | 'calendar' | 'trend' | 'eye' | 'heart' | 'share' | 'bookmark' | 'sparkle'
   | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet'
   | 'news' | 'play' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
-  | 'drive' | 'upload' | 'download' | 'design' | 'plus' | 'alert' | 'undo'
+  | 'drive' | 'upload' | 'download' | 'design' | 'plus' | 'alert' | 'undo' | 'edit'
 
 const P: Record<IconName, React.ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="2" /><rect x="14" y="3" width="7" height="5" rx="2" /><rect x="14" y="12" width="7" height="9" rx="2" /><rect x="3" y="16" width="7" height="5" rx="2" /></>,
@@ -53,6 +53,7 @@ const P: Record<IconName, React.ReactNode> = {
   plus: <><path d="M12 5v14M5 12h14" /></>,
   alert: <><path d="M12 4 21 19.5H3L12 4Z" /><path d="M12 10v4.2M12 17h.01" /></>,
   undo: <><path d="M9 14 4.5 9.5 9 5" /><path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3" /></>,
+  edit: <><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>,
 }
 
 export default function Icon({ name, className = 'ico-svg' }: { name: IconName; className?: string }) {

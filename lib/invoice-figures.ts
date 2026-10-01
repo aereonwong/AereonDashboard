@@ -12,6 +12,14 @@ import type { DriveStatus } from './invoice-drive'
  *  - paid. */
 export type Payment = 'paid' | 'outstanding' | 'overdue' | 'untracked'
 
+// The three payment terms that actually appear across the recent invoices —
+// the wording the Telegram interview and Create Invoice both print.
+export const TERMS: Record<string, string> = {
+  half: 'A non-refundable deposit of 50% is required to commence the work\nremaining 50% balance is due upon project delivered and signed off',
+  ondelivery: 'Full payment is due upon delivery of the content',
+  net30: 'Payment to be initiated within 30 days of posting',
+}
+
 export type DetailRow = {
   id: number
   no: string
@@ -30,6 +38,38 @@ export type DetailRow = {
   hasDesign: boolean
   createdAt: string
   source: string
+  /** The form values to edit this invoice with, or null when it is view only. */
+  edit: EditValues | null
+  /** Why it can't be edited, shown as the Edit button's tooltip. */
+  editBlock: string | null
+  /** The Canva design the edit form opened against — a save is refused if it changed meanwhile. */
+  designId: string | null
+  /** The last edit, when there is one to undo. */
+  undo: { at: string } | null
+}
+
+/** An invoice's details as the Create / Edit Invoice form holds them (all strings,
+ *  like the inputs). Built on the server from the row, so the form opens filled in. */
+export type EditValues = {
+  client: string
+  contact: string
+  address: string
+  reg: string
+  job: string
+  venue: string
+  eventDate: string
+  eventDateLabel: string
+  eventTime: string
+  deliverables: string
+  amount: string
+  currency: 'MYR' | 'USD' | 'SGD' | 'EUR' | 'RMB'
+  discount: string
+  termsKey: 'half' | 'ondelivery' | 'net30' | 'custom'
+  terms: string
+  quotation: string
+  date: string
+  dueDate: string
+  status: 'waiting' | 'paid' | 'issued'
 }
 
 export type StatusFigures = {
