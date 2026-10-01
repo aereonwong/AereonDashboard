@@ -1,26 +1,26 @@
-# Graph Report - AereonDashboard  (2026-09-28)
+# Graph Report - AereonDashboard  (2026-10-01)
 
 ## Corpus Check
-- 207 files · ~195,509 words
+- 208 files · ~199,586 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: (none) 4, .css 3, .example 1)
 
 ## Summary
-- 1404 nodes · 2718 edges · 108 communities (89 shown, 19 thin omitted)
+- 1428 nodes · 2858 edges · 115 communities (93 shown, 22 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 37 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `91a24dac`
+- Built from commit: `35672569`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - supabase.ts
 - instagram.ts
-- sendMessage
+- telegram.ts
 - analytics.ts
-- invoice-intake.ts
+- invoice-bot.ts
 - package.json
 - telegram/route.ts
 - /agent-builder — Hire YOUR AI Employee (live in Telegram)
@@ -29,12 +29,12 @@
 - What You Must Do When Invoked
 - records.ts
 - DAY 1 — Robot LIVE + your first AI Employee
-- invoices.ts
+- invoices/page.tsx
 - compilerOptions
 - lib/actions.ts
 - The inconsistencies
 - The 11 acceptance tests
-- Appearance.tsx
+- invoice-edit.ts
 - /jarvis-setup — Make Jarvis yours
 - The 8 questions ✍️
 - invoices/actions.ts
@@ -43,7 +43,7 @@
 - The 5-Finger Rule (LATAR) — how every robot in Aereon Dashboard thinks 🤚
 - READ — ask it anything, answered instantly
 - Sell It — packaging Aereon Dashboard as a RM5k–50k offer
-- version.ts
+- registry.ts
 - /team-crew — the message you send your team
 - /team-deputy — get build access without the keys
 - The 5 attacks 🎯
@@ -55,7 +55,7 @@
 - 🏛️ YOUR AI C-SUITE — set up your first head
 - 🧾 Expense Filer — the graduated-autonomy demo (ships ON)
 - react
-- Icon.tsx
+- next
 - Add Your Own Tab — the copy-paste prompt
 - CashFlowOS AI Agents — V2 BUILD SPEC
 - The AI C-Suite Blueprint — your one-page take-home
@@ -67,11 +67,11 @@
 - 🔁 Renewal Nudge — my-agent.md  (Insurance · worked example)
 - 🏠 Viewing Follow-up — my-agent.md  (Real-Estate · worked example)
 - 🤖 my-agent — the fill-in-the-blank brief
-- next
-- ThemeToggle.tsx
+- (app)/layout.tsx
+- news.ts
 - 4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2)
 - graphify reference: query, path, explain
-- fmt.ts
+- Dashboard.tsx
 - Components
 - How to make your own (the one prompt)
 - graphify reference: add a URL and watch a folder
@@ -92,25 +92,25 @@
 - extraction-spec.md
 - webhook-info.mjs
 - vercel.json
-- news.ts
+- news/page.tsx
 - vault/page.tsx
-- invoice-details.ts
+- InvoiceDetails.tsx
 - invoice-drive-upload.ts
 - rm
-- Clients.tsx
-- The Jarvis Playbook 🤖💬
-- invoice-canva.ts
 - ledger.ts
+- The Jarvis Playbook 🤖💬
+- instagram/page.tsx
+- Clients.tsx
 - session-start.sh
 - drive-reconcile.mjs
-- Dashboard.tsx
-- catalog.ts
+- refresh/route.ts
+- Appearance.tsx
 - studio.ts
-- composio-exec.ts
+- invoice-canva.ts
 - Aereon Dashboard
 - cron-daily/route.ts
 - Product
-- Shell.tsx
+- _v1.tsx
 - approvals/page.tsx
 - Owed.tsx
 - fonts.ts
@@ -124,18 +124,25 @@
 - security-reviewer.md
 - block-env.sh
 - _v3/CLAUDE.md
+- dashboard/page.tsx
+- Donut.tsx
+- app/layout.tsx
+- 📸 The Vault — the Day-1 build-together agent
+- demo/route.ts
+- login/route.ts
+- proxy.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `next` - 36 edges
 2. `rm()` - 34 edges
 3. `getRecords()` - 33 edges
-4. `react` - 30 edges
-5. `Rec` - 28 edges
-6. `supabase` - 23 edges
-7. `supabaseConfigured` - 23 edges
+4. `Rec` - 30 edges
+5. `react` - 30 edges
+6. `supabaseConfigured` - 24 edges
+7. `supabase` - 23 edges
 8. `compact()` - 21 edges
-9. `readVersion()` - 19 edges
-10. `rmFull()` - 18 edges
+9. `handleInvoiceCallback()` - 21 edges
+10. `readVersion()` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Files` --references--> `runVaultPipeline()`  [INFERRED]
@@ -152,27 +159,27 @@
 ## Import Cycles
 - None detected.
 
-## Communities (108 total, 19 thin omitted)
+## Communities (115 total, 22 thin omitted)
 
 ### Community 0 - "supabase.ts"
-Cohesion: 0.10
-Nodes (24): AgentMeta, AGENTS, draftOnly(), Executor, EXECUTORS, fileReceipt(), overdueInvoiceCheck, ScheduledCheck (+16 more)
+Cohesion: 0.16
+Nodes (17): AGENTS, dynamic, Employees(), getLastRuns(), LastRun, outcomeClass(), ConnStatus(), vaultBucketMissing() (+9 more)
 
 ### Community 1 - "instagram.ts"
-Cohesion: 0.08
-Nodes (38): dynamic, maxDuration, POST(), Dashboard(), dynamic, layout(), proposedCount(), ago() (+30 more)
+Cohesion: 0.17
+Nodes (13): analyse(), attachCovers(), avg(), DAYS, IgPost, IgProfile, IgSnapshot, IgStats (+5 more)
 
-### Community 2 - "sendMessage"
-Cohesion: 0.24
-Nodes (17): handleCallback(), approveAction(), approverId(), plain(), rejectAction(), ApproveButtons(), claim(), summarizeResult() (+9 more)
+### Community 2 - "telegram.ts"
+Cohesion: 0.26
+Nodes (16): handleCallback(), approveAction(), approverId(), plain(), rejectAction(), ApproveButtons(), claim(), summarizeResult() (+8 more)
 
 ### Community 3 - "analytics.ts"
 Cohesion: 0.07
 Nodes (46): DashboardV2(), monthName(), rm(), short(), Delta(), Bucket, compact(), LensData (+38 more)
 
-### Community 4 - "invoice-intake.ts"
-Cohesion: 0.11
-Nodes (37): cap(), EventDates, iso(), Item, label(), monthOf(), MONTHS, ord() (+29 more)
+### Community 4 - "invoice-bot.ts"
+Cohesion: 0.07
+Nodes (52): From the dashboard (27 Sep 2026) — no Claude in the loop, Raising an invoice or a quotation, Telegram now draws in Canva itself (27 Sep 2026), cap(), EventDates, iso(), Item, label() (+44 more)
 
 ### Community 5 - "package.json"
 Cohesion: 0.18
@@ -180,7 +187,7 @@ Nodes (10): engines, node, name, private, version, react-dom, @types/node, @type
 
 ### Community 6 - "telegram/route.ts"
 Cohesion: 0.09
-Nodes (33): addressedToBot(), ALLOWED, answerWithTools(), buildProposalText(), dynamic, handleMessage(), isAllowed(), isFreshUpdate() (+25 more)
+Nodes (34): addressedToBot(), ALLOWED, answerWithTools(), buildProposalText(), dynamic, handleMessage(), isAllowed(), isFreshUpdate() (+26 more)
 
 ### Community 7 - "/agent-builder — Hire YOUR AI Employee (live in Telegram)"
 Cohesion: 0.06
@@ -191,32 +198,32 @@ Cohesion: 0.08
 Nodes (25): here, nextConfig, ref_node_fs, ref_node_path, ref_node_url, ref_node_zlib, CATEGORY_MAP, clean (+17 more)
 
 ### Community 9 - "getRecords"
-Cohesion: 0.15
-Nodes (21): runAgentNow(), CashIn(), dynamic, WAITING, Clients(), dynamic, monthsBetween(), dynamic (+13 more)
+Cohesion: 0.23
+Nodes (14): CashIn(), dynamic, WAITING, CashOut(), dynamic, Content(), dynamic, dynamic (+6 more)
 
 ### Community 10 - "What You Must Do When Invoked"
 Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 11 - "records.ts"
-Cohesion: 0.11
-Nodes (18): definition, WhenTrigger, DraftPayload, DraftResult, definition, WhenTrigger, suggest(), STAGES (+10 more)
+Cohesion: 0.16
+Nodes (12): DraftPayload, DraftResult, STAGES, BOOK, day(), demoRecords(), iso(), row() (+4 more)
 
 ### Community 12 - "DAY 1 — Robot LIVE + your first AI Employee"
 Cohesion: 0.10
 Nodes (19): 0 · Mindset, 1 · Before you start — accounts + machine (all free), Appendix — what "working" data looks like (the 20 seed rows), CashFlowOS AI Agents — Dry-Run Brief for Yong, DAY 1 — Robot LIVE + your first AI Employee, DAY 2 — Your own AI Employee + break it + sell it, How to log a finding (copy per issue), Known traps (confirm whether they still bite) (+11 more)
 
-### Community 13 - "invoices.ts"
-Cohesion: 0.11
-Nodes (25): compact(), DashboardV1(), AreaChart(), AreaPoint, COLORS, Donut(), fmt(), Slice (+17 more)
+### Community 13 - "invoices/page.tsx"
+Cohesion: 0.20
+Nodes (18): Clients(), dynamic, monthsBetween(), dynamic, InvoiceSummary(), pct(), byMonth(), classify() (+10 more)
 
 ### Community 14 - "compilerOptions"
 Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
 
 ### Community 15 - "lib/actions.ts"
-Cohesion: 0.13
-Nodes (22): The knobs (what you're allowed to change), The pipeline, step by step (with the LATAR letter for each), 📸 The Vault — the Day-1 build-together agent, Why each guard exists (the safety story), runtime, ActionRow, attachNotify(), executeClaimed() (+14 more)
+Cohesion: 0.19
+Nodes (19): The pipeline, step by step (with the LATAR letter for each), runAgentNow(), ActionRow, attachNotify(), executeClaimed(), hoursFromNow(), markExecuted(), markFailed() (+11 more)
 
 ### Community 16 - "The inconsistencies"
 Cohesion: 0.11
@@ -226,9 +233,9 @@ Nodes (17): 10. Client identity is loose, 1. Six numbering schemes in five years
 Cohesion: 0.12
 Nodes (15): 10 · `scripts/import.mjs` with a messy CSV ⇒ valid rows in, plain-English skip report, no crash — ✅ **PASS (macOS)**, 11 · Gallery swap: `_template` → a Sales agent changes ONLY the 4 knobs + one added `registry.ts` line — ✅ **PASS**, 1 · Build clean on Node 20 + latest (26); all routes compile — ⚠️ **PARTIAL**, 2 · Fresh clone + placeholder env → connect banner instantly, nothing hangs/500s — ✅ **PASS**, 3 · Wrong (anon) Supabase key → "use service_role" banner (not an empty dashboard) — ✅ **PASS**, 4 · Passcode: wrong rejected; right → cookie; the 3 excluded paths reachable without the cookie; every page locked — ✅ **PASS**, 5 · Mobile 375px: bottom bar, no horizontal scroll, tables→cards; PWA installs; funnel renders 5 stages with non-zero seed %s — ⚠️ **PARTIAL**, 6 · Photo (above threshold) → propose → Approve/Reject/double-tap/dup/wrong-id/expired/replay — 🔑 **NEEDS LIVE KEYS (dry-run)** (+7 more)
 
-### Community 18 - "Appearance.tsx"
-Cohesion: 0.16
-Nodes (14): ADVANCED, Appearance(), BASIC, Bg, Dash, Font, FONTS, Glass (+6 more)
+### Community 18 - "invoice-edit.ts"
+Cohesion: 0.24
+Nodes (16): editBlockOf(), driveOf(), driveStatus, applyEdit(), EditResult, EditSnapshot, Fail, loadEditable() (+8 more)
 
 ### Community 19 - "/jarvis-setup — Make Jarvis yours"
 Cohesion: 0.14
@@ -239,8 +246,8 @@ Cohesion: 0.14
 Nodes (13): 1. WHEN does it wake up? ⏰, 2. WHAT does it look at? 👀, 3. WHAT does it suggest or do? 🤔, 4. WHEN must it ASK you first? 🙋, 5. 🟢 GREEN list — what can it just DO on its own?, 6. 🟡 YELLOW list — what must it ASK before doing?, 7. 🔴 RED list — what must it NEVER do (even if you say yes)?, 8. WHO approves, and how? ✅ (+5 more)
 
 ### Community 21 - "invoices/actions.ts"
-Cohesion: 0.10
-Nodes (33): CURRENCIES, Fail, guard(), InvoiceForm, msg(), previewInvoice(), PreviewResult, refresh() (+25 more)
+Cohesion: 0.17
+Nodes (30): CURRENCIES, discardInvoice(), Fail, guard(), InvoiceForm, msg(), previewEdit(), previewInvoice() (+22 more)
 
 ### Community 22 - "/team-owner — let four more people in"
 Cohesion: 0.17
@@ -262,9 +269,9 @@ Nodes (7): 📣 Content, 💰 Money, 🤝 People, 🏞️ Pipeline, READ — ask
 Cohesion: 0.18
 Nodes (10): Handling the 4 objections you'll actually hear, Sell It — packaging Aereon Dashboard as a RM5k–50k offer, The 3 tiers (anchor high, sell the middle), The guarantee (kills the risk objection), The offer stack (make RM20k feel like a steal), The one thing to remember, The pitch (5 lines, owner-to-owner, no jargon), What you're actually selling (say it in one line) (+2 more)
 
-### Community 27 - "version.ts"
-Cohesion: 0.25
-Nodes (11): AppLayout(), dynamic, Settings(), BottomNav(), DemoToggle(), Settings(), demoMode(), getPendingCount() (+3 more)
+### Community 27 - "registry.ts"
+Cohesion: 0.17
+Nodes (10): AgentMeta, draftOnly(), Executor, EXECUTORS, fileReceipt(), overdueInvoiceCheck, ScheduledCheck, writeRecord() (+2 more)
 
 ### Community 28 - "/team-crew — the message you send your team"
 Cohesion: 0.20
@@ -291,8 +298,8 @@ Cohesion: 0.20
 Nodes (9): ✅ Check it worked, 🤖 my-jarvis — teach the bot YOUR business, 👉 NEVER — your own red lines, ✍️ Or fill it in yourself, ⚡ The lazy way (recommended), 👉 VOICE — how it talks back, 👉 WATCH — what it brings up first, 🔒 What you can't switch off (+1 more)
 
 ### Community 34 - "bot-tools.ts"
-Cohesion: 0.22
-Nodes (10): How to report, The rules (all load-bearing), BOT_TOOLS, CLOSED_LOST, daysLate(), isOwedIn(), PAID, runBotTool() (+2 more)
+Cohesion: 0.24
+Nodes (9): How to report, The rules (all load-bearing), CLOSED_LOST, daysLate(), isOwedIn(), PAID, runBotTool(), getFunnel() (+1 more)
 
 ### Community 35 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
@@ -307,12 +314,12 @@ Cohesion: 0.25
 Nodes (7): Bonus — a blurry receipt → 🟡 ASK, flagged "unsure", 🧾 Expense Filer — the graduated-autonomy demo (ships ON), Files, Photo A — a RM45 lunch receipt  → 🟢 AUTOPILOT, Photo B — a RM269 supplies receipt  → 🟡 ASK-FIRST, Slide the dial, The two-photo demo (run this live)
 
 ### Community 38 - "react"
-Cohesion: 0.25
-Nodes (5): Login(), IgFilters(), TYPES, WINDOWS, react
+Cohesion: 0.14
+Nodes (12): Login(), Bars(), PAD, PaceChart(), PAD, rmFull(), IgFilters(), TYPES (+4 more)
 
-### Community 39 - "Icon.tsx"
-Cohesion: 0.27
-Nodes (7): Icon(), IconName, P, Nav(), NAV_GROUPS, TABS, Refresh()
+### Community 39 - "next"
+Cohesion: 0.18
+Nodes (10): Icon(), IconName, P, Nav(), NAV_GROUPS, TABS, Refresh(), HREFS (+2 more)
 
 ### Community 40 - "Add Your Own Tab — the copy-paste prompt"
 Cohesion: 0.25
@@ -358,13 +365,13 @@ Nodes (6): 1. WHEN does it wake up?  → knob `when` in `definition.ts`, 2. LOOK
 Cohesion: 0.29
 Nodes (6): 1. WHEN does it wake up?  → knob `when` in `definition.ts`, 2. LOOK AT — what does it read?  → knob `lookAt` in `definition.ts`, 3. SUGGEST — what does it draft?  → knob `suggest` in `prompt.ts`, 4. ASK-BEFORE — what must it never do without a YES?  → knob `askBefore` in `definition.ts`, 🤖 my-agent — the fill-in-the-blank brief, The autonomy dial — sort every action into a colour
 
-### Community 51 - "next"
-Cohesion: 0.12
-Nodes (10): runtime, MORE, PRIMARY, MoreSheet(), MoreTab, app_globals, metadata, viewport (+2 more)
+### Community 51 - "(app)/layout.tsx"
+Cohesion: 0.19
+Nodes (12): AppLayout(), BottomNav(), MORE, PRIMARY, MoreSheet(), MoreTab, apply(), FACE (+4 more)
 
-### Community 52 - "ThemeToggle.tsx"
-Cohesion: 0.40
-Nodes (5): apply(), FACE, Mode, NEXT, ThemeToggle()
+### Community 52 - "news.ts"
+Cohesion: 0.26
+Nodes (12): chunk(), dynamic, GET(), maxDuration, research(), toPlain(), decode(), NewsQuery (+4 more)
 
 ### Community 53 - "4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2)"
 Cohesion: 0.33
@@ -374,9 +381,9 @@ Nodes (6): 4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2), 4a · 
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
-### Community 55 - "fmt.ts"
-Cohesion: 0.26
-Nodes (13): longDate(), MONTHS, num(), shortDate(), Instagram(), one(), Params, embed() (+5 more)
+### Community 55 - "Dashboard.tsx"
+Cohesion: 0.23
+Nodes (18): Circle(), Dashboard(), Hud(), Strip(), compact(), longDate(), MONTHS, num() (+10 more)
 
 ### Community 56 - "Components"
 Cohesion: 0.06
@@ -398,65 +405,65 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 76 - "news.ts"
-Cohesion: 0.10
-Nodes (31): chunk(), dynamic, GET(), maxDuration, research(), toPlain(), dynamic, NewsPage() (+23 more)
+### Community 76 - "news/page.tsx"
+Cohesion: 0.13
+Nodes (19): dynamic, NewsPage(), one(), Params, NewsFilters(), WINDOWS, dayTitle(), label() (+11 more)
 
 ### Community 77 - "vault/page.tsx"
 Cohesion: 0.38
 Nodes (6): dynamic, getVaultCards(), prettySize(), Vault(), VaultCard, VaultRow
 
-### Community 78 - "invoice-details.ts"
-Cohesion: 0.15
-Nodes (21): dynamic, InvoiceDetailsPage(), one(), Params, app_app_invoices_invoices, rm(), StatusStrip(), formOptions() (+13 more)
+### Community 78 - "InvoiceDetails.tsx"
+Cohesion: 0.10
+Nodes (31): EditTarget, DRIVE_LABEL, Filters, InvoiceDetails(), money(), MONTHS, PAYMENT_LABEL, rm() (+23 more)
 
 ### Community 79 - "invoice-drive-upload.ts"
-Cohesion: 0.15
-Nodes (20): From the dashboard (27 Sep 2026) — no Claude in the loop, Raising an invoice or a quotation, Telegram now draws in Canva itself (27 Sep 2026), designIdOf(), driveViewUrl(), loadInvoice(), reuploadInvoiceToDrive(), ReuploadResult (+12 more)
+Cohesion: 0.16
+Nodes (20): dynamic, GET(), designIdOf(), exportPdfUrl(), driveDownloadUrl(), DriveMeta, driveViewUrl(), STALE_UPLOAD_MS (+12 more)
 
 ### Community 80 - "rm"
-Cohesion: 0.15
-Nodes (18): AgentDefinition, definition, WhenTrigger, suggest(), CashOut(), dynamic, Content(), Customers() (+10 more)
+Cohesion: 0.12
+Nodes (21): definition, WhenTrigger, AgentDefinition, definition, WhenTrigger, suggest(), definition, WhenTrigger (+13 more)
 
-### Community 81 - "Clients.tsx"
-Cohesion: 0.15
-Nodes (18): FilterBar(), Clients(), one(), Params, SORTS, Invoices(), Params, spanLabel() (+10 more)
+### Community 81 - "ledger.ts"
+Cohesion: 0.12
+Nodes (22): FilterBar(), Invoices(), Params, spanLabel(), Invoice, Filters, iso(), KINDS (+14 more)
 
 ### Community 82 - "The Jarvis Playbook 🤖💬"
 Cohesion: 0.33
 Nodes (4): ACT — things it can actually do, through the approval engine, The Jarvis Playbook 🤖💬, The safety one-liner, The zones, in one glance 🎚️
 
-### Community 83 - "invoice-canva.ts"
-Cohesion: 0.18
-Nodes (18): discardInvoice(), cancelQuietly(), discardRender(), forComposio(), parkForDeletion(), startRender(), buildOperations(), DocKind (+10 more)
+### Community 83 - "instagram/page.tsx"
+Cohesion: 0.27
+Nodes (8): ago(), dynamic, Instagram(), n(), short(), AreaChart(), AreaPoint, RefreshButton()
 
-### Community 84 - "ledger.ts"
-Cohesion: 0.14
-Nodes (16): PAD, PAD, QUAD, QUIET_MONTHS, buildLedger(), Ledger, LedgerRow, MON (+8 more)
+### Community 84 - "Clients.tsx"
+Cohesion: 0.21
+Nodes (11): Clients(), one(), Params, SORTS, PAD, QUAD, RelationshipMap(), QUIET_MONTHS (+3 more)
 
 ### Community 86 - "drive-reconcile.mjs"
 Cohesion: 0.12
 Nodes (14): args, byNo, db, exec(), files, invoices, match, missing (+6 more)
 
-### Community 87 - "Dashboard.tsx"
-Cohesion: 0.29
-Nodes (13): Bars(), Circle(), Dashboard(), Hud(), PaceChart(), PAD, Strip(), compact() (+5 more)
+### Community 87 - "refresh/route.ts"
+Cohesion: 0.28
+Nodes (8): dynamic, maxDuration, POST(), buildSnapshot(), Exec, num(), saveSnapshot(), @composio/core
 
-### Community 88 - "catalog.ts"
-Cohesion: 0.24
-Nodes (14): LandingSwitch(), PREVIEW, setCookie(), Theme(), VersionAndWorld(), Version, VERSIONS, World (+6 more)
+### Community 88 - "Appearance.tsx"
+Cohesion: 0.08
+Nodes (40): dynamic, Settings(), ADVANCED, Appearance(), BASIC, Bg, Dash, Font (+32 more)
 
 ### Community 89 - "studio.ts"
-Cohesion: 0.20
-Nodes (14): OWED_WINDOW_DAYS, inRange(), narrow(), buildRelationships(), monthsSince(), buildStudio(), ClientLine, dayDiff() (+6 more)
+Cohesion: 0.18
+Nodes (15): OWED_WINDOW_DAYS, inRange(), narrow(), buildRelationships(), monthsSince(), buildStudio(), ClientLine, dayDiff() (+7 more)
 
-### Community 90 - "composio-exec.ts"
+### Community 90 - "invoice-canva.ts"
 Cohesion: 0.29
-Nodes (10): dynamic, GET(), apiKey(), composioExec(), ComposioNotConfigured, composioReady(), localCli(), run (+2 more)
+Nodes (12): apiKey(), composioExec(), ComposioNotConfigured, localCli(), run, cancelQuietly(), commitRender(), discardRender() (+4 more)
 
 ### Community 91 - "Aereon Dashboard"
-Cohesion: 0.17
-Nodes (11): Aereon Dashboard, Appearance, Dashboard v3 — the creator studio, Data conventions, Folder move (27 Sep 2026), graphify, House rules, Live (+3 more)
+Cohesion: 0.12
+Nodes (14): BarRow, RowBars(), Aereon Dashboard, Appearance, Dashboard v3 — the creator studio, Data conventions, Folder move (27 Sep 2026), graphify (+6 more)
 
 ### Community 92 - "cron-daily/route.ts"
 Cohesion: 0.24
@@ -466,9 +473,9 @@ Nodes (9): ProposalDraft, SCHEDULED, buildBrief(), chiefOfStaff(), dynamic, GET(
 Cohesion: 0.18
 Nodes (10): Brand Commitments, Capabilities and Constraints, Evidence on Hand, Operating Context, Platform, Positioning, Product, Product Principles (+2 more)
 
-### Community 94 - "Shell.tsx"
-Cohesion: 0.29
-Nodes (8): Shell(), app_v3_v3, HREFS, isCurrent(), V3_NAV, V3MobileBar(), V3Nav(), WORLDS
+### Community 94 - "_v1.tsx"
+Cohesion: 0.31
+Nodes (7): compact(), DashboardV1(), fmt(), InteractiveBars(), Point, Series, Unit
 
 ### Community 95 - "approvals/page.tsx"
 Cohesion: 0.36
@@ -479,8 +486,8 @@ Cohesion: 0.53
 Nodes (7): age(), Owed(), money(), markPaid(), markPaidBefore(), markUnpaid(), refresh()
 
 ### Community 97 - "fonts.ts"
-Cohesion: 0.22
-Nodes (8): barlow, barlowCond, chakra, edge, geist, geistMono, marker, v3Fonts
+Cohesion: 0.15
+Nodes (13): barlow, barlowCond, chakra, edge, geist, geistMono, marker, v3Fonts (+5 more)
 
 ### Community 98 - "/ship"
 Cohesion: 0.22
@@ -499,8 +506,8 @@ Cohesion: 0.28
 Nodes (8): ref_node_child_process, ref_node_util, @supabase/supabase-js, arg, buildSnapshot(), exec(), run, supabase
 
 ### Community 102 - "MediaKit.tsx"
-Cohesion: 0.36
-Nodes (6): MediaKit(), SERVICES, WorkKind, Brand, KIT_BRANDS, logoSize()
+Cohesion: 0.31
+Nodes (7): MediaKit(), SERVICES, WorkKind, Audience, Brand, KIT_BRANDS, logoSize()
 
 ### Community 103 - "dependencies"
 Cohesion: 0.25
@@ -510,25 +517,41 @@ Nodes (8): dependencies, @anthropic-ai/sdk, @composio/core, next, react, react-d
 Cohesion: 0.40
 Nodes (5): devDependencies, @types/node, @types/react, @types/react-dom, typescript
 
+### Community 108 - "dashboard/page.tsx"
+Cohesion: 0.52
+Nodes (6): Dashboard(), dynamic, layout(), proposedCount(), latestSnapshot(), readAudience()
+
+### Community 109 - "Donut.tsx"
+Cohesion: 0.40
+Nodes (5): COLORS, Donut(), fmt(), Slice, Unit
+
+### Community 110 - "app/layout.tsx"
+Cohesion: 0.40
+Nodes (3): app_globals, metadata, viewport
+
+### Community 111 - "📸 The Vault — the Day-1 build-together agent"
+Cohesion: 0.50
+Nodes (3): The knobs (what you're allowed to change), 📸 The Vault — the Day-1 build-together agent, Why each guard exists (the safety story)
+
 ## Knowledge Gaps
-- **623 isolated node(s):** `session-start.sh script`, `WhenTrigger`, `AgentDefinition`, `definition`, `DraftPayload` (+618 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 709 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **628 isolated node(s):** `session-start.sh script`, `WhenTrigger`, `AgentDefinition`, `definition`, `DraftPayload` (+623 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 714 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `next` connect `next` to `instagram.ts`, `sendMessage`, `analytics.ts`, `package.json`, `telegram/route.ts`, `import.mjs`, `getRecords`, `records.ts`, `lib/actions.ts`, `Appearance.tsx`, `invoices/actions.ts`, `version.ts`, `react`, `Icon.tsx`, `news.ts`, `Clients.tsx`, `ledger.ts`, `Dashboard.tsx`, `catalog.ts`, `composio-exec.ts`, `Shell.tsx`, `Owed.tsx`, `fonts.ts`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
-- **Why does `getRecords()` connect `getRecords` to `instagram.ts`, `telegram/route.ts`, `records.ts`, `invoice-details.ts`, `rm`, `The 11 acceptance tests`, `version.ts`, `cron-daily/route.ts`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **Why does `react` connect `react` to `instagram.ts`, `sendMessage`, `analytics.ts`, `package.json`, `records.ts`, `invoices.ts`, `Appearance.tsx`, `invoices/actions.ts`, `version.ts`, `Icon.tsx`, `next`, `ThemeToggle.tsx`, `fmt.ts`, `news.ts`, `Clients.tsx`, `ledger.ts`, `Dashboard.tsx`, `catalog.ts`, `Owed.tsx`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+- **Why does `next` connect `next` to `telegram.ts`, `analytics.ts`, `package.json`, `telegram/route.ts`, `import.mjs`, `getRecords`, `records.ts`, `invoices/actions.ts`, `react`, `(app)/layout.tsx`, `Dashboard.tsx`, `news/page.tsx`, `InvoiceDetails.tsx`, `invoice-drive-upload.ts`, `ledger.ts`, `instagram/page.tsx`, `Appearance.tsx`, `Owed.tsx`, `fonts.ts`, `dashboard/page.tsx`, `app/layout.tsx`, `demo/route.ts`, `login/route.ts`, `proxy.ts`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+- **Why does `getRecords()` connect `getRecords` to `telegram/route.ts`, `records.ts`, `dashboard/page.tsx`, `invoices/page.tsx`, `InvoiceDetails.tsx`, `lib/actions.ts`, `rm`, `The 11 acceptance tests`, `Appearance.tsx`, `cron-daily/route.ts`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+- **Why does `Rec` connect `rm` to `bot-tools.ts`, `analytics.ts`, `invoice-bot.ts`, `records.ts`, `invoices/page.tsx`, `InvoiceDetails.tsx`, `lib/actions.ts`, `invoice-drive-upload.ts`, `ledger.ts`, `invoice-edit.ts`, `Clients.tsx`, `invoices/actions.ts`, `Dashboard.tsx`, `studio.ts`, `invoice-canva.ts`, `registry.ts`, `cron-daily/route.ts`, `_v1.tsx`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `getRecords()` (e.g. with `2 · Fresh clone + placeholder env → connect banner instantly, nothing hangs/500s — ✅ **PASS**` and `Why this is easy in Aereon Dashboard (the one-table pattern)`) actually correct?**
   _`getRecords()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `session-start.sh script`, `WhenTrigger`, `AgentDefinition` to the rest of the system?**
-  _623 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `supabase.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10160427807486631 - nodes in this community are weakly interconnected._
-- **Should `instagram.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07955596669750231 - nodes in this community are weakly interconnected._
+  _628 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `analytics.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.0660377358490566 - nodes in this community are weakly interconnected._
+- **Should `invoice-bot.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.06715063520871144 - nodes in this community are weakly interconnected._
