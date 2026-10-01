@@ -1,6 +1,7 @@
 import { supabase, supabaseConfigured } from './supabase'
 import type { InlineKeyboard } from './telegram'
 import type { DocKind } from './invoice-render'
+import { TERMS } from './invoice-figures'
 
 // 👉 The invoice interview. Aereon says /invoice in Telegram, answers eight
 // questions, and a real invoice record is filed the moment he confirms.
@@ -66,11 +67,8 @@ export const STEPS = [
 export type Step = (typeof STEPS)[number]
 
 // The three payment terms that actually appear across the recent invoices.
-export const TERMS: Record<string, string> = {
-  half: 'A non-refundable deposit of 50% is required to commence the work\nremaining 50% balance is due upon project delivered and signed off',
-  ondelivery: 'Full payment is due upon delivery of the content',
-  net30: 'Payment to be initiated within 30 days of posting',
-}
+// Kept in the pure invoice-figures.ts so the Edit form can match them too.
+export { TERMS } from './invoice-figures'
 
 const CURRENCIES: Currency[] = ['MYR', 'USD', 'SGD', 'EUR', 'RMB']
 

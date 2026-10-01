@@ -1,7 +1,7 @@
 import type { Rec } from './records'
 import { toInvoices } from './invoices'
 import { driveOf, driveStatus } from './invoice-drive'
-import type { Payment, DetailRow, KnownClient, FormOptions } from './invoice-figures'
+import { TERMS, type Payment, type DetailRow, type KnownClient, type FormOptions, type EditValues } from './invoice-figures'
 
 export { statusFigures } from './invoice-figures'
 export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from './invoice-figures'
@@ -31,6 +31,50 @@ export function paymentOf(r: Pick<Rec, 'status' | 'due_date'>, today = new Date(
   return r.due_date && r.due_date < today ? 'overdue' : 'outstanding'
 }
 
+/** Why an invoice can't be edited, or null when it can. Only invoices drawn
+ *  from the CURRENT Canva template (by the dashboard or the bot) are editable:
+ *  an edit redraws the template from the row's fields, so anything else — the
+ *  Canva back catalogue, or a bot row with no design recorded — is view only. */
+export function editBlockOf(r: Pick<Rec, 'meta'>): string | null {
+  const m = r.meta ?? {}
+  if (m.source === 'canva' || !m.render?.design_id || m.render?.status !== 'done')
+    return 'View only — made before the current Canva template'
+  if (!m.job || !Array.isArray(m.deliverables) || !m.deliverables.length)
+    return 'View only — this invoice is missing its job or scope of work'
+  return null
+}
+
+/** The row as the Edit form's fields. Reverse of the form's toDraft() + invoiceRow(). */
+export function editValuesOf(r: Rec): EditValues {
+  const m = r.meta ?? {}
+  const s = String(r.status ?? '').toLowerCase()
+  const terms = String(m.terms ?? '')
+  const termsKey = (Object.keys(TERMS).find(k => TERMS[k] === terms) ?? 'custom') as EditValues['termsKey']
+  const str = (v: unknown) => (v == null || v === '—' || v === '-' ? '' : String(v))
+  return {
+    client: str(m.customer),
+    contact: str(m.contact),
+    address: str(m.address),
+    reg: str(m.reg),
+    job: str(m.job),
+    venue: str(m.venue),
+    eventDate: str(m.event_date),
+    eventDateLabel: str(m.event_date_label),
+    eventTime: str(m.event_time),
+    deliverables: (m.deliverables as string[]).join('\n'),
+    // The row's amount is the NET; the form takes the list price and the discount.
+    amount: String(m.list_price ?? r.amount),
+    currency: (m.currency ?? 'MYR') as EditValues['currency'],
+    discount: m.discount ? String(m.discount) : '',
+    termsKey,
+    terms,
+    quotation: str(m.quotation_no),
+    date: str(m.invoice_date) || String(r.created_at).slice(0, 10),
+    dueDate: str(r.due_date),
+    status: PAID.includes(s) ? 'paid' : s === 'issued' ? 'issued' : 'waiting',
+  }
+}
+
 export function toDetailRows(rows: Rec[], today?: string): DetailRow[] {
   const byId = new Map(rows.map(r => [r.id, r]))
   return toInvoices(rows).map(i => {
@@ -55,6 +99,10 @@ export function toDetailRows(rows: Rec[], today?: string): DetailRow[] {
       hasDesign: !!(m.canva_design || m.render?.design_id || /\/design\/D/.test(String(m.canva_url ?? ''))),
       createdAt: String(r.created_at).slice(0, 10),
       source: String(m.source ?? '—'),
+      edit: editBlockOf(r) ? null : editValuesOf(r),
+      editBlock: editBlockOf(r),
+      designId: m.render?.design_id ?? m.canva_design ?? null,
+      undo: Array.isArray(m.edits) && m.edits.length ? { at: String(m.edits[m.edits.length - 1].at) } : null,
     }
   })
 }
