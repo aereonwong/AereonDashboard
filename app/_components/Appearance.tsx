@@ -70,14 +70,14 @@ export default function Appearance() {
   const [glass, setGlass] = useState<Glass>('frosted')
   const [font, setFont] = useState<Font>('grotesk')
   const [bg, setBg] = useState<Bg>('merdeka')
-  const [dash, setDash] = useState<Dash>('v2')
-  const [world, setWorld] = useState<World>('contact')
+  const [dash, setDash] = useState<Dash>('v3')
+  const [world, setWorld] = useState<World>('canon')
 
   // The dashboard layout lives in a cookie so the server can read it; mirror it
   // into state on mount so the right card shows as selected.
   useEffect(() => {
     const d = document.cookie.match(/(?:^|;\s*)cfo-dash=(v1|v2|v3)(?:;|$)/)?.[1] as Dash | undefined
-    setDash(d ?? 'v2')
+    setDash(d ?? 'v3')
     const w = document.cookie.match(/(?:^|;\s*)cfo-v3=(contact|hud|canon)(?:;|$)/)?.[1] as World | undefined
     if (w) setWorld(w)
   }, [])

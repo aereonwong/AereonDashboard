@@ -28,7 +28,7 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 - `app/page.tsx` — public landing page (portrait, bio, live IG numbers, brand strip from invoices).
 - `app/(app)/**` — everything behind the passcode; `app/(app)/layout.tsx` holds sidebar + bottom bar.
 - The Dashboard has two layouts. `app/(app)/dashboard/page.tsx` reads the `cfo-dash` cookie and
-  renders `_v2.tsx` (default, "Operating picture") or `_v1.tsx` ("Creator view"). Settings sets the
+  renders `_v2.tsx` ("Operating picture") or `_v1.tsx` ("Creator view") — but since 2 Oct 2026 the app defaults to **v3** (Studio Standard) when no cookie is set; see `lib/v3/version.ts`. Settings sets the
   cookie. Both read the same rows, so switching never changes a number.
 - `proxy.ts` — the passcode gate (Next 16 name for middleware). Public paths are listed in its matcher.
 - `lib/records.ts` — every tab reads ONE Supabase `records` table; `meta` jsonb carries per-tab fields.
