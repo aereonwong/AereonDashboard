@@ -25,11 +25,16 @@ export type Audience = {
   history: FollowerPoint[] // one point per day that has a snapshot
   historyDays: number // days between the first and latest snapshot
   top: IgPost[]
+  /** Showcase for the public kits: the furthest-travelling posts of the last 3 months only. */
+  best: IgPost[]
   /** Who follows and how far the work travels — null until the first account refresh. */
   view: AudienceView | null
   /** Daily reach and follows gained, oldest first. */
   daily: DailyPoint[]
 }
+
+/** How far back the public kits look for their best work (about 3 months). */
+export const BEST_DAYS = 90
 
 export async function readAudience(days = 30): Promise<Audience> {
   const [snap, account, daily] = await Promise.all([latestSnapshot(), latestAccount(), accountDaily()])
@@ -52,6 +57,10 @@ export async function readAudience(days = 30): Promise<Audience> {
   const historyDays = first && last ? Math.round((Date.parse(last) - Date.parse(first)) / 86_400_000) : 0
   const stats = snap ? analyse(snap, days) : null
   const top = snap ? [...snap.posts].sort((a, b) => (b.reach ?? 0) - (a.reach ?? 0)) : []
+  // Anchored to the snapshot, so a missed refresh doesn't quietly shrink the window.
+  // Posts whose insights failed have no reach — missing is not zero, so they are left out.
+  const cutoff = Date.parse(snap?.captured_at ?? '') - BEST_DAYS * 86_400_000
+  const best = top.filter(p => p.reach !== undefined && Date.parse(p.timestamp) >= cutoff)
   return {
     snap,
     stats,
@@ -59,6 +68,7 @@ export async function readAudience(days = 30): Promise<Audience> {
     history,
     historyDays,
     top,
+    best,
     view: account ? readAudienceView(account, Number(snap?.profile?.followers_count ?? 0)) : null,
     daily,
   }

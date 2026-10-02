@@ -41,7 +41,7 @@ export default function MediaKit({
   since: string
 }) {
   const s = audience.stats
-  const top = audience.top[0]
+  const top = audience.best[0]
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
 
   // Reach as one composed sentence, built only from figures that exist.
@@ -170,7 +170,7 @@ export default function MediaKit({
                 In the last 30 days the work reached <b>{reachLine}</b> accounts
                 {topLine ? (
                   <>
-                    {' '}— the top reel alone reached <b>{topLine}</b>
+                    {' '}— the best post of the last 3 months alone reached <b>{topLine}</b>
                   </>
                 ) : null}
                 {engage ? (
@@ -185,12 +185,12 @@ export default function MediaKit({
         </section>
 
         {/* ---------------- Best work, playable ---------------- */}
-        {audience.top.length ? (
+        {audience.best.length ? (
           <section className="v3-kit-section" aria-labelledby="k-work">
             <h2 className="v3-kit-h2" id="k-work">
-              Recent work
+              Best work, last 3 months
             </h2>
-            <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} />
+            <PostGrid posts={audience.best} limit={6} circleFirst={world === 'contact'} />
           </section>
         ) : null}
 
