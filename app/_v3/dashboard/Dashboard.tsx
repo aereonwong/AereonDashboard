@@ -9,7 +9,7 @@ import Strip from './Strip'
 import Owed from './Owed'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
-import DailyReach from '../DailyReach'
+import GrowthRhythm from '../GrowthRhythm'
 import Circle from '../Circle'
 import { rmFull, money, pct, compact, longDate, num } from '../fmt'
 
@@ -375,9 +375,9 @@ export default function Dashboard({
                   <div className="v3-kpi-note">last post {stats.daysSinceLastPost === 0 ? 'today' : `${stats.daysSinceLastPost} day${stats.daysSinceLastPost === 1 ? '' : 's'} ago`}</div>
                 </div>
               </div>
-              {audience.daily.length >= 2 ? (
+              {audience.daily.length >= 3 ? (
                 <div style={{ marginBottom: 'var(--space-5)' }}>
-                  <DailyReach days={audience.daily} />
+                  <GrowthRhythm days={audience.daily} posts={audience.snap?.posts ?? []} median={stats.baseline.median} />
                 </div>
               ) : null}
               <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} lift={stats.lift} />

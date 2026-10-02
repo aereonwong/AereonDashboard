@@ -12,6 +12,7 @@ import RefreshButton from '@/app/_components/RefreshButton'
 import V3Instagram from '@/app/_v3/pages/Instagram'
 import { readVersion } from '@/lib/v3/version'
 import { readAudience } from '@/lib/v3/audience'
+import { readIgExtras } from '@/lib/v3/ig-extras'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,8 +30,8 @@ export default async function Instagram({
 }) {
   const { version } = await readVersion()
   if (version === 'v3') {
-    const [audience, sp] = await Promise.all([readAudience(), searchParams])
-    return <V3Instagram audience={audience} sp={sp} />
+    const [audience, sp, extras] = await Promise.all([readAudience(), searchParams, readIgExtras()])
+    return <V3Instagram audience={audience} sp={sp} extras={extras} />
   }
   const [snap, account] = await Promise.all([latestSnapshot(), latestAccount()])
 
