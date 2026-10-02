@@ -1,19 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { SESSION_COOKIE, isValidSession } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The passcode gate. In Next 16 this file is called `proxy.ts` (the old name
 // `middleware.ts` is deprecated and would print scary warnings for beginners).
 //
 // It's "a lock on the door, not bank-grade auth": if APP_PASSCODE is set and the
-// visitor has no session cookie, we bounce them to /login. If APP_PASSCODE is NOT
+// visitor has no VALID session cookie (signature checked in lib/session.ts — a
+// cookie that merely exists proves nothing), we bounce them to /login. If APP_PASSCODE is NOT
 // set, we DON'T gate anything — the app shows a calm setup banner instead, so a
 // half-configured clone never locks you out of your own HQ.
 export function proxy(req: NextRequest) {
   const passcode = (process.env.APP_PASSCODE ?? '').trim()
   if (!passcode) return NextResponse.next()          // no lock installed → open door
 
-  const session = req.cookies.get('cfo_session')?.value
-  if (session) return NextResponse.next()            // has the opaque session cookie → allow
+  const session = req.cookies.get(SESSION_COOKIE)?.value
+  if (isValidSession(session, passcode)) return NextResponse.next()   // signed by us → allow
 
   const url = req.nextUrl.clone()
   url.pathname = '/login'
