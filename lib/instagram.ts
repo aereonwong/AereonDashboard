@@ -151,9 +151,9 @@ async function attachCovers(exec: Exec, igUserId: string, posts: IgPost[]): Prom
 // snapshot, so the page can crop the band out rather than show it. Uses sharp,
 // which ships with Next.js; if it is unavailable the covers simply stay as they are.
 async function measureLetterbox(posts: IgPost[]): Promise<void> {
-  let sharp: typeof import('sharp')
+  let sharp: (input: Buffer) => import('sharp').Sharp
   try {
-    sharp = (await import('sharp')).default
+    sharp = (await import('sharp')).default as unknown as typeof sharp
   } catch {
     return
   }

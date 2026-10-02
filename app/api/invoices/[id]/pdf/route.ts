@@ -3,6 +3,7 @@ import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { driveOf, driveDownloadUrl } from '@/lib/invoice-drive'
 import { designIdOf, exportPdfUrl } from '@/lib/invoice-canva'
 import { composioReady } from '@/lib/composio-exec'
+import { signedIn } from '@/lib/auth'
 
 // 👉 Download PDF. The cheapest route that works, in order:
 //   1. The invoice is already in Google Drive → redirect to that file. No API call.
@@ -14,6 +15,8 @@ import { composioReady } from '@/lib/composio-exec'
 export const dynamic = 'force-dynamic'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Second lock behind proxy.ts — this route spends or switches modes.
+  if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
   const id = Number((await params).id)
   if (!supabaseConfigured || !Number.isFinite(id)) return new NextResponse('Not found', { status: 404 })
 

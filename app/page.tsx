@@ -9,8 +9,7 @@ import type { Metadata } from 'next'
 import { readSite } from '@/lib/v3/site'
 import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
-import { cookies } from 'next/headers'
-import { SESSION_COOKIE, isValidSession } from '@/lib/session'
+import { signedIn as isSignedIn } from '@/lib/auth'
 import type { World } from '@/lib/v3/catalog'
 
 export const dynamic = 'force-dynamic'
@@ -43,10 +42,9 @@ export default async function Landing({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const [site, sp, jar] = await Promise.all([readSite(), searchParams, cookies()])
+  const [site, sp, signedIn] = await Promise.all([readSite(), searchParams, isSignedIn()])
   // A private preview, so the kit can be checked before it goes public. Only
   // honoured for someone signed in; everyone else sees the saved setting.
-  const signedIn = isValidSession(jar.get(SESSION_COOKIE)?.value, (process.env.APP_PASSCODE ?? '').trim())
   const previewWorld = String(sp.world ?? '')
   const preview = signedIn && sp.preview === 'kit'
   const world: World =

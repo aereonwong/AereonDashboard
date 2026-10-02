@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { safeEqual } from '@/lib/session'
 import { sendMessage } from '@/lib/telegram'
 import { logRun } from '@/lib/runs'
 import { parseDigest, saveNews } from '@/lib/news'
@@ -24,7 +25,7 @@ const LIMIT = 3800
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim()
-  const authed = !!secret && req.headers.get('authorization') === `Bearer ${secret}`
+  const authed = !!secret && safeEqual(req.headers.get('authorization'), `Bearer ${secret}`)
   if (!authed) return new Response('forbidden', { status: 401 })
 
   const owner = process.env.OWNER_CHAT_ID?.trim()

@@ -1,5 +1,6 @@
 'use server'
 
+import { requireSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import type { World } from './catalog'
@@ -39,9 +40,14 @@ export async function readSite(): Promise<Site> {
 }
 
 export async function saveSite(patch: Partial<Site>): Promise<{ ok: boolean; error?: string }> {
+  await requireSession()
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const current = await readSite()
-  const next = { ...current, ...patch }
+  // Only the known fields — a caller can't spread arbitrary keys into the row.
+  const next: Site = {
+    landing: patch.landing === 'kit' || patch.landing === 'classic' ? patch.landing : current.landing,
+    world: patch.world === 'contact' || patch.world === 'hud' || patch.world === 'canon' ? patch.world : current.world,
+  }
   const r = await row()
   const { error } = r
     ? await supabase.from('records').update({ meta: next }).eq('id', r.id)
