@@ -32,5 +32,5 @@ graphify-out/20*/
 graphify-out/.graphify_python
 graphify-out/cost.json
 
-# Browser-tool captures — they can hold private dashboard screenshots
+# Playwright MCP screenshots/snapshots (build-verifier, theme-qa)
 .playwright-mcp/

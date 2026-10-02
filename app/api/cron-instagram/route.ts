@@ -1,4 +1,5 @@
 import { refreshInstagram } from '@/lib/ig-refresh'
+import { safeEqual } from '@/lib/session'
 
 // 👉 The daily Instagram refresh (vercel.json, 6am MYT). It only READS Instagram
 // and writes history rows — no Claude call, no message sent — so it costs nothing
@@ -13,7 +14,7 @@ export const maxDuration = 300
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim()
-  const authed = !!secret && req.headers.get('authorization') === `Bearer ${secret}`
+  const authed = !!secret && safeEqual(req.headers.get('authorization'), `Bearer ${secret}`)
   if (!authed) return new Response('forbidden', { status: 401 })
 
   const r = await refreshInstagram('cron')

@@ -1,5 +1,6 @@
 'use server'
 
+import { requireSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 
@@ -16,6 +17,7 @@ const refresh = () => {
 }
 
 export async function markPaid(id: number): Promise<{ ok: boolean; error?: string }> {
+  await requireSession()
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta, status').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
@@ -34,6 +36,7 @@ export async function markPaid(id: number): Promise<{ ok: boolean; error?: strin
 }
 
 export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: string }> {
+  await requireSession()
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
@@ -49,6 +52,7 @@ export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: str
 
 /** One-time baseline: confirm everything issued on or before a date as paid. */
 export async function markPaidBefore(date: string): Promise<{ ok: boolean; count: number; error?: string }> {
+  await requireSession()
   if (!supabaseConfigured) return { ok: false, count: 0, error: 'Database not configured' }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, count: 0, error: 'Pick a valid date' }
   const { data, error } = await supabase

@@ -1,9 +1,8 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
-import { SESSION_COOKIE, isValidSession } from '@/lib/session'
+import { signedIn } from '@/lib/auth'
 import { readSite, siteRow, type Site } from './site'
 
 // 👉 Saving the site-wide settings (Settings → Public landing page). A server
@@ -20,12 +19,8 @@ const pick = (patch: Partial<Site>): Partial<Site> => {
 }
 
 export async function saveSite(patch: Partial<Site>): Promise<{ ok: boolean; error?: string }> {
-  // Same rule as proxy.ts: with APP_PASSCODE set, only a signed session may save.
-  const passcode = (process.env.APP_PASSCODE ?? '').trim()
-  if (passcode) {
-    const jar = await cookies()
-    if (!isValidSession(jar.get(SESSION_COOKIE)?.value, passcode)) return { ok: false, error: 'Sign in again to change this.' }
-  }
+  // Same rule as proxy.ts (lib/auth.ts): only a signed session may save.
+  if (!(await signedIn())) return { ok: false, error: 'Sign in again to change this.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const clean = pick(patch ?? {})
   if (!Object.keys(clean).length) return { ok: false, error: 'Nothing to change' }

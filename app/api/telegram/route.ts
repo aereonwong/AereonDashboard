@@ -21,6 +21,7 @@ import { jarvisIdentity, jarvisName } from '@/jarvis/config'
 import { logRun } from '@/lib/runs'
 import { startInvoice, handleInvoiceText, handleInvoiceCallback } from '@/lib/invoice-bot'
 import { pendingRender } from '@/lib/invoice-render'
+import { safeEqual } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The Telegram brain + hands. This ONE webhook does three jobs:
@@ -82,16 +83,10 @@ const HELP_CARD =
   `Small stuff I just do (reply <code>/undo-&lt;id&gt;</code> to reverse). Money stuff I propose ` +
   `and YOU tap ✅ Approve. I never message your customers.`
 
-// Open this route in a browser to confirm your env is wired (reveals only WHETHER
-// each value exists, never the values themselves).
+// This path is public (Telegram must reach it), so a GET says nothing about how
+// the bot is configured. Check the wiring with `npm run webhook:info` instead.
 export async function GET() {
-  return Response.json({
-    ok: true,
-    botTokenSet: !!process.env.TELEGRAM_BOT_TOKEN,
-    webhookSecretSet: !!process.env.TELEGRAM_WEBHOOK_SECRET,
-    anthropicKeySet: !!process.env.ANTHROPIC_API_KEY,
-    allowedUsers: ALLOWED.length,
-  })
+  return new Response('ok')
 }
 
 // ------------------------------------------------------------
@@ -117,7 +112,8 @@ async function isFreshUpdate(updateId: unknown): Promise<boolean> {
 
 export async function POST(req: Request) {
   // 1) Auth gate — Telegram sends this secret header (you set it via setWebhook).
-  if (req.headers.get('x-telegram-bot-api-secret-token') !== process.env.TELEGRAM_WEBHOOK_SECRET?.trim()) {
+  // Constant-time, and an unset/empty secret never matches (fails closed).
+  if (!safeEqual(req.headers.get('x-telegram-bot-api-secret-token'), process.env.TELEGRAM_WEBHOOK_SECRET?.trim())) {
     return new Response('forbidden', { status: 401 })
   }
 

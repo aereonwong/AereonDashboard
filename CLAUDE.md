@@ -112,6 +112,20 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
 
+## Review agents (`.claude/agents/`)
+
+Before opening a pull request, run the reviewers whose files the diff touches — in parallel, and
+fix every BLOCK before merging:
+
+- `numbers-guard` — money figures (`lib/records.ts`, `invoices.ts`, `analytics.ts`, `lib/v3/`, dashboard, Cash In, bot tools)
+- `security-reviewer` — `proxy.ts`, `app/api/**`, secrets, login/demo, `vercel.json`, new routes
+- `ig-guard` — Instagram fetch/refresh, snapshots, Media Kit, the landing page's live numbers
+- `invoice-auditor` — invoice/quote numbering, parsing, editing, Canva/Drive export
+- `build-verifier` — any app-code change: builds, starts locally, checks affected pages render
+- `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every palette × light/dark
+
+Each opens with **Verdict: SHIP** or **Verdict: BLOCK**. All are read-only.
+
 ## Motion skills (installed 2 Oct 2026)
 
 From https://github.com/kevinbadi/claude-motion-skills (an index of 16 packs by iart.ai, MIT).

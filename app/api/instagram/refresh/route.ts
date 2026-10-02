@@ -1,4 +1,5 @@
 import { refreshInstagram } from '@/lib/ig-refresh'
+import { signedIn } from '@/lib/auth'
 
 // 👉 Pulls your latest Instagram posts + insights through Composio and stores one
 // snapshot row (plus the history rows). Sits BEHIND the app passcode (proxy.ts
@@ -10,6 +11,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 export async function POST() {
+  // Second lock behind proxy.ts — a refresh spends Composio calls.
+  if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
   const r = await refreshInstagram('button')
   return r.ok
     ? Response.json({ ok: true, posts: r.posts, captured_at: r.captured_at, warnings: r.warnings })
