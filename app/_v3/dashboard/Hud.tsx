@@ -45,7 +45,7 @@ export default function Hud({
     return Math.ceil(max / mag) * mag
   })()
   const alt = pace[m].now ?? 0
-  const before = pace[m].before
+  const before = pace[m].beforeAt
   const speed = before ? ((alt - before) / before) * 100 : null
   const pos = (v: number) => `${(1 - v / top) * 100}%`
   const ticks = Array.from({ length: 11 }, (_, i) => (top / 10) * i)

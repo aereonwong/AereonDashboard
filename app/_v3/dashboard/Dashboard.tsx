@@ -30,14 +30,11 @@ export default function Dashboard({
 }) {
   const s = buildStudio(rows, filters)
   const { stats } = audience
-  const recentTotal = s.owed.filter(o => o.currency === 'MYR').reduce((t, o) => t + o.amount, 0)
-  const recentIncome = rows
-    .filter(r => r.category === 'cash_in' && r.meta?.invoice_no && !r.meta?.currency)
-    .filter(r => {
-      const d = String(r.meta?.invoice_date ?? '')
-      return d && Date.parse(s.today) - Date.parse(d) <= 120 * 86_400_000
-    })
-    .reduce((t, r) => t + Number(r.amount || 0), 0)
+  // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
+  // last 120 days — so a client filter can't compare one client with everyone.
+  const owedRm = s.owed.filter(o => o.currency === 'MYR')
+  const recentTotal = owedRm.reduce((t, o) => t + o.amount, 0)
+  const recentIncome = s.recentIncome
   const latestNo = [...rows]
     .filter(r => r.category === 'cash_in' && r.meta?.invoice_no)
     .map(r => String(r.meta?.invoice_no))
@@ -145,7 +142,7 @@ export default function Dashboard({
           projection={s.projection}
           lastFull={s.lastFull}
           owedTotal={recentTotal}
-          owedCount={s.owed.length}
+          owedCount={owedRm.length}
           recentTotal={recentIncome}
           reachPerPost={stats?.reachPerPost ?? 0}
           followers={audience.followers}
