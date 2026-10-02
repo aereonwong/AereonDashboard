@@ -2,7 +2,8 @@
 // reads the records once; the table, filters and figures then work in the
 // browser. Canva and Google Drive are only called from the row buttons.
 import { getRecords, demoMode } from '@/lib/records'
-import { toDetailRows, formOptions } from '@/lib/invoice-details'
+import { toDetailRows, formOptions, linkedPostsOf } from '@/lib/invoice-details'
+import { reachFor } from '@/lib/ig-links'
 import { composioReady } from '@/lib/composio-exec'
 import { readVersion } from '@/lib/v3/version'
 import InvoiceDetails from './InvoiceDetails'
@@ -15,9 +16,11 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 export default async function InvoiceDetailsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const [rows, demo, { version }, sp] = await Promise.all([getRecords(), demoMode(), readVersion(), searchParams])
   const today = new Date().toISOString().slice(0, 10)
+  // Reach for linked posts only — one small query, no Instagram call.
+  const reach = await reachFor(rows.flatMap(r => linkedPostsOf(r).map(p => p.id)))
   return (
     <InvoiceDetails
-      rows={toDetailRows(rows, today)}
+      rows={toDetailRows(rows, today, reach)}
       options={formOptions(rows, today)}
       initial={{
         year: one(sp.year),

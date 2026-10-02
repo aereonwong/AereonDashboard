@@ -195,9 +195,11 @@ export async function undoLastEdit(id: number): Promise<UndoResult> {
   }
 
   const rest = edits.slice(0, -1)
+  // Linked Instagram posts aren't part of the invoice's content: undo keeps
+  // today's links rather than the ones the snapshot happened to hold.
   const { error } = await supabase
     .from('records')
-    .update({ ...last.prev, meta: { ...prevMeta, edits: rest.length ? rest : undefined } })
+    .update({ ...last.prev, meta: { ...prevMeta, ig_posts: meta.ig_posts, edits: rest.length ? rest : undefined } })
     .eq('id', id)
   if (error) return { ok: false, error: `The invoice row could not be restored: ${error.message}` }
 

@@ -1,4 +1,5 @@
 import type { Rec } from './records'
+import type { LinkedPost } from './ig-link-types'
 import { toInvoices } from './invoices'
 import { driveOf, driveStatus } from './invoice-drive'
 import { TERMS, type Payment, type DetailRow, type KnownClient, type FormOptions, type EditValues } from './invoice-figures'
@@ -75,7 +76,18 @@ export function editValuesOf(r: Rec): EditValues {
   }
 }
 
-export function toDetailRows(rows: Rec[], today?: string): DetailRow[] {
+/** Instagram's "2026-09-30T16:30:00+0000" as a Malaysia-time day, e.g. "1 Oct".
+ *  Done on the server so the table never differs between server and browser. */
+export function postDay(ts: string): string {
+  const d = new Date(String(ts).replace(/([+-]\d{2})(\d{2})$/, '$1:$2'))
+  return Number.isNaN(+d) ? '' : d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', timeZone: 'Asia/Kuala_Lumpur' })
+}
+
+/** The posts linked to an invoice, as stored on it. */
+export const linkedPostsOf = (r: Pick<Rec, 'meta'>): LinkedPost[] =>
+  Array.isArray(r.meta?.ig_posts) ? (r.meta!.ig_posts as LinkedPost[]) : []
+
+export function toDetailRows(rows: Rec[], today?: string, reach: Record<string, { reach: number; at: string }> = {}): DetailRow[] {
   const byId = new Map(rows.map(r => [r.id, r]))
   return toInvoices(rows).map(i => {
     const r = byId.get(i.id)!
@@ -103,6 +115,12 @@ export function toDetailRows(rows: Rec[], today?: string): DetailRow[] {
       editBlock: editBlockOf(r),
       designId: m.render?.design_id ?? m.canva_design ?? null,
       undo: Array.isArray(m.edits) && m.edits.length ? { at: String(m.edits[m.edits.length - 1].at) } : null,
+      igPosts: linkedPostsOf(r).map(p => ({
+        ...p,
+        reach: reach[p.id]?.reach,
+        reachAt: reach[p.id] ? postDay(reach[p.id].at) : undefined,
+        day: postDay(p.timestamp),
+      })),
     }
   })
 }
