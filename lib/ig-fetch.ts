@@ -159,7 +159,7 @@ export async function insightsFor(rawExec: Exec, posts: IgPost[]): Promise<void>
 }
 
 async function postInsights(exec: Exec, post: IgPost) {
-  for (const metric of METRICS[post.type] ?? [BASE]) {
+  for (const metric of (Object.hasOwn(METRICS, post.type) ? METRICS[post.type] : null) ?? [BASE]) {
     try {
       const ins = await exec('INSTAGRAM_GET_IG_MEDIA_INSIGHTS', { ig_media_id: post.id, metric })
       for (const row of rows(ins)) {

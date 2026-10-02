@@ -55,7 +55,7 @@ export async function refreshInstagram(source: 'button' | 'cron'): Promise<Refre
     const igUserId = String((snap.profile as { id?: string }).id ?? '')
     const account = await buildAccount(exec, igUserId || undefined).catch(() => null)
     const warnings = await saveSnapshot(snap, account)
-    const tracked = await trackLinked(exec, snap).catch(e => {
+    const tracked = await trackLinked(exec, snap, warnings).catch(e => {
       warnings.push(`linked posts: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200))
       return 0
     })
@@ -77,7 +77,7 @@ export async function refreshInstagram(source: 'button' | 'cron'): Promise<Refre
 // the latest 40 would otherwise stop updating. Their insights are read here too,
 // at most 30 per refresh, and stored in ig_post_metrics like any other post.
 const MAX_TRACKED = 30
-async function trackLinked(exec: Exec, snap: IgSnapshot): Promise<number> {
+async function trackLinked(exec: Exec, snap: IgSnapshot, warnings: string[]): Promise<number> {
   const { data, error } = await supabase
     .from('records')
     .select('meta')
@@ -93,6 +93,7 @@ async function trackLinked(exec: Exec, snap: IgSnapshot): Promise<number> {
     .slice(0, MAX_TRACKED)
     .map(p => ({ id: p.id, timestamp: p.timestamp, type: p.type, caption: '', likes: 0, comments: 0 }))
   if (!posts.length) return 0
+  if (want.size > MAX_TRACKED) warnings.push(`linked posts: only the newest ${MAX_TRACKED} of ${want.size} older linked posts were updated`)
   await insightsFor(exec, posts)
   const rows = posts
     .filter(p => p.reach !== undefined)
@@ -113,6 +114,7 @@ async function trackLinked(exec: Exec, snap: IgSnapshot): Promise<number> {
       follows: p.follows ?? null,
       profile_visits: p.profileVisits ?? null,
     }))
+  if (rows.length < posts.length) warnings.push(`linked posts: Instagram gave no figures for ${posts.length - rows.length} of ${posts.length}`)
   if (rows.length) {
     const { error: ins } = await supabase.from('ig_post_metrics').insert(rows)
     if (ins) throw new Error(ins.message)

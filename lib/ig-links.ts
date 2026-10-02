@@ -1,6 +1,6 @@
 import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
-import { latestSnapshot } from './instagram'
+import { latestSnapshot, MAX_POSTS } from './instagram'
 import { composioExec } from './composio-exec'
 import type { LinkedPost, PickPost } from './ig-link-types'
 export type { LinkedPost, PickPost } from './ig-link-types'
@@ -13,6 +13,8 @@ export type { LinkedPost, PickPost } from './ig-link-types'
 // cover URLs comes back, 20 does not.
 
 export const OLDER_PAGE = 12
+/** Instagram's own format names — anything else is stored as FEED. */
+const TYPES = new Set(['FEED', 'REELS', 'STORY', 'VIDEO', 'IMAGE', 'CAROUSEL_ALBUM'])
 const MAX_LINKS = 20
 
 const clip = (s: unknown, n: number) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, n)
@@ -45,9 +47,13 @@ export async function olderPosts(after?: string): Promise<{ posts: PickPost[]; a
 
   let cursor = after ?? null
   if (!cursor) {
-    const skip = await composioExec('INSTAGRAM_GET_IG_USER_MEDIA', { ig_user_id: igUserId, limit: 40, fields: 'id' })
+    // Start right after what's stored. Skipping the stored COUNT (not a fixed
+    // 40) means a smaller snapshot can't hide posts; an overlap is de-duplicated.
+    const stored = Math.min(Math.max(snap?.posts.length ?? 0, 1), MAX_POSTS)
+    const skip = await composioExec('INSTAGRAM_GET_IG_USER_MEDIA', { ig_user_id: igUserId, limit: stored, fields: 'id' })
+    if (listOf(skip).length < stored) return { posts: [], after: null } // the account has no more posts
     cursor = cursorOf(skip)
-    if (!cursor) return { posts: [], after: null }
+    if (!cursor) throw new Error('Instagram did not say where the next page starts — try again.')
   }
   const page = await composioExec('INSTAGRAM_GET_IG_USER_MEDIA', {
     ig_user_id: igUserId,
@@ -55,7 +61,8 @@ export async function olderPosts(after?: string): Promise<{ posts: PickPost[]; a
     after: cursor,
     fields: 'id,caption,media_type,media_product_type,permalink,timestamp,thumbnail_url,media_url',
   })
-  const posts = listOf(page)
+  const raw = listOf(page)
+  const posts = raw
     .filter(m => m?.id && m?.permalink)
     .map(m => ({
       id: String(m.id),
@@ -65,7 +72,8 @@ export async function olderPosts(after?: string): Promise<{ posts: PickPost[]; a
       caption: clip(m.caption, 160),
       thumb: /VIDEO/i.test(String(m.media_type)) ? m.thumbnail_url : m.media_url ?? m.thumbnail_url,
     }))
-  return { posts, after: posts.length === OLDER_PAGE ? cursorOf(page) : null }
+  // "No more" only when Instagram itself sent a short page or no next cursor.
+  return { posts, after: raw.length === OLDER_PAGE ? cursorOf(page) : null }
 }
 
 /** Only well-formed posts are kept, with lengths capped — nothing else is written. */
@@ -78,12 +86,13 @@ export function cleanLinks(input: unknown): LinkedPost[] {
     const permalink = String(p?.permalink ?? '')
     if (!/^\d{5,30}$/.test(id) || seen.has(id)) continue
     if (!/^https:\/\/www\.instagram\.com\/(p|reel|tv)\/[\w-]+\/?$/.test(permalink)) continue
+    if (Number.isNaN(Date.parse(String(p?.timestamp ?? '').replace(/([+-]\d{2})(\d{2})$/, '$1:$2')))) continue
     seen.add(id)
     out.push({
       id,
       permalink,
       timestamp: clip(p.timestamp, 30),
-      type: clip(p.type, 20),
+      type: TYPES.has(String(p.type)) ? String(p.type) : 'FEED',
       caption: clip(p.caption, 160),
     })
     if (out.length >= MAX_LINKS) break
@@ -91,15 +100,20 @@ export function cleanLinks(input: unknown): LinkedPost[] {
   return out
 }
 
-/** Latest stored reach for each post id (from ig_post_metrics), for showing linked posts. */
-export async function reachFor(ids: string[]): Promise<Record<string, number>> {
+/** Latest stored reach for each post id (from ig_post_metrics) and the day it
+ *  was read, for showing linked posts. Looks back 120 days, newest first. */
+export async function reachFor(ids: string[]): Promise<Record<string, { reach: number; at: string }>> {
   if (!supabaseConfigured || !ids.length) return {}
+  const since = new Date(Date.now() - 120 * 86_400_000).toISOString()
   const { data } = await supabase
     .from('ig_post_metrics')
     .select('media_id, reach, captured_at')
     .in('media_id', [...new Set(ids)].slice(0, 500))
+    .gte('captured_at', since)
+    .not('reach', 'is', null)
     .order('captured_at', { ascending: false })
-  const out: Record<string, number> = {}
-  for (const r of data ?? []) if (out[r.media_id] === undefined && r.reach != null) out[r.media_id] = r.reach
+    .limit(5000)
+  const out: Record<string, { reach: number; at: string }> = {}
+  for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
   return out
 }

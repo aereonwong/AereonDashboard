@@ -21,8 +21,8 @@ const STOP = new Set([
   'malaysia', 'kuala', 'lumpur', 'the', 'and', 'for', 'production', 'content', 'social', 'media',
 ])
 const day = (iso: string) => {
-  const d = new Date(iso)
-  return Number.isNaN(+d) ? '' : d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })
+  const d = new Date(String(iso).replace(/([+-]\d{2})(\d{2})$/, '$1:$2'))
+  return Number.isNaN(+d) ? '' : d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' })
 }
 const kind = (t: string) => (/REEL/i.test(t) ? 'Reel' : /STORY/i.test(t) ? 'Story' : 'Post')
 const compact = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}K` : String(n))

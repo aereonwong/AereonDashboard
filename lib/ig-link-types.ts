@@ -6,4 +6,10 @@ export type LinkedPost = { id: string; permalink: string; timestamp: string; typ
 /** A post in the picker. */
 export type PickPost = LinkedPost & { thumb?: string; reach?: number }
 /** A linked post as Invoice Details shows it, with its latest stored reach. */
-export type ShownPost = LinkedPost & { reach?: number }
+export type ShownPost = LinkedPost & {
+  reach?: number
+  /** When that reach was read, e.g. "2 Oct" (Malaysia time). */
+  reachAt?: string
+  /** The post's day, e.g. "15 Sep" (Malaysia time). */
+  day: string
+}

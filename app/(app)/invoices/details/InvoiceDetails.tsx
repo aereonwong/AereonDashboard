@@ -335,9 +335,14 @@ export default function InvoiceDetails({
                       <ul className="idt-linked" aria-label={`Instagram posts linked to ${r.no}`}>
                         {r.igPosts.map(p => (
                           <li key={p.id}>
-                            <a href={p.permalink} target="_blank" rel="noopener noreferrer" title={p.caption}>
+                            <a
+                              href={p.permalink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={`${p.caption}${p.reachAt ? `\n\nReach as of ${p.reachAt}` : ''}`}
+                            >
                               <Icon name={/REEL|VIDEO/i.test(p.type) ? 'play' : 'camera'} />
-                              {new Date(p.timestamp).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' })}
+                              {p.day}
                               {p.reach !== undefined ? <span className="idt-num"> · {p.reach.toLocaleString('en-MY')} reached</span> : null}
                             </a>
                           </li>
@@ -421,7 +426,7 @@ export default function InvoiceDetails({
                       <button
                         type="button"
                         className={`idt-act${r.igPosts.length ? ' linked' : ''}`}
-                        disabled={!!locked}
+                        disabled={isBusy || !!locked}
                         onClick={() => setLinking(r)}
                         aria-label={r.igPosts.length ? `Instagram posts linked to ${r.no}: ${r.igPosts.length}. Change` : `Link Instagram posts to ${r.no}`}
                         title={locked ?? (r.igPosts.length ? `${r.igPosts.length} Instagram post${r.igPosts.length === 1 ? '' : 's'} linked — change` : 'Link Instagram posts (optional)')}
