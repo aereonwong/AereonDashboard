@@ -3,9 +3,12 @@ import type { Audience } from '@/lib/v3/audience'
 import IgFilters from '../IgFilters'
 import PostGrid from '../PostGrid'
 import ReachTimeline from '../ReachTimeline'
-import DailyReach from '../DailyReach'
+import GrowthRhythm from '../GrowthRhythm'
+import { FollowFlow, TimeGrid, ThemeStrip, ReachBeyond, ShelfCurve, CollabPanel } from '../IgInsights'
 import AudienceBreakdown from '../AudienceBreakdown'
 import Refresh from '../Refresh'
+import { followFlow, timeGrid, themes, reachVsFollowers, shelfLife, collabs } from '@/lib/v3/ig-insights'
+import type { IgExtras } from '@/lib/v3/ig-extras'
 import { compact, num, longDate } from '../fmt'
 
 // 👉 v3 Instagram: is my audience growing, and what earns it.
@@ -20,7 +23,7 @@ type Params = Record<string, string | string[] | undefined>
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 const per100 = (n: number) => (n >= 10 ? n.toFixed(0) : n.toFixed(1))
 
-export default function Instagram({ audience, sp }: { audience: Audience; sp: Params }) {
+export default function Instagram({ audience, sp, extras }: { audience: Audience; sp: Params; extras: IgExtras }) {
   const days = ['7', '30', '90', 'all'].includes(one(sp.days) ?? '') ? one(sp.days)! : '30'
   const type = ['REELS', 'FEED'].includes(one(sp.type) ?? '') ? one(sp.type)! : ''
   const { snap, history, view, daily } = audience
@@ -45,8 +48,18 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
   const last = history.at(-1)
   const tracked = first && last ? Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000) : 0
   const best = s.byType[0]
-  const bestDay = s.byWeekday.filter(d => d.count >= 2)[0] ?? s.byWeekday[0]
   const byReach = [...s.posts].sort((a, b) => (b.reach ?? 0) - (a.reach ?? 0))
+
+  // The new analysis panels read every stored post — the date and format filter only steer the panels above them.
+  const all = snap.posts
+  const flow = followFlow(all, daily)
+  const grid = timeGrid(all)
+  const subjects = themes(all)
+  const beyond = reachVsFollowers(all, audience.followers, daily)
+  const life = shelfLife(extras.metrics)
+  const brand = collabs(all, extras.linked, extras.reachById)
+  const readDays = new Set(extras.metrics.map(m => m.captured_at.slice(0, 10)))
+  const firstRead = extras.metrics.length ? extras.metrics.reduce((m, r) => (r.captured_at < m ? r.captured_at : m), extras.metrics[0].captured_at) : null
 
   const t = view?.totals ?? {}
   const net = view?.follows != null && view?.unfollows != null ? view.follows - view.unfollows : null
@@ -142,6 +155,22 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
         </section>
 
         {/* ------------------------------------------------ the posts (filterable) */}
+        {daily.length >= 3 ? (
+          <section className="v3-panel v3-span-12" aria-labelledby="t-daily">
+            <div className="v3-panel-head">
+              <h2 className="v3-panel-title" id="t-daily">
+                Reach and growth, day by day
+              </h2>
+              <p className="v3-panel-note">
+                Every post and story combined, with each post pinned on its day
+                {t.profile_views ? ` · ${compact(t.profile_views)} profile visits` : ''}
+                {t.profile_links_taps || t.website_clicks ? ` · ${num((t.profile_links_taps ?? 0) + (t.website_clicks ?? 0))} link taps` : ''}
+              </p>
+            </div>
+            <GrowthRhythm days={daily} posts={all} median={s.baseline.median} />
+          </section>
+        ) : null}
+
         <section className="v3-panel v3-span-12" aria-labelledby="t-top">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-top">
@@ -152,21 +181,25 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
           <PostGrid posts={byReach} limit={8} lift={s.lift} />
         </section>
 
-        {daily.length >= 2 ? (
-          <section className="v3-panel v3-span-12" aria-labelledby="t-daily">
-            <div className="v3-panel-head">
-              <h2 className="v3-panel-title" id="t-daily">
-                Reach, day by day
-              </h2>
-              <p className="v3-panel-note">
-                Every post and story combined
-                {t.profile_views ? ` · ${compact(t.profile_views)} profile visits` : ''}
-                {t.profile_links_taps || t.website_clicks ? ` · ${num((t.profile_links_taps ?? 0) + (t.website_clicks ?? 0))} link taps` : ''}
-              </p>
-            </div>
-            <DailyReach days={daily} />
-          </section>
-        ) : null}
+        <section className="v3-panel v3-span-6" aria-labelledby="t-flow">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-flow">
+              Posts that brought followers
+            </h2>
+            <p className="v3-panel-note">Followers gained in the 48 hours after each posting day</p>
+          </div>
+          <FollowFlow flow={flow} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-beyond">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-beyond">
+              Reach beyond your followers
+            </h2>
+            <p className="v3-panel-note">Each post against the followers you had that day</p>
+          </div>
+          <ReachBeyond v={beyond} />
+        </section>
 
         <section className="v3-panel v3-span-6" aria-labelledby="t-attn">
           <div className="v3-panel-head">
@@ -256,31 +289,45 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
         <section className="v3-panel v3-span-6" aria-labelledby="t-day">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-day">
-              Best day to post
+              When to post
             </h2>
-            {bestDay ? <p className="v3-panel-note">{bestDay.day} leads, from {bestDay.count} posts</p> : null}
+            <p className="v3-panel-note">Median reach by weekday and time of day · Malaysia time</p>
           </div>
-          <div className="v3-rows">
-            {s.byWeekday.map(d => (
-              <div key={d.day} className="v3-row">
-                <div className="v3-row-main">
-                  <div className="v3-row-title">{d.day}</div>
-                  <div className="v3-row-sub">
-                    {d.count} post{d.count === 1 ? '' : 's'}
-                    {d.count < 2 ? ' · too few to trust' : ''}
-                  </div>
-                </div>
-                <div className="v3-row-num">{compact(d.avgReach)}</div>
-                <div className="v3-row-bar">
-                  <i style={{ ['--w' as string]: (d.avgReach / (s.byWeekday[0]?.avgReach || 1)).toFixed(3) }} />
-                </div>
-              </div>
-            ))}
+          <TimeGrid grid={grid} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-theme">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-theme">
+              What subjects travel
+            </h2>
+            <p className="v3-panel-note">Posts grouped by what the caption is about</p>
           </div>
+          <ThemeStrip rows={subjects.rows} typical={subjects.typical} all={all} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-shelf">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-shelf">
+              How long a post lives
+            </h2>
+            <p className="v3-panel-note">Share of its final reach, by days since posting</p>
+          </div>
+          <ShelfCurve life={life} readingDays={readDays.size} since={firstRead} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-collab">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-collab">
+              Brand work vs your own
+            </h2>
+            <p className="v3-panel-note">Reach of paid and credited posts against organic ones</p>
+          </div>
+          <CollabPanel view={brand} />
         </section>
 
         {s.quiet.length ? (
-          <section className="v3-panel v3-span-6" aria-labelledby="t-quiet">
+          <section className="v3-panel v3-span-12" aria-labelledby="t-quiet">
             <div className="v3-panel-head">
               <h2 className="v3-panel-title" id="t-quiet">
                 Quietest posts
