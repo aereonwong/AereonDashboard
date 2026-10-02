@@ -151,3 +151,43 @@ Rules:
 ## Folder move (27 Sep 2026)
 The project folder was renamed from `~/cashflowos-aereon` to `~/AereonDashboard`. A symlink at the old path
 still points here so old references keep working; it can be deleted once nothing uses it.
+
+## HyperFrames — HTML to MP4 video (installed 2 Oct 2026)
+
+From https://github.com/heygen-com/hyperframes (HeyGen, Apache 2.0). Write HTML/CSS/GSAP, render
+deterministic MP4. Installed as a user-scope Claude Code plugin (needs Node >= 22; this Mac has 24).
+
+Install on a fresh machine or cloud session:
+
+```bash
+claude plugin marketplace add heygen-com/hyperframes
+claude plugin install hyperframes@hyperframes
+```
+
+Use `/hyperframes:hyperframes` first — it routes to the right workflow (`product-launch-video`,
+`motion-graphics`, `short-form` etc). Standalone skills alternative: `npx hyperframes skills update`.
+Use it for any video/animation render in the app; follow render → preview → check before claiming done.
+
+## Agent Reach — internet access for research (installed 2 Oct 2026)
+
+From https://github.com/Panniantong/agent-reach (MIT). Reads web pages, YouTube, RSS, V2EX, Bilibili,
+GitHub, plus Reddit/Facebook/Instagram/Twitter/LinkedIn once logged in. Skill is at
+`~/.claude/skills/agent-reach`.
+
+**Use it automatically** when Aereon asks to research, search or look something up online, or shares
+a URL or names a platform (YouTube, Reddit, Instagram, X, Bilibili, LinkedIn, GitHub, RSS) — before
+guessing or using plain WebFetch. Run `agent-reach doctor` to see which channels work right now.
+
+Install on a fresh machine (python 3.10+ via uv; npm global folder must be user-writable):
+
+```bash
+uv tool install --python 3.12 https://github.com/Panniantong/agent-reach/archive/main.zip
+agent-reach install --env=auto --system --channels=opencli
+npm install -g --allow-scripts=@jackwener/opencli @jackwener/opencli mcporter
+mcporter config add exa https://mcp.exa.ai/mcp --scope home
+uv tool install "yt-dlp[default]"
+```
+
+OpenCLI (`opencli`) needs its Chrome "Browser Bridge" extension loaded (chrome://extensions →
+Developer Mode → Load unpacked, from github.com/jackwener/opencli/releases) and Chrome logged in to
+the site. Not connected yet as of 2 Oct 2026. Cookies/logins are Aereon's to provide — never type them.
