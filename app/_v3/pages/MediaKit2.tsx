@@ -298,13 +298,13 @@ export default function MediaKit2({
         ) : null}
 
         {/* ------------------------------------------------ the work */}
-        {audience.top.length ? (
+        {audience.best.length ? (
           <Reveal className="v3-k2-section" aria-labelledby="k2-work">
             <h2 className="v3-k2-h2" id="k2-work">
-              Recent work
+              Best work, last 3 months
             </h2>
-            <p className="v3-k2-note">The furthest-travelling posts of the latest 40 — tap one to play it.</p>
-            <PostGrid posts={audience.top.slice(0, 8)} limit={8} circleFirst={world === 'contact'} />
+            <p className="v3-k2-note">The furthest-travelling posts of the past three months — tap one to play it.</p>
+            <PostGrid posts={audience.best.slice(0, 8)} limit={8} circleFirst={world === 'contact'} />
           </Reveal>
         ) : null}
 
