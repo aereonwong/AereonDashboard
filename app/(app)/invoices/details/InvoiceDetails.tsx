@@ -476,6 +476,16 @@ export default function InvoiceDetails({
                         </button>
                       ) : null}
 
+                      {r.hasDesign && ready && !locked ? (
+                        <a className="idt-act" href={`/api/invoices/${r.id}/preview`} target="_blank" rel="noopener" aria-label={`Preview ${r.no} from Canva`} title="Preview — fresh export from Canva">
+                          <Icon name="eye" />
+                        </a>
+                      ) : (
+                        <span className="idt-act" aria-disabled="true" title={r.hasDesign ? (locked ?? offline) : 'No Canva design linked'}>
+                          <Icon name="eye" />
+                        </span>
+                      )}
+
                       {r.canvaUrl ? (
                         <a className="idt-act" href={r.canvaUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.no} in Canva`} title="Open in Canva">
                           <Icon name="design" />
@@ -491,7 +501,7 @@ export default function InvoiceDetails({
                           <Icon name="download" />
                         </a>
                       ) : (
-                        <span className="idt-act" aria-disabled="true" title={r.hasDesign ? offline : 'No Canva design linked'}>
+                        <span className="idt-act" aria-disabled="true" title={r.hasDesign ? (locked ?? offline) : 'No Canva design linked'}>
                           <Icon name="download" />
                         </span>
                       )}
