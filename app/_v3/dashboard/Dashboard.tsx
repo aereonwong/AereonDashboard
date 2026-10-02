@@ -30,14 +30,11 @@ export default function Dashboard({
 }) {
   const s = buildStudio(rows, filters)
   const { stats } = audience
-  const recentTotal = s.owed.filter(o => o.currency === 'MYR').reduce((t, o) => t + o.amount, 0)
-  const recentIncome = rows
-    .filter(r => r.category === 'cash_in' && r.meta?.invoice_no && !r.meta?.currency)
-    .filter(r => {
-      const d = String(r.meta?.invoice_date ?? '')
-      return d && Date.parse(s.today) - Date.parse(d) <= 120 * 86_400_000
-    })
-    .reduce((t, r) => t + Number(r.amount || 0), 0)
+  // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
+  // last 120 days — so a client filter can't compare one client with everyone.
+  const owedRm = s.owed.filter(o => o.currency === 'MYR')
+  const recentTotal = owedRm.reduce((t, o) => t + o.amount, 0)
+  const recentIncome = s.recentIncome
   const latestNo = [...rows]
     .filter(r => r.category === 'cash_in' && r.meta?.invoice_no)
     .map(r => String(r.meta?.invoice_no))
@@ -46,6 +43,9 @@ export default function Dashboard({
   const up = (s.pacePct ?? 0) >= 0
   const hist = audience.history
   const reach30 = audience.view?.totals.reach ?? 0
+  const engaged30 = audience.view?.totals.accounts_engaged
+  const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
+  const postWindow = stats?.window.count ? 'last 30 days' : `last ${stats?.posts.length ?? 0} posts`
   const newPct = audience.view?.newPeoplePct ?? null
   const netFollows =
     audience.view?.follows != null && audience.view?.unfollows != null ? audience.view.follows - audience.view.unfollows : null
@@ -145,9 +145,10 @@ export default function Dashboard({
           projection={s.projection}
           lastFull={s.lastFull}
           owedTotal={recentTotal}
-          owedCount={s.owed.length}
+          owedCount={owedRm.length}
           recentTotal={recentIncome}
           reachPerPost={stats?.reachPerPost ?? 0}
+          reachWindow={postWindow}
           followers={audience.followers}
         />
       ) : null}
@@ -353,13 +354,15 @@ export default function Dashboard({
                   <div className="v3-kpi-note">
                     {reach30
                       ? `30 days · ${newPct !== null ? `${Math.round(newPct)}% did not follow you` : `typical post ${compact(stats.baseline.median)}`}`
-                      : `${Math.round(stats.reachVsFollowers)}% of followers, last 30 days`}
+                      : `${Math.round(stats.reachVsFollowers)}% of followers, ${postWindow}`}
                   </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement</div>
-                  <div className="v3-kpi-value num">{stats.engagementRate.toFixed(1)}%</div>
-                  <div className="v3-kpi-note">of accounts reached who interacted</div>
+                  <div className="v3-kpi-value num">{(engagedPct ?? stats.engagementRate).toFixed(1)}%</div>
+                  <div className="v3-kpi-note">
+                    {engagedPct !== null ? 'of accounts reached who interacted · 30 days' : `interactions per post reach, ${postWindow}`}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Posting</div>

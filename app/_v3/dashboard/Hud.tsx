@@ -23,6 +23,7 @@ export default function Hud({
   recentTotal,
   reachPerPost,
   followers,
+  reachWindow,
 }: {
   year: number
   pace: PacePoint[]
@@ -34,6 +35,7 @@ export default function Hud({
   recentTotal: number
   reachPerPost: number
   followers: number
+  reachWindow: string
 }) {
   const current = Math.max(0, pace.findLastIndex(p => p.now !== null))
   const [m, setM] = useState(current)
@@ -45,7 +47,7 @@ export default function Hud({
     return Math.ceil(max / mag) * mag
   })()
   const alt = pace[m].now ?? 0
-  const before = pace[m].before
+  const before = pace[m].beforeAt
   const speed = before ? ((alt - before) / before) * 100 : null
   const pos = (v: number) => `${(1 - v / top) * 100}%`
   const ticks = Array.from({ length: 11 }, (_, i) => (top / 10) * i)
@@ -135,7 +137,7 @@ export default function Hud({
               <span>Signal · reach</span>
             </span>
             <div className="v3-gauge-value num">{compact(reachPerPost)}</div>
-            <div className="v3-gauge-note">per post, last 30 days · {compact(followers)} followers</div>
+            <div className="v3-gauge-note">per post, {reachWindow} · {compact(followers)} followers</div>
           </a>
         </div>
       </div>

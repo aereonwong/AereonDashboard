@@ -66,16 +66,19 @@ export default async function Instagram({
       <div className="grid">
         <Stat label="Followers" value={n(p.followers_count)} icon="users" />
         <Stat label="Posts in window" value={String(s.posts.length)} icon="camera" />
-        <Stat label="Views" value={n(s.totals.views)} icon="eye" />
-        <Stat label="Accounts reached" value={n(s.totals.reach)} icon="trend" />
-        <Stat label="Engagement rate" value={`${s.engagementRate.toFixed(1)}%`} icon="heart" />
+        {/* Post-level sums: one person who saw three posts counts three times, so
+            these are labelled as combined post figures — the unique-account
+            numbers are in the account card below. */}
+        <Stat label="Post views (combined)" value={n(s.totals.views)} icon="eye" />
+        <Stat label="Post reach (combined)" value={n(s.totals.reach)} icon="trend" />
+        <Stat label="Interactions per reach" value={`${s.engagementRate.toFixed(1)}%`} icon="heart" />
         <Stat label="Reach per post" value={n(s.reachPerPost)} icon="share" />
       </div>
 
       <p className="metahint">
         A typical post reaches <b>{s.reachVsFollowers.toFixed(0)}%</b> of your followers ·{' '}
         you post about <b>{s.postsPerWeek.toFixed(1)}×</b> a week · last post <b>{s.daysSinceLastPost} day{s.daysSinceLastPost === 1 ? '' : 's'} ago</b> ·{' '}
-        engagement = likes + comments + saves + shares ÷ accounts reached.
+        interactions per reach = likes + comments + saves + shares ÷ combined post reach.
       </p>
 
       {ig ? (
@@ -122,8 +125,13 @@ export default async function Instagram({
             {best ? `${best.type} reaches the most: ${n(best.avgReach)} per post` : 'Not enough data yet'}
           </p>
           <Donut
-            slices={s.byType.map(t => ({ label: `${t.type} · ${t.count}`, value: Math.round(t.avgReach) }))}
-            centerLabel="average reach per post"
+            // Each format's share of combined post reach — summing averages would
+            // make the centre and the percentages meaningless.
+            slices={s.byType.map(t => ({
+              label: `${t.type} · ${t.count}`,
+              value: s.posts.filter(p => p.type === t.type).reduce((sum, p) => sum + (p.reach ?? 0), 0),
+            }))}
+            centerLabel="combined post reach, by format"
           />
         </div>
 
