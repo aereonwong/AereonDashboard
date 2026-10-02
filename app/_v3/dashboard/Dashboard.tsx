@@ -126,7 +126,8 @@ export default function Dashboard({
                 {rmFull(s.owedTotal)}
               </span>
               <p className="n">
-                {s.owed.length} invoice{s.owed.length === 1 ? '' : 's'} not yet confirmed paid
+                {s.owed.length} invoice{s.owed.length === 1 ? '' : 's'} tracked as unpaid
+                {s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
               </p>
             </a>
           </div>
@@ -147,6 +148,8 @@ export default function Dashboard({
           owedTotal={recentTotal}
           owedCount={owedRm.length}
           recentTotal={recentIncome}
+          recentPaid={s.recentPaid}
+          untracked={s.untracked}
           reachPerPost={stats?.reachPerPost ?? 0}
           reachWindow={postWindow}
           followers={audience.followers}
@@ -176,9 +179,11 @@ export default function Dashboard({
             <div className="v3-kpi-note">At this pace · {s.year - 1} closed at {rmFull(s.lastFull)}</div>
           </a>
           <a className="v3-kpi" href="#owed">
-            <div className="v3-kpi-label">Not yet confirmed paid</div>
+            <div className="v3-kpi-label">Owed to me</div>
             <div className="v3-kpi-value">{rmFull(s.owedTotal)}</div>
-            <div className="v3-kpi-note">{s.owed.length} invoices, last 120 days</div>
+            <div className="v3-kpi-note">
+              {s.owed.length} tracked unpaid, last 120 days{s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
+            </div>
           </a>
           <a className="v3-kpi" href="#audience">
             <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
@@ -212,9 +217,9 @@ export default function Dashboard({
             <h2 className="v3-panel-title" id="t-owed">
               Who owes me
             </h2>
-            <p className="v3-panel-note">Not yet confirmed paid · last 120 days</p>
+            <p className="v3-panel-note">Tracked as unpaid · last 120 days · issued invoices aren&apos;t counted until tracked</p>
           </div>
-          <Owed lines={s.owed} olderCount={s.unconfirmedOlder} paidCount={s.paidCount} today={s.today} />
+          <Owed lines={s.owed} olderCount={s.unconfirmedOlder} untracked={s.untracked} paidCount={s.paidCount} today={s.today} />
         </section>
 
         <div className="v3-span-5 v3-stack">

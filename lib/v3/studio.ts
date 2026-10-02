@@ -1,4 +1,4 @@
-import type { Rec } from '@/lib/records'
+import { isIssued, isPaid, type Rec } from '@/lib/records'
 import { toInvoices, type Invoice, type WorkKind } from '@/lib/invoices'
 import { narrow, inRange, KINDS, type Filters } from './filters'
 
@@ -37,6 +37,8 @@ export type ClientLine = { client: string; total: number; count: number; last: s
 export type Studio = {
   today: string
   recentIncome: number // RM invoiced in the owed window, same filters as `owed`
+  recentPaid: number // of that, RM marked paid
+  untracked: number // invoices still `issued`: payment not tracked, never counted as owed
   year: number
   // Question 1 — on track this year
   ytd: number
@@ -59,7 +61,7 @@ export type Studio = {
   // Question 3 — who owes me money
   owed: OwedLine[]
   owedTotal: number
-  unconfirmedOlder: number // invoices older than the owed window, never marked paid
+  unconfirmedOlder: number // invoices tracked as unpaid, older than the owed window
   paidCount: number
   // Filter choices, drawn from the data rather than invented
   allClients: string[]
@@ -156,16 +158,20 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
   }
 
   // ---- Question 3: who owes me money ----
-  // Payment tracking began on 26 Sep 2026; until then no invoice was ever marked
-  // paid. So "owed" means *not yet confirmed as paid* within a recent window,
-  // measured in exact days since the invoice was issued. There are no due dates
-  // in the records, so nothing here is ever called "overdue".
-  const paidIds = new Set(rows.filter(r => r.category === 'cash_in' && r.status === 'paid').map(r => r.id))
-  const unconfirmed = narrow(all, f).filter(i => !paidIds.has(i.id))
+  // "Owed" = invoices TRACKED as unpaid, in exact days since issue. An `issued`
+  // invoice is documented but its payment isn't tracked, so it is never owed
+  // (isIssued() in lib/records.ts, a house rule) — those are only counted, as
+  // `untracked`. There are no due dates in the records, so nothing is "overdue".
+  const paidIds = new Set(rows.filter(r => r.category === 'cash_in' && isPaid(r)).map(r => r.id))
+  const issuedIds = new Set(rows.filter(r => r.category === 'cash_in' && isIssued(r)).map(r => r.id))
+  const filtered = narrow(all, f)
+  const unconfirmed = filtered.filter(i => !paidIds.has(i.id) && !issuedIds.has(i.id))
   const owed: OwedLine[] = unconfirmed
     .map(i => ({ id: i.id, no: i.no, client: i.client, amount: i.amount, currency: i.currency, date: i.date, days: dayDiff(i.date, today) }))
     .filter(o => o.days <= OWED_WINDOW_DAYS && o.days >= 0)
     .sort((a, b) => b.days - a.days)
+
+  const recent = narrowed.filter(i => { const d = dayDiff(i.date, today); return d >= 0 && d <= OWED_WINDOW_DAYS })
 
   return {
     today,
@@ -190,7 +196,9 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
     },
     owed,
     owedTotal: owed.filter(o => o.currency === 'MYR').reduce((s, o) => s + o.amount, 0),
-    recentIncome: sum(narrowed.filter(i => { const d = dayDiff(i.date, today); return d >= 0 && d <= OWED_WINDOW_DAYS })),
+    recentIncome: sum(recent),
+    recentPaid: sum(recent.filter(i => paidIds.has(i.id))),
+    untracked: filtered.filter(i => issuedIds.has(i.id)).length,
     unconfirmedOlder: unconfirmed.filter(i => dayDiff(i.date, today) > OWED_WINDOW_DAYS).length,
     paidCount: paidIds.size,
     allClients: [...new Set(all.map(i => i.client))].filter(c => c && c !== '—').sort((a, b) => a.localeCompare(b)),

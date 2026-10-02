@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { safeEqual } from '@/lib/session'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { sendMessage } from '@/lib/telegram'
-import { getRecords, getFunnel, rm, todayISO, isIssued, type Rec } from '@/lib/records'
+import { getRecords, getFunnel, rm, todayISO, isIssued, SETTLED_STATUSES, type Rec } from '@/lib/records'
 import { propose, proposeAndNotify, runAutopilot } from '@/lib/actions'
 import { SCHEDULED, type ProposalDraft } from '@/agents/registry'
 
@@ -37,7 +37,7 @@ function recipients(): string[] {
 }
 
 const sum = (rows: Rec[]) => rows.reduce((s, r) => s + Number(r.amount || 0), 0)
-const PAID = new Set(['paid', 'done', 'closed', 'reversed'])
+const PAID = SETTLED_STATUSES // settled = not owed; shared list in lib/records.ts
 
 export async function GET(req: Request) {
   // ---- FAIL-CLOSED Bearer. Unset secret ⇒ 401 (never open). ----
@@ -208,7 +208,7 @@ async function chiefOfStaff(rows: Rec[], today: string): Promise<string | null> 
   })
   // Counts and totals computed HERE, never by the model — it miscounted rows.
   const cashInRows = rows.filter((r) => r.category === 'cash_in')
-  const issuedRows = cashInRows.filter((r) => (r.status || '').toLowerCase() === 'issued' && !r.meta?.currency)
+  const issuedRows = cashInRows.filter((r) => isIssued(r) && !r.meta?.currency)
   const facts =
     `FACTS (already counted for you — use these numbers verbatim, never recount):\n` +
     `records: ${rows.length}; customers: ${rows.filter((r) => r.category === 'customer').length}; ` +

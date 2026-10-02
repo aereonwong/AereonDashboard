@@ -21,6 +21,8 @@ export default function Hud({
   owedTotal,
   owedCount,
   recentTotal,
+  recentPaid,
+  untracked,
   reachPerPost,
   followers,
   reachWindow,
@@ -33,6 +35,8 @@ export default function Hud({
   owedTotal: number
   owedCount: number
   recentTotal: number
+  recentPaid: number
+  untracked: number
   reachPerPost: number
   followers: number
   reachWindow: string
@@ -53,7 +57,7 @@ export default function Hud({
   const ticks = Array.from({ length: 11 }, (_, i) => (top / 10) * i)
 
   // Battery: of the last 120 days' income, the share already confirmed paid.
-  const charge = recentTotal ? Math.max(0, Math.min(1, 1 - owedTotal / recentTotal)) : 1
+  const charge = recentTotal ? Math.max(0, Math.min(1, recentPaid / recentTotal)) : 1
   const bars = Math.round(charge * 10)
   const level = charge < 0.3 ? 'alert' : charge < 0.6 ? 'warn' : 'ok'
 
@@ -120,7 +124,8 @@ export default function Hud({
               ))}
             </div>
             <div className="v3-gauge-note">
-              unconfirmed across {owedCount} invoice{owedCount === 1 ? '' : 's'} · mark them paid to charge
+              owed across {owedCount} invoice{owedCount === 1 ? '' : 's'}
+              {untracked ? ` · ${untracked} not tracked yet` : ''} · mark paid to charge
             </div>
           </a>
           <a className="v3-gauge" href="#on-track">

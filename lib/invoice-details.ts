@@ -1,4 +1,4 @@
-import type { Rec } from './records'
+import { isIssued, isPaid, type Rec } from './records'
 import type { LinkedPost } from './ig-link-types'
 import { toInvoices } from './invoices'
 import { driveOf, driveStatus } from './invoice-drive'
@@ -11,7 +11,6 @@ export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from
 // the `records` table — no Canva or Drive call is needed to draw either page.
 // Everything here is plain data so it can cross into client components.
 
-const PAID = ['paid', 'received']
 
 /** The link Invoice Details opens: `meta.canva_url` when it's there (the
  *  dashboard's own Create Invoice writes it), else whatever the Telegram bot
@@ -25,10 +24,9 @@ function canvaUrlOf(m: Rec['meta']): string | null {
   return id ? `https://www.canva.com/design/${id}/view` : null
 }
 
-export function paymentOf(r: Pick<Rec, 'status' | 'due_date'>, today = new Date().toISOString().slice(0, 10)): Payment {
-  const s = (r.status || '').toLowerCase()
-  if (PAID.includes(s)) return 'paid'
-  if (s === 'issued') return 'untracked'
+export function paymentOf(r: Pick<Rec, 'status' | 'due_date' | 'meta'>, today = new Date().toISOString().slice(0, 10)): Payment {
+  if (isPaid(r)) return 'paid'
+  if (isIssued(r)) return 'untracked'
   return r.due_date && r.due_date < today ? 'overdue' : 'outstanding'
 }
 
@@ -48,7 +46,6 @@ export function editBlockOf(r: Pick<Rec, 'meta'>): string | null {
 /** The row as the Edit form's fields. Reverse of the form's toDraft() + invoiceRow(). */
 export function editValuesOf(r: Rec): EditValues {
   const m = r.meta ?? {}
-  const s = String(r.status ?? '').toLowerCase()
   const terms = String(m.terms ?? '')
   const termsKey = (Object.keys(TERMS).find(k => TERMS[k] === terms) ?? 'custom') as EditValues['termsKey']
   const str = (v: unknown) => (v == null || v === '—' || v === '-' ? '' : String(v))
@@ -72,7 +69,7 @@ export function editValuesOf(r: Rec): EditValues {
     quotation: str(m.quotation_no),
     date: str(m.invoice_date) || String(r.created_at).slice(0, 10),
     dueDate: str(r.due_date),
-    status: PAID.includes(s) ? 'paid' : s === 'issued' ? 'issued' : 'waiting',
+    status: isPaid(r) ? 'paid' : isIssued(r) ? 'issued' : 'waiting',
   }
 }
 
