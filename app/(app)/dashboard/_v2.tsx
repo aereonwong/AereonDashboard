@@ -4,7 +4,7 @@
 // is computed in lib/analytics.ts from the invoice rows; nothing is estimated.
 import Link from 'next/link'
 import { type Rec } from '@/lib/records'
-import { type IgSnapshot } from '@/lib/instagram'
+import { type IgSnapshot, type AudienceView } from '@/lib/instagram'
 import { operatingPicture, mixOverTime, categories } from '@/lib/analytics'
 import MixTrend from '@/app/_components/MixTrend'
 import Rhythm from '@/app/_components/Rhythm'
@@ -15,7 +15,7 @@ const short = (name: string) => name.replace(/,? (Sdn\.? ?Bhd\.?|Pte\.? ?Ltd\.?|
 const monthName = (iso: string) =>
   new Date(`${iso}-01T00:00:00Z`).toLocaleString('en-MY', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-export default function DashboardV2({ rows, snap }: { rows: Rec[]; snap: IgSnapshot | null }) {
+export default function DashboardV2({ rows, snap, ig = null }: { rows: Rec[]; snap: IgSnapshot | null; ig?: AudienceView | null }) {
   const p = operatingPicture(rows)
   const { kpis, revenue, prior, count, priorCount } = p
 
@@ -206,7 +206,20 @@ export default function DashboardV2({ rows, snap }: { rows: Rec[]; snap: IgSnaps
         <h2 id="h-audience">Audience</h2>
         {snap ? (
           <p className="panel-sub">
-            {(snap.profile.followers_count ?? 0).toLocaleString('en-MY')} followers on Instagram ·{' '}
+            {(snap.profile.followers_count ?? 0).toLocaleString('en-MY')} followers on Instagram
+            {ig?.follows != null && ig?.unfollows != null ? (
+              <>
+                {' '}({ig.follows - ig.unfollows >= 0 ? '+' : ''}
+                {(ig.follows - ig.unfollows).toLocaleString('en-MY')} in 30 days)
+              </>
+            ) : null}
+            {ig?.totals.reach ? (
+              <>
+                {' '}· <b>{ig.totals.reach.toLocaleString('en-MY')}</b> accounts reached in 30 days
+                {ig.newPeoplePct !== null ? <>, {Math.round(ig.newPeoplePct)}% of them new to you</> : null}
+              </>
+            ) : null}
+            {ig?.coreAgePct != null ? <> · {Math.round(ig.coreAgePct)}% of followers aged 25–44</> : null} ·{' '}
             <Link href="/instagram">see the full breakdown</Link>
           </p>
         ) : (

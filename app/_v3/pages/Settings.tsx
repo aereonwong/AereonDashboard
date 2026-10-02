@@ -57,7 +57,7 @@ export default function Settings({ version, world, site, demo }: { version: Vers
             </h2>
             <p className="v3-panel-note">What anyone opening the site&rsquo;s address sees</p>
           </div>
-          <LandingSwitch landing={site.landing} world={site.world} />
+          <LandingSwitch landing={site.landing} world={site.world} kit={site.kit} />
         </section>
       </div>
     </div>

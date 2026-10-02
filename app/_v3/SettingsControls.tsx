@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { VERSIONS, WORLDS, type Version, type World } from '@/lib/v3/catalog'
-import { saveSite, type Landing } from '@/lib/v3/site'
+import { saveSite } from '@/lib/v3/site-actions'
+import type { Landing, KitVersion } from '@/lib/v3/site'
 
 // The v3 Settings controls. Version and world are per device (cookies the server
 // reads before drawing); the landing page is site-wide (stored on the server).
@@ -115,13 +116,14 @@ export function Theme() {
   )
 }
 
-export function LandingSwitch({ landing, world }: { landing: Landing; world: World }) {
+export function LandingSwitch({ landing, world, kit }: { landing: Landing; world: World; kit: KitVersion }) {
   const router = useRouter()
   const [l, setL] = useState(landing)
   const [w, setW] = useState(world)
+  const [k, setK] = useState(kit)
   const [msg, setMsg] = useState<string | null>(null)
   const [pending, start] = useTransition()
-  const save = (patch: { landing?: Landing; world?: World }) =>
+  const save = (patch: { landing?: Landing; world?: World; kit?: KitVersion }) =>
     start(async () => {
       const r = await saveSite(patch)
       setMsg(r.ok ? 'Saved — visitors see this now.' : r.error ?? 'Did not save.')
@@ -155,14 +157,43 @@ export function LandingSwitch({ landing, world }: { landing: Landing; world: Wor
         ))}
       </div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
-        <a className="v3-btn" href={`/?preview=kit&world=${w}`} target="_blank" rel="noreferrer">
-          Preview the media kit privately
+        <a className="v3-btn" href={`/?preview=kit&kit=v1&world=${w}`} target="_blank" rel="noreferrer">
+          Preview kit v1
+        </a>
+        <a className="v3-btn" href={`/?preview=kit&kit=v2&world=${w}`} target="_blank" rel="noreferrer">
+          Preview kit v2
         </a>
         <span className="v3-panel-note">Only you see a preview; visitors see whichever option is chosen above.</span>
       </div>
       {l === 'kit' ? (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
-          <span className="v3-panel-note">Media kit look</span>
+          <span className="v3-panel-note">Media kit version</span>
+          <div className="v3-seg" role="group" aria-label="Media kit version">
+            {(
+              [
+                ['v1', 'v1 · 26 Sep'],
+                ['v2', 'v2 · 2 Oct, with audience · Studio Standard'],
+              ] as [KitVersion, string][]
+            ).map(([id, name]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={k === id}
+                disabled={pending}
+                onClick={() => {
+                  setK(id)
+                  save({ kit: id })
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {l === 'kit' && k === 'v1' ? (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 'var(--space-4)' }}>
+          <span className="v3-panel-note">Media kit v1 look</span>
           <div className="v3-seg" role="group" aria-label="Media kit world">
             {WORLDS.map(x => (
               <button

@@ -9,7 +9,7 @@
     "webhook:set": "node --env-file-if-exists=.env scripts/set-webhook.mjs",
     "webhook:info": "node --env-file-if-exists=.env scripts/webhook-info.mjs",
     "import": "node --env-file-if-exists=.env scripts/import.mjs",
-    "ig:refresh": "node --env-file-if-exists=.env scripts/ig-refresh.mjs",
+    "ig:refresh": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/ig-refresh.mjs",
     "drive:reconcile": "node --env-file-if-exists=.env scripts/drive-reconcile.mjs"
   },
   "engines": {

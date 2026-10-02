@@ -1,7 +1,7 @@
 // 👉 Instagram — how your posts are actually performing, read from the newest
 // snapshot in `ig_snapshots` (fetched through Composio). Engagement is measured
 // against REACH, the accounts that really saw a post, not your follower count.
-import { latestSnapshot, analyse, type IgPost } from '@/lib/instagram'
+import { latestSnapshot, latestAccount, readAudienceView, analyse, type IgPost } from '@/lib/instagram'
 import Stat from '@/app/_components/Stat'
 import AreaChart from '@/app/_components/AreaChart'
 import RowBars from '@/app/_components/RowBars'
@@ -32,7 +32,7 @@ export default async function Instagram({
     const [audience, sp] = await Promise.all([readAudience(), searchParams])
     return <V3Instagram audience={audience} sp={sp} />
   }
-  const snap = await latestSnapshot()
+  const [snap, account] = await Promise.all([latestSnapshot(), latestAccount()])
 
   if (!snap) {
     return (
@@ -48,6 +48,8 @@ export default async function Instagram({
   }
 
   const s = analyse(snap)
+  const ig = account ? readAudienceView(account, snap.profile.followers_count ?? 0) : null
+  const net = ig?.follows != null && ig?.unfollows != null ? ig.follows - ig.unfollows : null
   const p = snap.profile
   const best = s.byType[0]
   const oldest = [...snap.posts].map(p => p.timestamp).sort()[0]?.slice(0, 10)
@@ -75,6 +77,26 @@ export default async function Instagram({
         you post about <b>{s.postsPerWeek.toFixed(1)}×</b> a week · last post <b>{s.daysSinceLastPost} day{s.daysSinceLastPost === 1 ? '' : 's'} ago</b> ·{' '}
         engagement = likes + comments + saves + shares ÷ accounts reached.
       </p>
+
+      {ig ? (
+        <div className="chart-card">
+          <h2><Icon name="users" /> The whole account, last 30 days</h2>
+          <p className="sub">From Instagram&apos;s account insights — every post, Reel and story combined</p>
+          <div className="grid">
+            <Stat label="Accounts reached" value={n(ig.totals.reach)} icon="trend" />
+            <Stat label="New people" value={ig.newPeoplePct !== null ? `${Math.round(ig.newPeoplePct)}%` : '—'} icon="share" />
+            <Stat label="Followers gained (net)" value={net !== null ? `${net >= 0 ? '+' : ''}${n(net)}` : '—'} icon="users" />
+            <Stat label="Profile visits" value={n(ig.totals.profile_views)} icon="eye" />
+          </div>
+          <p className="metahint">
+            Typical post (median) reaches <b>{n(s.baseline.median)}</b>; the top quarter clear <b>{n(s.baseline.p75)}</b> ·{' '}
+            per 100 reached: <b>{s.rates.share.toFixed(1)}</b> shares, <b>{s.rates.save.toFixed(1)}</b> saves
+            {s.watch ? <> · Reels hold <b>{s.watch.avgSec.toFixed(1)}s</b> on average</> : null}
+            {ig.coreAgePct !== null ? <> · <b>{Math.round(ig.coreAgePct)}%</b> of followers are 25–44</> : null}
+            {ig.homePct !== null ? <>, <b>{Math.round(ig.homePct)}%</b> in Malaysia</> : null}.
+          </p>
+        </div>
+      ) : null}
 
       <div className="chart-card">
         <h2><Icon name="trend" /> Reach by week</h2>

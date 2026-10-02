@@ -2,13 +2,14 @@
 // Aereon and links into the locked dashboard. Numbers come from the newest
 // Instagram snapshot; the brands come from the invoices, so both stay current
 // without anyone editing this file. No client names, amounts or private data.
-import { latestSnapshot } from '@/lib/instagram'
+import { latestSnapshot, latestAccount } from '@/lib/instagram'
 import { getRecords } from '@/lib/records'
 import { toInvoices } from '@/lib/invoices'
 import type { Metadata } from 'next'
 import { readSite } from '@/lib/v3/site'
 import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
+import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import { signedIn as isSignedIn } from '@/lib/auth'
 import type { World } from '@/lib/v3/catalog'
 
@@ -54,6 +55,10 @@ export default async function Landing({
     const inv = toInvoices(recs)
     const kinds = [...new Set(inv.map(i => i.kind))]
     const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
+    // Which kit: a signed-in preview can ask for either; visitors get the saved one.
+    const kit = preview && (sp.kit === 'v1' || sp.kit === 'v2') ? sp.kit : site.kit
+    // Kit v2 is drawn in Studio Standard only — Aereon's chosen look (2 Oct 2026).
+    if (kit === 'v2') return <MediaKit2 world="canon" audience={audience} kinds={kinds} since={since} />
     return (
       <MediaKit
         world={world}
@@ -65,11 +70,14 @@ export default async function Landing({
     )
   }
 
-  const [snap, rows] = await Promise.all([latestSnapshot(), getRecords()])
+  const [snap, rows, account] = await Promise.all([latestSnapshot(), getRecords(), latestAccount()])
   const followers = snap?.profile.followers_count ?? 0
   const posts = snap?.posts ?? []
-  const reach = posts.reduce((s, p) => s + (p.reach ?? 0), 0)
-  const views = posts.reduce((s, p) => s + (p.views ?? 0), 0)
+  // Instagram's own 30-day account figures when stored; otherwise the recent posts added up.
+  const has30 = account?.totals.reach !== undefined
+  const reach = has30 ? account!.totals.reach : posts.reduce((s, p) => s + (p.reach ?? 0), 0)
+  const views = has30 ? (account!.totals.views ?? 0) : posts.reduce((s, p) => s + (p.views ?? 0), 0)
+  const span = has30 ? '30 days' : 'recent'
 
   const invoices = toInvoices(rows)
   const text = invoices.map(i => `${i.project} ${i.client}`).join(' ')
@@ -121,13 +129,13 @@ export default async function Landing({
             {reach > 0 ? (
               <div className="land-stat">
                 <div className="v">{compact(reach)}</div>
-                <div className="l">Reach · recent</div>
+                <div className="l">Reached · {span}</div>
               </div>
             ) : null}
             {views > 0 ? (
               <div className="land-stat">
                 <div className="v">{compact(views)}</div>
-                <div className="l">Views · recent</div>
+                <div className="l">Views · {span}</div>
               </div>
             ) : null}
             <div className="land-stat">
