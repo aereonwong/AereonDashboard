@@ -28,7 +28,15 @@ export async function markPaid(id: number): Promise<{ ok: boolean; error?: strin
     .from('records')
     .update({
       status: 'paid',
-      meta: { ...data.meta, paid_at: new Date().toISOString(), payment_tracked: true, status_before_paid: before ?? 'issued' },
+      meta: {
+        ...data.meta,
+        paid_at: new Date().toISOString(),
+        payment_tracked: true,
+        status_before_paid: before ?? 'issued',
+        // Undo must restore tracking as it was: an untracked invoice marked paid
+        // by mistake goes back to untracked, never to owed.
+        tracked_before_paid: data.status === 'paid' ? data.meta?.tracked_before_paid : data.meta?.payment_tracked ?? null,
+      },
     })
     .eq('id', id)
   refresh()
@@ -40,11 +48,13 @@ export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: str
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
-  const { paid_at: _drop, status_before_paid: before, ...meta } = data.meta ?? {}
+  const { paid_at: _drop, status_before_paid: before, tracked_before_paid: trackedBefore, ...meta } = data.meta ?? {}
   const status = before && before !== 'paid' ? String(before) : 'issued'
+  // Restore tracking exactly; rows paid before this was recorded fall back to the status.
+  const tracked = typeof trackedBefore === 'boolean' ? trackedBefore : status !== 'issued'
   const { error } = await supabase
     .from('records')
-    .update({ status, meta: { ...meta, payment_tracked: status !== 'issued' } })
+    .update({ status, meta: { ...meta, payment_tracked: tracked } })
     .eq('id', id)
   refresh()
   return error ? { ok: false, error: error.message } : { ok: true }

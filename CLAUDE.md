@@ -44,8 +44,9 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 
 ## Data conventions
 
-- An invoice = a `cash_in` row with `meta.invoice_no`, status **`issued`** = documented but payment
-  not tracked yet. `issued` must never count as paid, owed or overdue — see `isIssued()` in
+- An invoice = a `cash_in` row with `meta.invoice_no`, status **`issued`** — or any unpaid row with
+  `meta.payment_tracked: false` (196 Canva imports are `waiting` with tracking off) — = documented but
+  payment not tracked yet. `issued` must never count as paid, owed or overdue — see `isIssued()` in
   `lib/records.ts`, honoured by the dashboard, Cash In, the morning brief and the bot's tools.
 - Invoices were imported from Canva — the whole folder, Mar 2021 → Aug 2026: 185 invoices,
   RM 579,957.47 plus USD 10,130.30, SGD 7,378.40, RMB 4,000 and EUR 230, across 131 clients.

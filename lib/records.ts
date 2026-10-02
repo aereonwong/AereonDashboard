@@ -67,8 +67,22 @@ export const rm = (n: number) => 'RM ' + Number(n || 0).toLocaleString('en-MY')
 export const todayISO = () => new Date().toISOString().slice(0, 10)
 
 // An "issued" cash_in row is an invoice that's documented but whose payment isn't
-// tracked yet — it counts as neither money received nor money owed.
-export const isIssued = (r: Pick<Rec, 'status'>) => (r.status || '').toLowerCase() === 'issued'
+// tracked yet — it counts as neither money received nor money owed. That is
+// status 'issued', OR an unpaid row flagged `meta.payment_tracked: false`: the
+// Canva import left 196 invoices as 'waiting' with tracking off, and the flag is
+// the one that says whether anyone is actually tracking the payment.
+export const isIssued = (r: Pick<Rec, 'status' | 'meta'>) => {
+  const s = (r.status || '').toLowerCase()
+  if (s === 'issued') return true
+  return r.meta?.payment_tracked === false && !SETTLED_STATUSES.has(s)
+}
+
+// Statuses that mean the money landed. One list, so every page, the bot and the
+// crons agree on what "paid" is. `reversed` is settled (nothing owed) but the
+// money did NOT land, so it is in SETTLED only.
+export const PAID_STATUSES = new Set(['paid', 'received', 'done', 'closed'])
+export const SETTLED_STATUSES = new Set([...PAID_STATUSES, 'reversed'])
+export const isPaid = (r: Pick<Rec, 'status'>) => PAID_STATUSES.has((r.status || '').toLowerCase())
 
 // How many proposals are waiting for a YES right now (status 'proposed', unexpired).
 // Powers the 🙋 sidebar badge. Returns 0 before Supabase is wired (no hang).
