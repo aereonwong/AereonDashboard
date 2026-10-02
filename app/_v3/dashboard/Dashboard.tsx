@@ -9,6 +9,7 @@ import Strip from './Strip'
 import Owed from './Owed'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
+import DailyReach from '../DailyReach'
 import Circle from '../Circle'
 import { rmFull, money, pct, compact, longDate, num } from '../fmt'
 
@@ -29,14 +30,11 @@ export default function Dashboard({
 }) {
   const s = buildStudio(rows, filters)
   const { stats } = audience
-  const recentTotal = s.owed.filter(o => o.currency === 'MYR').reduce((t, o) => t + o.amount, 0)
-  const recentIncome = rows
-    .filter(r => r.category === 'cash_in' && r.meta?.invoice_no && !r.meta?.currency)
-    .filter(r => {
-      const d = String(r.meta?.invoice_date ?? '')
-      return d && Date.parse(s.today) - Date.parse(d) <= 120 * 86_400_000
-    })
-    .reduce((t, r) => t + Number(r.amount || 0), 0)
+  // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
+  // last 120 days — so a client filter can't compare one client with everyone.
+  const owedRm = s.owed.filter(o => o.currency === 'MYR')
+  const recentTotal = owedRm.reduce((t, o) => t + o.amount, 0)
+  const recentIncome = s.recentIncome
   const latestNo = [...rows]
     .filter(r => r.category === 'cash_in' && r.meta?.invoice_no)
     .map(r => String(r.meta?.invoice_no))
@@ -44,6 +42,13 @@ export default function Dashboard({
     .at(-1)
   const up = (s.pacePct ?? 0) >= 0
   const hist = audience.history
+  const reach30 = audience.view?.totals.reach ?? 0
+  const engaged30 = audience.view?.totals.accounts_engaged
+  const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
+  const postWindow = stats?.window.count ? 'last 30 days' : `last ${stats?.posts.length ?? 0} posts`
+  const newPct = audience.view?.newPeoplePct ?? null
+  const netFollows =
+    audience.view?.follows != null && audience.view?.unfollows != null ? audience.view.follows - audience.view.unfollows : null
   const growth = hist.length >= 2 && hist.at(-1)!.date !== hist[0].date ? hist.at(-1)!.followers - hist[0].followers : null
   const trackLine =
     s.pacePct === null
@@ -121,7 +126,8 @@ export default function Dashboard({
                 {rmFull(s.owedTotal)}
               </span>
               <p className="n">
-                {s.owed.length} invoice{s.owed.length === 1 ? '' : 's'} not yet confirmed paid
+                {s.owed.length} invoice{s.owed.length === 1 ? '' : 's'} tracked as unpaid
+                {s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
               </p>
             </a>
           </div>
@@ -140,9 +146,12 @@ export default function Dashboard({
           projection={s.projection}
           lastFull={s.lastFull}
           owedTotal={recentTotal}
-          owedCount={s.owed.length}
+          owedCount={owedRm.length}
           recentTotal={recentIncome}
+          recentPaid={s.recentPaid}
+          untracked={s.untracked}
           reachPerPost={stats?.reachPerPost ?? 0}
+          reachWindow={postWindow}
           followers={audience.followers}
         />
       ) : null}
@@ -170,14 +179,19 @@ export default function Dashboard({
             <div className="v3-kpi-note">At this pace · {s.year - 1} closed at {rmFull(s.lastFull)}</div>
           </a>
           <a className="v3-kpi" href="#owed">
-            <div className="v3-kpi-label">Not yet confirmed paid</div>
+            <div className="v3-kpi-label">Owed to me</div>
             <div className="v3-kpi-value">{rmFull(s.owedTotal)}</div>
-            <div className="v3-kpi-note">{s.owed.length} invoices, last 120 days</div>
+            <div className="v3-kpi-note">
+              {s.owed.length} tracked unpaid, last 120 days{s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
+            </div>
           </a>
           <a className="v3-kpi" href="#audience">
-            <div className="v3-kpi-label">Instagram reach per post</div>
-            <div className="v3-kpi-value">{stats ? compact(stats.reachPerPost) : '—'}</div>
-            <div className="v3-kpi-note">Last 30 days · {compact(audience.followers)} followers</div>
+            <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
+            <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
+            <div className="v3-kpi-note">
+              {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}
+              {compact(audience.followers)} followers
+            </div>
           </a>
         </section>
       ) : null}
@@ -203,9 +217,9 @@ export default function Dashboard({
             <h2 className="v3-panel-title" id="t-owed">
               Who owes me
             </h2>
-            <p className="v3-panel-note">Not yet confirmed paid · last 120 days</p>
+            <p className="v3-panel-note">Tracked as unpaid · last 120 days · issued invoices aren&apos;t counted until tracked</p>
           </div>
-          <Owed lines={s.owed} olderCount={s.unconfirmedOlder} paidCount={s.paidCount} today={s.today} />
+          <Owed lines={s.owed} olderCount={s.unconfirmedOlder} untracked={s.untracked} paidCount={s.paidCount} today={s.today} />
         </section>
 
         <div className="v3-span-5 v3-stack">
@@ -332,20 +346,28 @@ export default function Dashboard({
                   <div className="v3-kpi-label">Followers</div>
                   <div className="v3-kpi-value num">{num(audience.followers)}</div>
                   <div className="v3-kpi-note">
-                    {audience.historyDays > 0
-                      ? `Tracked for ${audience.historyDays} days`
-                      : 'Growth appears as daily snapshots build up'}
+                    {netFollows !== null
+                      ? `${netFollows >= 0 ? '+' : ''}${num(netFollows)} in the last 30 days`
+                      : audience.historyDays > 0
+                        ? `Tracked for ${audience.historyDays} days`
+                        : 'Growth appears as daily snapshots build up'}
                   </div>
                 </div>
                 <div>
-                  <div className="v3-kpi-label">Reach per post</div>
-                  <div className="v3-kpi-value num">{compact(stats.reachPerPost)}</div>
-                  <div className="v3-kpi-note">{Math.round(stats.reachVsFollowers)}% of followers, last 30 days</div>
+                  <div className="v3-kpi-label">{reach30 ? 'Accounts reached' : 'Reach per post'}</div>
+                  <div className="v3-kpi-value num">{compact(reach30 || stats.reachPerPost)}</div>
+                  <div className="v3-kpi-note">
+                    {reach30
+                      ? `30 days · ${newPct !== null ? `${Math.round(newPct)}% did not follow you` : `typical post ${compact(stats.baseline.median)}`}`
+                      : `${Math.round(stats.reachVsFollowers)}% of followers, ${postWindow}`}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement</div>
-                  <div className="v3-kpi-value num">{stats.engagementRate.toFixed(1)}%</div>
-                  <div className="v3-kpi-note">of accounts reached who interacted</div>
+                  <div className="v3-kpi-value num">{(engagedPct ?? stats.engagementRate).toFixed(1)}%</div>
+                  <div className="v3-kpi-note">
+                    {engagedPct !== null ? 'of accounts reached who interacted · 30 days' : `interactions per post reach, ${postWindow}`}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Posting</div>
@@ -353,7 +375,12 @@ export default function Dashboard({
                   <div className="v3-kpi-note">last post {stats.daysSinceLastPost === 0 ? 'today' : `${stats.daysSinceLastPost} day${stats.daysSinceLastPost === 1 ? '' : 's'} ago`}</div>
                 </div>
               </div>
-              <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} />
+              {audience.daily.length >= 2 ? (
+                <div style={{ marginBottom: 'var(--space-5)' }}>
+                  <DailyReach days={audience.daily} />
+                </div>
+              ) : null}
+              <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} lift={stats.lift} />
             </>
           ) : (
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>

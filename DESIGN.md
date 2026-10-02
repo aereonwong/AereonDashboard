@@ -399,6 +399,9 @@ Rows are hairline-separated with a 12px rhythm; the numeric column right-aligns.
 ### Brand wall (media kit)
 **The Optical Weight Rule.** Brand logos are official vector marks flattened to one ink with a CSS mask: ink-2 in Contact and HUD, ink-3 in Standard, rising to ink on hover. Each mark is sized by optical weight from its cropped aspect ratio: height = 44 × aspect^−0.4, width capped at 170px. A square symbol stands 44px tall; a long wordmark is shorter and wider, so twelve brands read as one line-up.
 
+### Media kit v2 (2 Oct 2026)
+`app/_v3/pages/MediaKit2.tsx` + `app/_v3/kit2.css`, drawn in Studio Standard only (Aereon's chosen world). Composition: a full-bleed Merdeka hero (headline clamp(3rem, 8.4vw, 6rem), telemetry line of followers / 30-day reach / views along its foot); sentence-led sections whose figures are set inline in bold (statement size clamp(1.6rem, 3.3vw, 2.75rem)); a sunset close. **The reach skyline** is its one authored moment: thirty days of daily reach as towers with a fine lit-window grid, rising left to right on first view (1.1s each, 32ms stagger), the peak day wearing a spire and its figure. Audience panels (age, gender, cities, countries) are the shared `AudienceBreakdown`, also used on the Instagram tab. Every entrance is armed by `KitMotion.tsx` only when motion is allowed; the server renders the final state.
+
 ### Motion
 Easing is one expo-out curve, cubic-bezier(0.16, 1, 0.3, 1), at 200ms for state changes. Longer moves are named: sections rise 8px over 520ms on entry; frames and posts lift in 260ms; bars grow in 700ms; the tape glides in 500ms; tooltips fade in 120ms; the player fades in 180ms. HUD LIVE and REC lights blink in two steps over 1.4s. Under `prefers-reduced-motion` every animation and transition collapses to 1ms, and circles render fully drawn.
 

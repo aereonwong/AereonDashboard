@@ -12,7 +12,18 @@ import { compact, num } from './fmt'
 const embed = (p: IgPost) => (p.permalink ? `${p.permalink.replace(/\/?$/, '/')}embed/` : null)
 const isVideo = (p: IgPost) => /REEL|VIDEO/i.test(p.type)
 
-export default function PostGrid({ posts, limit = 6, circleFirst = false }: { posts: IgPost[]; limit?: number; circleFirst?: boolean }) {
+export default function PostGrid({
+  posts,
+  limit = 6,
+  circleFirst = false,
+  lift,
+}: {
+  posts: IgPost[]
+  limit?: number
+  circleFirst?: boolean
+  /** Reach as a multiple of the account's median post; shown when it is notable. */
+  lift?: Record<string, number>
+}) {
   const [open, setOpen] = useState<IgPost | null>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const opener = useRef<HTMLElement | null>(null)
@@ -67,6 +78,11 @@ export default function PostGrid({ posts, limit = 6, circleFirst = false }: { po
             )}
             <span className="v3-post-shade" />
             <span className="v3-post-rank">#{i + 1}</span>
+            {lift?.[p.id] !== undefined && (lift[p.id] >= 1.5 || lift[p.id] < 0.5) ? (
+              <span className="v3-post-lift num" data-low={lift[p.id] < 0.5 || undefined} title="Reach compared with your typical (median) post">
+                {lift[p.id] >= 10 ? Math.round(lift[p.id]) : lift[p.id].toFixed(1)}× typical
+              </span>
+            ) : null}
             {circleFirst && i === 0 ? <Circle drawn /> : null}
             <span className="v3-post-meta">
               <span className="v3-post-reach num">
@@ -89,6 +105,9 @@ export default function PostGrid({ posts, limit = 6, circleFirst = false }: { po
             <div className="v3-player-bar">
               <span className="num">
                 {num(open.reach ?? 0)} reach · {num(open.likes)} likes · {num(open.comments)} comments
+                {open.saved !== undefined ? ` · ${num(open.saved)} saves` : ''}
+                {open.shares !== undefined ? ` · ${num(open.shares)} shares` : ''}
+                {open.watchMs !== undefined ? ` · ${(open.watchMs / 1000).toFixed(1)}s avg watch` : ''}
               </span>
               <button ref={closeRef} type="button" className="v3-player-close" onClick={() => setOpen(null)} aria-label="Close">
                 <Icon name="close" />

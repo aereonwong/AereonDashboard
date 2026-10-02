@@ -1,4 +1,4 @@
-import type { Rec } from '@/lib/records'
+import { isPaid, type Rec } from '@/lib/records'
 import { toInvoices, type Invoice, type WorkKind } from '@/lib/invoices'
 import { inRange, narrow, KINDS, type Filters } from './filters'
 
@@ -17,7 +17,7 @@ const rmOnly = <T extends Invoice>(xs: T[]) => xs.filter(i => i.currency === 'MY
 
 function statusOf(rows: Rec[]): Map<number, Status> {
   const m = new Map<number, Status>()
-  for (const r of rows) if (r.category === 'cash_in') m.set(r.id, r.status === 'paid' ? 'paid' : 'unconfirmed')
+  for (const r of rows) if (r.category === 'cash_in') m.set(r.id, isPaid(r) ? 'paid' : 'unconfirmed')
   return m
 }
 

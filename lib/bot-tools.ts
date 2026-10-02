@@ -1,6 +1,6 @@
 import 'server-only'
 import type { Rec } from './records'
-import { rm, todayISO, getFunnel, isIssued } from './records'
+import { rm, todayISO, getFunnel, isIssued, SETTLED_STATUSES } from './records'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The Jarvis bot's HANDS. Instead of dumping your whole table into the prompt,
@@ -168,7 +168,7 @@ export const BOT_TOOLS = [
 ]
 
 const sum = (rows: Rec[]) => rows.reduce((s, r) => s + Number(r.amount || 0), 0)
-const PAID = new Set(['paid', 'done', 'closed', 'reversed'])
+const PAID = SETTLED_STATUSES // settled = not owed; shared list in lib/records.ts
 // Money still owed to the owner: cash_in not yet paid. Issued invoices (payment not
 // tracked yet) are documented only — never counted as owed.
 const isOwedIn = (r: Rec) =>

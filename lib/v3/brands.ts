@@ -12,7 +12,9 @@
 // available; Singapore Tourism Board's mark sits on a background shape that
 // flattens to a solid block. Swap entries here, and drop the SVG in the folder.
 
-export type Brand = { slug: string; name: string; aspect: number }
+/** `kind` is the plain-words caption shown under the mark on media kit v2, so a
+ *  symbol-only logo (AirAsia's "a", Insta360's lens) still reads at a glance. */
+export type Brand = { slug: string; name: string; aspect: number; kind: string }
 
 /** Optical sizing. Each mark's viewBox is cropped to what is actually drawn, and
  *  its height falls as it gets wider: h = 44 · aspect^−0.4. A square symbol is
@@ -23,17 +25,18 @@ export const logoSize = (aspect: number) => {
   return { h, w: Math.min(170, Math.round(h * aspect)) }
 }
 
+// Tourism Malaysia leads: the kit represents Malaysia first (Aereon, 2 Oct 2026).
 export const KIT_BRANDS: Brand[] = [
-  { slug: 'petronas-towers', name: 'Petronas Twin Towers', aspect: 1.73 },
-  { slug: 'tesla', name: 'Tesla', aspect: 1.0 },
-  { slug: 'byd', name: 'BYD', aspect: 4.798 },
-  { slug: 'dji', name: 'DJI', aspect: 1.672 },
-  { slug: 'huawei', name: 'Huawei', aspect: 1.319 },
-  { slug: 'xiaomi', name: 'Xiaomi', aspect: 1.0 },
-  { slug: 'hyatt', name: 'Hyatt', aspect: 3.889 },
-  { slug: 'xpeng', name: 'XPENG', aspect: 7.292 },
-  { slug: 'airasia', name: 'AirAsia', aspect: 1.0 },
-  { slug: 'insta360', name: 'Insta360', aspect: 0.981 },
-  { slug: 'honor', name: 'HONOR', aspect: 4.8 },
-  { slug: 'tourism-malaysia', name: 'Tourism Malaysia', aspect: 2.338 },
+  { slug: 'tourism-malaysia', name: 'Tourism Malaysia', aspect: 2.338, kind: 'National tourism' },
+  { slug: 'petronas-towers', name: 'Petronas Twin Towers', aspect: 1.73, kind: 'Landmark' },
+  { slug: 'tesla', name: 'Tesla', aspect: 1.0, kind: 'Automotive' },
+  { slug: 'byd', name: 'BYD', aspect: 4.798, kind: 'Automotive' },
+  { slug: 'dji', name: 'DJI', aspect: 1.672, kind: 'Drones & cameras' },
+  { slug: 'huawei', name: 'Huawei', aspect: 1.319, kind: 'Smartphones' },
+  { slug: 'xiaomi', name: 'Xiaomi', aspect: 1.0, kind: 'Smartphones' },
+  { slug: 'hyatt', name: 'Hyatt', aspect: 3.889, kind: 'Hotels' },
+  { slug: 'xpeng', name: 'XPENG', aspect: 7.292, kind: 'Automotive' },
+  { slug: 'airasia', name: 'AirAsia', aspect: 1.0, kind: 'Airline' },
+  { slug: 'insta360', name: 'Insta360', aspect: 0.981, kind: 'Cameras' },
+  { slug: 'honor', name: 'HONOR', aspect: 4.8, kind: 'Smartphones' },
 ]

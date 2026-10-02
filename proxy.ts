@@ -1,19 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { SESSION_COOKIE, isValidSession } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The passcode gate. In Next 16 this file is called `proxy.ts` (the old name
 // `middleware.ts` is deprecated and would print scary warnings for beginners).
 //
 // It's "a lock on the door, not bank-grade auth": if APP_PASSCODE is set and the
-// visitor has no session cookie, we bounce them to /login. If APP_PASSCODE is NOT
+// visitor has no VALID session cookie (signature checked in lib/session.ts — a
+// cookie that merely exists proves nothing), we bounce them to /login. If APP_PASSCODE is NOT
 // set, we DON'T gate anything — the app shows a calm setup banner instead, so a
 // half-configured clone never locks you out of your own HQ.
 export function proxy(req: NextRequest) {
   const passcode = (process.env.APP_PASSCODE ?? '').trim()
   if (!passcode) return NextResponse.next()          // no lock installed → open door
 
-  const session = req.cookies.get('cfo_session')?.value
-  if (session) return NextResponse.next()            // has the opaque session cookie → allow
+  const session = req.cookies.get(SESSION_COOKIE)?.value
+  if (isValidSession(session, passcode)) return NextResponse.next()   // signed by us → allow
 
   const url = req.nextUrl.clone()
   url.pathname = '/login'
@@ -27,12 +29,14 @@ export function proxy(req: NextRequest) {
 //   • /api/telegram           — Telegram's webhook (has its own secret-header guard)
 //   • /api/cron-daily         — the daily cron (has its own fail-closed Bearer guard)
 //   • /api/cron-news          — the daily news digest cron (same fail-closed Bearer guard)
+//   • /api/cron-instagram     — the daily Instagram refresh (same fail-closed Bearer guard)
 //   • /manifest.webmanifest   — the REAL PWA manifest (app/manifest.ts serves HERE);
 //     /manifest.json          — belt-and-braces extra so install never silently breaks
 //   • /icons/*, /favicon.ico, /_next/* — static assets the install/render needs
 // A single missed exclusion here = a locked webhook on class day, so this list is tested.
+// Each name is anchored (`(?:/|$)`) so `/login-admin` or `/imgs-private` stay private.
 export const config = {
   matcher: [
-    '/((?!$|login|api/login|api/telegram|api/cron-daily|api/cron-news|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico).*)',
+    '/((?!$|(?:login|api/login|api/telegram|api/cron-daily|api/cron-news|api/cron-instagram|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico)(?:/|$)).*)',
   ],
 }

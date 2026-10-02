@@ -7,9 +7,10 @@ import { OWED_WINDOW_DAYS } from '@/lib/v3/catalog'
 import Icon from '@/app/_components/Icon'
 import { money, shortDate, longDate } from '../fmt'
 
-// Question 3: who owes me money. Payment tracking began on 26 Sep 2026, so this
-// lists invoices not yet CONFIRMED paid, in exact days since issue. There are
-// no due dates in the records, so nothing here is called overdue.
+// Question 3: who owes me money. Lists invoices TRACKED as unpaid, in exact days
+// since issue. `issued` invoices (payment not tracked) are never owed — they are
+// only counted, with the bulk "confirm as paid" tool. No due dates, so nothing
+// here is called overdue.
 //
 // The mark runs precisely as long as the days outstanding, against the window.
 
@@ -18,11 +19,13 @@ const age = (d: number) => (d >= 90 ? 'old' : d >= 45 ? 'mid' : 'new')
 export default function Owed({
   lines,
   olderCount,
+  untracked,
   paidCount,
   today,
 }: {
   lines: OwedLine[]
   olderCount: number
+  untracked: number
   paidCount: number
   today: string
 }) {
@@ -65,7 +68,16 @@ export default function Owed({
     <div>
       {lines.length === 0 ? (
         <p className="v3-empty">
-          <b>Nothing waiting.</b> Every invoice from the last {OWED_WINDOW_DAYS} days is confirmed as paid.
+          {untracked ? (
+            <>
+              <b>Nothing tracked as owed.</b> {untracked} invoice{untracked === 1 ? ' is' : 's are'} issued with no payment
+              status yet, so {untracked === 1 ? 'it isn’t' : 'they aren’t'} counted as owed.
+            </>
+          ) : (
+            <>
+              <b>Nothing waiting.</b> Every invoice from the last {OWED_WINDOW_DAYS} days is confirmed as paid.
+            </>
+          )}
         </p>
       ) : (
         <>
@@ -123,10 +135,13 @@ export default function Owed({
         {open.length && paidCount === 0 ? (
           <span className="v3-note">Payment tracking starts today — nothing had been marked paid before.</span>
         ) : null}
-        {olderCount > 0 ? (
+        {olderCount > 0 || untracked > 0 ? (
           <>
             <span>
-              {olderCount} older invoice{olderCount === 1 ? ' has' : 's have'} never been confirmed. Confirm everything up to
+              {olderCount > 0
+                ? `${olderCount} older unpaid invoice${olderCount === 1 ? '' : 's'}. `
+                : ''}
+              Confirm everything up to
             </span>
             <input
               className="v3-date"

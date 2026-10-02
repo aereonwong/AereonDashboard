@@ -24,7 +24,10 @@ export default function Login() {
         window.location.href = '/dashboard'
         return
       }
-      if (body.reason === 'no_passcode_set') {
+      if (body.reason === 'too_many_attempts') {
+        const mins = Math.max(1, Math.ceil((Number(body.retryAfter) || 900) / 60))
+        setError(`Too many wrong tries. Locked for ${mins} minute${mins === 1 ? '' : 's'} — try again after that.`)
+      } else if (body.reason === 'no_passcode_set') {
         setError("No passcode is set yet, so there's nothing to unlock — just open the app.")
       } else {
         setError("That code didn't match. Try again.")

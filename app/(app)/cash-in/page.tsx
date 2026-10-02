@@ -15,7 +15,8 @@ export default async function CashIn() {
   const all = await getRecords()
   const rows = all.filter(r => r.category === 'cash_in')
 
-  const isWaiting = (r: (typeof rows)[number]) => WAITING.includes((r.status || '').toLowerCase())
+  // An issued (untracked) invoice is never waiting money — see isIssued().
+  const isWaiting = (r: (typeof rows)[number]) => !isIssued(r) && WAITING.includes((r.status || '').toLowerCase())
   // Overdue = still waiting AND the due date is in the past. We flag it, but never
   // change the stored status — the robot only surfaces it, the human decides.
   const isOverdue = (r: (typeof rows)[number]) =>

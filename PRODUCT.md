@@ -37,7 +37,10 @@ are his, and its insights are written in plain language rather than accounting t
 
 - Invoices and quotations are raised through a Telegram bot (`/invoice`, `/quote`) and rendered
   as documents from Canva templates. The web app reads the same Supabase records.
-- Instagram data arrives as periodic snapshots (`ig_snapshots`): profile plus the latest 40 posts.
+- Instagram data arrives daily (cron, 6am MYT) as snapshots (`ig_snapshots`: profile plus the latest
+  40 posts) and history tables: `ig_post_metrics` (every post at every refresh), `ig_account_snapshots`
+  (30-day account totals, follower vs new-people split, formats, follower demographics) and
+  `ig_account_daily` (reach and follows gained per day).
 - Deployed on Vercel. Used mostly on desktop, also on phone.
 
 ## Capabilities and Constraints
@@ -76,8 +79,11 @@ are his, and its insights are written in plain language rather than accounting t
 - Instagram snapshot of 20 Sep 2026: 40 posts (23 Reels, 17 Feed), 29 Aug to 19 Sep 2026.
   Top post: the Petronas Twin Towers Merdeka Reel — 480,109 reach, 683,750 views, 36,176 likes.
   Merdeka content holds the top three positions.
-- **Absent, must not be fabricated:** testimonials or quotes attributed to any client, and
-  audience demographics. Follower history began 20 Sep 2026 and grows with each snapshot.
+- Follower demographics (age, gender, top 45 countries and cities) from Instagram, first stored
+  2 Oct 2026: 71% aged 25–44, 56% in Malaysia, 13% in Kuala Lumpur; 98% of 30-day reach was
+  non-followers. Shown on the Instagram tab and media kit v2.
+- **Absent, must not be fabricated:** testimonials or quotes attributed to any client. Follower
+  history began 20 Sep 2026 and grows with each snapshot.
 
 ## Product Principles
 

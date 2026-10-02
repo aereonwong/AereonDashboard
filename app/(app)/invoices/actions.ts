@@ -1,5 +1,6 @@
 'use server'
 
+import { requireSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
@@ -100,6 +101,7 @@ export type PreviewResult = { ok: true; no: string; preview: RenderPreview } | F
 /** Step 1: draw the invoice in Canva and hand back a picture of it. Nothing is
  *  saved yet — the Canva edit stays uncommitted and no database row exists. */
 export async function previewInvoice(form: InvoiceForm): Promise<PreviewResult> {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   const invalid = validate(form)
@@ -121,6 +123,7 @@ export type SaveResult = { ok: true; id: number; no: string } | Fail
 /** Step 2: Aereon approved the preview — commit the Canva design, then file the
  *  invoice row with its design id already on it. Drive is NOT touched here. */
 export async function saveInvoice(form: InvoiceForm, no: string, preview: RenderPreview): Promise<SaveResult> {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   const invalid = validate(form)
@@ -160,12 +163,14 @@ export async function saveInvoice(form: InvoiceForm, no: string, preview: Render
 
 /** Aereon rejected the preview: nothing is saved, the copy is parked for deletion. */
 export async function discardInvoice(preview: RenderPreview): Promise<{ ok: boolean }> {
+  await requireSession()
   await discardRender(preview).catch(() => {})
   return { ok: true }
 }
 
 /** The manual Google Drive step, one invoice at a time. */
 export async function uploadToDrive(id: number) {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   if (!composioReady()) return fail('Google Drive is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
@@ -177,6 +182,7 @@ export async function uploadToDrive(id: number) {
 /** After a hand fix in the Canva design: export again, upload the new PDF, then
  *  move the old Drive copy to trash. Manual click only, like uploadToDrive. */
 export async function reuploadToDrive(id: number) {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   if (!composioReady()) return fail('Google Drive is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
@@ -188,6 +194,7 @@ export async function reuploadToDrive(id: number) {
 /** Edit step 1: redraw the invoice from the template with the edited details,
  *  under the SAME number. Nothing changes until saveEdit. */
 export async function previewEdit(id: number, form: InvoiceForm): Promise<PreviewResult> {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   const invalid = validate(form)
@@ -210,6 +217,7 @@ export async function previewEdit(id: number, form: InvoiceForm): Promise<Previe
  *  the old Drive PDF (Drive status resets) and rewrite the row, keeping a
  *  snapshot so the edit can be undone. */
 export async function saveEdit(id: number, form: InvoiceForm, preview: RenderPreview, expectDesign: string) {
+  await requireSession()
   const blocked = await guard()
   if (blocked) {
     await discardRender(preview).catch(() => {})
@@ -234,6 +242,7 @@ export async function saveEdit(id: number, form: InvoiceForm, preview: RenderPre
 
 /** Undo the last edit of an invoice. */
 export async function undoEdit(id: number) {
+  await requireSession()
   const blocked = await guard()
   if (blocked) return blocked
   if (!composioReady()) return fail('Canva / Google Drive are not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
