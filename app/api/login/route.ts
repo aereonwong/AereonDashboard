@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { SESSION_COOKIE, SESSION_DAYS, mintSession } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // Checks the passcode and, on success, hands back an opaque session cookie.
@@ -49,18 +50,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: 'wrong_passcode' }, { status: 401 })
   }
 
-  // Mint the opaque cookie: nonce + HMAC(nonce, passcode).
-  const nonce = crypto.randomUUID()
-  const sig = crypto.createHmac('sha256', passcode).update(nonce).digest('hex')
-  const token = `${nonce}.${sig}`
+  // Mint the opaque cookie: expiry + nonce, signed (see lib/session.ts).
+  const token = mintSession(passcode)
 
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('cfo_session', token, {
+  res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * SESSION_DAYS, // the token carries the same expiry
   })
   return res
 }

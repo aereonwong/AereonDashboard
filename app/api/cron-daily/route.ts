@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { safeEqual } from '@/lib/session'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { sendMessage } from '@/lib/telegram'
 import { getRecords, getFunnel, rm, todayISO, isIssued, type Rec } from '@/lib/records'
@@ -41,7 +42,7 @@ const PAID = new Set(['paid', 'done', 'closed', 'reversed'])
 export async function GET(req: Request) {
   // ---- FAIL-CLOSED Bearer. Unset secret ⇒ 401 (never open). ----
   const secret = process.env.CRON_SECRET?.trim()
-  const authed = !!secret && req.headers.get('authorization') === `Bearer ${secret}`
+  const authed = !!secret && safeEqual(req.headers.get('authorization'), `Bearer ${secret}`)
   if (!authed) return new Response('forbidden', { status: 401 })
 
   const today = todayISO()

@@ -33,8 +33,9 @@ export function proxy(req: NextRequest) {
 //     /manifest.json          — belt-and-braces extra so install never silently breaks
 //   • /icons/*, /favicon.ico, /_next/* — static assets the install/render needs
 // A single missed exclusion here = a locked webhook on class day, so this list is tested.
+// Each name is anchored (`(?:/|$)`) so `/login-admin` or `/imgs-private` stay private.
 export const config = {
   matcher: [
-    '/((?!$|login|api/login|api/telegram|api/cron-daily|api/cron-news|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico).*)',
+    '/((?!$|(?:login|api/login|api/telegram|api/cron-daily|api/cron-news|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico)(?:/|$)).*)',
   ],
 }

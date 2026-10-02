@@ -1,6 +1,7 @@
 import { Composio } from '@composio/core'
 import { buildSnapshot, saveSnapshot, type Exec } from '@/lib/instagram'
 import { logRun } from '@/lib/runs'
+import { signedIn } from '@/lib/auth'
 
 // 👉 Pulls your latest Instagram posts + insights through Composio and stores one
 // snapshot row. Sits BEHIND the app passcode (proxy.ts guards every /api route
@@ -13,6 +14,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 export async function POST() {
+  // Second lock behind proxy.ts — this route spends or switches modes.
+  if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
   const apiKey = process.env.COMPOSIO_API_KEY?.trim()
   if (!apiKey) {
     return Response.json(
