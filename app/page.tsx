@@ -10,6 +10,7 @@ import { readSite } from '@/lib/v3/site'
 import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
 import { cookies } from 'next/headers'
+import { SESSION_COOKIE, isValidSession } from '@/lib/session'
 import type { World } from '@/lib/v3/catalog'
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +46,7 @@ export default async function Landing({
   const [site, sp, jar] = await Promise.all([readSite(), searchParams, cookies()])
   // A private preview, so the kit can be checked before it goes public. Only
   // honoured for someone signed in; everyone else sees the saved setting.
-  const signedIn = !!jar.get('cfo_session')?.value
+  const signedIn = isValidSession(jar.get(SESSION_COOKIE)?.value, (process.env.APP_PASSCODE ?? '').trim())
   const previewWorld = String(sp.world ?? '')
   const preview = signedIn && sp.preview === 'kit'
   const world: World =
