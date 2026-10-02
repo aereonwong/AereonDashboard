@@ -4,7 +4,7 @@
 // Both read exactly the same rows, so switching never changes a number.
 import { cookies } from 'next/headers'
 import { getRecords } from '@/lib/records'
-import { latestSnapshot } from '@/lib/instagram'
+import { latestSnapshot, latestAccount, readAudienceView } from '@/lib/instagram'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import DashboardV1 from './_v1'
 import DashboardV2 from './_v2'
@@ -48,16 +48,18 @@ export default async function Dashboard({
     return <DashboardV3 rows={rows} filters={parseFilters(sp)} world={world} audience={audience} />
   }
 
-  const [rows, snap, waiting, which] = await Promise.all([
+  const [rows, snap, waiting, which, account] = await Promise.all([
     getRecords(),
     latestSnapshot(),
     proposedCount(),
     layout(),
+    latestAccount(),
   ])
+  const ig = account ? readAudienceView(account, snap?.profile.followers_count ?? 0) : null
 
   return which === 'v1' ? (
     <DashboardV1 rows={rows} snap={snap} waiting={waiting} />
   ) : (
-    <DashboardV2 rows={rows} snap={snap} />
+    <DashboardV2 rows={rows} snap={snap} ig={ig} />
   )
 }

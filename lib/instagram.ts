@@ -1,205 +1,27 @@
 import { supabase, supabaseConfigured } from './supabase'
+import { persist, type IgSnapshot, type IgPost, type IgAccount, type Slice } from './ig-fetch'
 
 // 👉 Instagram analytics. Data arrives through Composio's Instagram tools and is
 // stored as a SNAPSHOT (one row per refresh) in `ig_snapshots`, so the tab loads
-// instantly and a slow API never blocks a page view.
-//
-// The fetching itself is injected as `exec` — the app route passes a Composio
-// SDK call, the local script passes the Composio CLI. Same shaping either way.
+// instantly and a slow API never blocks a page view. Fetching and shaping live in
+// lib/ig-fetch.ts (shared with the Mac script); this file reads and analyses.
 
-export type IgProfile = {
-  username?: string
-  name?: string
-  followers_count?: number
-  follows_count?: number
-  media_count?: number
-  biography?: string
-  profile_picture_url?: string
-}
+export {
+  buildSnapshot,
+  buildAccount,
+  MAX_POSTS,
+  type IgProfile,
+  type IgPost,
+  type IgSnapshot,
+  type IgAccount,
+  type Slice,
+  type Exec,
+} from './ig-fetch'
 
-export type IgPost = {
-  id: string
-  timestamp: string
-  type: string // REELS | FEED | STORY …
-  caption: string
-  permalink?: string
-  likes: number
-  comments: number
-  views?: number
-  reach?: number
-  saved?: number
-  shares?: number
-  /** Cover image: the photo itself, or a reel's thumbnail. Instagram CDN URLs
-   *  expire, so these are refreshed with every snapshot and may be stale between. */
-  thumb?: string
-  /** A letterbox baked into the cover (a landscape video in a vertical frame):
-   *  the fraction of the image height that is black band, top and bottom. */
-  crop?: { t: number; b: number }
-}
-
-export type IgSnapshot = {
-  captured_at: string
-  username: string
-  profile: IgProfile
-  posts: IgPost[]
-}
-
-export type Exec = (slug: string, args: Record<string, unknown>) => Promise<any>
-
-const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
-
-// Pull profile + the most recent posts, then one insights call per post.
-// Instagram quietly returns ZERO items when the page is too big for this field
-// set (50 gives nothing, 40 is fine), so the request is capped at 40.
-export const MAX_POSTS = 40
-export async function buildSnapshot(exec: Exec, limit = MAX_POSTS): Promise<IgSnapshot> {
-  limit = Math.min(Math.max(limit, 1), MAX_POSTS)
-  const info = await exec('INSTAGRAM_GET_USER_INFO', {})
-  const profile: IgProfile = info?.data ?? info ?? {}
-  const igUserId = String((profile as any).id ?? '')
-  if (!igUserId) throw new Error('Instagram account id missing from INSTAGRAM_GET_USER_INFO')
-
-  const media = await exec('INSTAGRAM_GET_IG_USER_MEDIA', {
-    ig_user_id: igUserId,
-    limit,
-    fields:
-      'id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count',
-  })
-  const items: any[] = media?.data?.data ?? media?.data ?? []
-
-  const posts: IgPost[] = []
-  for (const m of items) {
-    const post: IgPost = {
-      id: String(m.id),
-      timestamp: String(m.timestamp ?? ''),
-      type: String(m.media_product_type ?? m.media_type ?? 'FEED'),
-      caption: String(m.caption ?? '').replace(/\s+/g, ' ').trim(),
-      permalink: m.permalink ? String(m.permalink) : undefined,
-      likes: Number(m.like_count ?? 0),
-      comments: Number(m.comments_count ?? 0),
-    }
-    try {
-      const ins = await exec('INSTAGRAM_GET_IG_MEDIA_INSIGHTS', {
-        ig_media_id: post.id,
-        metric: ['views', 'reach', 'saved', 'shares'],
-      })
-      for (const row of ins?.data?.data ?? []) {
-        const v = num(row?.values?.[0]?.value)
-        if (row?.name === 'views') post.views = v
-        if (row?.name === 'reach') post.reach = v
-        if (row?.name === 'saved') post.saved = v
-        if (row?.name === 'shares') post.shares = v
-      }
-    } catch {
-      // Insights can be unavailable for an individual post — keep the post.
-    }
-    posts.push(post)
-  }
-
-  await attachCovers(exec, igUserId, posts)
-
-  return {
-    captured_at: new Date().toISOString(),
-    username: String((profile as any).username ?? ''),
-    profile,
-    posts,
-  }
-}
-
-// Cover images, fetched in their own small pages. Instagram's CDN URLs run to
-// 800+ characters each, and asking for them alongside the main field set pushes
-// the response past the size at which Instagram silently returns ZERO posts —
-// tested on 26 Sep 2026: 40, 25 and 20 per page all came back empty. Ten per
-// page with only the image fields works, following the `after` cursor.
-//
-// A reel's `media_url` is the whole .mp4, which is useless as a picture; its
-// cover is `thumbnail_url`. A photo or carousel has no thumbnail; its cover is
-// `media_url`. These URLs expire, so they are refreshed with every snapshot.
-const COVER_PAGE = 10
-async function attachCovers(exec: Exec, igUserId: string, posts: IgPost[]): Promise<void> {
-  const want = new Map(posts.map(p => [p.id, p]))
-  let after: string | undefined
-  for (let page = 0; page < Math.ceil(MAX_POSTS / COVER_PAGE) + 1 && want.size; page++) {
-    let res: any
-    try {
-      res = await exec('INSTAGRAM_GET_IG_USER_MEDIA', {
-        ig_user_id: igUserId,
-        limit: COVER_PAGE,
-        fields: 'id,media_type,media_url,thumbnail_url',
-        ...(after ? { after } : {}),
-      })
-    } catch {
-      return // covers are a nicety; a failure here never costs the snapshot
-    }
-    const body = res?.data ?? res
-    const items: any[] = body?.data ?? []
-    for (const m of items) {
-      const post = want.get(String(m.id))
-      if (!post) continue
-      const cover = /VIDEO/i.test(String(m.media_type)) ? m.thumbnail_url : m.media_url ?? m.thumbnail_url
-      if (cover) post.thumb = String(cover)
-      want.delete(post.id)
-    }
-    after = body?.paging?.cursors?.after
-    if (!items.length || !after) break
-  }
-  await measureLetterbox(posts)
-}
-
-// Some reel covers carry a letterbox: a landscape video placed in a vertical
-// frame leaves solid black bands above and below. Measured here, once per
-// snapshot, so the page can crop the band out rather than show it. Uses sharp,
-// which ships with Next.js; if it is unavailable the covers simply stay as they are.
-async function measureLetterbox(posts: IgPost[]): Promise<void> {
-  let sharp: typeof import('sharp')
-  try {
-    sharp = (await import('sharp')).default
-  } catch {
-    return
-  }
-  for (const p of posts) {
-    if (!p.thumb || !/REEL|VIDEO/i.test(p.type)) continue
-    try {
-      const res = await fetch(p.thumb)
-      if (!res.ok) continue
-      const buf = Buffer.from(await res.arrayBuffer())
-      const { data, info } = await sharp(buf).greyscale().resize({ width: 90 }).raw().toBuffer({ resolveWithObject: true })
-      const dark = (row: number) => {
-        let sum = 0
-        let max = 0
-        for (let x = 0; x < info.width; x++) {
-          const v = data[row * info.width + x]
-          sum += v
-          if (v > max) max = v
-        }
-        return sum / info.width < 14 && max < 40
-      }
-      let top = 0
-      while (top < info.height && dark(top)) top++
-      let bottom = 0
-      while (bottom < info.height - top && dark(info.height - 1 - bottom)) bottom++
-      const t = top / info.height
-      const b = bottom / info.height
-      // A letterbox is symmetric. A dark band on one side only is usually real
-      // content — night sky over a skyline — and must not be cropped away.
-      if (t >= 0.04 && b >= 0.04 && Math.abs(t - b) < 0.05 && t + b < 0.7) {
-        p.crop = { t: Math.round(t * 1000) / 1000, b: Math.round(b * 1000) / 1000 }
-      }
-    } catch {
-      // a cover that cannot be read is shown as it is
-    }
-  }
-}
-
-export async function saveSnapshot(snap: IgSnapshot): Promise<void> {
+/** Store a refresh; returns warnings for history tables that could not take a row. */
+export async function saveSnapshot(snap: IgSnapshot, account?: IgAccount | null): Promise<string[]> {
   if (!supabaseConfigured) throw new Error('Supabase not configured')
-  const { error } = await supabase.from('ig_snapshots').insert({
-    captured_at: snap.captured_at,
-    username: snap.username,
-    profile: snap.profile,
-    posts: snap.posts,
-  })
-  if (error) throw new Error(error.message)
+  return persist(supabase, snap, account)
 }
 
 export async function latestSnapshot(): Promise<IgSnapshot | null> {
@@ -232,11 +54,30 @@ export type IgStats = {
   weekly: { label: string; reach: number; posts: number }[]
   top: IgPost[]
   quiet: IgPost[]
+  /** The account's normal: median and upper-quartile reach across every stored post.
+   *  Medians, because one viral reel would drag an average far from typical. */
+  baseline: { median: number; p75: number; posts: number }
+  /** Each post's reach as a multiple of the median — 2.4 reads "2.4× a normal post". */
+  lift: Record<string, number>
+  /** Posts in the window that reached at least twice the median. */
+  hits: IgPost[]
+  /** Per 100 accounts reached. Saves and shares are what Instagram rewards most. */
+  rates: { save: number; share: number; comment: number }
+  /** Reels only, when Instagram returned watch time. */
+  watch: { reels: number; avgSec: number; totalHours: number } | null
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const interactions = (p: IgPost) => p.likes + p.comments + (p.saved ?? 0) + (p.shares ?? 0)
 const avg = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0)
+/** The q-th quantile (0–1) of a list, interpolated. */
+export function quantile(xs: number[], q: number): number {
+  if (!xs.length) return 0
+  const a = [...xs].sort((x, y) => x - y)
+  const i = (a.length - 1) * q
+  const lo = Math.floor(i)
+  return a[lo] + (a[Math.min(lo + 1, a.length - 1)] - a[lo]) * (i - lo)
+}
 
 export function analyse(snap: IgSnapshot, days = 30): IgStats {
   const since = Date.now() - days * 86_400_000
@@ -284,6 +125,12 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
     : 1
   const followers = snap.profile.followers_count ?? 0
   const reachPerPost = avg(reached.map(p => p.reach as number))
+  const allReach = all.filter(p => p.reach !== undefined).map(p => p.reach as number)
+  const median = quantile(allReach, 0.5)
+  const lift = Object.fromEntries(
+    all.filter(p => p.reach !== undefined && median).map(p => [p.id, (p.reach as number) / median]),
+  )
+  const watched = scope.filter(p => p.watchMs !== undefined)
 
   return {
     posts: scope,
@@ -314,5 +161,122 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
     weekly,
     top: [...scope].sort((a, b) => (b.reach ?? 0) - (a.reach ?? 0)).slice(0, 5),
     quiet: [...reached].sort((a, b) => (a.reach ?? 0) - (b.reach ?? 0)).slice(0, 3),
+    baseline: { median, p75: quantile(allReach, 0.75), posts: allReach.length },
+    lift,
+    hits: scope.filter(p => (lift[p.id] ?? 0) >= 2).sort((a, b) => lift[b.id] - lift[a.id]),
+    rates: {
+      save: totals.reach ? (totals.saves / totals.reach) * 100 : 0,
+      share: totals.reach ? (totals.shares / totals.reach) * 100 : 0,
+      comment: totals.reach ? (totals.comments / totals.reach) * 100 : 0,
+    },
+    watch: watched.length
+      ? {
+          reels: watched.length,
+          avgSec: avg(watched.map(p => p.watchMs as number)) / 1000,
+          totalHours: watched.reduce((t, p) => t + (p.watchTotalMs ?? 0), 0) / 3_600_000,
+        }
+      : null,
+  }
+}
+
+// ------------------------------------------------------------
+// The account picture — who follows, who the work reaches, how it grows.
+// Read from the history tables; each is optional until it has rows.
+// ------------------------------------------------------------
+
+export type DailyPoint = { day: string; reach?: number; new_followers?: number }
+
+export async function latestAccount(): Promise<IgAccount | null> {
+  if (!supabaseConfigured) return null
+  const { data, error } = await supabase
+    .from('ig_account_snapshots')
+    .select('captured_at, window_days, totals, follow_type, formats, demographics')
+    .order('captured_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return { ...(data as Omit<IgAccount, 'daily'>), daily: [] }
+}
+
+/** Daily reach and follows gained, oldest first. Grows by a day with every refresh. */
+export async function accountDaily(days = 400): Promise<DailyPoint[]> {
+  if (!supabaseConfigured) return []
+  const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+  const { data, error } = await supabase
+    .from('ig_account_daily')
+    .select('day, reach, new_followers')
+    .gte('day', since)
+    .order('day', { ascending: true })
+  if (error || !data) return []
+  return data.map(r => ({
+    day: String(r.day),
+    reach: r.reach ?? undefined,
+    new_followers: r.new_followers ?? undefined,
+  }))
+}
+
+export type Share = { key: string; label: string; value: number; pct: number }
+
+export type AudienceView = {
+  capturedAt: string
+  totals: Record<string, number>
+  /** % of accounts reached that do NOT follow — how far past the fan base the work travels. */
+  newPeoplePct: number | null
+  follows: number | null
+  unfollows: number | null
+  ages: Share[]
+  genders: Share[]
+  countries: Share[]
+  cities: Share[]
+  formats: Share[]
+  /** The age band with the most followers, and the 25–44 share brands usually ask about. */
+  topAge: Share | null
+  coreAgePct: number | null
+  homePct: number | null // % of followers in Malaysia
+}
+
+const REGION = (() => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+const FORMAT: Record<string, string> = {
+  REEL: 'Reels', POST: 'Posts', CAROUSEL_CONTAINER: 'Carousels', STORY: 'Stories', AD: 'Ads', LIVE: 'Live',
+}
+const GENDER: Record<string, string> = { F: 'Women', M: 'Men', U: 'Not stated' }
+
+// `of` is the denominator. Country and city lists are only Instagram's top 45, so
+// they are shared out of all followers — never re-based to make 100% of a partial list.
+const share = (xs: Slice[] | undefined, label: (k: string) => string, of?: number): Share[] => {
+  if (!xs?.length) return []
+  const total = of || xs.reduce((t, x) => t + x.value, 0)
+  return xs.map(x => ({ key: x.key, label: label(x.key), value: x.value, pct: total ? (x.value / total) * 100 : 0 }))
+}
+const valueOf = (xs: Slice[] | undefined, key: string) => xs?.find(x => x.key === key)?.value
+
+export function readAudienceView(acc: IgAccount, followers: number): AudienceView {
+  const d = acc.demographics.followers ?? {}
+  const reachSplit = acc.follow_type.reach
+  const nonFollower = valueOf(reachSplit, 'NON_FOLLOWER')
+  const reachTotal = (reachSplit ?? []).reduce((t, x) => t + x.value, 0)
+  const ages = share(d.age, k => k, undefined).sort((a, b) => a.key.localeCompare(b.key))
+  const countries = share(d.country, k => REGION?.of(k) ?? k, followers)
+  const core = ages.filter(a => a.key === '25-34' || a.key === '35-44')
+  return {
+    capturedAt: acc.captured_at,
+    totals: acc.totals,
+    newPeoplePct: nonFollower !== undefined && reachTotal ? (nonFollower / reachTotal) * 100 : null,
+    follows: valueOf(acc.follow_type.follows, 'FOLLOWER') ?? null,
+    unfollows: valueOf(acc.follow_type.follows, 'NON_FOLLOWER') ?? null,
+    ages,
+    genders: share(d.gender, k => GENDER[k] ?? k),
+    countries,
+    cities: share(d.city, k => k.split(',')[0], followers),
+    formats: share(acc.formats.reach, k => FORMAT[k] ?? k),
+    topAge: [...ages].sort((a, b) => b.value - a.value)[0] ?? null,
+    coreAgePct: core.length ? core.reduce((t, a) => t + a.pct, 0) : null,
+    homePct: countries.find(c => c.key === 'MY')?.pct ?? null,
   }
 }

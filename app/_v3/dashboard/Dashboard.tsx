@@ -9,6 +9,7 @@ import Strip from './Strip'
 import Owed from './Owed'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
+import DailyReach from '../DailyReach'
 import Circle from '../Circle'
 import { rmFull, money, pct, compact, longDate, num } from '../fmt'
 
@@ -44,6 +45,10 @@ export default function Dashboard({
     .at(-1)
   const up = (s.pacePct ?? 0) >= 0
   const hist = audience.history
+  const reach30 = audience.view?.totals.reach ?? 0
+  const newPct = audience.view?.newPeoplePct ?? null
+  const netFollows =
+    audience.view?.follows != null && audience.view?.unfollows != null ? audience.view.follows - audience.view.unfollows : null
   const growth = hist.length >= 2 && hist.at(-1)!.date !== hist[0].date ? hist.at(-1)!.followers - hist[0].followers : null
   const trackLine =
     s.pacePct === null
@@ -175,9 +180,12 @@ export default function Dashboard({
             <div className="v3-kpi-note">{s.owed.length} invoices, last 120 days</div>
           </a>
           <a className="v3-kpi" href="#audience">
-            <div className="v3-kpi-label">Instagram reach per post</div>
-            <div className="v3-kpi-value">{stats ? compact(stats.reachPerPost) : '—'}</div>
-            <div className="v3-kpi-note">Last 30 days · {compact(audience.followers)} followers</div>
+            <div className="v3-kpi-label">Instagram reach, 30 days</div>
+            <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
+            <div className="v3-kpi-note">
+              {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}
+              {compact(audience.followers)} followers
+            </div>
           </a>
         </section>
       ) : null}
@@ -332,15 +340,21 @@ export default function Dashboard({
                   <div className="v3-kpi-label">Followers</div>
                   <div className="v3-kpi-value num">{num(audience.followers)}</div>
                   <div className="v3-kpi-note">
-                    {audience.historyDays > 0
-                      ? `Tracked for ${audience.historyDays} days`
-                      : 'Growth appears as daily snapshots build up'}
+                    {netFollows !== null
+                      ? `${netFollows >= 0 ? '+' : ''}${num(netFollows)} in the last 30 days`
+                      : audience.historyDays > 0
+                        ? `Tracked for ${audience.historyDays} days`
+                        : 'Growth appears as daily snapshots build up'}
                   </div>
                 </div>
                 <div>
-                  <div className="v3-kpi-label">Reach per post</div>
-                  <div className="v3-kpi-value num">{compact(stats.reachPerPost)}</div>
-                  <div className="v3-kpi-note">{Math.round(stats.reachVsFollowers)}% of followers, last 30 days</div>
+                  <div className="v3-kpi-label">{reach30 ? 'Accounts reached' : 'Reach per post'}</div>
+                  <div className="v3-kpi-value num">{compact(reach30 || stats.reachPerPost)}</div>
+                  <div className="v3-kpi-note">
+                    {reach30
+                      ? `30 days · ${newPct !== null ? `${Math.round(newPct)}% did not follow you` : `typical post ${compact(stats.baseline.median)}`}`
+                      : `${Math.round(stats.reachVsFollowers)}% of followers, last 30 days`}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement</div>
@@ -353,7 +367,12 @@ export default function Dashboard({
                   <div className="v3-kpi-note">last post {stats.daysSinceLastPost === 0 ? 'today' : `${stats.daysSinceLastPost} day${stats.daysSinceLastPost === 1 ? '' : 's'} ago`}</div>
                 </div>
               </div>
-              <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} />
+              {audience.daily.length >= 2 ? (
+                <div style={{ marginBottom: 'var(--space-5)' }}>
+                  <DailyReach days={audience.daily} />
+                </div>
+              ) : null}
+              <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} lift={stats.lift} />
             </>
           ) : (
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>

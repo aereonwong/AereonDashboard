@@ -1,5 +1,16 @@
 import { supabase, supabaseConfigured } from '@/lib/supabase'
-import { latestSnapshot, analyse, type IgSnapshot, type IgStats, type IgPost } from '@/lib/instagram'
+import {
+  latestSnapshot,
+  latestAccount,
+  accountDaily,
+  readAudienceView,
+  analyse,
+  type IgSnapshot,
+  type IgStats,
+  type IgPost,
+  type AudienceView,
+  type DailyPoint,
+} from '@/lib/instagram'
 
 // 👉 Question 2: is my audience growing? Growth needs history, and history needs
 // snapshots taken over time. This reports honestly how much history exists, so a
@@ -14,10 +25,14 @@ export type Audience = {
   history: FollowerPoint[] // one point per day that has a snapshot
   historyDays: number // days between the first and latest snapshot
   top: IgPost[]
+  /** Who follows and how far the work travels — null until the first account refresh. */
+  view: AudienceView | null
+  /** Daily reach and follows gained, oldest first. */
+  daily: DailyPoint[]
 }
 
 export async function readAudience(days = 30): Promise<Audience> {
-  const snap = await latestSnapshot()
+  const [snap, account, daily] = await Promise.all([latestSnapshot(), latestAccount(), accountDaily()])
   let history: FollowerPoint[] = []
   if (supabaseConfigured) {
     const { data } = await supabase
@@ -44,6 +59,8 @@ export async function readAudience(days = 30): Promise<Audience> {
     history,
     historyDays,
     top,
+    view: account ? readAudienceView(account, Number(snap?.profile?.followers_count ?? 0)) : null,
+    daily,
   }
 }
 

@@ -31,3 +31,6 @@ graphify-out/20*/
 .serena/
 graphify-out/.graphify_python
 graphify-out/cost.json
+
+# Browser-tool captures — they can hold private dashboard screenshots
+.playwright-mcp/

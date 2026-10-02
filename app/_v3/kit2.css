@@ -1,0 +1,265 @@
+/* ============================================================================
+   Media kit v2 (2 Oct 2026). Same three worlds, same tokens as v3.css — this
+   file only composes them. Everything is scoped under .v3-k2.
+
+   Motion: one authored moment (the reach skyline rising), plus the hero's
+   headline reveal and photo settle. Every entrance is armed by KitMotion.tsx
+   only when motion is allowed, so the page is complete without JavaScript and
+   under reduced motion. Only transform, opacity and clip-path animate.
+   ========================================================================== */
+
+.v3-k2 { --k2-gutter: clamp(16px, 4vw, 48px); --k2-max: 1180px; overflow-x: clip; background: var(--ground); display: flow-root; }
+.v3-k2 ::selection { background: var(--mark-soft, rgba(127, 127, 127, 0.25)); color: var(--ink); }
+.v3-k2 a { text-underline-offset: 3px; }
+
+/* ---------------------------------------------------------------- hero */
+
+/* The photograph is dark in every world, so the hero carries its own light ink. */
+.v3-k2-hero {
+  --hero-ink: #F4F2EE; --hero-ink-2: rgba(244, 242, 238, 0.78); --hero-line: rgba(244, 242, 238, 0.22);
+  position: relative; isolation: isolate; min-height: max(640px, 100svh);
+  display: grid; grid-template-rows: auto 1fr auto; color: var(--hero-ink);
+  padding: var(--space-5) var(--k2-gutter) var(--space-6);
+}
+.v3-k2-photo { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: #050505; }
+.v3-k2-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 34%; display: block; }
+.v3-k2-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 5, 5, 0.55) 0%, transparent 22%, transparent 42%, rgba(5, 5, 5, 0.86) 88%),
+    linear-gradient(90deg, rgba(5, 5, 5, 0.74) 0%, rgba(5, 5, 5, 0.4) 45%, transparent 72%);
+}
+.v3[data-world="contact"] .v3-k2-photo::after {
+  background:
+    linear-gradient(180deg, rgba(13, 13, 13, 0.5) 0%, transparent 22%, transparent 40%, rgba(13, 13, 13, 0.92) 90%),
+    linear-gradient(90deg, rgba(13, 13, 13, 0.76) 0%, rgba(13, 13, 13, 0.42) 45%, transparent 72%);
+}
+.v3[data-world="hud"] .v3-k2-photo::after {
+  background:
+    linear-gradient(180deg, rgba(5, 8, 13, 0.5) 0%, transparent 24%, transparent 44%, rgba(5, 8, 13, 0.88) 90%),
+    linear-gradient(90deg, rgba(5, 8, 13, 0.72) 0%, rgba(5, 8, 13, 0.38) 45%, transparent 72%);
+}
+/* Contact: the hero is a print on the table — a print-white mat around the frame. */
+.v3[data-world="contact"] .v3-k2-hero,
+.v3[data-world="contact"] .v3-k2-close { margin: 24px; box-shadow: 0 0 0 12px var(--frame), 0 40px 80px -30px #000; }
+.v3[data-world="contact"] .v3-k2-hero { min-height: max(600px, calc(100svh - 48px)); }
+/* HUD: instrument brackets on the live feed. */
+.v3[data-world="hud"] .v3-k2-hero::before,
+.v3[data-world="hud"] .v3-k2-hero::after { content: ""; position: absolute; width: 34px; height: 34px; border: 0 solid var(--hero-ink); z-index: 1; pointer-events: none; }
+.v3[data-world="hud"] .v3-k2-hero::before { top: 18px; left: 18px; border-top-width: 2px; border-left-width: 2px; }
+.v3[data-world="hud"] .v3-k2-hero::after { bottom: 18px; right: 18px; border-bottom-width: 2px; border-right-width: 2px; }
+.v3-k2-hud { position: absolute; top: 74px; left: var(--k2-gutter); right: var(--k2-gutter); display: flex; justify-content: space-between; gap: var(--space-4); font-family: var(--f-num); font-size: 11px; letter-spacing: 0.16em; color: var(--hero-ink-2); }
+.v3-k2-hud .v3-kit-rec { color: var(--alert); }
+
+.v3-k2-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); position: relative; z-index: 1; }
+.v3-k2-mark { font-family: var(--f-display); font-weight: 700; font-size: var(--t-lg); letter-spacing: 0.02em; }
+.v3[data-world="contact"] .v3-k2-mark, .v3[data-world="hud"] .v3-k2-mark { text-transform: uppercase; letter-spacing: 0.1em; }
+.v3-k2-links { display: flex; gap: var(--space-5); font-size: var(--t-sm); }
+.v3-k2-links a { color: var(--hero-ink-2); text-decoration: none; transition: color var(--dur) var(--ease); }
+.v3-k2-links a:hover { color: var(--hero-ink); }
+.v3-k2-login { opacity: 0.7; }
+
+.v3-k2-hero-body { align-self: end; max-width: 980px; padding-bottom: var(--space-7); }
+.v3-k2-headline {
+  font-family: var(--f-display); font-weight: 700; margin: 0;
+  font-size: clamp(3rem, 8.4vw, 6rem); line-height: 0.92; letter-spacing: -0.03em; text-wrap: balance;
+}
+.v3[data-world="contact"] .v3-k2-headline { text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.88; }
+.v3[data-world="hud"] .v3-k2-headline { text-transform: uppercase; letter-spacing: 0.01em; font-weight: 600; }
+.v3-k2-line { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+.v3-k2-line > span { display: inline-block; }
+.v3-k2-blurb { color: var(--hero-ink-2); font-size: var(--t-lg); line-height: 1.55; max-width: 54ch; margin: var(--space-5) 0 0; text-wrap: pretty; }
+.v3-k2-hero .v3-kit-ctas { margin-top: var(--space-6); }
+.v3-k2-hero .v3-btn-primary { background: var(--hero-ink); border-color: var(--hero-ink); color: #0A0A0B; }
+.v3[data-world="canon"] .v3-k2-hero .v3-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v3-k2-ghost { color: var(--hero-ink) !important; border-color: var(--hero-line) !important; background: rgba(5, 5, 5, 0.25); backdrop-filter: blur(8px); }
+.v3-k2-ghost:hover { background: rgba(244, 242, 238, 0.12); }
+
+/* Telemetry: three readings along the foot of the frame. */
+.v3-k2-telemetry { display: flex; flex-wrap: wrap; gap: var(--space-4) clamp(24px, 6vw, 88px); margin: 0; padding-top: var(--space-5); border-top: 1px solid var(--hero-line); }
+.v3-k2-telemetry div { display: flex; flex-direction: column-reverse; gap: var(--space-1); }
+.v3-k2-telemetry dt { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hero-ink-2); }
+.v3-k2-telemetry dd { margin: 0; font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: clamp(1.75rem, 3.4vw, 2.6rem); line-height: 1; letter-spacing: -0.02em; }
+.v3[data-world="contact"] .v3-k2-telemetry dd { font-family: var(--f-note); font-weight: 400; letter-spacing: 0; font-size: clamp(2.2rem, 4.2vw, 3.2rem); }
+.v3[data-world="contact"] .v3-k2-telemetry dt { font-family: var(--f-code); color: var(--edge); }
+.v3[data-world="canon"] .v3-k2-telemetry dd { font-family: var(--f-geist-mono), ui-monospace, monospace; font-weight: 600; }
+
+/* ---------------------------------------------------------------- sections */
+
+.v3-k2-main { position: relative; z-index: 1; max-width: var(--k2-max); margin: 0 auto; padding: clamp(56px, 9vw, 120px) var(--k2-gutter) var(--space-7); }
+.v3-k2-section { margin-bottom: clamp(72px, 11vw, 140px); }
+.v3-k2-h2 { font-family: var(--f-display); font-size: var(--t-2xl); font-weight: 700; margin: 0 0 var(--space-5); letter-spacing: -0.01em; }
+.v3[data-world="contact"] .v3-k2-h2 { font-family: var(--f-note); color: var(--mark); font-weight: 400; font-size: 2.4rem; }
+.v3[data-world="hud"] .v3-k2-h2 { font-size: var(--t-sm); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.v3-k2-note { color: var(--ink-2); margin: calc(-1 * var(--space-3)) 0 var(--space-5); }
+
+.v3-k2-statement {
+  font-family: var(--f-display); font-weight: 500; color: var(--ink-2);
+  font-size: clamp(1.6rem, 3.3vw, 2.75rem); line-height: 1.14; letter-spacing: -0.015em;
+  max-width: 26em; margin: 0; text-wrap: pretty;
+}
+.v3[data-world="hud"] .v3-k2-statement { font-weight: 400; letter-spacing: 0; }
+.v3-k2-statement b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.v3[data-world="contact"] .v3-k2-statement b { font-family: var(--f-note); font-weight: 400; font-size: 1.18em; letter-spacing: 0; }
+.v3-k2-mark-word { color: var(--accent) !important; }
+.v3[data-world="hud"] .v3-k2-mark-word { color: var(--ink) !important; text-decoration: underline 2px; text-underline-offset: 6px; }
+.v3-k2-count { white-space: nowrap; }
+
+/* ---------------------------------------------------------------- the reach skyline */
+
+.v3-k2-skyline { margin: clamp(40px, 6vw, 72px) 0 0; }
+.v3-k2-bars {
+  --bar: var(--ink); --bar-dim: 0.62;
+  position: relative; display: flex; align-items: flex-end; gap: clamp(2px, 0.5vw, 6px);
+  height: clamp(220px, 30vw, 380px); padding-top: 64px; border-bottom: 1px solid var(--line-2);
+}
+.v3[data-world="contact"] .v3-k2-bars { --bar: var(--frame); --bar-dim: 0.5; }
+.v3[data-world="canon"] .v3-k2-bars { --bar: var(--accent); --bar-dim: 0.42; }
+.v3-k2-bar {
+  position: relative; flex: 1 1 0; min-width: 0;
+  height: max(3px, calc(var(--h) * 100%));
+  background: var(--bar); opacity: var(--bar-dim);
+  transform-origin: 50% 100%;
+  transition: opacity var(--dur) var(--ease);
+}
+.v3[data-world="canon"] .v3-k2-bar { border-radius: 3px 3px 0 0; }
+/* Lit windows: a fine grid cut into each tower, so the line reads as a city at night. */
+.v3-k2-bar::after {
+  content: ""; position: absolute; inset: 6px 3px 0;
+  background-image:
+    linear-gradient(90deg, var(--ground) 2px, transparent 2px),
+    linear-gradient(180deg, var(--ground) 2px, transparent 2px);
+  background-size: 7px 8px; opacity: 0.55;
+}
+.v3[data-world="canon"] .v3-k2-bar::after { opacity: 0.35; }
+.v3-k2-bar:hover { opacity: 1; }
+.v3-k2-bar[data-peak] { opacity: 1; }
+/* The peak wears a spire, like the tower he flies past. */
+.v3-k2-bar[data-peak]::before { content: ""; position: absolute; left: 50%; bottom: 100%; width: 2px; height: 22px; background: var(--bar); transform: translateX(-50%); }
+.v3-k2-peak { position: absolute; left: 50%; bottom: calc(100% + 30px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap; padding: 4px 12px; }
+.v3-k2-peak-v { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--t-xl); line-height: 1; color: var(--ink); }
+.v3[data-world="contact"] .v3-k2-peak-v { font-family: var(--f-note); font-weight: 400; font-size: 1.8rem; }
+.v3-k2-peak-d { font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0.04em; }
+.v3-k2-bar[data-edge="end"] .v3-k2-peak { left: auto; right: -6px; transform: none; align-items: flex-end; }
+.v3-k2-bar[data-edge="start"] .v3-k2-peak { left: -6px; transform: none; align-items: flex-start; }
+.v3-k2-peak .v3-circle { position: absolute; left: -10px; top: -8px; width: calc(100% + 20px); height: calc(100% + 16px); opacity: 1; }
+.v3-k2-peak .v3-circle path { animation: none; stroke-dashoffset: 0; }
+.v3-k2-axis { display: flex; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-3); font-size: var(--t-xs); color: var(--ink-3); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3[data-world="contact"] .v3-k2-axis { font-family: var(--f-code); color: var(--edge); letter-spacing: 0.08em; }
+
+/* who's watching: the shared audience styles live in v3.css (AudienceBreakdown) */
+.v3-k2-who-lede { margin-bottom: var(--space-6); }
+
+/* ---------------------------------------------------------------- attention + formats */
+
+.v3-k2-formats { margin-top: clamp(32px, 5vw, 56px); max-width: 860px; }
+.v3-k2-stack { display: flex; gap: 3px; height: 18px; }
+.v3-k2-stack i { flex: var(--w) 1 0; min-width: 4px; background: var(--ink); opacity: calc(1 - var(--i) * 0.2); }
+.v3[data-world="contact"] .v3-k2-stack i { background: var(--frame); }
+.v3[data-world="canon"] .v3-k2-stack i { background: var(--accent); }
+.v3[data-world="canon"] .v3-k2-stack i:first-child { border-radius: 99px 0 0 99px; }
+.v3[data-world="canon"] .v3-k2-stack i:last-child { border-radius: 0 99px 99px 0; }
+.v3-k2-stack-k { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); color: var(--ink-2); font-size: var(--t-sm); }
+.v3-k2-stack-k b { color: var(--ink); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- work, services, brands */
+
+.v3-k2 .v3-posts { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.v3-k2-services { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
+@media (max-width: 1100px) { .v3-k2-services { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .v3-k2-services { grid-template-columns: 1fr; } }
+.v3-k2-service { border-top: 2px solid var(--ink); padding-top: var(--space-4); }
+.v3[data-world="canon"] .v3-k2-service { border-top-color: var(--accent); }
+.v3-k2-service h3 { margin: 0 0 var(--space-2); font-family: var(--f-display); font-size: var(--t-xl); font-weight: 700; }
+.v3[data-world="contact"] .v3-k2-service h3, .v3[data-world="hud"] .v3-k2-service h3 { text-transform: uppercase; letter-spacing: 0.02em; }
+.v3-k2-service p { margin: 0; color: var(--ink-2); line-height: 1.55; }
+
+/* Brand wall with captions: the mark, then its name and what kind of brand it is,
+   so symbol-only marks still read. Ink-3 marks rise to ink on hover, as in v1. */
+.v3-k2-logos { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--space-6) var(--space-5); }
+.v3-k2-logos li { height: auto; flex-direction: column; justify-content: flex-start; gap: 6px; text-align: center; }
+.v3-k2-logo-mark { display: flex; align-items: center; justify-content: center; height: 64px; margin-bottom: 4px; }
+.v3-k2-logo-name { font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); line-height: 1.25; }
+.v3-k2-logo-kind { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.25; }
+.v3-k2-logos li:hover .v3-k2-logo-name { color: var(--ink); }
+
+/* ---------------------------------------------------------------- the close */
+
+.v3-k2-close {
+  --hero-ink: #F4F2EE; --hero-ink-2: rgba(244, 242, 238, 0.8); --hero-line: rgba(244, 242, 238, 0.24);
+  position: relative; isolation: isolate; color: var(--hero-ink);
+  min-height: min(86svh, 760px); display: flex; align-items: flex-end;
+  padding: var(--space-8) var(--k2-gutter);
+}
+.v3-k2-photo-close img { object-position: center 60%; }
+.v3-k2-photo-close::after { background: linear-gradient(180deg, rgba(5, 5, 5, 0.25), rgba(5, 5, 5, 0.86) 78%) !important; }
+.v3-k2-close-body { max-width: var(--k2-max); width: 100%; margin: 0 auto; }
+.v3-k2-close-h { font-size: clamp(2.6rem, 6.6vw, 5.25rem); max-width: 14ch; }
+.v3-k2-source { margin: var(--space-7) 0 0; font-size: var(--t-xs); color: var(--hero-ink-2); }
+
+/* ---------------------------------------------------------------- motion (only when allowed) */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The photograph settles into place, once. */
+  .v3-k2-hero .v3-k2-photo img { animation: k2-settle 2.6s var(--ease) both; }
+  /* Headline lines rise out of their own baseline. */
+  .v3-k2-line > span { animation: k2-rise 1s var(--ease) both; }
+  .v3-k2-line:nth-child(2) > span { animation-delay: 120ms; }
+  .v3-k2-hero .v3-k2-blurb, .v3-k2-hero .v3-kit-ctas, .v3-k2-telemetry { animation: k2-fade 900ms var(--ease) 380ms both; }
+  .v3-k2-telemetry { animation-delay: 560ms; }
+
+  /* Armed sections (JS on, motion allowed) wait off-stage until seen. */
+  [data-armed="true"]:not([data-in="true"]) .v3-k2-statement,
+  [data-armed="true"]:not([data-in="true"]) .v3-k2-h2,
+  [data-armed="true"]:not([data-in="true"]) .v3-k2-note { opacity: 0; transform: translateY(14px); }
+  [data-armed="true"] .v3-k2-statement,
+  [data-armed="true"] .v3-k2-h2,
+  [data-armed="true"] .v3-k2-note { transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
+  [data-armed="true"] .v3-k2-statement { transition-delay: 80ms; }
+
+  /* The skyline: towers rise left to right, then the peak's mark is drawn. */
+  [data-armed="true"] .v3-k2-bar { transform: scaleY(0); transition: transform 1.1s var(--ease) calc(300ms + var(--i) * 32ms), opacity var(--dur) var(--ease); }
+  [data-in="true"] .v3-k2-bar { transform: scaleY(1); }
+  [data-armed="true"] .v3-k2-peak { opacity: 0; transition: opacity 500ms var(--ease) 1.5s; }
+  [data-in="true"] .v3-k2-peak { opacity: 1; }
+  [data-armed="true"] .v3-k2-peak .v3-circle path { stroke-dashoffset: 600; }
+  [data-in="true"] .v3-k2-peak .v3-circle path { animation: v3-draw 900ms var(--ease) 1.8s forwards; }
+
+  /* Audience bars grow from their baselines. */
+  [data-armed="true"] .v3-k2-age-track i { transform: scaleY(0); transition: transform 900ms var(--ease); transition-delay: calc(250ms + var(--i) * 60ms); }
+  [data-in="true"] .v3-k2-age-track i { transform: scaleY(1); }
+  [data-armed="true"] .v3-k2-split i,
+  [data-armed="true"] .v3-k2-place-bar i { transform: scaleX(0); transition: transform 900ms var(--ease); transition-delay: calc(300ms + var(--i, 0) * 70ms); }
+  [data-in="true"] .v3-k2-split i,
+  [data-in="true"] .v3-k2-place-bar i { transform: scaleX(1); }
+  [data-armed="true"] .v3-k2-stack { clip-path: inset(0 100% 0 0); transition: clip-path 1.1s var(--ease) 300ms; }
+  [data-in="true"] .v3-k2-stack { clip-path: inset(0 0 0 0); }
+
+  /* Services and logos arrive in a short stagger. */
+  [data-armed="true"]:not([data-in="true"]) .v3-k2-service,
+  [data-armed="true"]:not([data-in="true"]) .v3-k2-logos li { opacity: 0; transform: translateY(10px); }
+  [data-armed="true"] .v3-k2-service,
+  [data-armed="true"] .v3-k2-logos li { transition: opacity 600ms var(--ease), transform 600ms var(--ease); transition-delay: calc(120ms + var(--i) * 45ms); }
+}
+@keyframes k2-settle { from { transform: scale(1.09); } to { transform: scale(1); } }
+@keyframes k2-rise { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes k2-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ---------------------------------------------------------------- small screens */
+
+@media (max-width: 900px) {
+  .v3-k2-links { gap: var(--space-4); }
+  .v3-k2-links .v3-k2-login { display: none; }
+  .v3-k2-hud { top: 64px; font-size: 10px; }
+  .v3-k2-hud span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .v3-k2-bars { padding-top: 56px; gap: 2px; }
+  .v3-k2-bar::after { inset: 4px 1px 0; background-size: 5px 7px; }
+  .v3-k2-axis span:nth-child(2) { display: none; }
+  .v3-k2 .v3-posts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v3-k2-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-4); }
+  .v3-k2-logo-mark { height: 52px; }
+  .v3[data-world="contact"] .v3-k2-hero, .v3[data-world="contact"] .v3-k2-close { margin: 12px; box-shadow: 0 0 0 6px var(--frame), 0 30px 60px -30px #000; }
+}
+@media (max-width: 520px) {
+  .v3-k2-telemetry div:nth-child(3) { display: none; }
+}
