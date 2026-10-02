@@ -54,6 +54,11 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   changing how invoices are parsed or before designing a new invoice template.
 - Instagram lives in its own `ig_snapshots` table, one row per refresh. Instagram caps a media page
   at ~40 posts for this field set — asking for 50 silently returns zero, so never raise the cap.
+  History (added 2 Oct 2026, `supabase/instagram-history.sql`): `ig_post_metrics`,
+  `ig_account_snapshots`, `ig_account_daily`. Fetching lives in `lib/ig-fetch.ts` — no runtime
+  imports, so `scripts/ig-refresh.mjs` loads the same file. Insight metrics differ per format
+  (Reels: watch time; posts: follows, profile visits) — asking for an unsupported one fails the call.
+  "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
 
@@ -67,20 +72,28 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 
 ## Scheduled
 
+- **`cron-instagram` runs daily at 6:00am MYT** (`0 22 * * *` UTC) — the only cron. It only reads
+  Instagram through Composio and writes history rows; no Claude call, no message.
 - **`cron-daily` is no longer scheduled** — Aereon removed the 8:30am job on 27 Sep 2026. The
   route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
   it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
   proposes chasers for overdue invoices) runs.
 - **`cron-news` is paused too** — Aereon turned off the 9:00am MYT news digest on 27 Sep 2026
   (it had been failing on a low Anthropic credit balance, and it was the costliest Claude call:
-  Opus with web search). `vercel.json` now has no crons; add
+  Opus with web search). To restore it, add
   `{ "path": "/api/cron-news", "schedule": "0 1 * * *" }` back to restore it.
-- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — both are free now.
+- Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — one is free now.
 
 ## Dashboard v3 — the creator studio
 
 A whole-app version chosen per device in Settings, beside v1 and v2. See `app/_v3/CLAUDE.md` for
-its structure, design-system pointers, and per-world rules.
+its structure, design-system pointers, and per-world rules. **Design direction (2 Oct 2026):**
+Aereon prefers Studio Standard (`canon`) and the classic look; new UI work targets those, not
+Contact Sheet or Flight HUD.
+
+**Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
+the reach skyline, always drawn in Studio Standard. Chosen in Settings beside v1;
+`/?preview=kit&kit=v2` previews it when signed in.
 
 ## Raising an invoice or a quotation
 
@@ -98,6 +111,20 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   Merging deploys the live app, so only merge after `npm run build` passes (for app code) and the
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
+
+## Review agents (`.claude/agents/`)
+
+Before opening a pull request, run the reviewers whose files the diff touches — in parallel, and
+fix every BLOCK before merging:
+
+- `numbers-guard` — money figures (`lib/records.ts`, `invoices.ts`, `analytics.ts`, `lib/v3/`, dashboard, Cash In, bot tools)
+- `security-reviewer` — `proxy.ts`, `app/api/**`, secrets, login/demo, `vercel.json`, new routes
+- `ig-guard` — Instagram fetch/refresh, snapshots, Media Kit, the landing page's live numbers
+- `invoice-auditor` — invoice/quote numbering, parsing, editing, Canva/Drive export
+- `build-verifier` — any app-code change: builds, starts locally, checks affected pages render
+- `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every palette × light/dark
+
+Each opens with **Verdict: SHIP** or **Verdict: BLOCK**. All are read-only.
 
 ## Motion skills (installed 2 Oct 2026)
 

@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "app/_components/Icon.tsx": {
-    "mtime": 1790835290.500832,
-    "seen": 1790835508.746513,
+    "mtime": 1790894850.0151944,
+    "seen": 1790904515.424843,
     "ast_hash": "a5a45b11602de44c25de866fe2a314b6",
     "semantic_hash": ""
   },
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "app/api/instagram/refresh/route.ts": {
-    "mtime": 1790605741.125787,
-    "seen": 1790605799.679449,
-    "ast_hash": "097389970eff592ecdb7d9949af1d3c3",
+    "mtime": 1790904242.9225688,
+    "seen": 1790904515.4258518,
+    "ast_hash": "4cea21c4d8f0dea621b3e1389570c696",
     "semantic_hash": ""
   },
   "app/api/login/route.ts": {
@@ -402,9 +402,9 @@
     "semantic_hash": ""
   },
   "lib/instagram.ts": {
-    "mtime": 1790404673.8228626,
-    "seen": 1790605799.679463,
-    "ast_hash": "6192150940dc0c18a39e2598ffdfbb95",
+    "mtime": 1790904488.2021956,
+    "seen": 1790904515.426205,
+    "ast_hash": "35619d5ee9b75645b3394253b5c28672",
     "semantic_hash": ""
   },
   "lib/invoice-bot.ts": {
@@ -414,8 +414,8 @@
     "semantic_hash": ""
   },
   "lib/invoice-intake.ts": {
-    "mtime": 1790835302.0328588,
-    "seen": 1790835508.747766,
+    "mtime": 1790894850.0327444,
+    "seen": 1790904515.4262872,
     "ast_hash": "16ba305afd0a7c95046a01502dbf21e0",
     "semantic_hash": ""
   },
@@ -468,21 +468,21 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1790516412.4444253,
-    "seen": 1790605799.679486,
-    "ast_hash": "bb4ae5556314c0b227505deb2235515b",
+    "mtime": 1790904319.698392,
+    "seen": 1790904515.426692,
+    "ast_hash": "e75f8e73dac6206c2faa5a98aab8106f",
     "semantic_hash": ""
   },
   "proxy.ts": {
-    "mtime": 1789881945.7002363,
-    "seen": 1790605799.679487,
-    "ast_hash": "a40c1fabb3d262fd3978bddd8b6e8a11",
+    "mtime": 1790904253.3020494,
+    "seen": 1790904515.4266932,
+    "ast_hash": "a091addd1424bccfc5d8e4868309786c",
     "semantic_hash": ""
   },
   "scripts/ig-refresh.mjs": {
-    "mtime": 1789873332.2559583,
-    "seen": 1790605799.6794891,
-    "ast_hash": "21736c34ac3aa2c5f756ee6c83965e00",
+    "mtime": 1790904262.4284286,
+    "seen": 1790904515.426718,
+    "ast_hash": "209784aac7ea5ab66d418664ddfb35be",
     "semantic_hash": ""
   },
   "scripts/import.mjs": {
@@ -516,9 +516,9 @@
     "semantic_hash": ""
   },
   "vercel.json": {
-    "mtime": 1790605741.128559,
-    "seen": 1790605799.679494,
-    "ast_hash": "383d5fe72b3ff1d2dd42a08ba00b238f",
+    "mtime": 1790904253.3114974,
+    "seen": 1790904515.4268181,
+    "ast_hash": "86a6360e597fec6c33cc362ce13ae67f",
     "semantic_hash": ""
   },
   ".claude/CLAUDE.md": {
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1790834947.991044,
-    "seen": 1790835508.7487879,
-    "ast_hash": "9e9d8258d09bffcd4cc227d7ade85b81",
+    "mtime": 1790903607.5945687,
+    "seen": 1790904515.427486,
+    "ast_hash": "55234745c5e7034918e38d0dbf6c2bb7",
     "semantic_hash": ""
   },
   "README.md": {
@@ -900,9 +900,9 @@
     "semantic_hash": ""
   },
   "app/(app)/invoices/CreateInvoice.tsx": {
-    "mtime": 1790835466.2752109,
-    "seen": 1790835508.746047,
-    "ast_hash": "3479ae30d3c7137f01f64c4c1558cb93",
+    "mtime": 1790894850.0138135,
+    "seen": 1790904515.424305,
+    "ast_hash": "b31aa7e08b6838f5f58b41c37f002588",
     "semantic_hash": ""
   },
   "app/(app)/invoices/StatusStrip.tsx": {
@@ -912,15 +912,15 @@
     "semantic_hash": ""
   },
   "app/(app)/invoices/actions.ts": {
-    "mtime": 1790835364.713005,
-    "seen": 1790835508.746072,
+    "mtime": 1790894850.014151,
+    "seen": 1790904515.42434,
     "ast_hash": "3f19231141acb83645da785d1395edf9",
     "semantic_hash": ""
   },
   "app/(app)/invoices/details/InvoiceDetails.tsx": {
-    "mtime": 1790835408.05939,
-    "seen": 1790835508.746073,
-    "ast_hash": "bce8ac3ffa87d5428c148782db2fcba2",
+    "mtime": 1790904495.9532545,
+    "seen": 1790904515.424341,
+    "ast_hash": "d36eeff70384f528510d02260b0d8a69",
     "semantic_hash": ""
   },
   "app/(app)/invoices/details/page.tsx": {
@@ -1110,14 +1110,14 @@
     "semantic_hash": ""
   },
   "lib/invoice-canva.ts": {
-    "mtime": 1790835323.218159,
-    "seen": 1790835508.747704,
+    "mtime": 1790894850.0317786,
+    "seen": 1790904515.4262242,
     "ast_hash": "e0101b818eee6507a39ef78401b39204",
     "semantic_hash": ""
   },
   "lib/invoice-details.ts": {
-    "mtime": 1790835314.529968,
-    "seen": 1790835508.747705,
+    "mtime": 1790894850.0320191,
+    "seen": 1790904515.426225,
     "ast_hash": "d25caed52ff1f49bf59f424ecb3b2cde",
     "semantic_hash": ""
   },
@@ -1140,8 +1140,8 @@
     "semantic_hash": ""
   },
   "lib/invoice-figures.ts": {
-    "mtime": 1790835302.0331447,
-    "seen": 1790835508.747765,
+    "mtime": 1790894850.0324364,
+    "seen": 1790904515.426286,
     "ast_hash": "e509728685a050ac8b7e5d917a637caa",
     "semantic_hash": ""
   },
@@ -1164,9 +1164,9 @@
     "semantic_hash": ""
   },
   "lib/v3/audience.ts": {
-    "mtime": 1790389414.160782,
-    "seen": 1790605799.679477,
-    "ast_hash": "bf3acdf894205c43f7894b26c5d5b055",
+    "mtime": 1790904494.8624609,
+    "seen": 1790904515.426472,
+    "ast_hash": "927fa4018ee440a9e78451a6d659f82c",
     "semantic_hash": ""
   },
   "lib/v3/brands.ts": {
@@ -1344,9 +1344,1143 @@
     "semantic_hash": ""
   },
   "lib/invoice-edit.ts": {
-    "mtime": 1790835352.7506378,
-    "seen": 1790835508.747746,
+    "mtime": 1790894850.0321865,
+    "seen": 1790904515.426264,
     "ast_hash": "96f3f43e9c680befe9af2fba82b7b5c5",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/scripts/apply-effect-to-layers.jsx": {
+    "mtime": 1790895638.7581177,
+    "seen": 1790904515.4236999,
+    "ast_hash": "367eb63ab655b81154e469586f06a259",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/scripts/batch-rename.jsx": {
+    "mtime": 1790895638.7582169,
+    "seen": 1790904515.423702,
+    "ast_hash": "494312cc41aaa06e894e577f22b1ffe3",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/scripts/sequential-offset.jsx": {
+    "mtime": 1790895638.7583168,
+    "seen": 1790904515.423703,
+    "ast_hash": "3973e3178b9b6fadaf0699c76eba3e1e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ascii-animation/scripts/img-to-ascii.mjs": {
+    "mtime": 1790895638.7598722,
+    "seen": 1790904515.423703,
+    "ast_hash": "7e39dd60b95b3739999b2cfe28a71dfe",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/examples/hero-timeline.js": {
+    "mtime": 1790895638.7660391,
+    "seen": 1790904515.4237041,
+    "ast_hash": "2425ab9a8825874867f4c1fb0e55b37b",
+    "semantic_hash": ""
+  },
+  "app/(app)/invoices/ConfirmDialog.tsx": {
+    "mtime": 1790894850.0132895,
+    "seen": 1790904515.4243042,
+    "ast_hash": "942909f565bb643f33716b1d8d8d6f49",
+    "semantic_hash": ""
+  },
+  "app/api/cron-instagram/route.ts": {
+    "mtime": 1790904253.266179,
+    "seen": 1790904515.425778,
+    "ast_hash": "553a46eaceca4c9cf4b2555e7d12dd8b",
+    "semantic_hash": ""
+  },
+  "app/api/invoices/[id]/preview/route.ts": {
+    "mtime": 1790904495.919573,
+    "seen": 1790904515.425886,
+    "ast_hash": "7795d48c6565ff566f936d142bff81b8",
+    "semantic_hash": ""
+  },
+  "lib/ig-fetch.ts": {
+    "mtime": 1790904212.2731242,
+    "seen": 1790904515.4262028,
+    "ast_hash": "e002d159d654cdb78d05ae29708f69f3",
+    "semantic_hash": ""
+  },
+  "lib/ig-refresh.ts": {
+    "mtime": 1790904242.8771765,
+    "seen": 1790904515.426204,
+    "ast_hash": "cd1946eb547eb96f558bbef670370d43",
+    "semantic_hash": ""
+  },
+  ".claude/skills/60fps-animation/README.md": {
+    "mtime": 1790895638.7554905,
+    "seen": 1790904515.4269938,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/60fps-animation/SKILL.md": {
+    "mtime": 1790895638.7557056,
+    "seen": 1790904515.4269938,
+    "ast_hash": "73580f4528e2f1617bfbb75536d5b063",
+    "semantic_hash": ""
+  },
+  ".claude/skills/60fps-animation/references/patterns-and-profiling.md": {
+    "mtime": 1790895638.7559183,
+    "seen": 1790904515.426995,
+    "ast_hash": "de1b0b11c0bfc3b2ccf6cc1269795253",
+    "semantic_hash": ""
+  },
+  ".claude/skills/accessible-animation/README.md": {
+    "mtime": 1790895638.7560248,
+    "seen": 1790904515.426996,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/accessible-animation/SKILL.md": {
+    "mtime": 1790895638.756163,
+    "seen": 1790904515.426997,
+    "ast_hash": "f849ca8c5c01cecabeaeb89c1d60db4c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/accessible-animation/references/patterns.md": {
+    "mtime": 1790895638.7563453,
+    "seen": 1790904515.426998,
+    "ast_hash": "dd4760369b72f6b3c6a40c04372ae5a8",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ad-creative-video/README.md": {
+    "mtime": 1790895638.756455,
+    "seen": 1790904515.426998,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ad-creative-video/SKILL.md": {
+    "mtime": 1790895638.7566226,
+    "seen": 1790904515.426999,
+    "ast_hash": "1deccbb421e7045eda290f3f6c18d333",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ad-creative-video/references/batch-ad-pipeline.md": {
+    "mtime": 1790895638.7569234,
+    "seen": 1790904515.427,
+    "ast_hash": "15980843bd65fe4985cdd111ebc23987",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ad-creative-video/references/platform-specs.md": {
+    "mtime": 1790895638.757054,
+    "seen": 1790904515.427001,
+    "ast_hash": "5b6505ddf2d5cc5181637c1f6b76b70f",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/README.md": {
+    "mtime": 1790895638.7571583,
+    "seen": 1790904515.4270022,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/SKILL.md": {
+    "mtime": 1790895638.7572901,
+    "seen": 1790904515.4270022,
+    "ast_hash": "f6a917bb60a30174c5f01c11648b6e44",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/references/export-recipes.md": {
+    "mtime": 1790895638.7574697,
+    "seen": 1790904515.427003,
+    "ast_hash": "2ffee2cd0c40561e9f330f124a7d9ce6",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/references/expression-library.md": {
+    "mtime": 1790895638.7575839,
+    "seen": 1790904515.4270039,
+    "ast_hash": "31453f81687c2d79d854a754b7e11941",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/references/expressions.md": {
+    "mtime": 1790895638.75771,
+    "seen": 1790904515.4270048,
+    "ast_hash": "41a0a04b990a5a564776ce538a3959da",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/references/performance-triage.md": {
+    "mtime": 1790895638.7578413,
+    "seen": 1790904515.4270048,
+    "ast_hash": "5e565bc574e8fc9e0659693598d70c40",
+    "semantic_hash": ""
+  },
+  ".claude/skills/after-effects/references/project-hygiene.md": {
+    "mtime": 1790895638.7579632,
+    "seen": 1790904515.427006,
+    "ast_hash": "cf9e835d37d4a4bfd5eefaf203ff7a26",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animated-infographic/README.md": {
+    "mtime": 1790895638.7584193,
+    "seen": 1790904515.427007,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animated-infographic/SKILL.md": {
+    "mtime": 1790895638.7585478,
+    "seen": 1790904515.427008,
+    "ast_hash": "5f36c6cd5b803ae2ddeda6d24ff9af16",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animated-infographic/references/sequenced-infographic.md": {
+    "mtime": 1790895638.758724,
+    "seen": 1790904515.427008,
+    "ast_hash": "11fe8840210af7e49a971c8f63bbfc23",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animation-principles/README.md": {
+    "mtime": 1790895638.7588212,
+    "seen": 1790904515.427009,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animation-principles/SKILL.md": {
+    "mtime": 1790895638.7589388,
+    "seen": 1790904515.42701,
+    "ast_hash": "cb0453ae2bc05da00bad9b1906c3313e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animation-principles/references/easing-curves.md": {
+    "mtime": 1790895638.7591035,
+    "seen": 1790904515.4270122,
+    "ast_hash": "3b8c2251e903871ddcf47e9190e12f5b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animation-principles/references/easing-graph-editor.md": {
+    "mtime": 1790895638.7592244,
+    "seen": 1790904515.4270132,
+    "ast_hash": "b27d2838f9a81560604a9bd453272519",
+    "semantic_hash": ""
+  },
+  ".claude/skills/animation-principles/references/twelve-principles.md": {
+    "mtime": 1790895638.7593303,
+    "seen": 1790904515.4270139,
+    "ast_hash": "160b36c60cd825aad9745de1ebad789e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ascii-animation/README.md": {
+    "mtime": 1790895638.759428,
+    "seen": 1790904515.4270148,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ascii-animation/SKILL.md": {
+    "mtime": 1790895638.7595527,
+    "seen": 1790904515.4270148,
+    "ast_hash": "b1f36e64a6c7caf22ec1c989f640dad0",
+    "semantic_hash": ""
+  },
+  ".claude/skills/ascii-animation/references/rendering.md": {
+    "mtime": 1790895638.7597268,
+    "seen": 1790904515.427016,
+    "ast_hash": "ea661f907263b691a178c2ecf16cd429",
+    "semantic_hash": ""
+  },
+  ".claude/skills/audiogram/README.md": {
+    "mtime": 1790895638.7599688,
+    "seen": 1790904515.427017,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/audiogram/SKILL.md": {
+    "mtime": 1790895638.7600927,
+    "seen": 1790904515.427018,
+    "ast_hash": "75180e74c6c5fbc9ba4e9c5ad5d13df0",
+    "semantic_hash": ""
+  },
+  ".claude/skills/audiogram/references/waveform-render.md": {
+    "mtime": 1790895638.7602649,
+    "seen": 1790904515.427018,
+    "ast_hash": "2362605b153195ceac15b087970f75e0",
+    "semantic_hash": ""
+  },
+  ".claude/skills/beat-sync-editing/README.md": {
+    "mtime": 1790895638.7603722,
+    "seen": 1790904515.4270191,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/beat-sync-editing/SKILL.md": {
+    "mtime": 1790895638.7605147,
+    "seen": 1790904515.42702,
+    "ast_hash": "2e7161b20c1db657946a7643e59259a6",
+    "semantic_hash": ""
+  },
+  ".claude/skills/beat-sync-editing/references/editing-techniques.md": {
+    "mtime": 1790895638.7606835,
+    "seen": 1790904515.427021,
+    "ast_hash": "42b7bc071f6c06b778309c1394a7d41c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/brand-motion-guidelines/README.md": {
+    "mtime": 1790895638.7607777,
+    "seen": 1790904515.427021,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/brand-motion-guidelines/SKILL.md": {
+    "mtime": 1790895638.7609048,
+    "seen": 1790904515.427022,
+    "ast_hash": "c5d8244308137105f0575c610f5c1140",
+    "semantic_hash": ""
+  },
+  ".claude/skills/brand-motion-guidelines/references/dos-and-donts.md": {
+    "mtime": 1790895638.7610524,
+    "seen": 1790904515.4270232,
+    "ast_hash": "98a8f14766957bd5d24831056293966b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/brand-motion-guidelines/references/full-template.md": {
+    "mtime": 1790895638.7611582,
+    "seen": 1790904515.4270232,
+    "ast_hash": "d1d5c173b883cf28856f6b22b00b373b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/brand-motion-guidelines/references/token-reference.md": {
+    "mtime": 1790895638.761264,
+    "seen": 1790904515.427024,
+    "ast_hash": "c24b0857b78e2c55c26f0b0d3078b415",
+    "semantic_hash": ""
+  },
+  ".claude/skills/caption-animation/README.md": {
+    "mtime": 1790895638.7614043,
+    "seen": 1790904515.4270248,
+    "ast_hash": "e648c81c26bbd198cd3cb5fc0c9aa1e1",
+    "semantic_hash": ""
+  },
+  ".claude/skills/caption-animation/SKILL.md": {
+    "mtime": 1790895638.761507,
+    "seen": 1790904515.427026,
+    "ast_hash": "edf3c1b0964228038dc346dbc976e4d1",
+    "semantic_hash": ""
+  },
+  ".claude/skills/caption-animation/references/word-timed-captions.md": {
+    "mtime": 1790895638.7616708,
+    "seen": 1790904515.427026,
+    "ast_hash": "1ff9598740343f8008498e565c343b84",
+    "semantic_hash": ""
+  },
+  ".claude/skills/chart-animation/README.md": {
+    "mtime": 1790895638.761768,
+    "seen": 1790904515.427027,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/chart-animation/SKILL.md": {
+    "mtime": 1790895638.7618902,
+    "seen": 1790904515.427028,
+    "ast_hash": "4ea666a0480a17a78a55867739850d07",
+    "semantic_hash": ""
+  },
+  ".claude/skills/chart-animation/references/bar-chart-race.md": {
+    "mtime": 1790895638.762039,
+    "seen": 1790904515.427029,
+    "ast_hash": "7e55f36a55b5b881c968878995a65c2e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/chart-animation/references/data-pipeline.md": {
+    "mtime": 1790895638.7621486,
+    "seen": 1790904515.42703,
+    "ast_hash": "4b1e062b08256a6e9726d24702ed9e92",
+    "semantic_hash": ""
+  },
+  ".claude/skills/client-revisions/README.md": {
+    "mtime": 1790895638.7622595,
+    "seen": 1790904515.42703,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/client-revisions/SKILL.md": {
+    "mtime": 1790895638.762393,
+    "seen": 1790904515.427031,
+    "ast_hash": "0410feaac54e2e8eb67942fc593998dd",
+    "semantic_hash": ""
+  },
+  ".claude/skills/client-revisions/references/email-templates.md": {
+    "mtime": 1790895638.7625415,
+    "seen": 1790904515.427032,
+    "ast_hash": "f84da2eb4e9c65c4acba586336f2be26",
+    "semantic_hash": ""
+  },
+  ".claude/skills/client-revisions/references/feedback-translator.md": {
+    "mtime": 1790895638.7626328,
+    "seen": 1790904515.427032,
+    "ast_hash": "d9599d252876f272b16b169ae04487bd",
+    "semantic_hash": ""
+  },
+  ".claude/skills/client-revisions/references/sow-clauses.md": {
+    "mtime": 1790895638.7627308,
+    "seen": 1790904515.4270332,
+    "ast_hash": "f5184ef6b3591aa5e5761010a8c1ae5e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/color-motion/README.md": {
+    "mtime": 1790895638.7628314,
+    "seen": 1790904515.4270341,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/color-motion/SKILL.md": {
+    "mtime": 1790895638.762956,
+    "seen": 1790904515.4270349,
+    "ast_hash": "0052d57671546c211f8172f787dcb41e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/color-motion/references/color-management.md": {
+    "mtime": 1790895638.7631233,
+    "seen": 1790904515.4270349,
+    "ast_hash": "53871da7888e2bc15ccb8fa55c852594",
+    "semantic_hash": ""
+  },
+  ".claude/skills/color-motion/references/palettes-and-interpolation.md": {
+    "mtime": 1790895638.7632372,
+    "seen": 1790904515.4270358,
+    "ast_hash": "4525652fc21e20d4487c83744c779480",
+    "semantic_hash": ""
+  },
+  ".claude/skills/countdown-video/README.md": {
+    "mtime": 1790895638.7633812,
+    "seen": 1790904515.427037,
+    "ast_hash": "f435886cb1b397ac6981cd895671c4f1",
+    "semantic_hash": ""
+  },
+  ".claude/skills/countdown-video/SKILL.md": {
+    "mtime": 1790895638.7635016,
+    "seen": 1790904515.427038,
+    "ast_hash": "af5e8b7430f8df2441147e993ee7e418",
+    "semantic_hash": ""
+  },
+  ".claude/skills/countdown-video/references/countdown-cookbook.md": {
+    "mtime": 1790895638.7636595,
+    "seen": 1790904515.427038,
+    "ast_hash": "5ee12f8f56cfcb2ac8abbff3a11f99a5",
+    "semantic_hash": ""
+  },
+  ".claude/skills/countdown-video/references/digit-flip.md": {
+    "mtime": 1790895638.7637565,
+    "seen": 1790904515.427039,
+    "ast_hash": "3f3059948f74e38df55b0ac021b22107",
+    "semantic_hash": ""
+  },
+  ".claude/skills/creative-brief/README.md": {
+    "mtime": 1790895638.7638464,
+    "seen": 1790904515.42704,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/creative-brief/SKILL.md": {
+    "mtime": 1790895638.76397,
+    "seen": 1790904515.427041,
+    "ast_hash": "043b45a6bd6c0377e7490e5cf151e006",
+    "semantic_hash": ""
+  },
+  ".claude/skills/creative-brief/references/clarifying-questions.md": {
+    "mtime": 1790895638.7641127,
+    "seen": 1790904515.427041,
+    "ast_hash": "265d60bb2757c5c4077d9571dd0f11f2",
+    "semantic_hash": ""
+  },
+  ".claude/skills/creative-brief/references/vague-translator.md": {
+    "mtime": 1790895638.764206,
+    "seen": 1790904515.427042,
+    "ast_hash": "3da82b9ee0244530399ab5b0ce6088b7",
+    "semantic_hash": ""
+  },
+  ".claude/skills/creative-brief/references/worked-example.md": {
+    "mtime": 1790895638.7642996,
+    "seen": 1790904515.427043,
+    "ast_hash": "668b381eccd3a6946e66dc813cf1563c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagram-animation/README.md": {
+    "mtime": 1790895638.764392,
+    "seen": 1790904515.4270442,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagram-animation/SKILL.md": {
+    "mtime": 1790895638.764529,
+    "seen": 1790904515.427045,
+    "ast_hash": "d5fcbf24b008b4614ebc4e45148f65e1",
+    "semantic_hash": ""
+  },
+  ".claude/skills/diagram-animation/references/diagram-and-chart-recipes.md": {
+    "mtime": 1790895638.7646868,
+    "seen": 1790904515.427045,
+    "ast_hash": "6d3ba38856cc769b437b1c1533c46ac4",
+    "semantic_hash": ""
+  },
+  ".claude/skills/explainer-video/README.md": {
+    "mtime": 1790895638.7647805,
+    "seen": 1790904515.4270458,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/explainer-video/SKILL.md": {
+    "mtime": 1790895638.7649078,
+    "seen": 1790904515.427047,
+    "ast_hash": "5ba0810d91d285b30c502ab75b70c16f",
+    "semantic_hash": ""
+  },
+  ".claude/skills/explainer-video/references/script-to-screen-workflow.md": {
+    "mtime": 1790895638.76517,
+    "seen": 1790904515.427047,
+    "ast_hash": "f60c17dc9a9f8155e9a9d62e6029a858",
+    "semantic_hash": ""
+  },
+  ".claude/skills/glassmorphism/README.md": {
+    "mtime": 1790895638.7653162,
+    "seen": 1790904515.427048,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/glassmorphism/SKILL.md": {
+    "mtime": 1790895638.7654576,
+    "seen": 1790904515.427049,
+    "ast_hash": "c52e7d6cc0147e27538d181f80fcd54e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/glassmorphism/references/glass-recipes.md": {
+    "mtime": 1790895638.7656379,
+    "seen": 1790904515.4270499,
+    "ast_hash": "0a5831c00438c0318d9ae7bc78caa8e4",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/README.md": {
+    "mtime": 1790895638.7657468,
+    "seen": 1790904515.4273112,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/SKILL.md": {
+    "mtime": 1790895638.7658885,
+    "seen": 1790904515.4273121,
+    "ast_hash": "19503062f8ccef8f91fc0bf26b1f7f6d",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/examples/standalone-template.html": {
+    "mtime": 1790895638.7661517,
+    "seen": 1790904515.4273129,
+    "ast_hash": "2ad60f329a336ecd2bfb201d0f44b1ab",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/references/scrolltrigger-cookbook.md": {
+    "mtime": 1790895638.7663164,
+    "seen": 1790904515.4273138,
+    "ast_hash": "a6dbe465e9e1dd5bab430ca11a2e50a9",
+    "semantic_hash": ""
+  },
+  ".claude/skills/gsap-web/references/scrolltrigger-lenis.md": {
+    "mtime": 1790895638.766434,
+    "seen": 1790904515.427315,
+    "ast_hash": "a76359214e0965307ecaefe47b452099",
+    "semantic_hash": ""
+  },
+  ".claude/skills/isometric-animation/README.md": {
+    "mtime": 1790895638.7665381,
+    "seen": 1790904515.427316,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/isometric-animation/SKILL.md": {
+    "mtime": 1790895638.7666607,
+    "seen": 1790904515.427317,
+    "ast_hash": "3e75f92cc6137035adf2cc0dc4255aa9",
+    "semantic_hash": ""
+  },
+  ".claude/skills/isometric-animation/references/isometric-recipes.md": {
+    "mtime": 1790895638.7668302,
+    "seen": 1790904515.427317,
+    "ast_hash": "45501dc16278087aeeced5431f634400",
+    "semantic_hash": ""
+  },
+  ".claude/skills/kinetic-typography/README.md": {
+    "mtime": 1790895638.7669272,
+    "seen": 1790904515.427318,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/kinetic-typography/SKILL.md": {
+    "mtime": 1790895638.7670538,
+    "seen": 1790904515.427319,
+    "ast_hash": "dbb3ca55c7af3241937598b6309cc70b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/kinetic-typography/references/reveal-recipes.md": {
+    "mtime": 1790895638.7672222,
+    "seen": 1790904515.42732,
+    "ast_hash": "62e9fa8941e4eddcd2eabd3541b5c860",
+    "semantic_hash": ""
+  },
+  ".claude/skills/launch-video/README.md": {
+    "mtime": 1790895638.7673392,
+    "seen": 1790904515.42732,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/launch-video/SKILL.md": {
+    "mtime": 1790895638.7674606,
+    "seen": 1790904515.4273212,
+    "ast_hash": "9ba0b1e7dec3cdac7ff481240501ed03",
+    "semantic_hash": ""
+  },
+  ".claude/skills/launch-video/references/launch-structure.md": {
+    "mtime": 1790895638.767614,
+    "seen": 1790904515.4273221,
+    "ast_hash": "347619776493af4de5441d3f0999c969",
+    "semantic_hash": ""
+  },
+  ".claude/skills/logo-animation/README.md": {
+    "mtime": 1790895638.7677095,
+    "seen": 1790904515.4273229,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/logo-animation/SKILL.md": {
+    "mtime": 1790895638.7678404,
+    "seen": 1790904515.4273229,
+    "ast_hash": "609aa743ecac39a2087dd70255e8b1e2",
+    "semantic_hash": ""
+  },
+  ".claude/skills/logo-animation/references/logo-patterns.md": {
+    "mtime": 1790895638.768006,
+    "seen": 1790904515.4273238,
+    "ast_hash": "c27536862fb5ff720f62fac754a40238",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lottie-animation/README.md": {
+    "mtime": 1790895638.7681088,
+    "seen": 1790904515.427325,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lottie-animation/SKILL.md": {
+    "mtime": 1790895638.7682397,
+    "seen": 1790904515.427326,
+    "ast_hash": "7d0c8319ab5c6c640915ed1aa2beac15",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lottie-animation/references/integration-and-export.md": {
+    "mtime": 1790895638.768427,
+    "seen": 1790904515.427326,
+    "ast_hash": "1f9ee633002dfbdd736be727797e5b0e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lower-thirds/README.md": {
+    "mtime": 1790895638.768569,
+    "seen": 1790904515.427327,
+    "ast_hash": "6752c4c0f733f911542da25c940763d5",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lower-thirds/SKILL.md": {
+    "mtime": 1790895638.7686985,
+    "seen": 1790904515.427328,
+    "ast_hash": "7c1ac3f99b42cf8f686c16fd1b50c1ae",
+    "semantic_hash": ""
+  },
+  ".claude/skills/lower-thirds/references/lower-third-component.md": {
+    "mtime": 1790895638.76886,
+    "seen": 1790904515.427329,
+    "ast_hash": "f30b254b5e2eef12656c7ebb6bddf9d2",
+    "semantic_hash": ""
+  },
+  ".claude/skills/map-animation/README.md": {
+    "mtime": 1790895638.7689672,
+    "seen": 1790904515.427329,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/map-animation/SKILL.md": {
+    "mtime": 1790895638.7690918,
+    "seen": 1790904515.42733,
+    "ast_hash": "b5d12aad23b5ef27ca02b27e7a6ca4ce",
+    "semantic_hash": ""
+  },
+  ".claude/skills/map-animation/references/earth-studio-to-ae.md": {
+    "mtime": 1790895638.7692573,
+    "seen": 1790904515.427331,
+    "ast_hash": "b8a58ad576b426a3738151d2f02b4138",
+    "semantic_hash": ""
+  },
+  ".claude/skills/map-animation/references/vector-maps.md": {
+    "mtime": 1790895638.769378,
+    "seen": 1790904515.4273322,
+    "ast_hash": "499ef4038567d4ceded6f49db89628ca",
+    "semantic_hash": ""
+  },
+  ".claude/skills/micro-interaction/README.md": {
+    "mtime": 1790895638.76947,
+    "seen": 1790904515.4273322,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/micro-interaction/SKILL.md": {
+    "mtime": 1790895638.769584,
+    "seen": 1790904515.427333,
+    "ast_hash": "c89c12fcafa377f673940581ec1fc921",
+    "semantic_hash": ""
+  },
+  ".claude/skills/micro-interaction/references/css-recipes.md": {
+    "mtime": 1790895638.76973,
+    "seen": 1790904515.4273338,
+    "ast_hash": "213ae62bfb2f5e571e64f204514c8112",
+    "semantic_hash": ""
+  },
+  ".claude/skills/micro-interaction/references/framer-motion-recipes.md": {
+    "mtime": 1790895638.7698328,
+    "seen": 1790904515.427335,
+    "ast_hash": "9d913c89ab37d2921e2aee454ca9b4bd",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-art-direction/README.md": {
+    "mtime": 1790895638.7699232,
+    "seen": 1790904515.427335,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-art-direction/SKILL.md": {
+    "mtime": 1790895638.7700336,
+    "seen": 1790904515.427336,
+    "ast_hash": "598aa5a3d629f5c74e5187913e543769",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-art-direction/references/direction-playbook.md": {
+    "mtime": 1790895638.770189,
+    "seen": 1790904515.427337,
+    "ast_hash": "2f308a858bd0d585c299cf91e1e3fe45",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-background/README.md": {
+    "mtime": 1790895638.7702978,
+    "seen": 1790904515.427341,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-background/SKILL.md": {
+    "mtime": 1790895638.770431,
+    "seen": 1790904515.427341,
+    "ast_hash": "274dcdd1388345e4923871a1fee9db03",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-background/references/background-recipes.md": {
+    "mtime": 1790895638.7705855,
+    "seen": 1790904515.4273422,
+    "ast_hash": "4a8f54f65e733f38f209363ece76ce15",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-pricing/README.md": {
+    "mtime": 1790895638.7706842,
+    "seen": 1790904515.4273431,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-pricing/SKILL.md": {
+    "mtime": 1790895638.770802,
+    "seen": 1790904515.4273438,
+    "ast_hash": "60d8db81d23cc9f26e5cd68aea4aa837",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-pricing/references/quote-template.md": {
+    "mtime": 1790895638.7709458,
+    "seen": 1790904515.4273438,
+    "ast_hash": "5ea362128a4b657a9d461077e7df7606",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-pricing/references/rate-card.md": {
+    "mtime": 1790895638.771041,
+    "seen": 1790904515.4273448,
+    "ast_hash": "6dd59f7890afb3bafd95da72192e8b58",
+    "semantic_hash": ""
+  },
+  ".claude/skills/motion-pricing/references/worked-example.md": {
+    "mtime": 1790895638.7711391,
+    "seen": 1790904515.427346,
+    "ast_hash": "1ccafb57aeaf6aa89f63d70ecc4681c6",
+    "semantic_hash": ""
+  },
+  ".claude/skills/page-transition-animation/README.md": {
+    "mtime": 1790895638.7712429,
+    "seen": 1790904515.427347,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/page-transition-animation/SKILL.md": {
+    "mtime": 1790895638.7713592,
+    "seen": 1790904515.427347,
+    "ast_hash": "882dc5bbe15e7a3c98a840e761f66d84",
+    "semantic_hash": ""
+  },
+  ".claude/skills/page-transition-animation/references/full-examples.md": {
+    "mtime": 1790895638.7715318,
+    "seen": 1790904515.427348,
+    "ast_hash": "08ddb0a26da58014fb27a02bc4eecbe4",
+    "semantic_hash": ""
+  },
+  ".claude/skills/particle-system/README.md": {
+    "mtime": 1790895638.7716227,
+    "seen": 1790904515.427349,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/particle-system/SKILL.md": {
+    "mtime": 1790895638.7717428,
+    "seen": 1790904515.42735,
+    "ast_hash": "6980872d73bda16da13d35b91d37de9d",
+    "semantic_hash": ""
+  },
+  ".claude/skills/particle-system/references/particle-recipes.md": {
+    "mtime": 1790895638.7719,
+    "seen": 1790904515.42735,
+    "ast_hash": "9ce5395593dafd9058fd2d405e1e8f81",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/README.md": {
+    "mtime": 1790895638.7720027,
+    "seen": 1790904515.427351,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/SKILL.md": {
+    "mtime": 1790895638.77212,
+    "seen": 1790904515.427352,
+    "ast_hash": "2bb209e6d019a15cfb0607b9a4b6382c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/references/aspect-and-layout.md": {
+    "mtime": 1790895638.7722597,
+    "seen": 1790904515.427352,
+    "ast_hash": "f219e02ca594b060b66df3438479f6bd",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/references/ken-burns.md": {
+    "mtime": 1790895638.7723584,
+    "seen": 1790904515.4273531,
+    "ast_hash": "a5a39db19ac528e2df52dff0e8f52480",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/references/templating-folder.md": {
+    "mtime": 1790895638.772458,
+    "seen": 1790904515.427354,
+    "ast_hash": "2403fabf54c7dbe41bf07cf21366530c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/photo-slideshow/references/timing-and-audio.md": {
+    "mtime": 1790895638.7725623,
+    "seen": 1790904515.4273548,
+    "ast_hash": "5d20c6ccff5329c1f4779c330cd0c686",
+    "semantic_hash": ""
+  },
+  ".claude/skills/presentation-video/README.md": {
+    "mtime": 1790895638.7726622,
+    "seen": 1790904515.4273548,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/presentation-video/SKILL.md": {
+    "mtime": 1790895638.7727826,
+    "seen": 1790904515.427356,
+    "ast_hash": "9ee5e4f0d5032a485839f8bfa822345e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/presentation-video/references/sequencing.md": {
+    "mtime": 1790895638.772932,
+    "seen": 1790904515.427357,
+    "ast_hash": "4c1d18e3f9d1df970abfc86e925e11eb",
+    "semantic_hash": ""
+  },
+  ".claude/skills/presentation-video/references/slide-components.md": {
+    "mtime": 1790895638.7730324,
+    "seen": 1790904515.427358,
+    "ast_hash": "277cf25a86ff5226caf9456368e8de01",
+    "semantic_hash": ""
+  },
+  ".claude/skills/product-demo-video/README.md": {
+    "mtime": 1790895638.7731285,
+    "seen": 1790904515.4273589,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/product-demo-video/SKILL.md": {
+    "mtime": 1790895638.7732475,
+    "seen": 1790904515.4273589,
+    "ast_hash": "a77f6833e1611869900c12623e092b91",
+    "semantic_hash": ""
+  },
+  ".claude/skills/product-demo-video/references/annotation-and-transitions.md": {
+    "mtime": 1790895638.773395,
+    "seen": 1790904515.42736,
+    "ast_hash": "e3bcdfa0b2877be097bfd98413f1c4c2",
+    "semantic_hash": ""
+  },
+  ".claude/skills/product-demo-video/references/screenshot-demo.md": {
+    "mtime": 1790895638.7735019,
+    "seen": 1790904515.427361,
+    "ast_hash": "028303882aee64db739db59981314b05",
+    "semantic_hash": ""
+  },
+  ".claude/skills/promo-video/README.md": {
+    "mtime": 1790895638.773621,
+    "seen": 1790904515.427361,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/promo-video/SKILL.md": {
+    "mtime": 1790895638.7737796,
+    "seen": 1790904515.427362,
+    "ast_hash": "6dd520c202f995aac46ec43a3f96055e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/promo-video/references/promo-components.md": {
+    "mtime": 1790895638.7739537,
+    "seen": 1790904515.4273632,
+    "ast_hash": "21bea9ba22cb7c5abe29f0cbcf934f8d",
+    "semantic_hash": ""
+  },
+  ".claude/skills/remotion-video/README.md": {
+    "mtime": 1790895638.774063,
+    "seen": 1790904515.427388,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/remotion-video/SKILL.md": {
+    "mtime": 1790895638.7741885,
+    "seen": 1790904515.427389,
+    "ast_hash": "17a158e009a6a3ab5228e33ff84a488c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/remotion-video/references/api-and-patterns.md": {
+    "mtime": 1790895638.774363,
+    "seen": 1790904515.4273899,
+    "ast_hash": "06f463ab48984b826e9449368a350431",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shader-glsl/README.md": {
+    "mtime": 1790895638.7744615,
+    "seen": 1790904515.427391,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shader-glsl/SKILL.md": {
+    "mtime": 1790895638.7745934,
+    "seen": 1790904515.427392,
+    "ast_hash": "2efd850efb061ab4fcc51e87cf777c08",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shader-glsl/references/glsl-cookbook.md": {
+    "mtime": 1790895638.7747579,
+    "seen": 1790904515.427392,
+    "ast_hash": "852f21738330bacde87eb2f312406daa",
+    "semantic_hash": ""
+  },
+  ".claude/skills/short-form-video/README.md": {
+    "mtime": 1790895638.7749252,
+    "seen": 1790904515.4274209,
+    "ast_hash": "59d6bfa743400b0abf42122fe090f0c7",
+    "semantic_hash": ""
+  },
+  ".claude/skills/short-form-video/SKILL.md": {
+    "mtime": 1790895638.7750864,
+    "seen": 1790904515.4274209,
+    "ast_hash": "e575f37dc118ed0e7a001290cdb60203",
+    "semantic_hash": ""
+  },
+  ".claude/skills/short-form-video/references/retention-pacing.md": {
+    "mtime": 1790895638.7753553,
+    "seen": 1790904515.427422,
+    "ast_hash": "290282cd52ab59718d38fdc1ecae9736",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shot-composition/README.md": {
+    "mtime": 1790895638.7754993,
+    "seen": 1790904515.427423,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shot-composition/SKILL.md": {
+    "mtime": 1790895638.7756662,
+    "seen": 1790904515.427424,
+    "ast_hash": "47812f8e257c8fec430b934ee35e56de",
+    "semantic_hash": ""
+  },
+  ".claude/skills/shot-composition/references/camera-and-grids.md": {
+    "mtime": 1790895638.775868,
+    "seen": 1790904515.427425,
+    "ast_hash": "aa7ee76f24d9f618179cb14f666577d9",
+    "semantic_hash": ""
+  },
+  ".claude/skills/svg-animation/README.md": {
+    "mtime": 1790895638.7760034,
+    "seen": 1790904515.427426,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/svg-animation/SKILL.md": {
+    "mtime": 1790895638.7761445,
+    "seen": 1790904515.427426,
+    "ast_hash": "a2dce62977916177e421aefdd4e76a92",
+    "semantic_hash": ""
+  },
+  ".claude/skills/svg-animation/references/svg-techniques.md": {
+    "mtime": 1790895638.7763522,
+    "seen": 1790904515.427427,
+    "ast_hash": "aabd7a3413e0d2aaf3afd03d27f43263",
+    "semantic_hash": ""
+  },
+  ".claude/skills/testimonial-video/README.md": {
+    "mtime": 1790895638.7764845,
+    "seen": 1790904515.427428,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/testimonial-video/SKILL.md": {
+    "mtime": 1790895638.776633,
+    "seen": 1790904515.427428,
+    "ast_hash": "8ba387cd349a6121943ee55ac5f4edd3",
+    "semantic_hash": ""
+  },
+  ".claude/skills/testimonial-video/references/batch-and-typography.md": {
+    "mtime": 1790895638.7768161,
+    "seen": 1790904515.4274292,
+    "ast_hash": "97c6690ab9b439de75185b213b2049c8",
+    "semantic_hash": ""
+  },
+  ".claude/skills/testimonial-video/references/quote-card.md": {
+    "mtime": 1790895638.7769372,
+    "seen": 1790904515.42743,
+    "ast_hash": "d5145f6ef010428319b89e7c65fb33cb",
+    "semantic_hash": ""
+  },
+  ".claude/skills/threejs-animation/README.md": {
+    "mtime": 1790895638.7770634,
+    "seen": 1790904515.4274309,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/threejs-animation/SKILL.md": {
+    "mtime": 1790895638.7772093,
+    "seen": 1790904515.4274309,
+    "ast_hash": "b8c39d111976e0033ae0f83ec96a54d9",
+    "semantic_hash": ""
+  },
+  ".claude/skills/threejs-animation/references/r3f-and-perf.md": {
+    "mtime": 1790895638.7773871,
+    "seen": 1790904515.4274318,
+    "ast_hash": "b7b1f39c296ab3ab92e5eee749c6162a",
+    "semantic_hash": ""
+  },
+  ".claude/skills/threejs-animation/references/resource-disposal.md": {
+    "mtime": 1790895638.7775123,
+    "seen": 1790904515.427433,
+    "ast_hash": "58b82e0ed7de5ffce87c6d15da62ad37",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/README.md": {
+    "mtime": 1790895638.7776248,
+    "seen": 1790904515.427433,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/SKILL.md": {
+    "mtime": 1790895638.7777753,
+    "seen": 1790904515.427434,
+    "ast_hash": "7cbb178b5573e632d984e0f898210233",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/references/platform-specs.md": {
+    "mtime": 1790895638.7779357,
+    "seen": 1790904515.427435,
+    "ast_hash": "dacbfec377ee9cc46480f5eaedc7f896",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/references/qc-checklist.md": {
+    "mtime": 1790895638.7780502,
+    "seen": 1790904515.427436,
+    "ast_hash": "1be5178aa77b8deba264bc643ee3e740",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/references/repurposing-matrix.md": {
+    "mtime": 1790895638.778144,
+    "seen": 1790904515.427437,
+    "ast_hash": "36fe39656a24706a2f595eadf0483530",
+    "semantic_hash": ""
+  },
+  ".claude/skills/video-delivery-specs/references/safe-areas.md": {
+    "mtime": 1790895638.7782347,
+    "seen": 1790904515.427437,
+    "ast_hash": "20ec9fe3dbec435c6b9840b22b9f7403",
+    "semantic_hash": ""
+  },
+  ".claude/skills/whiteboard-animation/README.md": {
+    "mtime": 1790895638.7783468,
+    "seen": 1790904515.427438,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/whiteboard-animation/SKILL.md": {
+    "mtime": 1790895638.7784734,
+    "seen": 1790904515.4274392,
+    "ast_hash": "e31dcd992033ca2b0b9f2558b6bb0715",
+    "semantic_hash": ""
+  },
+  ".claude/skills/whiteboard-animation/references/draw-on-recipes.md": {
+    "mtime": 1790895638.7786336,
+    "seen": 1790904515.4274402,
+    "ast_hash": "d2bd404425da84359d481578e2d80027",
+    "semantic_hash": ""
+  },
+  ".claude/skills/whiteboard-animation/references/whiteboard-pipeline.md": {
+    "mtime": 1790895638.7787535,
+    "seen": 1790904515.4274402,
+    "ast_hash": "118e8e6f5a4187d3db64766f11a84a89",
+    "semantic_hash": ""
+  },
+  ".claude/skills/wrapped-video/README.md": {
+    "mtime": 1790895638.7788637,
+    "seen": 1790904515.427441,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/wrapped-video/SKILL.md": {
+    "mtime": 1790895638.7789948,
+    "seen": 1790904515.4274418,
+    "ast_hash": "1897de68b3f4422fb2268245694c8e0b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/wrapped-video/references/batch-pipeline.md": {
+    "mtime": 1790895638.779146,
+    "seen": 1790904515.4274418,
+    "ast_hash": "18dbcf35cf9a5d64ac8409bba670d014",
+    "semantic_hash": ""
+  },
+  ".claude/skills/wrapped-video/references/remotion-recipes.md": {
+    "mtime": 1790895638.7792425,
+    "seen": 1790904515.427443,
+    "ast_hash": "7719e898378af6ae84a59cb7de5a4fa9",
+    "semantic_hash": ""
+  },
+  ".claude/skills/wrapped-video/references/scene-grammar.md": {
+    "mtime": 1790895638.7793443,
+    "seen": 1790904515.427444,
+    "ast_hash": "8559a9cfc77c1cf52a4edb63f408c148",
+    "semantic_hash": ""
+  },
+  ".claude/skills/youtube-intro-outro/README.md": {
+    "mtime": 1790895638.7794476,
+    "seen": 1790904515.427445,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/youtube-intro-outro/SKILL.md": {
+    "mtime": 1790895638.7795825,
+    "seen": 1790904515.427445,
+    "ast_hash": "3f27a84f2146ec24c9f494e2ce98ef2c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/youtube-intro-outro/references/intro-outro.md": {
+    "mtime": 1790895638.7797515,
+    "seen": 1790904515.4274461,
+    "ast_hash": "475288f185cf7db01708e42daae1a00f",
     "semantic_hash": ""
   }
 }
