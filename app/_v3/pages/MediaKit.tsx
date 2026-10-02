@@ -45,9 +45,12 @@ export default function MediaKit({
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
 
   // Reach as one composed sentence, built only from figures that exist.
-  const reachLine = s ? compact(s.totals.reach) : null
+  // Only Instagram's own 30-day account figures (unique people). Summing post
+  // reach would count people twice, so with no account row the line is left out.
+  const v = audience.view?.totals
+  const reachLine = v?.reach ? compact(v.reach) : null
   const topLine = top?.reach ? compact(top.reach) : null
-  const engage = s ? `${s.engagementRate.toFixed(1)}%` : null
+  const engage = v?.reach && v.accounts_engaged ? `${((v.accounts_engaged / v.reach) * 100).toFixed(1)}%` : null
 
   return (
     <div className={`v3 v3-kit ${v3Fonts}`} data-world={world}>

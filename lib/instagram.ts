@@ -95,6 +95,17 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
     shares: scope.reduce((s, p) => s + (p.shares ?? 0), 0),
   }
 
+  // Rates use ONLY posts that returned reach, top and bottom — a post whose
+  // insights call failed would otherwise add its likes but no reach, inflating
+  // every rate.
+  const rx = {
+    reach: reached.reduce((s, p) => s + (p.reach as number), 0),
+    interactions: reached.reduce((s, p) => s + interactions(p), 0),
+    saves: reached.reduce((s, p) => s + (p.saved ?? 0), 0),
+    shares: reached.reduce((s, p) => s + (p.shares ?? 0), 0),
+    comments: reached.reduce((s, p) => s + p.comments, 0),
+  }
+
   const types = new Map<string, IgPost[]>()
   for (const p of scope) types.set(p.type, [...(types.get(p.type) ?? []), p])
 
@@ -138,7 +149,7 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
     posts: scope,
     window: { days, count: posts.length },
     totals,
-    engagementRate: totals.reach ? ((totals.likes + totals.comments + totals.saves + totals.shares) / totals.reach) * 100 : 0,
+    engagementRate: rx.reach ? (rx.interactions / rx.reach) * 100 : 0,
     reachPerPost,
     reachVsFollowers: followers ? (reachPerPost / followers) * 100 : 0,
     postsPerWeek: (all.length / spanDays) * 7,
@@ -167,9 +178,9 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
     lift,
     hits: scope.filter(p => (lift[p.id] ?? 0) >= 2).sort((a, b) => lift[b.id] - lift[a.id]),
     rates: {
-      save: totals.reach ? (totals.saves / totals.reach) * 100 : 0,
-      share: totals.reach ? (totals.shares / totals.reach) * 100 : 0,
-      comment: totals.reach ? (totals.comments / totals.reach) * 100 : 0,
+      save: rx.reach ? (rx.saves / rx.reach) * 100 : 0,
+      share: rx.reach ? (rx.shares / rx.reach) * 100 : 0,
+      comment: rx.reach ? (rx.comments / rx.reach) * 100 : 0,
     },
     // Weighted by plays: all watch time ÷ all plays. Averaging each reel's own
     // average would let a short-played reel count as much as a hit.

@@ -72,12 +72,13 @@ export default async function Landing({
 
   const [snap, rows, account] = await Promise.all([latestSnapshot(), getRecords(), latestAccount()])
   const followers = snap?.profile.followers_count ?? 0
-  const posts = snap?.posts ?? []
-  // Instagram's own 30-day account figures when stored; otherwise the recent posts added up.
-  const has30 = account?.totals.reach !== undefined
-  const reach = has30 ? account!.totals.reach : posts.reduce((s, p) => s + (p.reach ?? 0), 0)
-  const views = has30 ? (account!.totals.views ?? 0) : posts.reduce((s, p) => s + (p.views ?? 0), 0)
-  const span = has30 ? '30 days' : 'recent'
+  // Only Instagram's own 30-day account figures, and only while fresh (the cron
+  // refreshes daily). Adding up post reach would count people twice, and an old
+  // row would show a stale "30 days" — so either way the tiles are left out.
+  const fresh = account && Date.now() - Date.parse(account.captured_at) <= 3 * 86_400_000
+  const reach = fresh ? (account!.totals.reach ?? 0) : 0
+  const views = fresh ? (account!.totals.views ?? 0) : 0
+  const span = '30 days'
 
   const invoices = toInvoices(rows)
   const text = invoices.map(i => `${i.project} ${i.client}`).join(' ')

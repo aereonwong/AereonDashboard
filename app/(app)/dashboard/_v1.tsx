@@ -28,7 +28,20 @@ export default function DashboardV1({
   const now = new Date()
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const monthRow = inv.months.find(m => m.month === thisMonth)
-  const last6 = inv.months.slice(-6)
+  // The six calendar months ending this month — byMonth() stops at the last
+  // invoice, so a month with nothing invoiced yet must still appear (as zero).
+  const last6 = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    return (
+      inv.months.find(m => m.month === key) ?? {
+        month: key,
+        label: d.toLocaleString('en-MY', { month: 'short' }),
+        total: 0,
+        count: 0,
+      }
+    )
+  })
   const openTasks = rows.filter(r => r.category === 'task' && (r.status || '').toLowerCase() === 'open')
 
   return (
@@ -117,9 +130,9 @@ export default function DashboardV1({
         <>
           <div className="grid">
             <Stat label="Followers" value={compact(snap.profile.followers_count ?? 0)} icon="users" href="/instagram" />
-            <Stat label="Reach · recent" value={compact(ig.totals.reach)} icon="trend" href="/instagram" />
-            <Stat label="Views · recent" value={compact(ig.totals.views)} icon="eye" href="/instagram" />
-            <Stat label="Engagement" value={`${ig.engagementRate.toFixed(1)}%`} icon="heart" href="/instagram" />
+            <Stat label="Post reach (combined)" value={compact(ig.totals.reach)} icon="trend" href="/instagram" />
+            <Stat label="Post views (combined)" value={compact(ig.totals.views)} icon="eye" href="/instagram" />
+            <Stat label="Interactions per reach" value={`${ig.engagementRate.toFixed(1)}%`} icon="heart" href="/instagram" />
           </div>
 
           <div className="chart-card">

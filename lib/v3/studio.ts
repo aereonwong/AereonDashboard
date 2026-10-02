@@ -17,7 +17,10 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const rm = (xs: Invoice[]) => xs.filter(i => i.currency === 'MYR')
 const sum = (xs: Invoice[]) => xs.reduce((s, i) => s + i.amount, 0)
 
-export type PacePoint = { month: string; now: number | null; before: number }
+// `before` is last year's running total at month end (chart line). `beforeAt` is the
+// same, except for the current month, where it stops at today's date — the fair
+// comparison for a month that isn't over yet.
+export type PacePoint = { month: string; now: number | null; before: number; beforeAt: number }
 export type MonthFrame = {
   key: string // YYYY-MM
   label: string
@@ -33,6 +36,7 @@ export type ClientLine = { client: string; total: number; count: number; last: s
 
 export type Studio = {
   today: string
+  recentIncome: number // RM invoiced in the owed window, same filters as `owed`
   year: number
   // Question 1 — on track this year
   ytd: number
@@ -94,7 +98,12 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
     const m = idx + 1
     runBefore += sum(monthTotal(prevYear, m))
     if (m <= currentMonth) runNow += sum(monthTotal(thisYear, m))
-    return { month: label, now: m <= currentMonth ? runNow : null, before: runBefore }
+    return {
+      month: label,
+      now: m <= currentMonth ? runNow : null,
+      before: runBefore,
+      beforeAt: isCurrentYear && m === currentMonth ? lastYtd : runBefore,
+    }
   })
 
   // ---- The months, as frames on one shared scale across both years ----
@@ -181,6 +190,7 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
     },
     owed,
     owedTotal: owed.filter(o => o.currency === 'MYR').reduce((s, o) => s + o.amount, 0),
+    recentIncome: sum(narrowed.filter(i => { const d = dayDiff(i.date, today); return d >= 0 && d <= OWED_WINDOW_DAYS })),
     unconfirmedOlder: unconfirmed.filter(i => dayDiff(i.date, today) > OWED_WINDOW_DAYS).length,
     paidCount: paidIds.size,
     allClients: [...new Set(all.map(i => i.client))].filter(c => c && c !== '—').sort((a, b) => a.localeCompare(b)),
