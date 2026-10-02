@@ -9,6 +9,7 @@ import { markPaid, markUnpaid } from '@/lib/v3/payments'
 import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
 import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
+import LinkPosts from './LinkPosts'
 import '../invoices.css'
 
 // 👉 Invoice Details — the operational table. Every row, filter and figure here
@@ -66,6 +67,7 @@ export default function InvoiceDetails({
   const [toast, setToast] = useState<{ text: string; bad?: boolean } | null>(null)
   const [editing, setEditing] = useState<EditTarget | null>(null)
   const [ask, setAsk] = useState<ConfirmAsk | null>(null)
+  const [linking, setLinking] = useState<DetailRow | null>(null)
   /** Ask first, run on "yes". */
   const confirmThen = (a: Omit<ConfirmAsk, 'onConfirm'>, run: () => void) =>
     setAsk({ ...a, onConfirm: () => (setAsk(null), run()) })
@@ -179,6 +181,18 @@ export default function InvoiceDetails({
       ) : null}
 
       {ask ? <ConfirmDialog ask={ask} onCancel={() => setAsk(null)} /> : null}
+
+      {linking ? (
+        <LinkPosts
+          key={linking.id}
+          row={linking}
+          onClose={() => setLinking(null)}
+          onSaved={(text, bad) => {
+            setToast({ text, bad })
+            startTransition(() => router.refresh())
+          }}
+        />
+      ) : null}
 
       {!ready && !demo ? (
         <p className="idt-banner" role="status">
@@ -317,6 +331,19 @@ export default function InvoiceDetails({
                     <div className="idt-proj" title={r.project}>
                       {r.project || '—'}
                     </div>
+                    {r.igPosts.length ? (
+                      <ul className="idt-linked" aria-label={`Instagram posts linked to ${r.no}`}>
+                        {r.igPosts.map(p => (
+                          <li key={p.id}>
+                            <a href={p.permalink} target="_blank" rel="noopener noreferrer" title={p.caption}>
+                              <Icon name={/REEL|VIDEO/i.test(p.type) ? 'play' : 'camera'} />
+                              {new Date(p.timestamp).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' })}
+                              {p.reach !== undefined ? <span className="idt-num"> · {p.reach.toLocaleString('en-MY')} reached</span> : null}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </td>
                   <td className="r idt-num">
                     {r.currency !== 'MYR' ? <span className="idt-fx">{r.currency}</span> : null}
@@ -391,6 +418,18 @@ export default function InvoiceDetails({
                   </td>
                   <td>
                     <div className="idt-acts">
+                      <button
+                        type="button"
+                        className={`idt-act${r.igPosts.length ? ' linked' : ''}`}
+                        disabled={!!locked}
+                        onClick={() => setLinking(r)}
+                        aria-label={r.igPosts.length ? `Instagram posts linked to ${r.no}: ${r.igPosts.length}. Change` : `Link Instagram posts to ${r.no}`}
+                        title={locked ?? (r.igPosts.length ? `${r.igPosts.length} Instagram post${r.igPosts.length === 1 ? '' : 's'} linked — change` : 'Link Instagram posts (optional)')}
+                      >
+                        <Icon name="instagram" />
+                        {r.igPosts.length ? <span className="idt-act-count">{r.igPosts.length}</span> : null}
+                      </button>
+
                       <button
                         type="button"
                         className="idt-act"

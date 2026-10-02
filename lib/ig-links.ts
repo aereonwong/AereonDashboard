@@ -2,6 +2,8 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { latestSnapshot } from './instagram'
 import { composioExec } from './composio-exec'
+import type { LinkedPost, PickPost } from './ig-link-types'
+export type { LinkedPost, PickPost } from './ig-link-types'
 
 // 👉 Linking Instagram posts to invoices (Invoice Details → Link posts). Optional:
 // an invoice keeps `meta.ig_posts`, a short list of the posts the job produced.
@@ -9,11 +11,6 @@ import { composioExec } from './composio-exec'
 // The picker starts from the newest stored snapshot (no Instagram call). Only
 // "Load older" asks Instagram, 12 posts at a time — tested 2 Oct 2026: 12 with
 // cover URLs comes back, 20 does not.
-
-/** A post as stored on the invoice: enough to show it even after it drops out of the latest 40. */
-export type LinkedPost = { id: string; permalink: string; timestamp: string; type: string; caption: string }
-/** A post in the picker. */
-export type PickPost = LinkedPost & { thumb?: string; reach?: number }
 
 export const OLDER_PAGE = 12
 const MAX_LINKS = 20

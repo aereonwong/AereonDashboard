@@ -151,6 +151,13 @@ export async function buildSnapshot(rawExec: Exec, limit = MAX_POSTS): Promise<I
   }
 }
 
+/** Insights for posts outside the latest page (e.g. older posts linked to an
+ *  invoice), with the same per-format metric lists and fallbacks. */
+export async function insightsFor(rawExec: Exec, posts: IgPost[]): Promise<void> {
+  const exec = guard(rawExec)
+  await pool(posts, 5, p => postInsights(exec, p))
+}
+
 async function postInsights(exec: Exec, post: IgPost) {
   for (const metric of METRICS[post.type] ?? [BASE]) {
     try {

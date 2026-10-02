@@ -1,4 +1,5 @@
 import type { DriveStatus } from './invoice-drive'
+import type { ShownPost } from './ig-link-types'
 
 // 👉 The pure half of lib/invoice-details.ts — types and arithmetic only, no
 // database import — so the Invoice Details table (a client component) can
@@ -46,6 +47,8 @@ export type DetailRow = {
   designId: string | null
   /** The last edit, when there is one to undo. */
   undo: { at: string } | null
+  /** Instagram posts linked to this invoice (optional), with their latest stored reach. */
+  igPosts: ShownPost[]
 }
 
 /** An invoice's details as the Create / Edit Invoice form holds them (all strings,
