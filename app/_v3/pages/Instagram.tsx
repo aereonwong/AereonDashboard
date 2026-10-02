@@ -101,7 +101,9 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
             <div>
               <div className="v3-kpi-label">Accounts reached</div>
               <div className="v3-kpi-value num">{compact(t.reach ?? s.totals.reach)}</div>
-              <div className="v3-kpi-note">{compact(t.views ?? s.totals.views)} views · 30 days</div>
+              <div className="v3-kpi-note">
+                {t.reach !== undefined ? `${compact(t.views ?? 0)} views · 30 days` : `${compact(s.totals.views)} views · posts in view`}
+              </div>
             </div>
             <div>
               <div className="v3-kpi-label">New people</div>

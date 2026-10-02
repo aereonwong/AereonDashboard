@@ -17,7 +17,7 @@ export default function Refresh({ label = 'Refresh from Instagram' }: { label?: 
       const r = await fetch('/api/instagram/refresh', { method: 'POST' })
       const j = await r.json().catch(() => ({}))
       if (r.ok && j.ok) {
-        setMsg(`Updated · ${j.posts} posts`)
+        setMsg(`Updated · ${j.posts} posts${j.warnings?.length ? ` · not saved: ${j.warnings.join('; ')}` : ''}`)
         start(() => router.refresh())
       } else setMsg(j.error ?? 'That did not work — try again in a minute.')
     } catch {

@@ -180,7 +180,7 @@ export default function Dashboard({
             <div className="v3-kpi-note">{s.owed.length} invoices, last 120 days</div>
           </a>
           <a className="v3-kpi" href="#audience">
-            <div className="v3-kpi-label">Instagram reach, 30 days</div>
+            <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
             <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
             <div className="v3-kpi-note">
               {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}

@@ -71,7 +71,7 @@
 .v3-k2-blurb { color: var(--hero-ink-2); font-size: var(--t-lg); line-height: 1.55; max-width: 54ch; margin: var(--space-5) 0 0; text-wrap: pretty; }
 .v3-k2-hero .v3-kit-ctas { margin-top: var(--space-6); }
 .v3-k2-hero .v3-btn-primary { background: var(--hero-ink); border-color: var(--hero-ink); color: #0A0A0B; }
-.v3[data-world="canon"] .v3-k2-hero .v3-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v3[data-world="canon"] .v3-k2-hero .v3-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .v3-k2-ghost { color: var(--hero-ink) !important; border-color: var(--hero-line) !important; background: rgba(5, 5, 5, 0.25); backdrop-filter: blur(8px); }
 .v3-k2-ghost:hover { background: rgba(244, 242, 238, 0.12); }
 
@@ -148,7 +148,7 @@
 .v3[data-world="contact"] .v3-k2-axis { font-family: var(--f-code); color: var(--edge); letter-spacing: 0.08em; }
 
 /* who's watching: the shared audience styles live in v3.css (AudienceBreakdown) */
-.v3-k2-who-lede { margin-bottom: var(--space-6); }
+.v3-k2-who-lede { grid-column: 1 / -1; margin-bottom: var(--space-6); }
 
 /* ---------------------------------------------------------------- attention + formats */
 
@@ -262,4 +262,8 @@
 }
 @media (max-width: 520px) {
   .v3-k2-telemetry div:nth-child(3) { display: none; }
+  /* The tower lights sit behind the blurb on a phone: a heavier scrim keeps it legible. */
+  .v3-k2-hero .v3-k2-photo::after {
+    background: linear-gradient(180deg, rgba(5, 5, 5, 0.5) 0%, rgba(5, 5, 5, 0.25) 20%, rgba(5, 5, 5, 0.7) 45%, rgba(5, 5, 5, 0.9) 85%) !important;
+  }
 }

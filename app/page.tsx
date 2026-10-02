@@ -76,9 +76,10 @@ export default async function Landing({
   const followers = snap?.profile.followers_count ?? 0
   const posts = snap?.posts ?? []
   // Instagram's own 30-day account figures when stored; otherwise the recent posts added up.
-  const reach = account?.totals.reach ?? posts.reduce((s, p) => s + (p.reach ?? 0), 0)
-  const views = account?.totals.views ?? posts.reduce((s, p) => s + (p.views ?? 0), 0)
-  const span = account ? '30 days' : 'recent'
+  const has30 = account?.totals.reach !== undefined
+  const reach = has30 ? account!.totals.reach : posts.reduce((s, p) => s + (p.reach ?? 0), 0)
+  const views = has30 ? (account!.totals.views ?? 0) : posts.reduce((s, p) => s + (p.views ?? 0), 0)
+  const span = has30 ? '30 days' : 'recent'
 
   const invoices = toInvoices(rows)
   const text = invoices.map(i => `${i.project} ${i.client}`).join(' ')

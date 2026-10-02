@@ -23,7 +23,11 @@ export default function RefreshButton({ endpoint, label = 'Refresh now' }: { end
               const res = await fetch(endpoint, { method: 'POST' })
               const body = await res.json().catch(() => ({}))
               if (!res.ok || !body.ok) setError(body.error || `Refresh failed (${res.status})`)
-              else router.refresh()
+              else {
+                // History rows that could not be saved are reported, not hidden.
+                if (body.warnings?.length) setError(`Updated, but not saved: ${body.warnings.join('; ')}`)
+                router.refresh()
+              }
             } catch (e) {
               setError(e instanceof Error ? e.message : 'Refresh failed')
             } finally {

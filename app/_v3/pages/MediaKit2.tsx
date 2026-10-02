@@ -55,8 +55,10 @@ export default function MediaKit2({
   const { view, stats, daily } = audience
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
 
-  const reach = view?.totals.reach ?? stats?.totals.reach ?? 0
-  const views = view?.totals.views ?? stats?.totals.views ?? 0
+  // Only Instagram's own 30-day account figures are labelled "30 days"; without
+  // them those lines are left out rather than filled with a post total.
+  const reach = view?.totals.reach ?? 0
+  const views = view?.totals.views ?? 0
   const engaged = view?.totals.accounts_engaged
   const shares = view?.totals.shares
   const saves = view?.totals.saves
@@ -173,6 +175,11 @@ export default function MediaKit2({
                 '.'
               )}
             </p>
+            {view?.adPct ? (
+              <p className="v3-k2-fine">
+                Instagram&rsquo;s own &ldquo;accounts reached&rdquo; — about {Math.round(view.adPct)}% of it came through boosted posts.
+              </p>
+            ) : null}
 
             {days.length >= 7 ? (
               <figure className="v3-k2-skyline" aria-label={`Accounts reached each day, ${shortDate(days[0].day)} to ${shortDate(days.at(-1)!.day)}`}>
@@ -297,7 +304,7 @@ export default function MediaKit2({
               Recent work
             </h2>
             <p className="v3-k2-note">The furthest-travelling posts of the latest 40 — tap one to play it.</p>
-            <PostGrid posts={audience.top} limit={8} circleFirst={world === 'contact'} />
+            <PostGrid posts={audience.top.slice(0, 8)} limit={8} circleFirst={world === 'contact'} />
           </Reveal>
         ) : null}
 

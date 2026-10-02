@@ -1,7 +1,8 @@
 // 👉 Fetching Instagram data and shaping it into rows — nothing else. This file
-// has NO runtime imports on purpose: the app (lib/instagram.ts, the cron) and the
-// plain-Node Mac script (scripts/ig-refresh.mjs, via Node's type stripping) both
-// load it, so the two can never drift apart again.
+// has no static imports on purpose (only `sharp`, loaded on demand and optional):
+// the app (lib/instagram.ts, the cron) and the plain-Node Mac script
+// (scripts/ig-refresh.mjs, via Node's type stripping) both load it, so the two
+// can never drift apart again.
 //
 // The Composio call is injected as `exec` and the database as `db`.
 // Every metric here was tested against the live account on 2 Oct 2026.
@@ -79,7 +80,21 @@ export type Exec = (slug: string, args: Record<string, unknown>) => Promise<any>
 export type Db = { from: (table: string) => any }
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
-const rows = (res: any): any[] => res?.data?.data ?? res?.data ?? []
+const rows = (res: any): any[] => {
+  const r = res?.data?.data ?? res?.data
+  return Array.isArray(r) ? r : []
+}
+
+/** Composio's SDK reports a failed tool call as `{ successful: false }` rather than
+ *  throwing, and the CLI throws. Both callers go through this, so a failure always
+ *  throws here and every fallback below behaves the same in the app and the script. */
+const guard =
+  (exec: Exec): Exec =>
+  async (slug, args) => {
+    const res = await exec(slug, args)
+    if (res && res.successful === false) throw new Error(`${slug}: ${res.error ?? 'failed'}`)
+    return res
+  }
 
 // Run tasks a few at a time — fast, but gentle on Instagram's rate limit.
 async function pool<T>(items: T[], size: number, fn: (x: T) => Promise<void>) {
@@ -102,7 +117,8 @@ const METRICS: Record<string, string[][]> = {
   FEED: [[...BASE, 'follows', 'profile_visits'], BASE],
 }
 
-export async function buildSnapshot(exec: Exec, limit = MAX_POSTS): Promise<IgSnapshot> {
+export async function buildSnapshot(rawExec: Exec, limit = MAX_POSTS): Promise<IgSnapshot> {
+  const exec = guard(rawExec)
   limit = Math.min(Math.max(limit, 1), MAX_POSTS)
   const info = await exec('INSTAGRAM_GET_USER_INFO', {})
   const profile: IgProfile = info?.data ?? info ?? {}
@@ -276,7 +292,8 @@ const slices = (row: any): Slice[] | undefined => {
 // Each call is independent and any one may fail or come back empty (Instagram
 // hides figures it has too little data for). A missing piece is left out — never
 // filled with a zero that would read as a real figure.
-export async function buildAccount(exec: Exec, igUserId?: string): Promise<IgAccount> {
+export async function buildAccount(rawExec: Exec, igUserId?: string): Promise<IgAccount> {
+  const exec = guard(rawExec)
   const id = igUserId ?? String((await exec('INSTAGRAM_GET_USER_INFO', {}))?.data?.id ?? '')
   if (!id) throw new Error('Instagram account id missing')
   // Instagram allows at most 30 days between `since` and `until`.
@@ -288,15 +305,26 @@ export async function buildAccount(exec: Exec, igUserId?: string): Promise<IgAcc
   const demo = (metric: string, breakdown: string, timeframe = 'this_month') =>
     ask({ metric: [metric], period: 'lifetime', metric_type: 'total_value', breakdown, timeframe }).then(r => slices(r[0]))
 
-  const [series, totals, follow, follows, formats, ...demos] = await Promise.all([
-    ask({ metric: ['reach', 'follower_count'], period: 'day', since, until }),
-    ask({ metric: TOTALS, ...window }),
-    ask({ metric: ['reach', 'views'], ...window, breakdown: 'follow_type' }),
-    ask({ metric: ['follows_and_unfollows'], ...window, breakdown: 'follow_type' }),
-    ask({ metric: ['reach', 'views'], ...window, breakdown: 'media_product_type' }),
-    ...['age', 'gender', 'country', 'city'].map(b => demo('follower_demographics', b)),
-    ...['age', 'gender', 'country', 'city'].map(b => demo('engaged_audience_demographics', b)),
-  ])
+  // Run a few at a time, like the post insights, to stay gentle on the rate limit.
+  // (engaged_audience_demographics was tried on 2 Oct 2026 and returns nothing for
+  // this account, so it is not asked for.)
+  const jobs: (() => Promise<any>)[] = [
+    () => ask({ metric: ['reach', 'follower_count'], period: 'day', since, until }),
+    () => ask({ metric: TOTALS, ...window }),
+    () => ask({ metric: ['reach', 'views'], ...window, breakdown: 'follow_type' }),
+    () => ask({ metric: ['follows_and_unfollows'], ...window, breakdown: 'follow_type' }),
+    () => ask({ metric: ['reach', 'views'], ...window, breakdown: 'media_product_type' }),
+    ...['age', 'gender', 'country', 'city'].map(b => () => demo('follower_demographics', b)),
+  ]
+  const results: any[] = new Array(jobs.length)
+  await pool(
+    jobs.map((job, i) => ({ job, i })),
+    4,
+    async ({ job, i }) => {
+      results[i] = await job()
+    },
+  )
+  const [series, totals, follow, follows, formats, ...demos] = results as [any[], any[], any[], any[], any[], ...(Slice[] | undefined)[]]
 
   // A day's value carries an end_time of the NEXT day's start (Pacific time),
   // so the day it describes is the one before.
@@ -313,8 +341,12 @@ export async function buildAccount(exec: Exec, igUserId?: string): Promise<IgAcc
     }
   }
 
+  // Instagram fills in the newest day's follows late (it reads 0, then the real
+  // figure a day later), so that one value is left out until a later refresh.
+  const settle = (days: { day: string; reach?: number; new_followers?: number }[]) =>
+    days.map((d, i) => (i === days.length - 1 ? { day: d.day, reach: d.reach } : d))
   const named = (rs: any[], name: string) => rs.find(r => r?.name === name)
-  const [fAge, fGender, fCountry, fCity, eAge, eGender, eCountry, eCity] = demos as (Slice[] | undefined)[]
+  const [fAge, fGender, fCountry, fCity] = demos
   const clean = <T extends Record<string, unknown>>(o: T) =>
     Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && (!Array.isArray(v) || v.length))) as T
 
@@ -332,9 +364,8 @@ export async function buildAccount(exec: Exec, igUserId?: string): Promise<IgAcc
     formats: clean({ reach: slices(named(formats, 'reach')), views: slices(named(formats, 'views')) }),
     demographics: clean({
       followers: clean({ age: fAge, gender: fGender, country: fCountry, city: fCity }),
-      engaged: clean({ age: eAge, gender: eGender, country: eCountry, city: eCity }),
     }),
-    daily: [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day)),
+    daily: settle([...byDay.values()].sort((a, b) => a.day.localeCompare(b.day))),
   }
 }
 

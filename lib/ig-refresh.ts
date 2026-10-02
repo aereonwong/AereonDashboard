@@ -38,6 +38,12 @@ export async function refreshInstagram(source: 'button' | 'cron'): Promise<Refre
     const snap = await buildSnapshot(exec)
     // Instagram sometimes answers with an empty page. Saving that would wipe the
     // tab, so keep the previous snapshot and say what happened.
+    // Same for a page of posts with no insights at all (a rate limit at 6am would
+    // otherwise publish "0 reach" on every tile of the public kit).
+    if (snap.posts.length && !snap.posts.some(p => p.reach !== undefined)) {
+      await logRun('instagram', 'noop', { reason: 'Instagram returned posts without insights', source })
+      return { ok: false, status: 502, error: 'Instagram sent posts but no reach figures — kept the previous snapshot. Try again later.' }
+    }
     if (snap.posts.length === 0) {
       await logRun('instagram', 'noop', { reason: 'Instagram returned no posts', source })
       return { ok: false, status: 502, error: 'Instagram returned no posts — kept the previous snapshot. Try again in a minute.' }

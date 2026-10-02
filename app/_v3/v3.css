@@ -112,9 +112,11 @@ html[data-theme="dark"]:has(.v3[data-world="canon"]) body { background: #0A0A0B;
   --f-code: var(--f-geist-mono), ui-monospace, monospace;
   --f-note: var(--f-geist), system-ui, sans-serif;
   --radius: 10px;
+  --on-accent: #FFFFFF; /* text on an indigo fill */
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .v3[data-world="canon"] {
+    --on-accent: #0A0A0B; /* the dark theme's lavender needs dark text (white was 2.9:1) */
     color-scheme: dark;
     --ground: #0A0A0B; --film: #111113; --film-2: #18181B; --frame: #27272A;
     --ink: #FAFAFA; --ink-2: #A1A1AA; --ink-3: #8B8B94; --line: #27272A; --line-2: #3F3F46;
@@ -124,6 +126,7 @@ html[data-theme="dark"]:has(.v3[data-world="canon"]) body { background: #0A0A0B;
 }
 html[data-theme="dark"] .v3[data-world="canon"] {
   color-scheme: dark;
+  --on-accent: #0A0A0B;
   --ground: #0A0A0B; --film: #111113; --film-2: #18181B; --frame: #27272A;
   --ink: #FAFAFA; --ink-2: #A1A1AA; --ink-3: #8B8B94; --line: #27272A; --line-2: #3F3F46;
   --accent: #8B8CF7; --accent-soft: rgba(139, 140, 247, 0.14); --pos: #4ADE80; --neg: #F87171;
@@ -276,7 +279,7 @@ html[data-theme="dark"] .v3[data-world="canon"] {
 .v3-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 .v3-btn-primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 .v3-btn-primary:hover { background: color-mix(in srgb, var(--ink) 86%, var(--ground)); }
-.v3[data-world="canon"] .v3-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v3[data-world="canon"] .v3-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .v3-btn .ico-svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------------------------------------------------------------- panels */
@@ -1029,7 +1032,7 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-k2-age-bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); height: 190px; }
 .v3-k2-age { display: grid; grid-template-rows: auto 1fr auto; gap: var(--space-2); text-align: center; min-width: 0; }
 .v3-k2-age-v { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); }
-.v3-k2-age-k { font-size: var(--t-xs); color: var(--ink-3); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-k2-age-k { font-size: var(--t-xs); color: var(--ink-3); font-family: var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .v3-k2-age-track { position: relative; display: flex; align-items: flex-end; }
 .v3-k2-age-track i { display: block; width: 100%; height: max(2px, calc(var(--h) * 100%)); background: var(--ink-3); opacity: 0.55; border-radius: var(--radius) var(--radius) 0 0; transform-origin: 50% 100%; }
 .v3-k2-age[data-top] .v3-k2-age-track i { background: var(--ink); opacity: 1; }
@@ -1063,6 +1066,7 @@ a.v3-story-head:hover { text-decoration: underline; }
 @media (max-width: 520px) {
   .v3-k2-age-bars { height: 160px; gap: 4px; }
   .v3-k2-age-v { font-size: 11px; }
+  .v3-k2-age-k { font-size: 10px; letter-spacing: -0.02em; }
 }
 .v3-k2-fine { margin: var(--space-3) 0 0; font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0.02em; }
 
@@ -1090,8 +1094,10 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-daily-key i.f { opacity: 0.35; margin-left: 8px; }
 
 .v3-post-lift { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 2; font-size: 11px; font-weight: 600; padding: 2px 7px; background: var(--ink); color: var(--ground); border-radius: var(--radius); }
-.v3[data-world="canon"] .v3-post-lift { background: var(--accent); color: #fff; border-radius: 99px; }
-.v3-post-lift[data-low] { background: rgba(0, 0, 0, 0.6); color: #fff; }
+.v3[data-world="canon"] .v3-post-lift { background: var(--accent); color: var(--on-accent); border-radius: 99px; }
+.v3-post-lift[data-low],
+.v3[data-world="canon"] .v3-post-lift[data-low] { background: rgba(0, 0, 0, 0.62); color: #fff; }
+@media (max-width: 340px) { .v3-post-lift { font-size: 10px; padding: 1px 5px; } }
 
 .v3-attn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-4); }
 .v3-attn-v { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--t-2xl); line-height: 1.1; }

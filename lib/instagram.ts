@@ -63,7 +63,7 @@ export type IgStats = {
   hits: IgPost[]
   /** Per 100 accounts reached. Saves and shares are what Instagram rewards most. */
   rates: { save: number; share: number; comment: number }
-  /** Reels only, when Instagram returned watch time. */
+  /** Reels only, when Instagram returned watch time. avgSec is per play (weighted). */
   watch: { reels: number; avgSec: number; totalHours: number } | null
 }
 
@@ -130,7 +130,9 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
   const lift = Object.fromEntries(
     all.filter(p => p.reach !== undefined && median).map(p => [p.id, (p.reach as number) / median]),
   )
-  const watched = scope.filter(p => p.watchMs !== undefined)
+  const watched = scope.filter(p => p.watchTotalMs !== undefined && p.views)
+  const watchMs = watched.reduce((t, p) => t + (p.watchTotalMs as number), 0)
+  const watchPlays = watched.reduce((t, p) => t + (p.views as number), 0)
 
   return {
     posts: scope,
@@ -169,11 +171,13 @@ export function analyse(snap: IgSnapshot, days = 30): IgStats {
       share: totals.reach ? (totals.shares / totals.reach) * 100 : 0,
       comment: totals.reach ? (totals.comments / totals.reach) * 100 : 0,
     },
-    watch: watched.length
+    // Weighted by plays: all watch time ÷ all plays. Averaging each reel's own
+    // average would let a short-played reel count as much as a hit.
+    watch: watchPlays
       ? {
           reels: watched.length,
-          avgSec: avg(watched.map(p => p.watchMs as number)) / 1000,
-          totalHours: watched.reduce((t, p) => t + (p.watchTotalMs ?? 0), 0) / 3_600_000,
+          avgSec: watchMs / watchPlays / 1000,
+          totalHours: watchMs / 3_600_000,
         }
       : null,
   }
@@ -229,6 +233,9 @@ export type AudienceView = {
   countries: Share[]
   cities: Share[]
   formats: Share[]
+  /** Share of format reach that came through ads (boosted posts) — Instagram's
+   *  account reach includes it, so public copy says so. */
+  adPct: number | null
   /** The age band with the most followers, and the 25–44 share brands usually ask about. */
   topAge: Share | null
   coreAgePct: number | null
@@ -275,6 +282,12 @@ export function readAudienceView(acc: IgAccount, followers: number): AudienceVie
     countries,
     cities: share(d.city, k => k.split(',')[0], followers),
     formats: share(acc.formats.reach, k => FORMAT[k] ?? k),
+    adPct: (() => {
+      const f = acc.formats.reach ?? []
+      const total = f.reduce((t, x) => t + x.value, 0)
+      const ad = valueOf(f, 'AD')
+      return total && ad !== undefined ? (ad / total) * 100 : null
+    })(),
     topAge: [...ages].sort((a, b) => b.value - a.value)[0] ?? null,
     coreAgePct: core.length ? core.reduce((t, a) => t + a.pct, 0) : null,
     homePct: countries.find(c => c.key === 'MY')?.pct ?? null,
