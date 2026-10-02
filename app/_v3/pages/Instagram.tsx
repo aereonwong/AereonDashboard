@@ -99,7 +99,7 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
         <section className="v3-panel v3-span-8" aria-label="The account, last 30 days">
           <div className="v3-kpis">
             <div>
-              <div className="v3-kpi-label">Accounts reached</div>
+              <div className="v3-kpi-label">{t.reach !== undefined ? 'Accounts reached' : 'Post reach (combined)'}</div>
               <div className="v3-kpi-value num">{compact(t.reach ?? s.totals.reach)}</div>
               <div className="v3-kpi-note">
                 {t.reach !== undefined ? `${compact(t.views ?? 0)} views · 30 days` : `${compact(s.totals.views)} views · posts in view`}
@@ -118,10 +118,10 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
               </div>
             </div>
             <div>
-              <div className="v3-kpi-label">Accounts engaged</div>
+              <div className="v3-kpi-label">{engagedPct !== null ? 'Accounts engaged' : 'Interactions per reach'}</div>
               <div className="v3-kpi-value num">{engagedPct !== null ? `${engagedPct.toFixed(1)}%` : `${s.engagementRate.toFixed(1)}%`}</div>
               <div className="v3-kpi-note">
-                {engagedPct !== null ? `${compact(t.accounts_engaged!)} accounts interacted` : 'of accounts reached who interacted'}
+                {engagedPct !== null ? `${compact(t.accounts_engaged!)} accounts interacted` : 'per combined post reach, posts in view'}
               </div>
             </div>
           </div>

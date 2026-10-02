@@ -246,7 +246,7 @@ export function headline(book: Book) {
       delta: pc(concentration, priorConcentration),
       better: 'down',
       unit: 'percent',
-      note: `${ranked.length} clients paid you this year`,
+      note: `${ranked.length} clients invoiced in the last 12 months`,
       href: '/clients',
     },
     {

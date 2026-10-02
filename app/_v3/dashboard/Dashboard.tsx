@@ -43,6 +43,9 @@ export default function Dashboard({
   const up = (s.pacePct ?? 0) >= 0
   const hist = audience.history
   const reach30 = audience.view?.totals.reach ?? 0
+  const engaged30 = audience.view?.totals.accounts_engaged
+  const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
+  const postWindow = stats?.window.count ? 'last 30 days' : `last ${stats?.posts.length ?? 0} posts`
   const newPct = audience.view?.newPeoplePct ?? null
   const netFollows =
     audience.view?.follows != null && audience.view?.unfollows != null ? audience.view.follows - audience.view.unfollows : null
@@ -145,6 +148,7 @@ export default function Dashboard({
           owedCount={owedRm.length}
           recentTotal={recentIncome}
           reachPerPost={stats?.reachPerPost ?? 0}
+          reachWindow={postWindow}
           followers={audience.followers}
         />
       ) : null}
@@ -350,13 +354,15 @@ export default function Dashboard({
                   <div className="v3-kpi-note">
                     {reach30
                       ? `30 days · ${newPct !== null ? `${Math.round(newPct)}% did not follow you` : `typical post ${compact(stats.baseline.median)}`}`
-                      : `${Math.round(stats.reachVsFollowers)}% of followers, last 30 days`}
+                      : `${Math.round(stats.reachVsFollowers)}% of followers, ${postWindow}`}
                   </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement</div>
-                  <div className="v3-kpi-value num">{stats.engagementRate.toFixed(1)}%</div>
-                  <div className="v3-kpi-note">of accounts reached who interacted</div>
+                  <div className="v3-kpi-value num">{(engagedPct ?? stats.engagementRate).toFixed(1)}%</div>
+                  <div className="v3-kpi-note">
+                    {engagedPct !== null ? 'of accounts reached who interacted · 30 days' : `interactions per post reach, ${postWindow}`}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Posting</div>
