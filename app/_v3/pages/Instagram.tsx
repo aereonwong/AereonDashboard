@@ -127,6 +127,31 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
           </div>
         </section>
 
+        <div className="v3-span-12">
+          <IgFilters days={days} type={type} />
+        </div>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-time">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-time">
+              What travelled
+            </h2>
+            <p className="v3-panel-note">Every post on the day it went out, raised by its reach</p>
+          </div>
+          <ReachTimeline posts={s.posts} />
+        </section>
+
+        {/* ------------------------------------------------ the posts (filterable) */}
+        <section className="v3-panel v3-span-12" aria-labelledby="t-top">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-top">
+              Top performances
+            </h2>
+            <p className="v3-panel-note">Ranked by accounts reached · badge compares with your typical post · tap to play</p>
+          </div>
+          <PostGrid posts={byReach} limit={8} lift={s.lift} />
+        </section>
+
         {daily.length >= 2 ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-daily">
             <div className="v3-panel-head">
@@ -142,31 +167,6 @@ export default function Instagram({ audience, sp }: { audience: Audience; sp: Pa
             <DailyReach days={daily} />
           </section>
         ) : null}
-
-        {/* ------------------------------------------------ the posts (filterable) */}
-        <div className="v3-span-12">
-          <IgFilters days={days} type={type} />
-        </div>
-
-        <section className="v3-panel v3-span-12" aria-labelledby="t-top">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-top">
-              Top performances
-            </h2>
-            <p className="v3-panel-note">Ranked by accounts reached · badge compares with your typical post · tap to play</p>
-          </div>
-          <PostGrid posts={byReach} limit={8} lift={s.lift} />
-        </section>
-
-        <section className="v3-panel v3-span-12" aria-labelledby="t-time">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-time">
-              What travelled
-            </h2>
-            <p className="v3-panel-note">Every post on the day it went out, raised by its reach</p>
-          </div>
-          <ReachTimeline posts={s.posts} />
-        </section>
 
         <section className="v3-panel v3-span-6" aria-labelledby="t-attn">
           <div className="v3-panel-head">
