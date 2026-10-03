@@ -11,7 +11,7 @@ const share = (x: number) => `${Math.round(x * 100)}%`
 
 export function GettingPaid({ p }: { p: PaySpeed }) {
   const left = [
-    p.paidBulk ? `${p.paidBulk} confirmed in bulk` : '',
+    p.paidUndated ? `${p.paidUndated} paid with no payment date yet` : '',
     p.paidNoDate ? `${p.paidNoDate} with no delivery date` : '',
     p.paidEarly ? `${p.paidEarly} paid before delivery` : '',
   ].filter(Boolean)
@@ -19,12 +19,12 @@ export function GettingPaid({ p }: { p: PaySpeed }) {
     <div className="v3-ins">
       <div className="v3-ins-pair">
         <div>
-          <div className="v3-kpi-label">Delivered → marked paid</div>
+          <div className="v3-kpi-label">Delivered → paid</div>
           <div className="v3-kpi-value num">{p.medianDays !== null ? days(p.medianDays) : '—'}</div>
           <div className="v3-kpi-note">
             {p.paid.length
               ? `median of ${p.paid.length} paid invoice${p.paid.length === 1 ? '' : 's'}`
-              : 'Starts counting as invoices are marked paid'}
+              : 'Starts counting as payment dates are recorded'}
           </div>
         </div>
         <div>
@@ -77,8 +77,8 @@ export function GettingPaid({ p }: { p: PaySpeed }) {
       ) : null}
 
       <p className="v3-ins-foot">
-        Delivered = the tagged Instagram post, or the event date when no post is tagged. Marked paid = the day Paid was
-        clicked, so tick it when the money lands.
+        Delivered = the tagged Instagram post, or the event date when no post is tagged. Paid = the payment date recorded on
+        the invoice, not the day it was ticked.
         {left.length ? ` Left out: ${left.join(', ')}.` : ''}
       </p>
     </div>

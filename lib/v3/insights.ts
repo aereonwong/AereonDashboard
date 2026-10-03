@@ -43,6 +43,7 @@ export function deliveredOn(r: Pick<Rec, 'meta'>): { day: string; source: 'post'
   return ev ? { day: ev, source: 'event' } : null
 }
 
+/** `paid` is the payment date (meta.paid_on), not the day the invoice was marked paid. */
 export type PaidLine = { id: number; no: string; client: string; delivered: string; paid: string; days: number; source: 'post' | 'event' }
 export type LagLine = { id: number; no: string; client: string; delivered: string; invoiced: string; days: number }
 export type PaySpeed = {
@@ -50,7 +51,7 @@ export type PaySpeed = {
   medianDays: number | null
   slowest: { client: string; median: number; count: number }[]
   paidNoDate: number // marked paid, but no delivery date to measure from
-  paidBulk: number // confirmed paid in bulk ("Confirm as paid"): the click date says nothing about payment
+  paidUndated: number // marked paid, but no payment date (meta.paid_on) recorded yet
   paidEarly: number // paid before delivery (deposits) — left out of the median
   lagMedian: number | null // delivered → invoiced, days (invoices raised after delivery)
   lagCount: number
@@ -64,7 +65,7 @@ export function paySpeed(rows: Rec[], f: Filters): PaySpeed {
   const paid: PaidLine[] = []
   const lag: LagLine[] = []
   let paidNoDate = 0
-  let paidBulk = 0
+  let paidUndated = 0
   let paidEarly = 0
   let lagAhead = 0
   for (const i of list) {
@@ -76,14 +77,14 @@ export function paySpeed(rows: Rec[], f: Filters): PaySpeed {
       else lagAhead++
     }
     if (!isPaid(r)) continue
-    // paid_at is the day Paid was clicked. A bulk confirmation stamps today on years of
-    // old invoices, so those rows carry no payment timing at all.
-    if (r.meta?.paid_baseline) {
-      paidBulk++
+    // The payment date is meta.paid_on, recorded by the paid-date workflow. meta.paid_at is
+    // only when Paid (or "Confirm as paid") was clicked — an indicator, never a payment date.
+    const paidDay = isoDay(r.meta?.paid_on)
+    if (!paidDay) {
+      paidUndated++
       continue
     }
-    const paidDay = isoDay(r.meta?.paid_at)
-    if (!d || !paidDay) {
+    if (!d) {
       paidNoDate++
       continue
     }
@@ -103,7 +104,7 @@ export function paySpeed(rows: Rec[], f: Filters): PaySpeed {
       .sort((a, b) => b.median - a.median)
       .slice(0, 3),
     paidNoDate,
-    paidBulk,
+    paidUndated,
     paidEarly,
     lagMedian: median(lag.map(l => l.days)),
     lagCount: lag.length,

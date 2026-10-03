@@ -48,7 +48,7 @@ export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: str
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
-  const { paid_at: _drop, status_before_paid: before, tracked_before_paid: trackedBefore, ...meta } = data.meta ?? {}
+  const { paid_at: _drop, paid_on: _dropOn, status_before_paid: before, tracked_before_paid: trackedBefore, ...meta } = data.meta ?? {}
   const status = before && before !== 'paid' ? String(before) : 'issued'
   // Restore tracking exactly; rows paid before this was recorded fall back to the status.
   const tracked = typeof trackedBefore === 'boolean' ? trackedBefore : status !== 'issued'

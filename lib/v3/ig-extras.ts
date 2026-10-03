@@ -65,22 +65,41 @@ export async function readIgExtras(): Promise<IgExtras> {
   return { metrics, linked, reachById }
 }
 
-/** The Dashboard's light read: the latest reach of every post seen in the last
- *  120 days of readings — four columns, no invoice query. Empty in demo mode, so
- *  invented invoices are never plotted against real Instagram figures. */
+/** The Dashboard's light read: the latest reach of every post ever stored — four
+ *  columns, no invoice query, no time limit, so the history grows with every refresh.
+ *  Uses the `ig_post_latest` view (supabase/ig-post-latest.sql) when it exists — one row
+ *  per post — and otherwise reads every stored reading and keeps the latest.
+ *  Empty in demo mode, so invented invoices are never set against real Instagram figures. */
 export async function readPostReach(): Promise<MetricRow[]> {
   if (!supabaseConfigured || (await demoMode())) return []
-  const since = new Date(Date.now() - 120 * 86_400_000).toISOString()
+  // Supabase returns at most 1,000 rows a request, so both reads are paged.
+  const fromView: MetricRow[] = []
+  for (let from = 0; from < 200_000; from += 1000) {
+    const { data, error } = await supabase
+      .from('ig_post_latest')
+      .select('media_id, posted_at, reach, captured_at')
+      .order('media_id', { ascending: true })
+      .range(from, from + 999)
+    if (error) {
+      // Only a missing view sends us down the slow path; any other failure shows no
+      // history rather than part of it.
+      if (error.code === '42P01' || error.code === 'PGRST205') break
+      return []
+    }
+    fromView.push(...((data ?? []) as Omit<MetricRow, 'type'>[]).map(r => ({ ...r, type: null })))
+    if ((data?.length ?? 0) < 1000) return fromView
+  }
   const latest = new Map<string, MetricRow>()
-  for (let from = 0; from < 20_000; from += 1000) {
-    const { data } = await supabase
+  for (let from = 0; from < 200_000; from += 1000) {
+    const { data, error } = await supabase
       .from('ig_post_metrics')
       .select('media_id, posted_at, reach, captured_at')
-      .gte('captured_at', since)
       .not('reach', 'is', null)
       .order('captured_at', { ascending: true })
       .order('media_id', { ascending: true })
       .range(from, from + 999)
+    // Oldest first: a failed page would silently drop the NEWEST readings, so give up instead.
+    if (error) return []
     for (const r of (data ?? []) as Omit<MetricRow, 'type'>[]) latest.set(r.media_id, { ...r, type: null }) // ascending: last wins
     if ((data?.length ?? 0) < 1000) break
   }
