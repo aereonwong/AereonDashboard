@@ -6,7 +6,7 @@ import type { Audience } from '@/lib/v3/audience'
 import FilterBar from '../FilterBar'
 import PaceChart from './PaceChart'
 import Strip from './Strip'
-import Owed from './Owed'
+import Receivables from './Receivables'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
 import GrowthRhythm from '../GrowthRhythm'
@@ -211,19 +211,26 @@ export default function Dashboard({
           <PaceChart pace={s.pace} year={s.year} />
         </section>
 
-        <section className="v3-panel v3-span-7" id="owed" aria-labelledby="t-owed">
-          <span className="v3-edge">{s.owed.map(o => o.no).join(' ▸ ')}</span>
+        <section className="v3-panel v3-span-4" id="owed" aria-labelledby="t-owed">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-owed">
               Who owes me
             </h2>
-            <p className="v3-panel-note">Tracked as unpaid · last 120 days · issued invoices aren&apos;t counted until tracked</p>
+            <a className="v3-panel-link" href="/invoices/details#owed">
+              Invoice Details
+            </a>
           </div>
-          <Owed lines={s.owed} olderCount={s.unconfirmedOlder} untracked={s.untracked} paidCount={s.paidCount} today={s.today} />
+          <Receivables
+            owed={s.owed}
+            owedTotal={s.owedTotal}
+            recentPaid={s.recentPaid}
+            untracked={s.untracked}
+            olderCount={s.unconfirmedOlder}
+            filtered={!!filterNote}
+          />
         </section>
 
-        <div className="v3-span-5 v3-stack">
-          <section className="v3-panel" aria-labelledby="t-mix">
+          <section className="v3-panel v3-span-4" aria-labelledby="t-mix">
             <div className="v3-panel-head">
               <h2 className="v3-panel-title" id="t-mix">
                 Kind of work
@@ -263,7 +270,7 @@ export default function Dashboard({
             ) : null}
           </section>
 
-          <section className="v3-panel" aria-labelledby="t-clients">
+          <section className="v3-panel v3-span-4" aria-labelledby="t-clients">
             <div className="v3-panel-head">
               <h2 className="v3-panel-title" id="t-clients">
                 Biggest clients
@@ -292,10 +299,11 @@ export default function Dashboard({
             ) : (
               <p className="v3-empty">No clients in this range.</p>
             )}
-            {s.keepers.length ? (
+            {/* Contact Sheet circles its keepers; elsewhere they only repeat Biggest clients. */}
+            {world === 'contact' && s.keepers.length ? (
               <div style={{ marginTop: 'var(--space-5)' }}>
                 <h3 className="v3-panel-title" style={{ fontSize: 'var(--t-md)', marginBottom: 'var(--space-2)' }}>
-                  {world === 'contact' ? 'The keepers' : 'Biggest jobs'}
+                  The keepers
                 </h3>
                 <div className="v3-rows">
                   {s.keepers.map(k => (
@@ -316,7 +324,6 @@ export default function Dashboard({
               </div>
             ) : null}
           </section>
-        </div>
 
         {world === 'canon' ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-strip">

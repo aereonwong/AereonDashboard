@@ -157,19 +157,9 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
     fx.set(i.currency, { total: cur.total + i.amount, count: cur.count + 1 })
   }
 
-  // ---- Question 3: who owes me money ----
-  // "Owed" = invoices TRACKED as unpaid, in exact days since issue. An `issued`
-  // invoice is documented but its payment isn't tracked, so it is never owed
-  // (isIssued() in lib/records.ts, a house rule) — those are only counted, as
-  // `untracked`. There are no due dates in the records, so nothing is "overdue".
-  const paidIds = new Set(rows.filter(r => r.category === 'cash_in' && isPaid(r)).map(r => r.id))
-  const issuedIds = new Set(rows.filter(r => r.category === 'cash_in' && isIssued(r)).map(r => r.id))
-  const filtered = narrow(all, f)
-  const unconfirmed = filtered.filter(i => !paidIds.has(i.id) && !issuedIds.has(i.id))
-  const owed: OwedLine[] = unconfirmed
-    .map(i => ({ id: i.id, no: i.no, client: i.client, amount: i.amount, currency: i.currency, date: i.date, days: dayDiff(i.date, today) }))
-    .filter(o => o.days <= OWED_WINDOW_DAYS && o.days >= 0)
-    .sort((a, b) => b.days - a.days)
+  // ---- Question 3: who owes me money (owedBook, below) ----
+  const book = owedBook(rows, narrow(all, f), today)
+  const { owed, paidIds } = book
 
   const recent = narrowed.filter(i => { const d = dayDiff(i.date, today); return d >= 0 && d <= OWED_WINDOW_DAYS })
 
@@ -195,12 +185,53 @@ export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOStr
       byCurrency: [...fx.entries()].map(([currency, v]) => ({ currency, ...v })).sort((a, b) => b.count - a.count),
     },
     owed,
-    owedTotal: owed.filter(o => o.currency === 'MYR').reduce((s, o) => s + o.amount, 0),
+    owedTotal: book.owedTotal,
     recentIncome: sum(recent),
     recentPaid: sum(recent.filter(i => paidIds.has(i.id))),
-    untracked: filtered.filter(i => issuedIds.has(i.id)).length,
-    unconfirmedOlder: unconfirmed.filter(i => dayDiff(i.date, today) > OWED_WINDOW_DAYS).length,
-    paidCount: paidIds.size,
+    untracked: book.untracked,
+    unconfirmedOlder: book.olderCount,
+    paidCount: book.paidCount,
     allClients: [...new Set(all.map(i => i.client))].filter(c => c && c !== '—').sort((a, b) => a.localeCompare(b)),
   }
+}
+
+// ---- Question 3: who owes me money ----
+// "Owed" = invoices TRACKED as unpaid, in exact days since issue. An `issued`
+// invoice is documented but its payment isn't tracked, so it is never owed
+// (isIssued() in lib/records.ts, a house rule) — those are only counted, as
+// `untracked`. There are no due dates in the records, so nothing is "overdue".
+// Shared by the Dashboard (filtered) and Invoice Details (every invoice).
+export function owedBook(rows: Rec[], invoices: Invoice[], today: string) {
+  const paidIds = new Set(rows.filter(r => r.category === 'cash_in' && isPaid(r)).map(r => r.id))
+  const issuedIds = new Set(rows.filter(r => r.category === 'cash_in' && isIssued(r)).map(r => r.id))
+  const unconfirmed = invoices.filter(i => !paidIds.has(i.id) && !issuedIds.has(i.id))
+  const owed: OwedLine[] = unconfirmed
+    .map(i => ({ id: i.id, no: i.no, client: i.client, amount: i.amount, currency: i.currency, date: i.date, days: dayDiff(i.date, today) }))
+    .filter(o => o.days <= OWED_WINDOW_DAYS && o.days >= 0)
+    .sort((a, b) => b.days - a.days)
+  return {
+    owed,
+    owedTotal: owed.filter(o => o.currency === 'MYR').reduce((s, o) => s + o.amount, 0),
+    untracked: invoices.filter(i => issuedIds.has(i.id)).length,
+    olderCount: unconfirmed.filter(i => dayDiff(i.date, today) > OWED_WINDOW_DAYS).length,
+    paidCount: paidIds.size,
+    paidIds,
+  }
+}
+
+// Owed ringgit by age since issue — the Dashboard's ageing bar. Buckets cover the
+// whole owed window, so they always add up to owedTotal.
+export const AGE_BUCKETS = [
+  { id: 'new', label: '0–30 days', max: 30 },
+  { id: 'mid', label: '31–60 days', max: 60 },
+  { id: 'late', label: '61–90 days', max: 90 },
+  { id: 'old', label: `91–${OWED_WINDOW_DAYS} days`, max: Infinity }, // the rest of the owed window
+] as const
+export function ageing(owed: OwedLine[]) {
+  const rmOwed = owed.filter(o => o.currency === 'MYR')
+  return AGE_BUCKETS.map((b, i) => {
+    const min = i ? AGE_BUCKETS[i - 1].max + 1 : 0
+    const xs = rmOwed.filter(o => o.days >= min && o.days <= b.max)
+    return { ...b, total: xs.reduce((s, o) => s + o.amount, 0), count: xs.length }
+  })
 }

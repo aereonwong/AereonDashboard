@@ -584,6 +584,36 @@ a.v3-row[aria-current="true"] { background: var(--mark-soft); }
 .v3-owed-label { font-family: var(--f-num); font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: right; }
 .v3-note { font-family: var(--f-note); color: var(--mark); font-size: var(--t-md); line-height: 1.2; }
 .v3[data-world="hud"] .v3-note, .v3[data-world="canon"] .v3-note { font-size: var(--t-sm); font-weight: 600; }
+/* Who owes me, as a figure (Dashboard). Ageing bar: segment length is owed
+   ringgit; colour deepens with days since issue — never "overdue", no due dates. */
+.v3-recv { display: flex; flex-direction: column; gap: var(--space-5); }
+.v3-recv-figure .v3-kpi-value { margin-bottom: var(--space-1); }
+.v3-age-bar { display: flex; gap: 2px; height: 10px; border-radius: var(--radius); overflow: hidden; background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.v3-age-bar i { flex-basis: 0; min-width: 3px; background: var(--ink-3); transform-origin: left; animation: v3-grow 600ms var(--ease) both; }
+.v3-age-bar i[data-age="mid"], .v3-age-dot[data-age="mid"] { background: color-mix(in srgb, var(--neg) 35%, var(--ink-3)); }
+.v3-age-bar i[data-age="late"], .v3-age-dot[data-age="late"] { background: color-mix(in srgb, var(--neg) 70%, var(--ink-3)); }
+.v3-age-bar i[data-age="old"], .v3-age-dot[data-age="old"] { background: var(--neg); }
+.v3[data-world="hud"] .v3-age-bar i[data-age="mid"], .v3[data-world="hud"] .v3-age-dot[data-age="mid"] { background: var(--ink-2); }
+.v3[data-world="hud"] .v3-age-bar i[data-age="late"], .v3[data-world="hud"] .v3-age-dot[data-age="late"] { background: var(--warn); }
+.v3[data-world="hud"] .v3-age-bar i[data-age="old"], .v3[data-world="hud"] .v3-age-dot[data-age="old"] { background: var(--alert); }
+.v3-age-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: var(--ink-3); vertical-align: 0; }
+.v3-age-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-4); margin: var(--space-3) 0 0; }
+.v3-age-legend > div { display: flex; justify-content: space-between; gap: var(--space-2); font-size: var(--t-xs); }
+.v3-age-legend > div[data-empty] dt, .v3-age-legend > div[data-empty] dd { color: var(--ink-3); }
+.v3-age-legend dt { color: var(--ink-2); white-space: nowrap; }
+.v3-age-legend dd { margin: 0; color: var(--ink); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-recv-meter { display: flex; flex-direction: column; gap: var(--space-2); }
+.v3-recv-meter-head { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--t-sm); color: var(--ink-2); }
+.v3-recv-meter-head b { color: var(--ink); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-recv-meter .v3-owed-track i { background: var(--pos, var(--ink)); }
+.v3-recv-top .v3-row-title { font-size: var(--t-sm); }
+.v3-recv-cta { margin-top: auto; font-size: var(--t-sm); color: var(--ink-2); padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.v3-recv-cta:hover { color: var(--ink); }
+.v3-panel#owed { display: flex; flex-direction: column; }
+.v3-panel#owed .v3-recv { flex: 1; }
+.idt-owed { margin-bottom: var(--space-5); }
+@media (prefers-reduced-motion: reduce) { .v3-age-bar i { animation: none; } }
+
 .v3-owed-foot { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); font-size: var(--t-sm); color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .v3-empty { color: var(--ink-2); font-size: var(--t-sm); padding: var(--space-4) 0; }
 .v3-empty b { color: var(--ink); }
