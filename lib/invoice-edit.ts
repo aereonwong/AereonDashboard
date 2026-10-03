@@ -132,6 +132,8 @@ export async function applyEdit(
       source: prevMeta.source,
       payment_tracked: opts.status !== 'issued',
       paid_at: opts.status === 'paid' ? (wasPaid ? prevMeta.paid_at : undefined) ?? now : undefined,
+      // The payment date only survives while the invoice stays paid.
+      paid_on: opts.status === 'paid' ? prevMeta.paid_on : undefined,
       canva_design: opts.preview.designId,
       canva_url: opts.preview.viewUrl ?? `https://www.canva.com/design/${opts.preview.designId}/view`,
       render: { status: 'done', design_id: opts.preview.designId, rendered_at: now, source: 'dashboard-edit' },
