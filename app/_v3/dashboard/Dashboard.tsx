@@ -7,6 +7,9 @@ import FilterBar from '../FilterBar'
 import PaceChart from './PaceChart'
 import Strip from './Strip'
 import Receivables from './Receivables'
+import { GettingPaid, ClientRiskCard, SeasonsGrid, ReachAndWork } from './Insights'
+import { paySpeed, clientRisk, seasons, reachVsWork, postReach } from '@/lib/v3/insights'
+import type { MetricRow } from '@/lib/v3/ig-insights'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
 import GrowthRhythm from '../GrowthRhythm'
@@ -22,13 +25,21 @@ export default function Dashboard({
   filters,
   world,
   audience,
+  metrics = [],
+  demo = false,
 }: {
   rows: Rec[]
   filters: Filters
   world: World
   audience: Audience
+  metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
+  demo?: boolean // demo invoices are invented: never set them against real Instagram reach
 }) {
   const s = buildStudio(rows, filters)
+  const speed = paySpeed(rows, filters)
+  const risk = clientRisk(rows, filters, s.today)
+  const season = seasons(rows, filters, s.today)
+  const rvw = reachVsWork(rows, filters, postReach(audience.snap?.posts ?? [], metrics), s.today)
   const { stats } = audience
   // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
   // last 120 days — so a client filter can't compare one client with everyone.
@@ -337,6 +348,42 @@ export default function Dashboard({
           </section>
         ) : null}
 
+        <section className="v3-panel v3-span-6" id="paid-speed" aria-labelledby="t-speed">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-speed">
+              Getting paid
+            </h2>
+            <a className="v3-panel-link" href="/invoices/details">
+              Invoice Details
+            </a>
+          </div>
+          <GettingPaid p={speed} />
+        </section>
+
+        <section className="v3-panel v3-span-6" id="risk" aria-labelledby="t-risk">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-risk">
+              Client risk
+            </h2>
+            <a className="v3-panel-link" href="/clients">
+              Clients
+            </a>
+          </div>
+          <ClientRiskCard r={risk} />
+        </section>
+
+        <section className="v3-panel v3-span-12" id="seasons" aria-labelledby="t-seasons">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-seasons">
+              Busy and quiet months
+            </h2>
+            <p className="v3-panel-note">
+              {season.rows[0].year}–{season.rows.at(-1)!.year}
+            </p>
+          </div>
+          <SeasonsGrid s={season} />
+        </section>
+
         <section className="v3-panel v3-span-12" id="audience" aria-labelledby="t-aud">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-aud">
@@ -393,6 +440,19 @@ export default function Dashboard({
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>
           )}
         </section>
+        {stats && !demo ? (
+          <section className="v3-panel v3-span-12" id="reach-work" aria-labelledby="t-rvw">
+            <div className="v3-panel-head">
+              <h2 className="v3-panel-title" id="t-rvw">
+                Reach and invoicing
+              </h2>
+              <a className="v3-panel-link" href="/instagram">
+                Instagram
+              </a>
+            </div>
+            <ReachAndWork v={rvw} client={filters.client} />
+          </section>
+        ) : null}
       </div>
     </div>
   )
