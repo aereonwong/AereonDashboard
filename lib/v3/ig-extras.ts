@@ -64,3 +64,25 @@ export async function readIgExtras(): Promise<IgExtras> {
     .filter(l => l.postIds.length)
   return { metrics, linked, reachById }
 }
+
+/** The Dashboard's light read: the latest reach of every post seen in the last
+ *  120 days of readings — four columns, no invoice query. Empty in demo mode, so
+ *  invented invoices are never plotted against real Instagram figures. */
+export async function readPostReach(): Promise<MetricRow[]> {
+  if (!supabaseConfigured || (await demoMode())) return []
+  const since = new Date(Date.now() - 120 * 86_400_000).toISOString()
+  const latest = new Map<string, MetricRow>()
+  for (let from = 0; from < 20_000; from += 1000) {
+    const { data } = await supabase
+      .from('ig_post_metrics')
+      .select('media_id, posted_at, reach, captured_at')
+      .gte('captured_at', since)
+      .not('reach', 'is', null)
+      .order('captured_at', { ascending: true })
+      .order('media_id', { ascending: true })
+      .range(from, from + 999)
+    for (const r of (data ?? []) as Omit<MetricRow, 'type'>[]) latest.set(r.media_id, { ...r, type: null }) // ascending: last wins
+    if ((data?.length ?? 0) < 1000) break
+  }
+  return [...latest.values()]
+}

@@ -1275,3 +1275,66 @@ a.v3-story-head:hover { text-decoration: underline; }
   .v3-heat { grid-template-columns: 44px repeat(5, minmax(0, 1fr)); }
   .v3-rhythm-tip { width: 220px; }
 }
+
+/* ---------------------------------------------------------------- Insights (Dashboard) */
+.v3-ins { display: flex; flex-direction: column; gap: var(--space-5); }
+.v3-ins-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.v3-ins-sub { font-size: var(--t-sm); font-weight: 600; color: var(--ink-2); margin: 0 0 var(--space-1); }
+.v3-ins-foot { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.5; margin: 0; }
+.v3-ins-say { font-size: var(--t-md); color: var(--ink-2); margin: 0; line-height: 1.45; max-width: 70ch; }
+.v3-ins-say b { color: var(--ink); font-weight: 600; }
+.v3-ins-dim { color: var(--ink-3); font-weight: 400; }
+.v3-ins-lead .v3-kpi-value { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.v3-ins-flag { font-family: var(--f-body, inherit); font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 999px; color: var(--ink-2); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.v3-ins-flag.risk { color: var(--neg); background: color-mix(in srgb, var(--neg) 13%, transparent); }
+.v3[data-world="hud"] .v3-ins-flag.risk { color: var(--alert); background: color-mix(in srgb, var(--alert) 14%, transparent); }
+
+/* Client risk: one bar, the clients in rank order; the tick is the 25% line. */
+.v3-risk-bar { position: relative; display: flex; gap: 2px; height: 12px; border-radius: var(--radius); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.v3-risk-bar i { flex-basis: 0; min-width: 2px; transform-origin: left; animation: v3-grow 600ms var(--ease) both; }
+.v3-risk-bar i:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.v3-risk-bar i:last-of-type { border-radius: 0 var(--radius) var(--radius) 0; }
+.v3-risk-bar i[data-rank="1"], .v3-risk-dot[data-rank="1"] { background: var(--accent); }
+.v3-risk-bar i[data-rank="2"], .v3-risk-dot[data-rank="2"] { background: color-mix(in srgb, var(--accent) 60%, transparent); }
+.v3-risk-bar i[data-rank="3"], .v3-risk-dot[data-rank="3"] { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.v3-risk-bar i[data-rank="rest"] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.v3-risk-line { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+.v3-ins-scale { position: relative; display: flex; justify-content: space-between; font-size: var(--t-xs); color: var(--ink-3); margin: var(--space-2) 0 0; height: 1.2em; }
+.v3-ins-scale span:nth-child(2) { position: absolute; transform: translateX(-50%); white-space: nowrap; color: var(--ink-2); }
+.v3-risk-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; vertical-align: 1px; }
+
+/* Busy and quiet months: one shared scale, cell tint is ringgit. */
+.v3-season { display: flex; flex-direction: column; gap: 3px; overflow-x: auto; }
+.v3-season-row { display: grid; grid-template-columns: 4.5em repeat(12, minmax(42px, 1fr)) 4.5em; gap: 3px; align-items: center; min-width: 640px; }
+.v3-season-head span { font-size: var(--t-xs); color: var(--ink-3); text-align: center; }
+.v3-season-head span.r, .v3-season-total { text-align: right; }
+.v3-season-year { font-size: var(--t-sm); color: var(--ink-2); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-season-cell { --cap: 50%; height: 38px; display: grid; place-items: center; border-radius: var(--radius); font-family: var(--f-num); font-size: var(--t-xs); font-variant-numeric: tabular-nums; color: var(--ink);
+  background: color-mix(in srgb, var(--accent) calc(var(--a, 0) * var(--cap)), color-mix(in srgb, var(--ink) 6%, transparent)); }
+/* The tint is capped so the text (always --ink) stays readable on the strongest cell. HUD's
+   accent is near-white, so its cap is lower. */
+.v3[data-world="hud"] .v3-season-cell { --cap: 30%; }
+.v3-season-cell[data-strong] { font-weight: 700; }
+.v3-season-cell[data-future] { background: transparent; border: 1px dashed var(--line); }
+.v3-season-total { font-size: var(--t-sm); color: var(--ink); font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-season-avg { margin-top: var(--space-2); }
+.v3-season-avgcell { height: 34px; display: flex; align-items: flex-end; justify-content: center; }
+.v3-season-avgcell i { width: 60%; height: calc(var(--h, 0) * 100%); min-height: 2px; border-radius: 2px 2px 0 0; background: var(--ink-3); transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
+.v3-season-avgcell[data-tone="busy"] i { background: var(--accent); }
+.v3-season-avgcell[data-tone="quiet"] i { background: color-mix(in srgb, var(--neg) 60%, var(--ink-3)); }
+.v3[data-world="hud"] .v3-season-avgcell[data-tone="quiet"] i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-2); } /* HUD colour is status only */
+@keyframes v3-rise { from { transform: scaleY(0); } }
+
+/* Reach and paid work: two bars a month, each on its own scale. */
+.v3-rvw { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(56px, 88px); justify-content: start; gap: var(--space-2); overflow-x: auto; }
+.v3-rvw-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.v3-rvw-bars { height: 120px; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 4px; border-bottom: 1px solid var(--line); }
+.v3-rvw-bars i { width: 14px; height: calc(var(--h, 0) * 100%); min-height: 2px; border-radius: 3px 3px 0 0; transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
+.v3-rvw-bars i.reach, .v3-rvw-key.reach { background: color-mix(in srgb, var(--ink) 30%, transparent); }
+.v3-rvw-bars i.rm, .v3-rvw-key.rm { background: var(--accent); }
+.v3-rvw-label { font-size: var(--t-xs); color: var(--ink-2); margin-top: 2px; }
+.v3-rvw-num { font-family: var(--f-num); font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.v3-rvw-num.rm { color: var(--ink); }
+.v3-rvw-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 4px 0 2px; }
+@media (max-width: 600px) { .v3-ins-pair { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .v3-risk-bar i, .v3-season-avgcell i, .v3-rvw-bars i { animation: none; } }
