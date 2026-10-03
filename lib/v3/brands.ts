@@ -29,7 +29,10 @@ export const logoSize = (aspect: number) => {
 export const KIT_BRANDS: Brand[] = [
   { slug: 'tourism-malaysia', name: 'Tourism Malaysia', aspect: 2.338, kind: 'National tourism' },
   { slug: 'petronas-towers', name: 'Petronas Twin Towers', aspect: 1.73, kind: 'Landmark' },
+  { slug: 'samsung', name: 'Samsung', aspect: 5.899, kind: 'Smartphones & tech' },
   { slug: 'tesla', name: 'Tesla', aspect: 1.0, kind: 'Automotive' },
+  { slug: 'adidas', name: 'adidas', aspect: 1.574, kind: 'Sportswear' },
+  { slug: 'playstation', name: 'PlayStation', aspect: 1.269, kind: 'Gaming' },
   { slug: 'byd', name: 'BYD', aspect: 4.798, kind: 'Automotive' },
   { slug: 'dji', name: 'DJI', aspect: 1.672, kind: 'Drones & cameras' },
   { slug: 'huawei', name: 'Huawei', aspect: 1.319, kind: 'Smartphones' },
