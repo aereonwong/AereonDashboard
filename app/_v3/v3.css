@@ -1125,3 +1125,39 @@ html[data-v3accent] .v3[data-world="canon"] a.v3-btn-primary { color: var(--on-a
 .v3-swatch-chips i { width: 22px; height: 22px; border-radius: 6px; }
 .v3-swatch b { font-size: var(--t-sm); }
 .v3-swatch small { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.35; }
+
+/* Chapters: long pages (Instagram, Clients) read as a few named parts. */
+.v3-chapter { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-6, 32px); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.v3-chapter:first-child { margin-top: 0; }
+.v3-chapter-title { margin: 0; font-family: var(--f-display); font-size: var(--t-lg, 1.2rem); font-weight: 650; letter-spacing: -0.01em; color: var(--ink); }
+.v3-chapter-title::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); margin-right: 10px; vertical-align: 2px; }
+.v3-chapter-note { margin: 0; font-size: var(--t-sm); color: var(--ink-3); }
+.v3-dash-reach { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+.v3-dash-reach .v3-spark { height: 56px; }
+
+/* Clients: the four relationship groups, as filters for the table. */
+.v3-segs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+.v3-seg-card { display: grid; gap: 2px; padding: var(--space-4); border-radius: var(--radius-lg, 14px); border: 1px solid var(--line); background: var(--film); color: var(--ink); text-decoration: none; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); position: relative; overflow: hidden; }
+.v3-seg-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--seg); }
+.v3-seg-card:hover { border-color: var(--line-2, var(--ink-3)); }
+.v3-seg-card[aria-current="true"] { border-color: var(--seg); background: color-mix(in srgb, var(--seg) 8%, var(--film)); }
+.v3-seg-name { font-size: var(--t-sm); color: var(--ink-2); font-weight: 600; }
+.v3-seg-card b { font-family: var(--f-num); font-size: 1.6rem; letter-spacing: -0.02em; }
+.v3-seg-note { font-size: var(--t-xs); color: var(--ink-3); }
+[data-seg="nurture"] { --seg: var(--accent); }
+[data-seg="repitch"] { --seg: var(--neg); }
+[data-seg="new"] { --seg: color-mix(in srgb, var(--accent) 45%, var(--ink-3)); }
+[data-seg="drifted"] { --seg: var(--ink-3); }
+.v3-seg-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; color: color-mix(in srgb, var(--seg) 70%, var(--ink)); background: color-mix(in srgb, var(--seg) 12%, transparent); white-space: nowrap; }
+@media (max-width: 900px) { .v3-segs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.v3-due { color: color-mix(in srgb, var(--neg) 80%, var(--ink)); font-weight: 600; }
+.v3-keep { display: grid; }
+.v3-keep-row { display: grid; grid-template-columns: 4.2em 4.2em minmax(0, 1fr) 7em; gap: var(--space-3); align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.v3-keep-head { font-size: var(--t-xs); color: var(--ink-3); }
+.v3-keep .r { text-align: right; }
+.v3-keep-rate { position: relative; display: flex; align-items: center; height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 5%, transparent); overflow: hidden; }
+.v3-keep-rate i { position: absolute; inset: 0 auto 0 0; width: calc(var(--w, 0) * 100%); background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.v3-keep-rate b { position: relative; padding-left: var(--space-2); font-size: var(--t-sm); }
+.v3-keep-row[data-progress] { color: var(--ink-3); }
+.v3-keep-wip { display: block; font-size: 10px; color: var(--ink-3); font-family: var(--f-ui); }
