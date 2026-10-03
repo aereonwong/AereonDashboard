@@ -10,7 +10,7 @@ import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
 import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
 import LinkPosts from './LinkPosts'
-import Owed from '@/app/_v3/dashboard/Owed'
+import { markPaidBefore } from '@/lib/v3/payments'
 import '../invoices.css'
 
 // 👉 Invoice Details — the operational table. Every row, filter and figure here
@@ -38,6 +38,11 @@ const rm = (n: number) => `RM ${Math.round(n).toLocaleString('en-MY')}`
 const money = (n: number, cur: string) =>
   `${cur === 'MYR' ? 'RM' : cur} ${n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
+// Days an unpaid invoice has waited since it was issued (no due dates → never "overdue" here).
+const waited = (date: string, today: string) =>
+  Math.max(0, Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86_400_000))
+const ageOf = (d: number) => (d >= 90 ? 'old' : d >= 45 ? 'mid' : 'new')
+
 export default function InvoiceDetails({
   rows,
   options,
@@ -45,7 +50,6 @@ export default function InvoiceDetails({
   demo,
   ready,
   v3,
-  owed,
 }: {
   rows: DetailRow[]
   options: FormOptions
@@ -53,9 +57,22 @@ export default function InvoiceDetails({
   demo: boolean
   ready: boolean
   v3: boolean
-  owed?: React.ComponentProps<typeof Owed> | null // v3: the Who owes me list, with its Paid buttons
 }) {
   const router = useRouter()
+  const [upTo, setUpTo] = useState(() => {
+    const d = new Date(`${options.today}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() - 120)
+    return d.toISOString().slice(0, 10)
+  })
+  // Exactly what "Mark as paid" will touch — the whole book, not just the filtered view.
+  const bulk = useMemo(() => {
+    const hit = rows.filter(r => r.payment !== 'paid' && r.date <= upTo)
+    return {
+      count: hit.length,
+      rm: hit.filter(r => r.currency === 'MYR').reduce((t, r) => t + r.amount, 0),
+      foreign: hit.filter(r => r.currency !== 'MYR').length,
+    }
+  }, [rows, upTo])
   const [, startTransition] = useTransition()
   const [f, setF] = useState<Filters>({
     year: initial.year ?? options.today.slice(0, 4),
@@ -254,17 +271,6 @@ export default function InvoiceDetails({
         </div>
       </section>
 
-      {owed ? (
-        <section className="v3-panel idt-owed" id="owed" aria-labelledby="t-owed">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-owed">
-              Who owes me
-            </h2>
-            <p className="v3-panel-note">Tracked as unpaid · last 120 days · issued invoices aren&apos;t counted until tracked</p>
-          </div>
-          <Owed {...owed} />
-        </section>
-      ) : null}
 
       <div className="idt-filters" role="search">
         <select aria-label="Year" value={f.year} onChange={e => set('year', e.target.value)}>
@@ -307,6 +313,38 @@ export default function InvoiceDetails({
           </button>
         ) : null}
       </div>
+
+      {f.payment === 'owed' || f.payment === 'untracked' ? (
+        <div className="idt-bulk" role="group" aria-label="Confirm older invoices as paid">
+          <span>Already paid? Mark every unpaid invoice issued up to</span>
+          <input type="date" value={upTo} max={options.today} onChange={e => setUpTo(e.target.value)} aria-label="Issued on or before" />
+          <button
+            type="button"
+            className="idt-paybtn"
+            disabled={!!locked || !upTo || !bulk.count}
+            onClick={() =>
+              confirmThen(
+                {
+                  title: `Mark ${bulk.count} invoice${bulk.count === 1 ? '' : 's'} as paid?`,
+                  lines: [
+                    `Every unpaid or not-tracked invoice issued on or before ${upTo}: ${bulk.count} invoice${bulk.count === 1 ? '' : 's'}, RM ${Math.round(bulk.rm).toLocaleString('en-MY')}${bulk.foreign ? ` plus ${bulk.foreign} in other currencies` : ''}.`,
+                    'This covers every year and client, whatever the filters above show.',
+                    'It only marks them paid — the payment date stays empty. Undo any single one from its row.',
+                  ],
+                  confirmLabel: 'Mark as paid',
+                },
+                async () => {
+                  const res = await markPaidBefore(upTo)
+                  setToast(res.ok ? { text: `${res.count} invoice${res.count === 1 ? '' : 's'} marked paid.` } : { text: res.error ?? 'That did not save.', bad: true })
+                  router.refresh()
+                },
+              )
+            }
+          >
+            <Icon name="check" /> Mark {bulk.count} as paid
+          </button>
+        </div>
+      ) : null}
 
       <div className="idt-wrap">
         <table className="idt-table">
@@ -370,11 +408,35 @@ export default function InvoiceDetails({
                     {money(r.amount, r.currency)}
                   </td>
                   <td>
-                    <span className={`idt-pill ${r.payment}`}>
-                      <span className="idt-dot" /> {PAYMENT_LABEL[r.payment]}
-                    </span>
+                    <div className="idt-pay">
+                      <span className={`idt-pill ${r.payment}`}>
+                        <span className="idt-dot" /> {PAYMENT_LABEL[r.payment]}
+                      </span>
+                      <button
+                        type="button"
+                        className={`idt-paybtn${r.payment === 'paid' ? ' on' : ''}`}
+                        disabled={busy.has(r.id) || !!locked}
+                        onClick={() =>
+                          r.payment === 'paid'
+                            ? withBusy(r.id, () => markUnpaid(r.id), `${r.no} no longer marked paid`)
+                            : withBusy(r.id, () => markPaid(r.id), `${r.no} marked paid`)
+                        }
+                        aria-label={r.payment === 'paid' ? `Undo paid for ${r.no}` : `Mark ${r.no} paid`}
+                        title={locked ?? (r.payment === 'paid' ? 'Marked paid — click to undo' : 'Mark paid')}
+                      >
+                        {r.payment === 'paid' ? 'Undo' : (
+                          <>
+                            <Icon name="check" /> Paid
+                          </>
+                        )}
+                      </button>
+                    </div>
                     {r.payment === 'paid' && r.paidAt ? (
                       <span className="idt-sub idt-num">on {r.paidAt}</span>
+                    ) : r.payment === 'outstanding' || r.payment === 'overdue' ? (
+                      <span className="idt-sub idt-num" data-age={ageOf(waited(r.date, options.today))}>
+                        {waited(r.date, options.today)} days since invoice{r.dueDate ? ` · due ${r.dueDate}` : ''}
+                      </span>
                     ) : r.dueDate ? (
                       <span className="idt-sub idt-num">due {r.dueDate}</span>
                     ) : null}
@@ -521,20 +583,6 @@ export default function InvoiceDetails({
                         </span>
                       )}
 
-                      <button
-                        type="button"
-                        className={`idt-act${r.payment === 'paid' ? ' on' : ''}`}
-                        disabled={busy.has(r.id) || !!locked}
-                        onClick={() =>
-                          r.payment === 'paid'
-                            ? withBusy(r.id, () => markUnpaid(r.id), `${r.no} no longer marked paid`)
-                            : withBusy(r.id, () => markPaid(r.id), `${r.no} marked paid`)
-                        }
-                        aria-label={r.payment === 'paid' ? `Undo paid for ${r.no}` : `Mark ${r.no} paid`}
-                        title={locked ?? (r.payment === 'paid' ? 'Paid — click to undo' : 'Mark paid')}
-                      >
-                        <Icon name="wallet" />
-                      </button>
                     </div>
                   </td>
                 </tr>

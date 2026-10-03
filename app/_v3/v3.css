@@ -1338,3 +1338,142 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-rvw-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 4px 0 2px; }
 @media (max-width: 600px) { .v3-ins-pair { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .v3-risk-bar i, .v3-season-avgcell i, .v3-rvw-bars i { animation: none; } }
+
+/* ---------------------------------------------------------------- Invoice Summary */
+.v3-lede .v3-up { color: var(--pos); font-weight: 600; }
+.v3-lede .v3-down { color: var(--neg); font-weight: 600; }
+
+/* Headline band: five figures, each with its change and a sparkline. */
+.v3-sum-band { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+.v3-sum-kpi { position: relative; padding: var(--space-5); border-left: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.v3-sum-kpi:first-child { border-left: 0; background: linear-gradient(160deg, var(--accent-soft, var(--mark-soft)), transparent 70%); }
+.v3-sum-kpi-row { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.v3-sum-kpi .v3-spark { margin-top: auto; padding-top: var(--space-3); }
+.v3-spark { width: 100%; height: 28px; display: block; overflow: visible; }
+.v3-spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.v3-spark polygon { fill: var(--accent); opacity: 0.1; }
+.v3[data-world="hud"] .v3-spark polyline { stroke: var(--ink); }
+.v3[data-world="hud"] .v3-spark polygon { fill: var(--ink); }
+.v3-chip-delta { font-family: var(--f-num); font-size: var(--t-xs); font-weight: 600; padding: 2px 7px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.v3-chip-delta.up { color: color-mix(in srgb, var(--pos) 75%, var(--ink)); background: color-mix(in srgb, var(--pos) 12%, transparent); }
+.v3-chip-delta.down { color: color-mix(in srgb, var(--neg) 80%, var(--ink)); background: color-mix(in srgb, var(--neg) 12%, transparent); }
+.v3-chip-delta.flat { color: var(--ink-2); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+@media (max-width: 1100px) {
+  .v3-sum-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v3-sum-kpi { border-left: 0; border-top: 1px solid var(--line); }
+  .v3-sum-kpi:first-child { grid-column: 1 / -1; border-top: 0; }
+  .v3-sum-kpi:nth-child(2n) { border-right: 1px solid var(--line); }
+}
+
+/* Trend: bars, last year's ghost bars, 3-month average. */
+.v3-trend-key { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--t-xs); color: var(--ink-2); margin-bottom: var(--space-2); }
+.v3-trend-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.v3-trend-key i.now, .v3-trend-svg rect.now { background: var(--accent); fill: var(--accent); }
+.v3-trend-key i.ly, .v3-trend-svg rect.ly { background: color-mix(in srgb, var(--ink) 14%, transparent); fill: color-mix(in srgb, var(--ink) 14%, transparent); }
+.v3-trend-key i.avg { height: 2px; width: 14px; vertical-align: 3px; background: var(--ink); }
+.v3-trend-svg polyline.avg { fill: none; stroke: var(--ink); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; opacity: 0.75; }
+.v3-trend-svg rect.now { transform-box: fill-box; transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
+.v3-trend-svg g[data-on] rect.now { filter: brightness(1.15); }
+.v3-trend-svg .hit { fill: transparent; }
+.v3[data-world="hud"] .v3-trend-key i.now, .v3[data-world="hud"] .v3-trend-svg rect.now { background: var(--ink); fill: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .v3-trend-svg rect.now { animation: none; } }
+
+/* Payment & filing: one bar by status, linked legend, Drive meter. */
+.v3-pay { display: grid; gap: var(--space-4); }
+.v3-pay-bar { display: flex; gap: 2px; height: 14px; border-radius: var(--radius); overflow: hidden; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.v3-pay-bar i { flex-basis: 0; min-width: 3px; transform-origin: left; animation: v3-grow 600ms var(--ease) both; }
+[data-s="paid"] { background: var(--pos); }
+[data-s="waiting"] { background: var(--accent); }
+[data-s="overdue"] { background: var(--neg); }
+[data-s="untracked"] { background: color-mix(in srgb, var(--ink) 16%, transparent); }
+.v3[data-world="hud"] [data-s="waiting"] { background: var(--ink-2); }
+.v3-pay-legend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+.v3-pay-item { display: grid; grid-template-columns: auto 1fr; column-gap: var(--space-2); row-gap: 2px; padding: var(--space-3); border-radius: var(--radius); border: 1px solid var(--line); transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); }
+.v3-pay-item:hover { border-color: var(--line-2, var(--line)); background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.v3-pay-item[data-empty] { border-style: dashed; }
+.v3-pay-item[data-empty] b { color: var(--ink-2); }
+.v3-pay-dot { width: 9px; height: 9px; border-radius: 2px; align-self: center; }
+.v3-pay-label { font-size: var(--t-sm); color: var(--ink-2); }
+.v3-pay-item b { grid-column: 2; font-family: var(--f-num); font-size: var(--t-lg, 1.15rem); color: var(--ink); font-variant-numeric: tabular-nums; }
+.v3-pay-sub { grid-column: 2; font-size: var(--t-xs); color: var(--ink-3); }
+.v3-pay-drive { display: flex; align-items: center; gap: var(--space-3); font-size: var(--t-sm); color: var(--ink-2); }
+.v3-pay-drive b { color: var(--ink); font-family: var(--f-num); }
+.v3-pay-drive svg { width: 16px; height: 16px; }
+.v3-pay-meter { flex: 1; max-width: 240px; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 7%, transparent); position: relative; overflow: hidden; }
+.v3-pay-meter i { position: absolute; inset: 0 auto 0 0; width: calc(var(--w, 0) * 100%); background: var(--pos); }
+@media (max-width: 900px) { .v3-pay-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* What the work pays: a table with a rate bar per job. */
+.v3-kinds { display: grid; }
+.v3-kinds-head, .v3-kinds-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr) minmax(0, 1.4fr) minmax(0, 0.7fr); gap: var(--space-3); align-items: center; }
+.v3-kinds-head { font-size: var(--t-xs); color: var(--ink-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.v3-kinds-row { padding: var(--space-3) var(--space-2); margin: 0 calc(var(--space-2) * -1); border-bottom: 1px solid var(--line); border-radius: var(--radius); font-size: var(--t-sm); color: var(--ink); transition: background var(--dur) var(--ease); }
+.v3-kinds-row:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.v3-kinds-row[aria-current="true"] { background: var(--mark-soft); }
+.v3-kinds .r { text-align: right; }
+.v3-kinds .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.v3-kinds-name { display: flex; flex-direction: column; font-weight: 600; min-width: 0; }
+.v3-kinds-name small, .v3-kinds-row .r small { font-weight: 400; font-size: var(--t-xs); color: var(--ink-3); }
+.v3-kinds-row .r small { display: block; }
+.v3-kinds-row .r small.up { color: var(--pos); }
+.v3-kinds-row .r small.down { color: var(--neg); }
+.v3-kinds-rate { position: relative; display: flex; align-items: center; height: 26px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 5%, transparent); overflow: hidden; }
+.v3-kinds-rate i { position: absolute; inset: 0 auto 0 0; width: calc(var(--w, 0) * 100%); background: color-mix(in srgb, var(--accent) 28%, transparent); transform-origin: left; animation: v3-grow 600ms var(--ease) both; }
+.v3[data-world="hud"] .v3-kinds-rate i { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+.v3-kinds-rate b { position: relative; padding-left: var(--space-2); font-size: var(--t-sm); }
+
+/* How the mix has shifted: 100% bars per year, indigo steps only (one accent). */
+.v3-mix { display: grid; gap: var(--space-3); }
+.v3-mix-row { display: grid; grid-template-columns: 3.2em 1fr 3.6em; gap: var(--space-3); align-items: center; }
+.v3-mix-year, .v3-mix-total { font-size: var(--t-sm); color: var(--ink-2); }
+.v3-mix-total { text-align: right; }
+.v3-mix-bar { display: flex; gap: 2px; height: 22px; border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.v3-mix-bar i { flex-basis: 0; min-width: 2px; }
+.v3-mix [data-i="0"] { background: var(--accent); }
+.v3-mix [data-i="1"] { background: color-mix(in srgb, var(--accent) 66%, transparent); }
+.v3-mix [data-i="2"] { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-mix [data-i="3"] { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.v3-mix [data-i="4"] { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.v3[data-world="hud"] .v3-mix [data-i="0"] { background: var(--ink); }
+.v3[data-world="hud"] .v3-mix [data-i="1"] { background: color-mix(in srgb, var(--ink) 62%, transparent); }
+.v3[data-world="hud"] .v3-mix [data-i="2"] { background: color-mix(in srgb, var(--ink) 38%, transparent); }
+.v3[data-world="hud"] .v3-mix [data-i="3"] { background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.v3-mix-key { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--t-xs); color: var(--ink-2); margin-top: var(--space-2); }
+.v3-mix-key i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+/* Invoice sizes and new-vs-returning: column pairs and stacks. */
+.v3-sizes, .v3-cohort { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(48px, 1fr); gap: var(--space-2); overflow-x: auto; }
+.v3-sizes-col, .v3-cohort-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.v3-sizes-bars { height: 130px; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 4px; border-bottom: 1px solid var(--line); }
+.v3-sizes-bars i { width: 16px; height: calc(var(--h, 0) * 100%); min-height: 2px; border-radius: 3px 3px 0 0; transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
+.v3-sizes-bars i.n { background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.v3-sizes-bars i.rm { background: var(--accent); }
+.v3[data-world="hud"] .v3-sizes-bars i.rm { background: var(--ink); }
+.v3-sizes-label { font-size: var(--t-xs); color: var(--ink-2); white-space: nowrap; }
+.v3-sizes-num { font-size: var(--t-xs); color: var(--ink-3); white-space: nowrap; }
+.v3-cohort-col { justify-content: flex-end; }
+.v3-cohort-stack { height: calc(var(--h, 0) * 130px); min-height: 2px; width: 70%; max-width: 34px; display: flex; flex-direction: column; border-radius: 4px 4px 0 0; overflow: hidden; transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
+.v3-cohort-stack i { flex-basis: 0; }
+.v3-cohort-stack i.new { background: var(--accent); }
+.v3-cohort-stack i.ret { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+.v3[data-world="hud"] .v3-cohort-stack i.new { background: var(--ink); }
+.v3[data-world="hud"] .v3-cohort-stack i.ret { background: color-mix(in srgb, var(--ink) 30%, transparent); }
+.v3-cohort { align-items: end; min-height: 170px; }
+.v3-rvw-key.ret { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+
+/* Clients */
+.v3-tag-new { margin-left: var(--space-2); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; color: color-mix(in srgb, var(--accent) 75%, var(--ink)); background: color-mix(in srgb, var(--accent) 12%, transparent); vertical-align: 1px; }
+.v3[data-world="hud"] .v3-tag-new { color: var(--ink); background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.v3-movers { display: grid; gap: var(--space-4); }
+.v3-move.up { color: var(--pos); }
+.v3-move.down { color: var(--neg); }
+@media (prefers-reduced-motion: reduce) { .v3-pay-bar i, .v3-kinds-rate i, .v3-sizes-bars i, .v3-cohort-stack { animation: none; } }
+/* Getting paid, laid out wide on the Summary: figures | slowest | invoiced late. */
+.v3-speed-wide .v3-ins { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5) var(--space-6, 32px); align-items: start; }
+.v3-speed-wide .v3-ins-foot { grid-column: 1 / -1; }
+@media (max-width: 1100px) { .v3-speed-wide .v3-ins { grid-template-columns: 1fr; } }
+.v3-pay-item, .v3-pay-drive, .v3-kinds-row { text-decoration: none; color: inherit; }
+.v3-pay-drive:hover b, .v3-kinds-row:hover .v3-kinds-name { color: var(--accent); }
+.v3-cohort { grid-auto-columns: minmax(10px, 1fr); overflow-x: visible; }
+.v3-cohort-col .v3-rvw-label, .v3-cohort-col .v3-rvw-num { white-space: nowrap; }
+.v3 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
