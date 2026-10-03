@@ -9,8 +9,7 @@ import Receivables from './Receivables'
 import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
-import PostGrid from '../PostGrid'
-import GrowthRhythm from '../GrowthRhythm'
+import { Spark } from '../summary/Panels'
 import { rmFull, pct, compact, num } from '../fmt'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
@@ -34,6 +33,9 @@ export default function Dashboard({
   const rvw = reachVsWork(rows, filters, postReach(audience.snap?.posts ?? [], metrics), s.today)
   const { stats } = audience
   const up = (s.pacePct ?? 0) >= 0
+  // The last 30 calendar days by date — a missed refresh leaves a gap, never stretches the window.
+  const since30 = new Date(Date.parse(`${s.today}T00:00:00Z`) - 30 * 86_400_000).toISOString().slice(0, 10)
+  const reachLine = audience.daily.filter(d => d.day >= since30 && d.reach !== undefined).map(d => d.reach!)
   const reach30 = audience.view?.totals.reach ?? 0
   const engaged30 = audience.view?.totals.accounts_engaged
   const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
@@ -232,12 +234,15 @@ export default function Dashboard({
                   <div className="v3-kpi-note">last post {stats.daysSinceLastPost === 0 ? 'today' : `${stats.daysSinceLastPost} day${stats.daysSinceLastPost === 1 ? '' : 's'} ago`}</div>
                 </div>
               </div>
-              {audience.daily.length >= 3 ? (
-                <div style={{ marginBottom: 'var(--space-5)' }}>
-                  <GrowthRhythm days={audience.daily} posts={audience.snap?.posts ?? []} median={stats.baseline.median} />
+              {reachLine.length >= 3 ? (
+                <div className="v3-dash-reach">
+                  <span className="v3-kpi-label">Daily reach, last 30 days</span>
+                  <Spark values={reachLine} />
                 </div>
               ) : null}
-              <PostGrid posts={audience.top} limit={6} lift={stats.lift} />
+              <a className="v3-recv-cta" href="/instagram">
+                Growth chart, top posts and audience on Instagram<span aria-hidden="true"> →</span>
+              </a>
             </>
           ) : (
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>

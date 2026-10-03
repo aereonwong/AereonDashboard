@@ -29,9 +29,12 @@ export default function RelationshipMap({ list, median }: { list: Relationship[]
   const vals = list.map(c => Math.max(100, c.lifetime))
   const lo = Math.log10(Math.min(...vals))
   const hi = Math.log10(Math.max(...vals)) + 0.05
-  const x = (m: number) => PAD.l + (m / maxQ) * (W - PAD.l - PAD.r)
-  const y = (v: number) => H - PAD.b - ((Math.log10(Math.max(100, v)) - lo) / Math.max(0.1, hi - lo)) * (H - PAD.t - PAD.b)
-  const r = (jobs: number) => 4 + Math.sqrt(jobs) * 3
+  // Rounded to a tenth of a pixel: server and browser floats can differ in the
+  // last digits, which made React warn that the drawing didn't match (hydration).
+  const r1 = (n: number) => Math.round(n * 10) / 10
+  const x = (m: number) => r1(PAD.l + (m / maxQ) * (W - PAD.l - PAD.r))
+  const y = (v: number) => r1(H - PAD.b - ((Math.log10(Math.max(100, v)) - lo) / Math.max(0.1, hi - lo)) * (H - PAD.t - PAD.b))
+  const r = (jobs: number) => r1(4 + Math.sqrt(jobs) * 3)
   const ticks = [500, 1000, 5000, 10000, 50000, 100000].filter(v => Math.log10(v) >= lo - 0.1 && Math.log10(v) <= hi + 0.1)
 
   return (
@@ -51,7 +54,7 @@ export default function RelationshipMap({ list, median }: { list: Relationship[]
               {compact(t)}
             </text>
           ))}
-          {[0, QUIET_MONTHS, Math.round(maxQ / 2), maxQ].map(m => (
+          {[...new Set([0, QUIET_MONTHS, Math.round(maxQ / 2), maxQ])].map(m => (
             <text key={m} x={x(m)} y={H - 16} textAnchor="middle">
               {m === 0 ? 'this month' : `${m}m`}
             </text>

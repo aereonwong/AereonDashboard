@@ -10,6 +10,7 @@ import Refresh from '../Refresh'
 import { followFlow, timeGrid, themes, reachVsFollowers, shelfLife, collabs } from '@/lib/v3/ig-insights'
 import type { IgExtras } from '@/lib/v3/ig-extras'
 import { compact, num, longDate } from '../fmt'
+import { KpiCard } from '../summary/Panels'
 
 // 👉 v3 Instagram: is my audience growing, and what earns it.
 //
@@ -44,6 +45,9 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
 
   const scoped: IgSnapshot = { ...snap, posts: type ? snap.posts.filter(p => (type === 'REELS' ? /REEL/i : /^(?!.*REEL)/i).test(p.type)) : snap.posts }
   const s = analyse(scoped, days === 'all' ? 3650 : Number(days))
+  // The Growth band never follows the filter: its post figures are always every post, last 30 days.
+  const base = analyse(snap, 30)
+  const cutoff = (n: number) => new Date(Date.parse(snap.captured_at) - n * 86_400_000).toISOString().slice(0, 10)
   const first = history[0]
   const last = history.at(-1)
   const tracked = first && last ? Math.round((Date.parse(last.date) - Date.parse(first.date)) / 86_400_000) : 0
@@ -85,76 +89,49 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
       </header>
 
       <div className="v3-grid">
-        {/* ------------------------------------------------ the account, last 30 days */}
-        <section className="v3-panel v3-span-4" aria-labelledby="t-follow">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-follow">
-              Followers
-            </h2>
-          </div>
-          <div className="v3-follow">
-            <span className="v3-follow-big">{num(audience.followers)}</span>
-            {net !== null ? (
-              <span className={`v3-follow-change${net < 0 ? ' down' : ''}`}>
-                {net >= 0 ? '+' : ''}
-                {num(net)} in 30 days
-              </span>
-            ) : null}
-          </div>
-          <p className="v3-panel-note" style={{ marginTop: 'var(--space-3)' }}>
-            {net !== null
-              ? `${num(view!.follows!)} followed, ${num(view!.unfollows!)} left. `
-              : ''}
-            {tracked > 0 ? `Daily count tracked since ${longDate(first!.date)}.` : 'Daily count starts with the next refresh.'}
-          </p>
-        </section>
-
-        <section className="v3-panel v3-span-8" aria-label="The account, last 30 days">
-          <div className="v3-kpis">
-            <div>
-              <div className="v3-kpi-label">{t.reach !== undefined ? 'Accounts reached' : 'Post reach (combined)'}</div>
-              <div className="v3-kpi-value num">{compact(t.reach ?? s.totals.reach)}</div>
-              <div className="v3-kpi-note">
-                {t.reach !== undefined ? `${compact(t.views ?? 0)} views · 30 days` : `${compact(s.totals.views)} views · posts in view`}
-              </div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">New people</div>
-              <div className="v3-kpi-value num">{view?.newPeoplePct != null ? `${Math.round(view.newPeoplePct)}%` : '—'}</div>
-              <div className="v3-kpi-note">of reach did not follow you</div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">Typical post</div>
-              <div className="v3-kpi-value num">{compact(s.baseline.median)}</div>
-              <div className="v3-kpi-note">
-                median reach · top quarter {compact(s.baseline.p75)}+
-              </div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">{engagedPct !== null ? 'Accounts engaged' : 'Interactions per reach'}</div>
-              <div className="v3-kpi-value num">{engagedPct !== null ? `${engagedPct.toFixed(1)}%` : `${s.engagementRate.toFixed(1)}%`}</div>
-              <div className="v3-kpi-note">
-                {engagedPct !== null ? `${compact(t.accounts_engaged!)} accounts interacted` : 'per combined post reach, posts in view'}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="v3-span-12">
-          <IgFilters days={days} type={type} />
+        <div className="v3-chapter v3-span-12">
+          <h2 className="v3-chapter-title">Growth</h2>
+          <p className="v3-chapter-note">Is the account growing, and which posts grew it — the last 30 days, whatever the filter below.</p>
         </div>
 
-        <section className="v3-panel v3-span-12" aria-labelledby="t-time">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-time">
-              What travelled
-            </h2>
-            <p className="v3-panel-note">Every post on the day it went out, raised by its reach</p>
-          </div>
-          <ReachTimeline posts={s.posts} />
+        <section className="v3-panel v3-span-12 v3-sum-band" aria-label="The account, last 30 days">
+          <KpiCard
+            label="Followers"
+            value={num(audience.followers)}
+            k={{
+              value: audience.followers,
+              prev: net !== null ? audience.followers - net : null,
+              delta: net !== null && audience.followers - net ? net / (audience.followers - net) : null,
+              spark: history.filter(h => h.date >= cutoff(60)).map(h => h.followers),
+            }}
+            note={
+              net !== null
+                ? `${net >= 0 ? '+' : ''}${num(net)} in 30 days · ${num(view!.follows!)} followed, ${num(view!.unfollows!)} left`
+                : tracked > 0
+                  ? `tracked since ${longDate(first!.date)}`
+                  : 'daily count starts with the next refresh'
+            }
+          />
+          <KpiCard
+            label={t.reach !== undefined ? 'Accounts reached · 30 days' : 'Post reach (combined)'}
+            value={compact(t.reach ?? base.totals.reach)}
+            k={t.reach !== undefined ? { value: t.reach, prev: null, delta: null, spark: daily.filter(d => d.day >= cutoff(30) && d.reach !== undefined).map(d => d.reach!) } : undefined}
+            note={t.reach !== undefined ? `${compact(t.views ?? 0)} views` : `${compact(base.totals.views)} views · posts, last 30 days`}
+          />
+          <KpiCard label="New people" value={view?.newPeoplePct != null ? `${Math.round(view.newPeoplePct)}%` : '—'} note="of reach did not follow you" />
+          <KpiCard
+            label="Typical post"
+            value={compact(base.baseline.median)}
+            k={{ value: base.baseline.median, prev: null, delta: null, spark: [...base.posts].filter(p => p.reach !== undefined).sort((a, b) => a.timestamp.localeCompare(b.timestamp)).map(p => p.reach!) }}
+            note={`median post reach, last 30 days · top quarter ${compact(base.baseline.p75)}+`}
+          />
+          <KpiCard
+            label={engagedPct !== null ? 'Accounts engaged' : 'Interactions per reach'}
+            value={engagedPct !== null ? `${engagedPct.toFixed(1)}%` : `${base.engagementRate.toFixed(1)}%`}
+            note={engagedPct !== null ? `${compact(t.accounts_engaged!)} accounts interacted` : 'per combined post reach, last 30 days'}
+          />
         </section>
 
-        {/* ------------------------------------------------ the posts (filterable) */}
         {daily.length >= 3 ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-daily">
             <div className="v3-panel-head">
@@ -170,17 +147,6 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
             <GrowthRhythm days={daily} posts={all} median={s.baseline.median} />
           </section>
         ) : null}
-
-        <section className="v3-panel v3-span-12" aria-labelledby="t-top">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-top">
-              Top performances
-            </h2>
-            <p className="v3-panel-note">Ranked by accounts reached · badge compares with your typical post · tap to play</p>
-          </div>
-          <PostGrid posts={byReach} limit={8} lift={s.lift} />
-        </section>
-
         <section className="v3-panel v3-span-6" aria-labelledby="t-flow">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-flow">
@@ -190,7 +156,6 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
           </div>
           <FollowFlow flow={flow} />
         </section>
-
         <section className="v3-panel v3-span-6" aria-labelledby="t-beyond">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-beyond">
@@ -200,7 +165,32 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
           </div>
           <ReachBeyond v={beyond} />
         </section>
+        <div className="v3-chapter v3-span-12">
+          <h2 className="v3-chapter-title">What works</h2>
+          <p className="v3-chapter-note">Your posts, judged against your typical post. The date and format filter steers the post panels here; subjects and brand work always use every stored post.</p>
+        </div>
 
+        <div className="v3-span-12">
+          <IgFilters days={days} type={type} />
+        </div>
+        <section className="v3-panel v3-span-12" aria-labelledby="t-time">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-time">
+              What travelled
+            </h2>
+            <p className="v3-panel-note">Every post on the day it went out, raised by its reach</p>
+          </div>
+          <ReachTimeline posts={s.posts} />
+        </section>
+        <section className="v3-panel v3-span-12" aria-labelledby="t-top">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-top">
+              Top performances
+            </h2>
+            <p className="v3-panel-note">Ranked by accounts reached · badge compares with your typical post · tap to play</p>
+          </div>
+          <PostGrid posts={byReach} limit={8} lift={s.lift} />
+        </section>
         <section className="v3-panel v3-span-6" aria-labelledby="t-attn">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-attn">
@@ -233,7 +223,6 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
             </div>
           </div>
         </section>
-
         <section className="v3-panel v3-span-6" aria-labelledby="t-fmt">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-fmt">
@@ -267,8 +256,40 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
             </p>
           ) : null}
         </section>
+        <section className="v3-panel v3-span-6" aria-labelledby="t-theme">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-theme">
+              What subjects travel
+            </h2>
+            <p className="v3-panel-note">Posts grouped by what the caption is about</p>
+          </div>
+          <ThemeStrip rows={subjects.rows} typical={subjects.typical} all={all} />
+        </section>
+        <section className="v3-panel v3-span-6" aria-labelledby="t-collab">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-collab">
+              Brand work vs your own
+            </h2>
+            <p className="v3-panel-note">Reach of paid and credited posts against organic ones</p>
+          </div>
+          <CollabPanel view={brand} />
+        </section>
+        {s.quiet.length ? (
+          <section className="v3-panel v3-span-12" aria-labelledby="t-quiet">
+            <div className="v3-panel-head">
+              <h2 className="v3-panel-title" id="t-quiet">
+                Quietest posts
+              </h2>
+              <p className="v3-panel-note">Worth a look before making more of the same</p>
+            </div>
+            <PostGrid posts={s.quiet} limit={3} lift={s.lift} />
+          </section>
+        ) : null}
+        <div className="v3-chapter v3-span-12">
+          <h2 className="v3-chapter-title">Audience</h2>
+          <p className="v3-chapter-note">Who follows you, and where they are.</p>
+        </div>
 
-        {/* ------------------------------------------------ who follows */}
         {view && view.ages.length ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-who">
             <div className="v3-panel-head">
@@ -285,6 +306,10 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
             </div>
           </section>
         ) : null}
+        <div className="v3-chapter v3-span-12">
+          <h2 className="v3-chapter-title">Timing</h2>
+          <p className="v3-chapter-note">When to post, and how long a post keeps finding people.</p>
+        </div>
 
         <section className="v3-panel v3-span-6" aria-labelledby="t-day">
           <div className="v3-panel-head">
@@ -295,17 +320,6 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
           </div>
           <TimeGrid grid={grid} />
         </section>
-
-        <section className="v3-panel v3-span-6" aria-labelledby="t-theme">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-theme">
-              What subjects travel
-            </h2>
-            <p className="v3-panel-note">Posts grouped by what the caption is about</p>
-          </div>
-          <ThemeStrip rows={subjects.rows} typical={subjects.typical} all={all} />
-        </section>
-
         <section className="v3-panel v3-span-6" aria-labelledby="t-shelf">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-shelf">
@@ -315,28 +329,6 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
           </div>
           <ShelfCurve life={life} readingDays={readDays.size} since={firstRead} />
         </section>
-
-        <section className="v3-panel v3-span-6" aria-labelledby="t-collab">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-collab">
-              Brand work vs your own
-            </h2>
-            <p className="v3-panel-note">Reach of paid and credited posts against organic ones</p>
-          </div>
-          <CollabPanel view={brand} />
-        </section>
-
-        {s.quiet.length ? (
-          <section className="v3-panel v3-span-12" aria-labelledby="t-quiet">
-            <div className="v3-panel-head">
-              <h2 className="v3-panel-title" id="t-quiet">
-                Quietest posts
-              </h2>
-              <p className="v3-panel-note">Worth a look before making more of the same</p>
-            </div>
-            <PostGrid posts={s.quiet} limit={3} lift={s.lift} />
-          </section>
-        ) : null}
       </div>
     </div>
   )
