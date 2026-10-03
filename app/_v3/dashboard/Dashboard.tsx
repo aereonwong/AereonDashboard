@@ -7,8 +7,8 @@ import FilterBar from '../FilterBar'
 import PaceChart from './PaceChart'
 import Strip from './Strip'
 import Receivables from './Receivables'
-import { GettingPaid, ClientRiskCard, SeasonsGrid, ReachAndWork } from './Insights'
-import { paySpeed, clientRisk, seasons, reachVsWork, postReach } from '@/lib/v3/insights'
+import { ClientRiskCard, ReachAndWork } from './Insights'
+import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
 import Hud from './Hud'
 import PostGrid from '../PostGrid'
@@ -36,9 +36,7 @@ export default function Dashboard({
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
 }) {
   const s = buildStudio(rows, filters)
-  const speed = paySpeed(rows, filters)
   const risk = clientRisk(rows, filters, s.today)
-  const season = seasons(rows, filters, s.today)
   const rvw = reachVsWork(rows, filters, postReach(audience.snap?.posts ?? [], metrics), s.today)
   const { stats } = audience
   // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
@@ -241,44 +239,16 @@ export default function Dashboard({
           />
         </section>
 
-          <section className="v3-panel v3-span-4" aria-labelledby="t-mix">
+          <section className="v3-panel v3-span-4" id="risk" aria-labelledby="t-risk">
             <div className="v3-panel-head">
-              <h2 className="v3-panel-title" id="t-mix">
-                Kind of work
+              <h2 className="v3-panel-title" id="t-risk">
+                Client risk
               </h2>
-              <p className="v3-panel-note">{rmFull(s.rangeTotal)}</p>
+              <a className="v3-panel-link" href="/invoices">
+                Invoice Summary
+              </a>
             </div>
-            {s.mix.length ? (
-              <div className="v3-rows">
-                {s.mix.map(x => (
-                  <a
-                    key={x.kind}
-                    className="v3-row"
-                    href={withParam(filters, 'kind', filters.kind === x.kind ? undefined : x.kind)}
-                    aria-current={filters.kind === x.kind ? 'true' : undefined}
-                  >
-                    <div className="v3-row-main">
-                      <div className="v3-row-title">{x.kind}</div>
-                      <div className="v3-row-sub">
-                        {x.count} job{x.count === 1 ? '' : 's'} · {Math.round(x.share * 100)}%
-                      </div>
-                    </div>
-                    <div className="v3-row-num">{rmFull(x.total)}</div>
-                    <div className="v3-row-bar">
-                      <i style={{ ['--w' as string]: x.share.toFixed(3) }} />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <p className="v3-empty">No ringgit invoices in this range.</p>
-            )}
-            {s.foreign.count ? (
-              <p className="v3-panel-note" style={{ marginTop: 'var(--space-4)' }}>
-                Plus {s.foreign.byCurrency.map(c => money(c.total, c.currency)).join(' and ')} in foreign currency, kept
-                out of these ringgit totals.
-              </p>
-            ) : null}
+            <ClientRiskCard r={risk} />
           </section>
 
           <section className="v3-panel v3-span-4" aria-labelledby="t-clients">
@@ -347,42 +317,6 @@ export default function Dashboard({
             <Strip frames={s.frames} bestKey={s.bestMonth?.key ?? null} world={world} />
           </section>
         ) : null}
-
-        <section className="v3-panel v3-span-6" id="paid-speed" aria-labelledby="t-speed">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-speed">
-              Getting paid
-            </h2>
-            <a className="v3-panel-link" href="/invoices/details">
-              Invoice Details
-            </a>
-          </div>
-          <GettingPaid p={speed} />
-        </section>
-
-        <section className="v3-panel v3-span-6" id="risk" aria-labelledby="t-risk">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-risk">
-              Client risk
-            </h2>
-            <a className="v3-panel-link" href="/clients">
-              Clients
-            </a>
-          </div>
-          <ClientRiskCard r={risk} />
-        </section>
-
-        <section className="v3-panel v3-span-12" id="seasons" aria-labelledby="t-seasons">
-          <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-seasons">
-              Busy and quiet months
-            </h2>
-            <p className="v3-panel-note">
-              {season.rows[0].year}–{season.rows.at(-1)!.year}
-            </p>
-          </div>
-          <SeasonsGrid s={season} />
-        </section>
 
         <section className="v3-panel v3-span-12" id="audience" aria-labelledby="t-aud">
           <div className="v3-panel-head">

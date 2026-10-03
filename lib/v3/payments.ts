@@ -3,6 +3,7 @@
 import { requireSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
+import { isPaid } from '@/lib/records'
 
 // 👉 Marking invoices paid from the web app. Until 26 Sep 2026 no invoice had
 // ever been marked paid, so "who owes me money" had no true answer; these
@@ -48,7 +49,7 @@ export async function markUnpaid(id: number): Promise<{ ok: boolean; error?: str
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data } = await supabase.from('records').select('meta').eq('id', id).eq('category', 'cash_in').single()
   if (!data) return { ok: false, error: 'Invoice not found' }
-  const { paid_at: _drop, paid_on: _dropOn, status_before_paid: before, tracked_before_paid: trackedBefore, ...meta } = data.meta ?? {}
+  const { paid_at: _drop, paid_on: _dropOn, paid_baseline: _dropBase, status_before_paid: before, tracked_before_paid: trackedBefore, ...meta } = data.meta ?? {}
   const status = before && before !== 'paid' ? String(before) : 'issued'
   // Restore tracking exactly; rows paid before this was recorded fall back to the status.
   const tracked = typeof trackedBefore === 'boolean' ? trackedBefore : status !== 'issued'
@@ -67,17 +68,30 @@ export async function markPaidBefore(date: string): Promise<{ ok: boolean; count
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, count: 0, error: 'Pick a valid date' }
   const { data, error } = await supabase
     .from('records')
-    .select('id, meta, status')
+    .select('id, meta, status, created_at')
     .eq('category', 'cash_in')
     .neq('status', 'paid')
+    .not('meta->invoice_no', 'is', null) // invoices only — never other income rows
     .limit(3000)
   if (error) return { ok: false, count: 0, error: error.message }
-  const targets = (data ?? []).filter(r => String(r.meta?.invoice_date ?? '') && String(r.meta?.invoice_date) <= date)
+  // The invoice's date as every page reads it (toInvoices): invoice_date, else when it was filed.
+  const targets = (data ?? []).filter(r => !isPaid(r) && String(r.meta?.invoice_date || r.created_at).slice(0, 10) <= date)
   const stamp = new Date().toISOString()
   for (const r of targets) {
     await supabase
       .from('records')
-      .update({ status: 'paid', meta: { ...r.meta, paid_at: stamp, paid_baseline: date, payment_tracked: true } })
+      .update({
+        status: 'paid',
+        meta: {
+          ...r.meta,
+          paid_at: stamp,
+          paid_baseline: date,
+          payment_tracked: true,
+          // As markPaid: remember what it was, so undo on its row restores it exactly.
+          status_before_paid: r.status,
+          tracked_before_paid: r.meta?.payment_tracked ?? null,
+        },
+      })
       .eq('id', r.id)
   }
   refresh()

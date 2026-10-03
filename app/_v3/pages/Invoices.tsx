@@ -1,32 +1,41 @@
 import type { Rec } from '@/lib/records'
-import { buildLedger } from '@/lib/v3/ledger'
-import { RANGES, withParam, type Filters } from '@/lib/v3/filters'
+import { buildSummary } from '@/lib/v3/summary'
+import { paySpeed, seasons } from '@/lib/v3/insights'
+import { RANGES, narrow, type Filters } from '@/lib/v3/filters'
+import { toInvoices } from '@/lib/invoices'
+import { toDetailRows, statusFigures } from '@/lib/invoice-details'
 import FilterBar from '../FilterBar'
-import Bars from '../Bars'
-import StatusStrip from '@/app/(app)/invoices/StatusStrip'
-import { toDetailRows } from '@/lib/invoice-details'
-import { rmFull, money, longDate } from '../fmt'
+import TrendBars from '../TrendBars'
+import { GettingPaid, SeasonsGrid } from '../dashboard/Insights'
+import { KpiCard, PaymentPanel, WorkTypes, MixByYear, Sizes, Cohorts, TopClients, Movers, ForeignNote } from '../summary/Panels'
+import { rmFull, longDate, shortDate } from '../fmt'
 
-// 👉 v3 Invoice Summary. Totals, the monthly chart, top clients, work type,
-// repeat and concentration figures, and the payment & Drive status strip —
-// all following the range filter. Summary only: the invoice-by-invoice table
-// (sortable, searchable, with the Drive/PDF actions) is Invoice Details.
+// 👉 v3 Invoice Summary — the deep money view for the chosen range. The Dashboard
+// is the daily pulse (this year's pace, who owes me, audience); this page is
+// where the analysis lives: the period against the one before, the shape of the
+// months, what work pays and at what rate, invoice sizes, clients won, grown
+// and lost (quiet clients to re-pitch live on Clients), and how fast work turns into an invoice.
+// The invoice-by-invoice table, with its Paid and Drive actions, is Invoice Details.
 
 type Params = Record<string, string | string[] | undefined>
 
-// "12 months", "8.9 months" — whole numbers stay whole.
-const spanLabel = (m: number) => {
-  const r = Math.round(m * 10) / 10
-  return `${Number.isInteger(r) ? r : r.toFixed(1)} month${r === 1 ? '' : 's'}`
-}
-
 export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
-  const l = buildLedger(rows, filters)
+  const today = new Date().toISOString().slice(0, 10)
+  const s = buildSummary(rows, filters, today)
+  const speed = paySpeed(rows, filters)
+  const season = seasons(rows, filters, today)
   const rangeLabel = RANGES.find(r => r.id === filters.range)?.label ?? ''
-  // The status strip covers exactly the invoices the rest of the page is showing.
-  const inView = new Set(l.rows.map(r => r.id))
-  const details = toDetailRows(rows).filter(r => inView.has(r.id))
-  const oneYear = filters.from.slice(0, 4) === filters.to.slice(0, 4) ? filters.from.slice(0, 4) : undefined
+  const allClients = [...new Set(toInvoices(rows).map(i => i.client))].filter(c => c && c !== '—').sort((a, b) => a.localeCompare(b))
+  // The status panel covers exactly the invoices the rest of the page is showing.
+  const inView = new Set(narrow(toInvoices(rows), filters).filter(i => i.date >= s.from && i.date <= s.to).map(i => i.id))
+  const viewRows = toDetailRows(rows).filter(r => inView.has(r.id))
+  // Payment counts sit beside ringgit, so they count ringgit invoices only; filing counts every invoice.
+  const status = statusFigures(viewRows.filter(r => r.currency === 'MYR'))
+  const filing = statusFigures(viewRows)
+  const oneYear = s.from.slice(0, 4) === s.to.slice(0, 4) ? s.from.slice(0, 4) : undefined
+  const prevLabel = s.prevFrom ? `vs ${shortDate(s.prevFrom)} – ${shortDate(s.prevTo!)}` : undefined
+  const rangeText = filters.range === 'custom' ? `${longDate(s.from)} to ${longDate(s.to)}` : rangeLabel.toLowerCase()
+  const d = s.invoiced.delta
 
   return (
     <div>
@@ -34,104 +43,100 @@ export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filt
         <div>
           <h1 className="v3-title">Invoice Summary</h1>
           <p className="v3-lede">
-            {rmFull(l.total)} across {l.count} ringgit invoice{l.count === 1 ? '' : 's'} ·{' '}
-            {filters.range === 'custom' ? `${longDate(filters.from)} to ${longDate(filters.to)}` : rangeLabel.toLowerCase()}
+            {rmFull(s.invoiced.value)} invoiced · {rangeText}
+            {d !== null ? (
+              <>
+                {' '}— <b className={d >= 0 ? 'v3-up' : 'v3-down'}>{d >= 0 ? 'up' : 'down'} {Math.abs(Math.round(d * 100))}%</b> on the period before
+              </>
+            ) : null}
+            {s.best ? `. Best month ${s.best.label}, ${rmFull(s.best.total)}.` : '.'}
           </p>
         </div>
       </header>
 
-      <FilterBar filters={filters} clients={l.allClients} />
-
-      <StatusStrip rows={details} year={oneYear} />
+      <FilterBar filters={filters} clients={allClients} />
 
       <div className="v3-grid">
-        <section className="v3-panel v3-span-12" aria-label="Figures">
-          <div className="v3-kpis v3-kpis-5">
-            <div>
-              <div className="v3-kpi-label">Invoiced</div>
-              <div className="v3-kpi-value num">{rmFull(l.total)}</div>
-              <div className="v3-kpi-note">{l.count} invoices</div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">Average invoice</div>
-              <div className="v3-kpi-value num">{rmFull(l.average)}</div>
-              <div className="v3-kpi-note">
-                Biggest {l.biggest ? `${rmFull(l.biggest.amount)}, ${l.biggest.client}` : '—'}
-              </div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">Average month</div>
-              {/* Under a month, a monthly rate would be a guess scaled up — say so instead. */}
-              <div className="v3-kpi-value num">{l.spanMonths >= 1 ? rmFull(l.perMonth) : '—'}</div>
-              <div className="v3-kpi-note">
-                {l.spanMonths >= 1
-                  ? `over ${spanLabel(l.spanMonths)}, ${(l.count / l.spanMonths).toFixed(1)} invoices a month`
-                  : l.count
-                    ? 'range is shorter than a month'
-                    : 'no invoices in range'}
-              </div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">From returning clients</div>
-              <div className="v3-kpi-value num">{Math.round(l.repeatShare * 100)}%</div>
-              <div className="v3-kpi-note">clients who have hired you more than once</div>
-            </div>
-            <div>
-              <div className="v3-kpi-label">Top five clients</div>
-              <div className="v3-kpi-value num">{Math.round(l.concentration * 100)}%</div>
-              <div className="v3-kpi-note">
-                of the range{l.concentration >= 0.5 ? ' — a lot resting on a few' : ''}
-              </div>
-            </div>
-          </div>
-          {l.foreign.length ? (
-            <p className="v3-panel-note" style={{ marginTop: 'var(--space-4)' }}>
-              Plus {l.foreign.map(f => `${money(f.total, f.currency)} (${f.count})`).join(' and ')} in foreign currency, kept
-              out of the ringgit totals.
-            </p>
-          ) : null}
+        <section className="v3-panel v3-span-12 v3-sum-band" aria-label="Headline figures">
+          <KpiCard label="Invoiced" value={rmFull(s.invoiced.value)} k={s.invoiced} prevLabel={prevLabel} note={s.invoiced.prev !== null ? `${rmFull(s.invoiced.prev)} the period before` : 'ringgit, the whole range'} />
+          <KpiCard label="Invoices" value={String(s.count.value)} k={s.count} prevLabel={prevLabel} note={s.count.prev !== null ? `${s.count.prev} the period before` : 'ringgit invoices'} />
+          <KpiCard label="Average invoice" value={rmFull(s.average.value)} k={s.average} prevLabel={prevLabel} note={`median ${rmFull(s.medianInvoice)}`} />
+          <KpiCard
+            label="Clients"
+            value={String(s.clients.value)}
+            k={s.clients}
+            prevLabel={prevLabel}
+            note={s.newClients ? `${s.newClients.count} new to you` : 'every client on record'}
+          />
+          <KpiCard
+            label="From returning clients"
+            value={s.returningShare === null ? '—' : `${Math.round(s.returningShare * 100)}%`}
+            note={s.returningShare === null ? 'pick a shorter range — over all time every client was new once' : 'clients you had invoiced before this range'}
+          />
         </section>
 
-        <section className="v3-panel v3-span-12" aria-labelledby="t-months">
+        <section className="v3-panel v3-span-12" aria-labelledby="t-trend">
           <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-months">
+            <h2 className="v3-panel-title" id="t-trend">
               Invoiced by month
             </h2>
-            <p className="v3-panel-note">Click a month to filter the page to it</p>
+            <p className="v3-panel-note">One scale for every bar · click a month to filter the page</p>
           </div>
-          <Bars months={l.months} />
+          <TrendBars months={s.months} />
+          <ForeignNote sum={s} />
         </section>
 
-        <section className="v3-panel v3-span-6" aria-labelledby="t-kind">
+        <section className="v3-panel v3-span-12" aria-labelledby="t-pay">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-pay">
+              Payment &amp; filing
+            </h2>
+            <a className="v3-panel-link" href={oneYear ? `/invoices/details?year=${oneYear}` : '/invoices/details?year='}>
+              Mark paid in Invoice Details
+            </a>
+          </div>
+          <PaymentPanel s={status} drive={filing} year={oneYear} client={filters.client} />
+        </section>
+
+        <section className="v3-panel v3-span-7" aria-labelledby="t-kind">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-kind">
-              Kind of work
+              What the work pays
             </h2>
+            <p className="v3-panel-note">Click a type to filter</p>
           </div>
-          <div className="v3-rows">
-            {l.mix.map(x => (
-              <a
-                key={x.kind}
-                className="v3-row"
-                href={withParam(filters, 'kind', filters.kind === x.kind ? undefined : x.kind)}
-                aria-current={filters.kind === x.kind ? 'true' : undefined}
-              >
-                <div className="v3-row-main">
-                  <div className="v3-row-title">{x.kind}</div>
-                  <div className="v3-row-sub">
-                    {x.count} jobs · {Math.round(x.share * 100)}%
-                  </div>
-                </div>
-                <div className="v3-row-num">{rmFull(x.total)}</div>
-                <div className="v3-row-bar">
-                  <i style={{ ['--w' as string]: x.share.toFixed(3) }} />
-                </div>
-              </a>
-            ))}
-          </div>
+          <WorkTypes sum={s} filters={filters} />
         </section>
 
-        <section className="v3-panel v3-span-6" aria-labelledby="t-top">
+        <section className="v3-panel v3-span-5" aria-labelledby="t-mixyear">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-mixyear">
+              How the mix has shifted
+            </h2>
+            <p className="v3-panel-note">Share of each year</p>
+          </div>
+          <MixByYear sum={s} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-sizes">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-sizes">
+              Invoice sizes
+            </h2>
+          </div>
+          <Sizes sum={s} />
+        </section>
+
+        <section className="v3-panel v3-span-6" aria-labelledby="t-cohort">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-cohort">
+              New and returning clients
+            </h2>
+          </div>
+          <Cohorts sum={s} />
+        </section>
+
+        <section className="v3-panel v3-span-7" aria-labelledby="t-top">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-top">
               Top clients
@@ -140,24 +145,38 @@ export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filt
               Relationship map
             </a>
           </div>
-          <div className="v3-rows">
-            {l.topClients.map(c => (
-              <a key={c.client} className="v3-row" href={withParam(filters, 'client', c.client)}>
-                <div className="v3-row-main">
-                  <div className="v3-row-title">{c.client}</div>
-                  <div className="v3-row-sub">
-                    {c.count} job{c.count === 1 ? '' : 's'} · {Math.round(c.share * 100)}%
-                  </div>
-                </div>
-                <div className="v3-row-num">{rmFull(c.total)}</div>
-                <div className="v3-row-bar">
-                  <i style={{ ['--w' as string]: (c.total / (l.topClients[0]?.total || 1)).toFixed(3) }} />
-                </div>
-              </a>
-            ))}
-          </div>
+          <TopClients sum={s} filters={filters} />
         </section>
 
+        <section className="v3-panel v3-span-5" aria-labelledby="t-moves">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-moves">
+              Who moved
+            </h2>
+          </div>
+          <Movers sum={s} />
+        </section>
+
+        <section className="v3-panel v3-span-12 v3-speed-wide" aria-labelledby="t-speed">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-speed">
+              From delivery to money
+            </h2>
+          </div>
+          <GettingPaid p={speed} />
+        </section>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-seasons">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-seasons">
+              Busy and quiet months
+            </h2>
+            <p className="v3-panel-note">
+              {season.rows[0].year}–{season.rows.at(-1)!.year}
+            </p>
+          </div>
+          <SeasonsGrid s={season} />
+        </section>
       </div>
     </div>
   )

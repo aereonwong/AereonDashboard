@@ -246,3 +246,18 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 .idt-link-more { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
 .idt-link .idt-error { margin-top: 12px; }
 @media (max-width: 560px) { .idt-link-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Payment cell: status pill with its own Paid button; days waiting underneath. */
+.idt-pay { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.idt-paybtn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); transition: background 160ms ease, border-color 160ms ease, color 160ms ease; }
+.idt-paybtn svg { width: 12px; height: 12px; }
+.idt-paybtn:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 8%, transparent); }
+.idt-paybtn.on { color: var(--i-dim); border-color: transparent; font-weight: 500; }
+.idt-paybtn.on:hover:not(:disabled) { color: var(--i-ink); border-color: var(--i-line2); background: transparent; }
+.idt-paybtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.idt-sub[data-age="mid"] { color: var(--i-warn); }
+.idt-sub[data-age="old"] { color: var(--i-neg); }
+.idt-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 12px; padding: 10px 14px; border: 1px dashed var(--i-line2); border-radius: 12px; font-size: 13px; color: var(--i-dim); }
+.idt-bulk input[type="date"] { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); }
+@media (prefers-reduced-motion: reduce) { .idt-paybtn { transition: none; } }
