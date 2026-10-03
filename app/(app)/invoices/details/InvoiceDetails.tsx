@@ -10,6 +10,7 @@ import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
 import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
 import LinkPosts from './LinkPosts'
+import Owed from '@/app/_v3/dashboard/Owed'
 import '../invoices.css'
 
 // 👉 Invoice Details — the operational table. Every row, filter and figure here
@@ -44,6 +45,7 @@ export default function InvoiceDetails({
   demo,
   ready,
   v3,
+  owed,
 }: {
   rows: DetailRow[]
   options: FormOptions
@@ -51,6 +53,7 @@ export default function InvoiceDetails({
   demo: boolean
   ready: boolean
   v3: boolean
+  owed?: React.ComponentProps<typeof Owed> | null // v3: the Who owes me list, with its Paid buttons
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -250,6 +253,18 @@ export default function InvoiceDetails({
           </div>
         </div>
       </section>
+
+      {owed ? (
+        <section className="v3-panel idt-owed" id="owed" aria-labelledby="t-owed">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-owed">
+              Who owes me
+            </h2>
+            <p className="v3-panel-note">Tracked as unpaid · last 120 days · issued invoices aren&apos;t counted until tracked</p>
+          </div>
+          <Owed {...owed} />
+        </section>
+      ) : null}
 
       <div className="idt-filters" role="search">
         <select aria-label="Year" value={f.year} onChange={e => set('year', e.target.value)}>
