@@ -11,7 +11,6 @@ import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import { signedIn as isSignedIn } from '@/lib/auth'
-import type { World } from '@/lib/v3/catalog'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,10 +45,7 @@ export default async function Landing({
   const [site, sp, signedIn] = await Promise.all([readSite(), searchParams, isSignedIn()])
   // A private preview, so the kit can be checked before it goes public. Only
   // honoured for someone signed in; everyone else sees the saved setting.
-  const previewWorld = String(sp.world ?? '')
   const preview = signedIn && sp.preview === 'kit'
-  const world: World =
-    preview && (previewWorld === 'contact' || previewWorld === 'hud' || previewWorld === 'canon') ? previewWorld : site.world
   if (site.landing === 'kit' || preview) {
     const [audience, recs] = await Promise.all([readAudience(), getRecords()])
     const inv = toInvoices(recs)
@@ -58,10 +54,9 @@ export default async function Landing({
     // Which kit: a signed-in preview can ask for either; visitors get the saved one.
     const kit = preview && (sp.kit === 'v1' || sp.kit === 'v2') ? sp.kit : site.kit
     // Kit v2 is drawn in Studio Standard only — Aereon's chosen look (2 Oct 2026).
-    if (kit === 'v2') return <MediaKit2 world="canon" audience={audience} kinds={kinds} since={since} />
+    if (kit === 'v2') return <MediaKit2 audience={audience} kinds={kinds} since={since} />
     return (
       <MediaKit
-        world={world}
         audience={audience}
         brands={[]}
         kinds={kinds}

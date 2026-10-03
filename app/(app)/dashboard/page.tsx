@@ -44,10 +44,10 @@ export default async function Dashboard({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { version, world } = await readVersion()
+  const { version } = await readVersion()
   if (version === 'v3') {
     const [rows, audience, metrics, demo, sp] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams])
-    return <DashboardV3 rows={rows} filters={parseFilters(sp)} world={world} audience={audience} metrics={metrics} demo={demo} />
+    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} />
   }
 
   const [rows, snap, waiting, which, account] = await Promise.all([

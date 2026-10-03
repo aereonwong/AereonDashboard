@@ -15,7 +15,7 @@ export type Landing = 'classic' | 'kit'
 /** Which media kit: v1 (26 Sep 2026) or v2 (2 Oct 2026, with audience data). */
 export type KitVersion = 'v1' | 'v2'
 export type Site = { landing: Landing; world: World; kit: KitVersion }
-export const DEFAULT_SITE: Site = { landing: 'classic', world: 'contact', kit: 'v1' }
+export const DEFAULT_SITE: Site = { landing: 'classic', world: 'canon', kit: 'v1' }
 
 export async function siteRow() {
   const { data } = await supabase
@@ -35,7 +35,7 @@ export async function readSite(): Promise<Site> {
     const m = (r?.meta ?? {}) as Partial<Site>
     return {
       landing: m.landing === 'kit' ? 'kit' : 'classic',
-      world: m.world === 'hud' || m.world === 'canon' || m.world === 'contact' ? m.world : DEFAULT_SITE.world,
+      world: 'canon', // the only look; an older saved Contact Sheet or HUD choice is ignored
       kit: m.kit === 'v2' ? 'v2' : 'v1',
     }
   } catch {

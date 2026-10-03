@@ -1,7 +1,6 @@
 import type { Rec } from '@/lib/records'
 import { buildStudio } from '@/lib/v3/studio'
 import { withParam, type Filters } from '@/lib/v3/filters'
-import type { World } from '@/lib/v3/version'
 import type { Audience } from '@/lib/v3/audience'
 import FilterBar from '../FilterBar'
 import PaceChart from './PaceChart'
@@ -10,27 +9,22 @@ import Receivables from './Receivables'
 import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
-import Hud from './Hud'
 import PostGrid from '../PostGrid'
 import GrowthRhythm from '../GrowthRhythm'
-import Circle from '../Circle'
-import { rmFull, money, pct, compact, longDate, num } from '../fmt'
+import { rmFull, pct, compact, num } from '../fmt'
 
-// 👉 Dashboard v3 — the creator studio. One composition in every world, led by
-// the three questions in PRODUCT.md. Only the first viewport differs by world,
-// exactly as each world's direction contract describes.
+// 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
+// The daily pulse: deeper money analysis lives on Invoice Summary.
 
 export default function Dashboard({
   rows,
   filters,
-  world,
   audience,
   metrics = [],
   demo = false,
 }: {
   rows: Rec[]
   filters: Filters
-  world: World
   audience: Audience
   metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
@@ -39,18 +33,7 @@ export default function Dashboard({
   const risk = clientRisk(rows, filters, s.today)
   const rvw = reachVsWork(rows, filters, postReach(audience.snap?.posts ?? [], metrics), s.today)
   const { stats } = audience
-  // Battery: owed vs income over the SAME invoices — filtered, ringgit only,
-  // last 120 days — so a client filter can't compare one client with everyone.
-  const owedRm = s.owed.filter(o => o.currency === 'MYR')
-  const recentTotal = owedRm.reduce((t, o) => t + o.amount, 0)
-  const recentIncome = s.recentIncome
-  const latestNo = [...rows]
-    .filter(r => r.category === 'cash_in' && r.meta?.invoice_no)
-    .map(r => String(r.meta?.invoice_no))
-    .sort()
-    .at(-1)
   const up = (s.pacePct ?? 0) >= 0
-  const hist = audience.history
   const reach30 = audience.view?.totals.reach ?? 0
   const engaged30 = audience.view?.totals.accounts_engaged
   const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
@@ -58,7 +41,6 @@ export default function Dashboard({
   const newPct = audience.view?.newPeoplePct ?? null
   const netFollows =
     audience.view?.follows != null && audience.view?.unfollows != null ? audience.view.follows - audience.view.unfollows : null
-  const growth = hist.length >= 2 && hist.at(-1)!.date !== hist[0].date ? hist.at(-1)!.followers - hist[0].followers : null
   const trackLine =
     s.pacePct === null
       ? `No ${s.year - 1} invoices to compare against.`
@@ -78,95 +60,9 @@ export default function Dashboard({
 
       <FilterBar filters={filters} clients={s.allClients} />
 
-      {/* ---------------- The first viewport: one per world ---------------- */}
+      {/* ---------------- The first viewport: the key figures ---------------- */}
 
-      {world === 'contact' ? (
-        <section className="v3-hero v3-sheet-hero v3-enter" aria-label="The three questions">
-          <figure className="v3-print" style={{ margin: 0 }}>
-            <span className="v3-frame-no">
-              {latestNo ?? 'SYCP'} ▸ {longDate(s.today).toUpperCase()}
-            </span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/klcc-merdeka.jpg" alt="KLCC on Merdeka night, photographed by Aereon" />
-            <figcaption className="v3-print-caption">
-              <p className="v3-print-figure">
-                <span className="cur">RM</span>
-                {Math.round(s.ytd).toLocaleString('en-MY')}
-              </p>
-              <p className="v3-print-line">
-                <span className="long">invoiced in {s.year} · </span>
-                {s.pacePct === null ? `invoiced in ${s.year}` : (
-                  <>
-                    <b>{pct(s.pacePct)}</b> on {s.year - 1}
-                    <span className="long"> at this point</span>
-                  </>
-                )}
-              </p>
-            </figcaption>
-          </figure>
-
-          <div className="v3-sheet-notes">
-            <a className="v3-sheet-note" href="#on-track">
-              <p className="q">On track this year?</p>
-              <span className="a">
-                <Circle drawn />
-                {s.pacePct === null ? 'No data' : up ? 'Yes' : 'Behind'}
-              </span>
-              <p className="n">
-                Heading for {rmFull(s.projection)} at this pace · {s.year - 1} closed at {rmFull(s.lastFull)}
-              </p>
-            </a>
-            <a className="v3-sheet-note" href="#audience">
-              <p className="q">Audience growing?</p>
-              <span className="a">
-                <Circle drawn />
-                {growth === null ? 'Too early' : `${growth >= 0 ? '+' : ''}${num(growth)}`}
-              </span>
-              <p className="n">
-                {growth === null
-                  ? `Tracking ${compact(audience.followers)} followers from ${audience.history[0] ? longDate(audience.history[0].date) : 'today'}`
-                  : `followers since ${longDate(audience.history[0].date)} · ${num(audience.followers)} now`}
-              </p>
-            </a>
-            <a className="v3-sheet-note" href="#owed">
-              <p className="q">Who owes me?</p>
-              <span className="a">
-                <Circle drawn />
-                {rmFull(s.owedTotal)}
-              </span>
-              <p className="n">
-                {s.owed.length} invoice{s.owed.length === 1 ? '' : 's'} tracked as unpaid
-                {s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
-              </p>
-            </a>
-          </div>
-
-          <div className="v3-sheet-strip">
-            <Strip frames={s.frames} bestKey={s.bestMonth?.key ?? null} world={world} />
-          </div>
-        </section>
-      ) : null}
-
-      {world === 'hud' ? (
-        <Hud
-          year={s.year}
-          pace={s.pace}
-          frames={s.frames}
-          projection={s.projection}
-          lastFull={s.lastFull}
-          owedTotal={recentTotal}
-          owedCount={owedRm.length}
-          recentTotal={recentIncome}
-          recentPaid={s.recentPaid}
-          untracked={s.untracked}
-          reachPerPost={stats?.reachPerPost ?? 0}
-          reachWindow={postWindow}
-          followers={audience.followers}
-        />
-      ) : null}
-
-      {world === 'canon' ? (
-        <section className="v3-hero v3-kpis" aria-label="Key figures">
+      <section className="v3-hero v3-kpis" aria-label="Key figures">
           <a className="v3-kpi" href="#on-track">
             <div className="v3-kpi-label">Invoiced this year</div>
             <div className="v3-kpi-value">
@@ -202,10 +98,9 @@ export default function Dashboard({
               {compact(audience.followers)} followers
             </div>
           </a>
-        </section>
-      ) : null}
+      </section>
 
-      {/* ---------------- The body: shared by every world ---------------- */}
+      {/* ---------------- The body ---------------- */}
 
       <div className="v3-grid">
         <section className="v3-panel v3-span-12" id="on-track" aria-labelledby="t-track">
@@ -280,43 +175,17 @@ export default function Dashboard({
             ) : (
               <p className="v3-empty">No clients in this range.</p>
             )}
-            {/* Contact Sheet circles its keepers; elsewhere they only repeat Biggest clients. */}
-            {world === 'contact' && s.keepers.length ? (
-              <div style={{ marginTop: 'var(--space-5)' }}>
-                <h3 className="v3-panel-title" style={{ fontSize: 'var(--t-md)', marginBottom: 'var(--space-2)' }}>
-                  The keepers
-                </h3>
-                <div className="v3-rows">
-                  {s.keepers.map(k => (
-                    <div key={k.id} className="v3-row">
-                      <div className="v3-row-main">
-                        <div className="v3-row-title">{k.client}</div>
-                        <div className="v3-row-sub">
-                          <span className="code">{k.no}</span> · {k.kind}
-                        </div>
-                      </div>
-                      <div className="v3-row-num" style={{ position: 'relative', padding: '0 6px' }}>
-                        {world === 'contact' ? <Circle drawn /> : null}
-                        {rmFull(k.amount)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </section>
 
-        {world === 'canon' ? (
-          <section className="v3-panel v3-span-12" aria-labelledby="t-strip">
+        <section className="v3-panel v3-span-12" aria-labelledby="t-strip">
             <div className="v3-panel-head">
               <h2 className="v3-panel-title" id="t-strip">
                 {s.year}, month by month
               </h2>
               <p className="v3-panel-note">Click a month to filter the page to it</p>
             </div>
-            <Strip frames={s.frames} bestKey={s.bestMonth?.key ?? null} world={world} />
+            <Strip frames={s.frames} bestKey={s.bestMonth?.key ?? null} />
           </section>
-        ) : null}
 
         <section className="v3-panel v3-span-12" id="audience" aria-labelledby="t-aud">
           <div className="v3-panel-head">
@@ -368,7 +237,7 @@ export default function Dashboard({
                   <GrowthRhythm days={audience.daily} posts={audience.snap?.posts ?? []} median={stats.baseline.median} />
                 </div>
               ) : null}
-              <PostGrid posts={audience.top} limit={6} circleFirst={world === 'contact'} lift={stats.lift} />
+              <PostGrid posts={audience.top} limit={6} lift={stats.lift} />
             </>
           ) : (
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>

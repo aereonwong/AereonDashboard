@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { IgPost } from '@/lib/instagram'
 import Icon from '@/app/_components/Icon'
-import Circle from './Circle'
 import { compact, num } from './fmt'
 
 // Top Instagram posts as frames. Clicking one opens Instagram's own player for
@@ -15,12 +14,10 @@ const isVideo = (p: IgPost) => /REEL|VIDEO/i.test(p.type)
 export default function PostGrid({
   posts,
   limit = 6,
-  circleFirst = false,
   lift,
 }: {
   posts: IgPost[]
   limit?: number
-  circleFirst?: boolean
   /** Reach as a multiple of the account's median post; shown when it is notable. */
   lift?: Record<string, number>
 }) {
@@ -83,7 +80,6 @@ export default function PostGrid({
                 {lift[p.id] >= 10 ? Math.round(lift[p.id]) : lift[p.id].toFixed(1)}× typical
               </span>
             ) : null}
-            {circleFirst && i === 0 ? <Circle drawn /> : null}
             <span className="v3-post-meta">
               <span className="v3-post-reach num">
                 {compact(p.reach ?? 0)}

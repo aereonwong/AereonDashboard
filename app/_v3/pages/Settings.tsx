@@ -1,10 +1,10 @@
-import type { Version, World } from '@/lib/v3/catalog'
+import type { Version } from '@/lib/v3/catalog'
 import type { Site } from '@/lib/v3/site'
 import DemoToggle from '@/app/_components/DemoToggle'
-import { VersionAndWorld, Theme, LandingSwitch } from '../SettingsControls'
+import { VersionPicker, Theme, LandingSwitch } from '../SettingsControls'
 
 // 👉 v3 Settings: what you actually change, in the order you change it.
-export default function Settings({ version, world, site, demo }: { version: Version; world: World; site: Site; demo: boolean }) {
+export default function Settings({ version, site, demo }: { version: Version; site: Site; demo: boolean }) {
   return (
     <div>
       <header className="v3-head">
@@ -22,7 +22,7 @@ export default function Settings({ version, world, site, demo }: { version: Vers
             </h2>
             <p className="v3-panel-note">All three read the same records; only the layout changes</p>
           </div>
-          <VersionAndWorld version={version} world={world} />
+          <VersionPicker version={version} />
         </section>
 
         <section className="v3-panel v3-span-6" aria-labelledby="t-theme">
@@ -31,10 +31,6 @@ export default function Settings({ version, world, site, demo }: { version: Vers
               Light or dark
             </h2>
           </div>
-          <p className="v3-panel-note" style={{ marginBottom: 'var(--space-4)' }}>
-            Applies to Studio Standard. Contact Sheet and Flight HUD are night worlds by design — a light table and a live
-            feed are both read in the dark.
-          </p>
           <Theme />
         </section>
 
@@ -57,7 +53,7 @@ export default function Settings({ version, world, site, demo }: { version: Vers
             </h2>
             <p className="v3-panel-note">What anyone opening the site&rsquo;s address sees</p>
           </div>
-          <LandingSwitch landing={site.landing} world={site.world} kit={site.kit} />
+          <LandingSwitch landing={site.landing} kit={site.kit} />
         </section>
       </div>
     </div>

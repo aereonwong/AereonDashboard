@@ -88,9 +88,10 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 ## Dashboard v3 — the creator studio
 
 A whole-app version chosen per device in Settings, beside v1 and v2. See `app/_v3/CLAUDE.md` for
-its structure, design-system pointers, and per-world rules. **Design direction (2 Oct 2026):**
-Aereon prefers Studio Standard (`canon`) and the classic look; new UI work targets those, not
-Contact Sheet or Flight HUD.
+its structure and design-system pointers. **One look since 3 Oct 2026: Studio Standard** (`canon`) —
+Contact Sheet and Flight HUD were removed at Aereon's request. **Only v3 is developed**; v1 and v2
+stay as they are (they must still build). Analytics or design changes cover Dashboard, Invoice
+Summary, Invoice Details, Instagram and Clients together.
 
 **Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
