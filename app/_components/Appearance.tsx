@@ -10,7 +10,7 @@ type Mode = 'auto' | 'light' | 'dark'
 type Glass = 'clear' | 'frosted' | 'solid'
 type Font = 'grotesk' | 'sora' | 'archivo' | 'system'
 type Bg = 'merdeka' | 'sunset' | 'off'
-import { VERSIONS, WORLDS, type World } from '@/lib/v3/catalog'
+import { VERSIONS } from '@/lib/v3/catalog'
 
 type Dash = 'v1' | 'v2' | 'v3'
 
@@ -71,15 +71,12 @@ export default function Appearance() {
   const [font, setFont] = useState<Font>('grotesk')
   const [bg, setBg] = useState<Bg>('merdeka')
   const [dash, setDash] = useState<Dash>('v3')
-  const [world, setWorld] = useState<World>('canon')
 
   // The dashboard layout lives in a cookie so the server can read it; mirror it
   // into state on mount so the right card shows as selected.
   useEffect(() => {
     const d = document.cookie.match(/(?:^|;\s*)cfo-dash=(v1|v2|v3)(?:;|$)/)?.[1] as Dash | undefined
     setDash(d ?? 'v3')
-    const w = document.cookie.match(/(?:^|;\s*)cfo-v3=(contact|hud|canon)(?:;|$)/)?.[1] as World | undefined
-    if (w) setWorld(w)
   }, [])
 
   useEffect(() => {
@@ -155,30 +152,6 @@ export default function Appearance() {
             </button>
           ))}
         </div>
-        {dash === 'v3' ? (
-          <>
-            <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>v3 world</h3>
-            <p className="sub">The same studio in three looks. Switch any time.</p>
-            <div className="layoutpick">
-              {WORLDS.map(w => (
-                <button
-                  key={w.id}
-                  type="button"
-                  className={`layoutcard${world === w.id ? ' on' : ''}`}
-                  aria-pressed={world === w.id}
-                  onClick={() => {
-                    setWorld(w.id)
-                    document.cookie = `cfo-v3=${w.id}; path=/; max-age=31536000; samesite=lax`
-                    router.refresh()
-                  }}
-                >
-                  <span className="layoutlabel">{w.name}</span>
-                  <span className="layoutnote">{w.note}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        ) : null}
       </div>
 
       <div className="set-section">

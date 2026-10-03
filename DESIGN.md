@@ -1,6 +1,6 @@
 ---
 name: Aereon Studio v3
-description: Creator studio. One shared structure, three visual worlds (Contact Sheet, Flight HUD, Studio Standard) chosen by data-world on the .v3 root.
+description: Creator studio in Studio Standard (data-world="canon" on the .v3 root). Contact Sheet and Flight HUD were removed on 3 Oct 2026; their entries below are kept as history only.
 colors:
   contact-ground: "#0D0D0D"
   contact-film: "#161616"

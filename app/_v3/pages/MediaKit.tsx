@@ -1,10 +1,8 @@
 import '../v3.css'
 import { v3Fonts } from '../fonts'
-import type { World } from '@/lib/v3/catalog'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import PostGrid from '../PostGrid'
-import Circle from '../Circle'
 import Icon from '@/app/_components/Icon'
 import { compact, num } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
@@ -28,13 +26,11 @@ const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
 export default function MediaKit({
-  world,
   audience,
   brands,
   kinds,
   since,
 }: {
-  world: World
   audience: Audience
   brands: string[]
   kinds: WorkKind[]
@@ -53,7 +49,7 @@ export default function MediaKit({
   const engage = v?.reach && v.accounts_engaged ? `${((v.accounts_engaged / v.reach) * 100).toFixed(1)}%` : null
 
   return (
-    <div className={`v3 v3-kit ${v3Fonts}`} data-world={world}>
+    <div className={`v3 v3-kit ${v3Fonts}`} data-world="canon">
       <div className="v3-backdrop" aria-hidden="true" />
       <div className="v3-kit-inner">
         <header className="v3-kit-top">
@@ -71,33 +67,6 @@ export default function MediaKit({
 
         {/* ---------------- The first viewport: the work is the proof ---------------- */}
         <section className="v3-kit-hero" aria-label="Introduction">
-          {world === 'contact' ? (
-            <div className="v3-kit-sheet">
-              <figure className="v3-kit-print">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/img/klcc-merdeka.jpg" alt="KLCC lit for Merdeka, photographed from the air by Aereon Wong" />
-                <figcaption>
-                  <span className="v3-kit-name">Aereon Wong</span>
-                  <span className="v3-kit-role">Tech &amp; travel, shot from the sky</span>
-                </figcaption>
-              </figure>
-              <div className="v3-kit-frames" aria-hidden="true">
-                <span className="v3-kit-frame">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/img/klcc-sunset.jpg" alt="" />
-                </span>
-                <span className="v3-kit-frame">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/img/klcc-balloon.jpg" alt="" />
-                  <Circle drawn />
-                </span>
-                <span className="v3-kit-frame">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/img/aereon.jpg" alt="" />
-                </span>
-              </div>
-            </div>
-          ) : (
             <div className="v3-kit-split">
               <div>
                 <h1 className="v3-kit-headline">
@@ -121,37 +90,9 @@ export default function MediaKit({
               </div>
               <figure className="v3-kit-portrait">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={world === 'hud' ? '/img/klcc-merdeka.jpg' : '/img/aereon.jpg'} alt={world === 'hud' ? 'KLCC lit for Merdeka, from the air' : 'Aereon Wong'} />
-                {world === 'hud' ? (
-                  <figcaption className="v3-kit-hud">
-                    <span>KLCC · MERDEKA NIGHT</span>
-                    <span className="v3-kit-rec">
-                      <i aria-hidden="true" /> REC
-                    </span>
-                  </figcaption>
-                ) : null}
+                <img src="/img/aereon.jpg" alt="Aereon Wong" />
               </figure>
             </div>
-          )}
-          {world === 'contact' ? (
-            <div className="v3-kit-intro">
-              <div>
-                <p className="v3-kit-blurb">
-                  Creative visual travel content creator and professional drone pilot in Kuala Lumpur. Aerial films, launch
-                  campaigns, hotels and tourism — from KLCC rooftops to island resorts.
-                </p>
-                <span className="v3-kit-credential">CAAM-licensed drone pilot</span>
-              </div>
-              <div className="v3-kit-ctas">
-                <a className="v3-btn v3-btn-primary" href={`mailto:${EMAIL}?subject=Collaboration`}>
-                  Book a collaboration
-                </a>
-                <a className="v3-btn" href={IG} target="_blank" rel="noopener noreferrer">
-                  <Icon name="instagram" /> @aereonwong
-                </a>
-              </div>
-            </div>
-          ) : null}
         </section>
 
         {/* ---------------- Reach ---------------- */}
@@ -190,7 +131,7 @@ export default function MediaKit({
             <h2 className="v3-kit-h2" id="k-work">
               Best work, last 3 months
             </h2>
-            <PostGrid posts={audience.best} limit={6} circleFirst={world === 'contact'} />
+            <PostGrid posts={audience.best} limit={6} />
           </section>
         ) : null}
 

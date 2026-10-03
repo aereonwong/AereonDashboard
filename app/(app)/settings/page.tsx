@@ -10,8 +10,8 @@ import { readSite } from '@/lib/v3/site'
 export const dynamic = 'force-dynamic'
 
 export default async function Settings() {
-  const [demo, { version, world }, site] = await Promise.all([demoMode(), readVersion(), readSite()])
-  if (version === 'v3') return <V3Settings version={version} world={world} site={site} demo={demo} />
+  const [demo, { version }, site] = await Promise.all([demoMode(), readVersion(), readSite()])
+  if (version === 'v3') return <V3Settings version={version} site={site} demo={demo} />
   return (
     <>
       <h1 className="ph">Settings ⚙️</h1>

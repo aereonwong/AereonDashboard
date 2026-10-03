@@ -1,13 +1,11 @@
 import '../v3.css'
 import '../kit2.css'
 import { v3Fonts } from '../fonts'
-import type { World } from '@/lib/v3/catalog'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import type { Share } from '@/lib/instagram'
 import PostGrid from '../PostGrid'
 import AudienceBreakdown from '../AudienceBreakdown'
-import Circle from '../Circle'
 import Icon from '@/app/_components/Icon'
 import { Reveal, CountUp } from '../KitMotion'
 import { compact, longDate, shortDate } from '../fmt'
@@ -20,8 +18,7 @@ import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 // brand actually asks — who are they, where are they, does the work reach past
 // the fan base, and do people watch it — from Instagram's own account insights.
 //
-// The composition is shared by all three worlds; only material changes, as in
-// DESIGN.md. One authored moment: the reach skyline, thirty days of daily reach
+// Drawn in Studio Standard. One authored moment: the reach skyline, thirty days of daily reach
 // rising as a city line on scroll — the same skyline Aereon flies over.
 //
 // Hard rules kept from v1: no client names, no amounts, no private business data,
@@ -42,12 +39,10 @@ const IG = 'https://www.instagram.com/aereonwong/'
 const inTen = (pct: number) => `${Math.max(1, Math.round(pct / 10))} in 10`
 
 export default function MediaKit2({
-  world,
   audience,
   kinds,
   since,
 }: {
-  world: World
   audience: Audience
   kinds: WorkKind[]
   since: string
@@ -75,7 +70,7 @@ export default function MediaKit2({
   const updated = view?.capturedAt ?? audience.snap?.captured_at
 
   return (
-    <div className={`v3 v3-kit v3-k2 ${v3Fonts}`} data-world={world}>
+    <div className={`v3 v3-kit v3-k2 ${v3Fonts}`} data-world="canon">
       {/* ------------------------------------------------ the first viewport */}
       <header className="v3-k2-hero">
         <div className="v3-k2-photo" aria-hidden="true">
@@ -94,15 +89,6 @@ export default function MediaKit2({
             </a>
           </span>
         </nav>
-        {world === 'hud' ? (
-          <div className="v3-k2-hud" aria-hidden="true">
-            <span>KLCC · MERDEKA NIGHT · 3.153°N 101.712°E</span>
-            <span className="v3-kit-rec">
-              <i /> REC
-            </span>
-          </div>
-        ) : null}
-
         <div className="v3-k2-hero-body">
           <h1 className="v3-k2-headline">
             <span className="v3-k2-line">
@@ -199,7 +185,6 @@ export default function MediaKit2({
                           <span className="v3-k2-peak">
                             <span className="v3-k2-peak-v">{compact(d.reach ?? 0)}</span>
                             <span className="v3-k2-peak-d">{shortDate(d.day)}</span>
-                            {world === 'contact' ? <Circle drawn /> : null}
                           </span>
                         ) : null}
                       </span>
@@ -304,7 +289,7 @@ export default function MediaKit2({
               Best work, last 3 months
             </h2>
             <p className="v3-k2-note">The furthest-travelling posts of the past three months — tap one to play it.</p>
-            <PostGrid posts={audience.best.slice(0, 8)} limit={8} circleFirst={world === 'contact'} />
+            <PostGrid posts={audience.best.slice(0, 8)} limit={8} />
           </Reveal>
         ) : null}
 

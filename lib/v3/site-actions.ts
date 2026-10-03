@@ -13,7 +13,7 @@ import { readSite, siteRow, type Site } from './site'
 const pick = (patch: Partial<Site>): Partial<Site> => {
   const out: Partial<Site> = {}
   if (patch.landing === 'classic' || patch.landing === 'kit') out.landing = patch.landing
-  if (patch.world === 'contact' || patch.world === 'hud' || patch.world === 'canon') out.world = patch.world
+  if (patch.world === 'canon') out.world = patch.world
   if (patch.kit === 'v1' || patch.kit === 'v2') out.kit = patch.kit
   return out
 }

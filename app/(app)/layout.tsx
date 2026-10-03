@@ -9,11 +9,11 @@ import V3Shell from '@/app/_v3/Shell'
 // The dashboard chrome: sidebar on desktop, bottom bar on phones. Everything
 // inside app/(app)/ gets it; the landing page and /login do not.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [pending, demo, { version, world }] = await Promise.all([getPendingCount(), demoMode(), readVersion()])
+  const [pending, demo, { version }] = await Promise.all([getPendingCount(), demoMode(), readVersion()])
   // v3 is a whole-app version with its own chrome; v1 and v2 share the classic one.
   if (version === 'v3') {
     return (
-      <V3Shell world={world} pending={pending} demo={demo}>
+      <V3Shell pending={pending} demo={demo}>
         {children}
       </V3Shell>
     )

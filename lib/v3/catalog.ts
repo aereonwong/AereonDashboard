@@ -1,15 +1,16 @@
-// 👉 The version and world catalogue — pure data, safe to import from client
+// 👉 The version catalogue (and v3's one world) — pure data, safe to import from client
 // components (Settings) as well as the server. Reading the cookie lives in version.ts.
 
 export type Version = 'v1' | 'v2' | 'v3'
-export type World = 'contact' | 'hud' | 'canon'
+/** v3 has one look since 3 Oct 2026: Studio Standard. Contact Sheet and Flight HUD were removed. */
+export type World = 'canon'
 
 export const VERSIONS: { id: Version; name: string; date: string; note: string }[] = [
   {
     id: 'v3',
     name: 'Creator studio',
     date: '26 Sep 2026',
-    note: 'A full redesign around your three questions: on track, audience, and who owes you. Filters, charts and a News desk, in a world you choose.',
+    note: 'A full redesign around your three questions: on track, audience, and who owes you. Filters, charts and a News desk, in Studio Standard.',
   },
   {
     id: 'v2',
@@ -26,16 +27,6 @@ export const VERSIONS: { id: Version; name: string; date: string; note: string }
 ]
 
 export const WORLDS: { id: World; name: string; note: string }[] = [
-  {
-    id: 'contact',
-    name: 'Contact Sheet',
-    note: 'Your year printed as a photographer’s contact sheet on a night light table. Keepers circled in grease pencil, invoice numbers along the film edge.',
-  },
-  {
-    id: 'hud',
-    name: 'Flight HUD',
-    note: 'Your business read as live drone telemetry: income as altitude, pace as ground speed, money owed as the battery.',
-  },
   {
     id: 'canon',
     name: 'Studio Standard',
