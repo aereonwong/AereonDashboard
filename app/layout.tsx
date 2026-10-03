@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var d=document.documentElement,g=localStorage;var m=g.getItem('cfo-theme'),a=g.getItem('cfo-accent'),gl=g.getItem('cfo-glass'),f=g.getItem('cfo-font'),b=g.getItem('cfo-bg');if(m==='light'||m==='dark')d.setAttribute('data-theme',m);if(a&&a!=='blue')d.setAttribute('data-accent',a);if(gl==='clear'||gl==='solid')d.setAttribute('data-glass',gl);d.setAttribute('data-font',f||'grotesk');d.setAttribute('data-bg',b==='photo'?'merdeka':(b||'merdeka'))}catch(e){document.documentElement.setAttribute('data-font','grotesk');document.documentElement.setAttribute('data-bg','merdeka')}",
+              "try{var d=document.documentElement,g=localStorage;var m=g.getItem('cfo-theme'),a=g.getItem('cfo-accent'),gl=g.getItem('cfo-glass'),f=g.getItem('cfo-font'),b=g.getItem('cfo-bg');if(m==='light'||m==='dark')d.setAttribute('data-theme',m);if(a&&a!=='blue')d.setAttribute('data-accent',a);if(gl==='clear'||gl==='solid')d.setAttribute('data-glass',gl);d.setAttribute('data-font',f||'grotesk');d.setAttribute('data-bg',b==='photo'?'merdeka':(b||'merdeka'));var v=g.getItem('cfo-v3-accent');if(v&&v!=='indigo')d.setAttribute('data-v3accent',v)}catch(e){document.documentElement.setAttribute('data-font','grotesk');document.documentElement.setAttribute('data-bg','merdeka')}",
           }}
         />
       </head>

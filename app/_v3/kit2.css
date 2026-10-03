@@ -226,3 +226,91 @@
     background: linear-gradient(180deg, rgba(5, 5, 5, 0.5) 0%, rgba(5, 5, 5, 0.25) 20%, rgba(5, 5, 5, 0.7) 45%, rgba(5, 5, 5, 0.9) 85%) !important;
   }
 }
+
+/* ============================================================================
+   Media kit v2, reworked 3 Oct 2026 (.k3): the Front door's calm — one KLCC night
+   photo behind everything, the portrait first, glass tiles, one tidy row per
+   section. Always dark: it sits on a night photograph.
+   ========================================================================== */
+.k3 { --k-ink: #F7F8FA; --k-ink-2: rgba(247, 248, 250, 0.78); --k-ink-3: rgba(247, 248, 250, 0.62); --k-glass: rgba(14, 18, 26, 0.52);
+  --k-line: rgba(255, 255, 255, 0.12); --k-accent: #8B8CF7; /* fixed: the kit is always dark, whatever the device theme */
+  position: relative; min-height: 100vh; color: var(--k-ink); background: #05080D; overflow-x: hidden; font-family: var(--f-ui); }
+.k3 .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.k3-photo { position: fixed; inset: 0; background: url(/img/klcc-merdeka.jpg) center 30% / cover no-repeat; transform: scale(1.04); animation: k3-drift 26s ease-in-out infinite alternate; }
+.k3-scrim { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(3, 8, 14, 0.62) 0%, rgba(3, 8, 14, 0.72) 40%, rgba(3, 8, 14, 0.94) 100%); }
+@keyframes k3-drift { to { transform: scale(1.1) translate3d(-1%, -1%, 0); } }
+.k3-inner { position: relative; max-width: 1120px; margin: 0 auto; padding: 30px 24px 48px; display: flex; flex-direction: column; gap: 64px; }
+
+.k3-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.k3-mark { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.14em; font-size: 12px; text-transform: uppercase; }
+.k3-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 0 14px var(--k-accent); }
+.k3-links { display: flex; align-items: center; gap: 18px; font-size: 13px; }
+.k3-links a { color: var(--k-ink-2); text-decoration: none; }
+.k3-links a:hover { color: var(--k-ink); }
+.k3-enter { padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.28); color: var(--k-ink) !important; }
+
+.k3-hero { display: flex; flex-direction: column; gap: 22px; padding-top: 6vh; }
+.k3-person { display: flex; align-items: center; gap: 14px; }
+.k3-face { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4); }
+.k3-name { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.k3-role { margin: 3px 0 0; font-size: 12.5px; letter-spacing: 0.04em; color: var(--k-ink-2); }
+.k3-headline { margin: 0; font-family: var(--f-display); font-size: clamp(44px, 7.4vw, 92px); line-height: 0.98; letter-spacing: -0.035em; font-weight: 700; }
+.k3-tint { color: var(--k-accent); }
+.k3-blurb { margin: 0; max-width: 60ch; font-size: 16px; line-height: 1.6; color: var(--k-ink-2); }
+.k3-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.k3-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; text-decoration: none; transition: transform 160ms ease, background 160ms ease; }
+.k3-btn svg { width: 16px; height: 16px; }
+.k3-btn.solid { background: var(--k-accent); color: #0A0A0B; } /* the kit is always dark, so its accent is the light shade: dark text reads (white was 2.9:1) */
+.k3-btn.ghost { border: 1px solid rgba(255, 255, 255, 0.3); color: var(--k-ink); background: rgba(255, 255, 255, 0.06); }
+.k3-btn:hover { transform: translateY(-1px); }
+
+.k3-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 0; }
+.k3-stat, .k3-card, .k3-logos { background: var(--k-glass); border: 1px solid var(--k-line); border-radius: 16px; backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); }
+.k3-stat { padding: 16px 18px; display: flex; flex-direction: column-reverse; gap: 4px; }
+.k3-stat dd { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.k3-stat dt { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--k-ink-3); }
+
+.k3-section { display: flex; flex-direction: column; gap: 18px; }
+.k3-h2 { margin: 0; font-family: var(--f-display); font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -0.02em; font-weight: 650; }
+.k3-cards { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 12px; }
+.k3-cards-3 { --cols: 3; }
+.k3-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.k3-card h3 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--k-ink-3); }
+.k3-note { margin: 0; font-size: 14px; line-height: 1.55; color: var(--k-ink-2); }
+.k3-share { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.k3-share li { display: grid; grid-template-columns: minmax(0, 1fr) 90px 3.2em; gap: 10px; align-items: center; font-size: 14px; }
+.k3-share-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k3-share-bar { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.k3-share-bar i { display: block; height: 100%; width: calc(var(--w, 0) * 100%); background: var(--k-accent); border-radius: 3px; }
+.k3-share b { text-align: right; font-weight: 600; }
+.k3-gender { display: flex; gap: 24px; }
+.k3-gender p { margin: 0; font-size: 14px; color: var(--k-ink-2); }
+.k3-gender b { display: block; font-size: 30px; color: var(--k-ink); letter-spacing: -0.02em; }
+
+.k3-posts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.k3-posts a { position: relative; display: block; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, 0.06); color: var(--k-ink); text-decoration: none; }
+.k3-posts img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 400ms ease; }
+.k3-posts a:hover img { transform: scale(1.04); }
+.k3-post-fallback { position: absolute; inset: 0; padding: 12px; font-size: 12px; line-height: 1.4; color: var(--k-ink-2); }
+.k3-post-reach { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 10px 9px; font-size: 11px; color: var(--k-ink-2); background: linear-gradient(transparent, rgba(0, 0, 0, 0.75)); }
+.k3-post-reach b { font-size: 15px; color: #fff; margin-right: 3px; }
+
+.k3-logos { list-style: none; margin: 0; padding: 10px; display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 0; }
+.k3-logos li { display: grid; place-items: center; min-height: 92px; padding: 14px; border-radius: 12px; }
+.k3-logos li:hover { background: rgba(255, 255, 255, 0.06); }
+.k3 .k3-logos .v3-logo { background: rgba(247, 248, 250, 0.72); }
+.k3 .k3-logos li:hover .v3-logo { background: #fff; }
+
+.k3-close { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; padding: 28px; border-radius: 20px; border: 1px solid var(--k-line);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--k-accent) 26%, transparent), rgba(14, 18, 26, 0.5)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.k3-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--k-ink-3); border-top: 1px solid var(--k-line); padding-top: 18px; }
+
+@media (max-width: 900px) {
+  .k3-cards, .k3-cards-3 { --cols: 1; }
+  .k3-posts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .k3-logos { --cols: 3 !important; }
+  .k3-links a:not(.k3-enter) { display: none; }
+  .k3-inner { gap: 48px; }
+}
+@media (prefers-reduced-motion: reduce) { .k3-photo { animation: none; } .k3-btn, .k3-posts img { transition: none; } }
+.k3-fine { margin: -8px 0 0; font-size: 12px; color: var(--k-ink-3); }
