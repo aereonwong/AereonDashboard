@@ -88,8 +88,8 @@
 .idt-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .idt-no { font-family: var(--f-code, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12.5px; white-space: nowrap; }
 .idt-sub { display: block; font-size: 12px; color: var(--i-dim); margin-top: 1px; }
-.idt-proj { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.idt-client { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idt-proj { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idt-client { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .idt-fx { font-size: 10.5px; border: 1px solid var(--i-line2); border-radius: 99px; padding: 0 5px; margin-right: 4px; color: var(--i-dim); }
 
 .idt-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
@@ -104,8 +104,16 @@
 
 /* ── row actions: icon buttons ──────────────────────────────────────────── */
 .idt-acts { display: flex; gap: 2px; justify-content: flex-end; }
+/* The actions column stays pinned to the right edge, so Preview / Canva / PDF are
+   always in reach even when a narrow window makes the table scroll sideways. */
+.idt-table th:last-child, .idt-table td:last-child {
+  position: sticky; right: 0; z-index: 1;
+  background: var(--i-ground);
+  box-shadow: -1px 0 0 var(--i-line);
+}
+.idt-table th:last-child { z-index: 2; }
 .idt-act {
-  width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
+  width: 30px; height: 30px; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
   background: none; color: var(--i-dim); cursor: pointer; text-decoration: none; position: relative;
 }
 .idt-act:hover { background: color-mix(in srgb, var(--i-ink) 8%, transparent); color: var(--i-ink); }
@@ -258,6 +266,8 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 .idt-paybtn:disabled { opacity: 0.45; cursor: not-allowed; }
 .idt-sub[data-age="mid"] { color: var(--i-warn); }
 .idt-sub[data-age="old"] { color: var(--i-neg); }
+/* "N days since invoice · due …" may wrap, so the Payment column doesn't push the row actions off-screen. */
+.idt-sub[data-age] { white-space: normal; max-width: 150px; }
 .idt-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 12px; padding: 10px 14px; border: 1px dashed var(--i-line2); border-radius: 12px; font-size: 13px; color: var(--i-dim); }
 .idt-bulk input[type="date"] { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); }
 @media (prefers-reduced-motion: reduce) { .idt-paybtn { transition: none; } }
