@@ -1091,3 +1091,37 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-cohort-col .v3-rvw-label, .v3-cohort-col .v3-rvw-num { white-space: nowrap; }
 .v3 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .v3-seg[aria-label="Media kit version"] { max-width: 100%; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- Colour themes
+   One accent at a time (Studio Standard keeps a single accent hue); chosen per
+   device in Settings, replayed before paint as html[data-v3accent]. Green and
+   red stay reserved for paid/overdue, so no theme uses them. */
+html[data-v3accent="skyline"] .v3[data-world="canon"] { --accent: #2563EB; --accent-soft: rgba(37, 99, 235, 0.10); --mark: #2563EB; --mark-soft: rgba(37, 99, 235, 0.10); }
+html[data-v3accent="lagoon"] .v3[data-world="canon"] { --accent: #0E7C86; --accent-soft: rgba(14, 124, 134, 0.10); --mark: #0E7C86; --mark-soft: rgba(14, 124, 134, 0.10); }
+html[data-v3accent="golden"] .v3[data-world="canon"] { --accent: #B45309; --accent-soft: rgba(180, 83, 9, 0.10); --mark: #B45309; --mark-soft: rgba(180, 83, 9, 0.10); }
+html[data-v3accent="orchid"] .v3[data-world="canon"] { --accent: #A21CAF; --accent-soft: rgba(162, 28, 175, 0.10); --mark: #A21CAF; --mark-soft: rgba(162, 28, 175, 0.10); }
+html[data-v3accent="graphite"] .v3[data-world="canon"] { --accent: #27272A; --accent-soft: rgba(39, 39, 42, 0.08); --mark: #27272A; --mark-soft: rgba(39, 39, 42, 0.08); }
+@media (prefers-color-scheme: dark) {
+  html[data-v3accent="skyline"]:not([data-theme="light"]) .v3[data-world="canon"] { --accent: #60A5FA; --accent-soft: rgba(96, 165, 250, 0.14); --mark: #60A5FA; --mark-soft: rgba(96, 165, 250, 0.14); }
+  html[data-v3accent="lagoon"]:not([data-theme="light"]) .v3[data-world="canon"] { --accent: #2DD4BF; --accent-soft: rgba(45, 212, 191, 0.14); --mark: #2DD4BF; --mark-soft: rgba(45, 212, 191, 0.14); }
+  html[data-v3accent="golden"]:not([data-theme="light"]) .v3[data-world="canon"] { --accent: #FBBF24; --accent-soft: rgba(251, 191, 36, 0.14); --mark: #FBBF24; --mark-soft: rgba(251, 191, 36, 0.14); }
+  html[data-v3accent="orchid"]:not([data-theme="light"]) .v3[data-world="canon"] { --accent: #E879F9; --accent-soft: rgba(232, 121, 249, 0.14); --mark: #E879F9; --mark-soft: rgba(232, 121, 249, 0.14); }
+  html[data-v3accent="graphite"]:not([data-theme="light"]) .v3[data-world="canon"] { --accent: #E4E4E7; --accent-soft: rgba(228, 228, 231, 0.12); --mark: #E4E4E7; --mark-soft: rgba(228, 228, 231, 0.12); }
+}
+html[data-theme="dark"][data-v3accent="skyline"] .v3[data-world="canon"] { --accent: #60A5FA; --accent-soft: rgba(96, 165, 250, 0.14); --mark: #60A5FA; --mark-soft: rgba(96, 165, 250, 0.14); }
+html[data-theme="dark"][data-v3accent="lagoon"] .v3[data-world="canon"] { --accent: #2DD4BF; --accent-soft: rgba(45, 212, 191, 0.14); --mark: #2DD4BF; --mark-soft: rgba(45, 212, 191, 0.14); }
+html[data-theme="dark"][data-v3accent="golden"] .v3[data-world="canon"] { --accent: #FBBF24; --accent-soft: rgba(251, 191, 36, 0.14); --mark: #FBBF24; --mark-soft: rgba(251, 191, 36, 0.14); }
+html[data-theme="dark"][data-v3accent="orchid"] .v3[data-world="canon"] { --accent: #E879F9; --accent-soft: rgba(232, 121, 249, 0.14); --mark: #E879F9; --mark-soft: rgba(232, 121, 249, 0.14); }
+html[data-theme="dark"][data-v3accent="graphite"] .v3[data-world="canon"] { --accent: #E4E4E7; --accent-soft: rgba(228, 228, 231, 0.12); --mark: #E4E4E7; --mark-soft: rgba(228, 228, 231, 0.12); }
+/* In dark mode every theme's accent is light, so text sitting on it turns dark. */
+@media (prefers-color-scheme: dark) { html[data-v3accent]:not([data-theme="light"]) .v3[data-world="canon"] { --on-accent: #0A0A0B; } }
+html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0A0A0B; }
+html[data-v3accent] .v3[data-world="canon"] a.v3-btn-primary { color: var(--on-accent, #fff); }
+.v3-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+.v3-swatch { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius); border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: border-color var(--dur) var(--ease); }
+.v3-swatch:hover { border-color: var(--line-2, var(--ink-3)); }
+.v3-swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.v3-swatch-chips { display: flex; gap: 4px; }
+.v3-swatch-chips i { width: 22px; height: 22px; border-radius: 6px; }
+.v3-swatch b { font-size: var(--t-sm); }
+.v3-swatch small { font-size: var(--t-xs); color: var(--ink-3); line-height: 1.35; }

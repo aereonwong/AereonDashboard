@@ -158,3 +158,46 @@ export function LandingSwitch({ landing, kit }: { landing: Landing; kit: KitVers
     </>
   )
 }
+
+// Colour themes: one accent each, so Studio Standard keeps a single accent hue.
+// Green and red stay reserved for paid and overdue, so no theme uses them.
+const ACCENTS = [
+  { id: 'indigo', name: 'Studio Indigo', note: 'The default. Calm, neutral, made for numbers.', light: '#5B5BD6', dark: '#8B8CF7' },
+  { id: 'skyline', name: 'KLCC Skyline', note: 'Night-city blue, like the towers after dark.', light: '#2563EB', dark: '#60A5FA' },
+  { id: 'lagoon', name: 'Island Lagoon', note: 'Resort-water teal for the travel side.', light: '#0E7C86', dark: '#2DD4BF' },
+  { id: 'golden', name: 'Golden Hour', note: 'Warm amber, the light drone pilots wait for.', light: '#B45309', dark: '#FBBF24' },
+  { id: 'orchid', name: 'Orchid', note: 'Bold magenta with a Malaysian-orchid accent.', light: '#A21CAF', dark: '#E879F9' },
+  { id: 'graphite', name: 'Graphite', note: 'Black and white only — the quietest look.', light: '#27272A', dark: '#E4E4E7' },
+] as const
+
+export function AccentPicker() {
+  const [pick, setPick] = useState<string>('indigo')
+  useEffect(() => {
+    try {
+      setPick(localStorage.getItem('cfo-v3-accent') || 'indigo')
+    } catch {}
+  }, [])
+  const choose = (id: string) => {
+    setPick(id)
+    try {
+      if (id === 'indigo') localStorage.removeItem('cfo-v3-accent')
+      else localStorage.setItem('cfo-v3-accent', id)
+    } catch {}
+    if (id === 'indigo') document.documentElement.removeAttribute('data-v3accent')
+    else document.documentElement.setAttribute('data-v3accent', id)
+  }
+  return (
+    <div className="v3-swatches" role="radiogroup" aria-label="Colour theme">
+      {ACCENTS.map(a => (
+        <button key={a.id} type="button" role="radio" className="v3-swatch" aria-checked={pick === a.id} aria-pressed={pick === a.id} onClick={() => choose(a.id)}>
+          <span className="v3-swatch-chips" aria-hidden="true">
+            <i style={{ background: a.light }} />
+            <i style={{ background: a.dark }} />
+          </span>
+          <b>{a.name}</b>
+          <small>{a.note}</small>
+        </button>
+      ))}
+    </div>
+  )
+}

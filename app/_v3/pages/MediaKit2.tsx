@@ -4,25 +4,17 @@ import { v3Fonts } from '../fonts'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import type { Share } from '@/lib/instagram'
-import PostGrid from '../PostGrid'
-import AudienceBreakdown from '../AudienceBreakdown'
 import Icon from '@/app/_components/Icon'
-import { Reveal, CountUp } from '../KitMotion'
-import { compact, longDate, shortDate } from '../fmt'
+import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 
-// 👉 The public creator media kit, version 2 (2 Oct 2026). v1 (MediaKit.tsx) stays
-// selectable in Settings for comparison.
+// 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
+// door's calm: one KLCC night photo behind everything, Aereon's portrait first,
+// glass tiles, and every section one tidy row — no scroll-in gaps.
+// Branding: Tech & Travel Content Creator.
 //
-// What changed: v1 could only say how many people follow. v2 answers what a
-// brand actually asks — who are they, where are they, does the work reach past
-// the fan base, and do people watch it — from Instagram's own account insights.
-//
-// Drawn in Studio Standard. One authored moment: the reach skyline, thirty days of daily reach
-// rising as a city line on scroll — the same skyline Aereon flies over.
-//
-// Hard rules kept from v1: no client names, no amounts, no private business data,
-// and no figure that Instagram did not report. A section without data is left out.
+// Hard rules: no client names, no amounts, no private business data, and no
+// figure that Instagram did not report. A section without data is left out.
 
 const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {
   'Drone / aerial': { title: 'Aerial & drone', line: 'Licensed aerial film and photography — skylines, resorts, launches and drone shows.' },
@@ -35,355 +27,260 @@ const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {
 const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
-/** "7 in 10" reads faster than "68.4%" in a sentence. */
-const inTen = (pct: number) => `${Math.max(1, Math.round(pct / 10))} in 10`
+// The logo wall always fills whole rows: 15 → 5·5·5, 12 → 6·6, 10 → 5·5, 9 → 3·3·3.
+const wallColumns = (n: number) => [5, 6, 4, 3].find(c => n % c === 0 && n / c <= 4) ?? 5
 
-export default function MediaKit2({
-  audience,
-  kinds,
-  since,
-}: {
-  audience: Audience
-  kinds: WorkKind[]
-  since: string
-}) {
-  const { view, stats, daily } = audience
+const Mail = () => (
+  <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="3" />
+    <path d="m3.5 7 8.5 6 8.5-6" />
+  </svg>
+)
+
+function ShareList({ items, max = 4 }: { items: Share[]; max?: number }) {
+  const top = items.slice(0, max)
+  const peak = Math.max(1, ...top.map(s => s.pct))
+  return (
+    <ul className="k3-share">
+      {top.map(s => (
+        <li key={s.key}>
+          <span className="k3-share-label">{s.label}</span>
+          <span className="k3-share-bar" aria-hidden="true">
+            <i style={{ ['--w' as string]: (s.pct / peak).toFixed(3) }} />
+          </span>
+          <b className="num">{Math.round(s.pct)}%</b>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export default function MediaKit2({ audience, kinds, since }: { audience: Audience; kinds: WorkKind[]; since: string }) {
+  const { view } = audience
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
-
-  // Only Instagram's own 30-day account figures are labelled "30 days"; without
-  // them those lines are left out rather than filled with a post total.
-  const reach = view?.totals.reach ?? 0
-  const views = view?.totals.views ?? 0
-  const engaged = view?.totals.accounts_engaged
-  const shares = view?.totals.shares
-  const saves = view?.totals.saves
-  const newPct = view?.newPeoplePct ?? null
-
-  // The skyline: the last 30 days that carry a reach figure.
-  const days = daily.filter(d => d.reach !== undefined).slice(-30)
-  const peak = days.reduce((m, d) => ((d.reach ?? 0) > (m?.reach ?? 0) ? d : m), days[0])
-  const top = Math.max(...days.map(d => d.reach ?? 0), 1)
-
-  const ages = view?.ages ?? []
-
-  const watch = stats?.watch
+  // Instagram's own 30-day account figures — only while fresh (the cron refreshes
+  // daily); an old row would show a stale "30 days", so the tiles are left out.
+  const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
+  const reach = fresh ? (view?.totals.reach ?? 0) : 0
+  const views = fresh ? (view?.totals.views ?? 0) : 0
+  const newPct = fresh ? (view?.newPeoplePct ?? null) : null
+  const adPct = fresh ? (view?.adPct ?? null) : null
+  const posts = audience.best.slice(0, 10) // two rows of five
   const updated = view?.capturedAt ?? audience.snap?.captured_at
+  const women = view?.genders.find(g => /^f/i.test(g.key))
+  const men = view?.genders.find(g => /^m/i.test(g.key))
 
   return (
-    <div className={`v3 v3-kit v3-k2 ${v3Fonts}`} data-world="canon">
-      {/* ------------------------------------------------ the first viewport */}
-      <header className="v3-k2-hero">
-        <div className="v3-k2-photo" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/img/klcc-merdeka.jpg" alt="" fetchPriority="high" />
-        </div>
-        <nav className="v3-k2-top" aria-label="Contact">
-          <span className="v3-k2-mark">Aereon Wong</span>
-          <span className="v3-k2-links">
+    <div className={`v3 v3-kit k3 ${v3Fonts}`} data-world="canon">
+      <div className="k3-photo" aria-hidden="true" />
+      <div className="k3-scrim" aria-hidden="true" />
+
+      <div className="k3-inner">
+        <header className="k3-top">
+          <span className="k3-mark">
+            <span className="k3-dot" aria-hidden="true" /> Aereon Wong
+          </span>
+          <nav className="k3-links" aria-label="Contact">
             <a href={IG} target="_blank" rel="noopener noreferrer">
               Instagram
             </a>
             <a href={`mailto:${EMAIL}`}>Email</a>
-            <a href="/dashboard" className="v3-k2-login">
-              Studio login
+            <a className="k3-enter" href="/dashboard">
+              Studio login →
             </a>
-          </span>
-        </nav>
-        <div className="v3-k2-hero-body">
-          <h1 className="v3-k2-headline">
-            <span className="v3-k2-line">
-              <span>Tech &amp; travel,</span>
-            </span>
-            <span className="v3-k2-line">
-              <span>shot from the sky.</span>
-            </span>
+          </nav>
+        </header>
+
+        {/* ------------------------------------------------ hero */}
+        <section className="k3-hero" aria-label="Introduction">
+          <div className="k3-person">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="k3-face" src="/img/aereon.jpg" alt="Aereon Wong" />
+            <div>
+              <p className="k3-name">Hi, I&rsquo;m Aereon.</p>
+              <p className="k3-role">Tech &amp; Travel Content Creator · drone pilot · Kuala Lumpur</p>
+            </div>
+          </div>
+          <h1 className="k3-headline">
+            Tech &amp; travel,
+            <br />
+            shot from <span className="k3-tint">the sky</span>.
           </h1>
-          <p className="v3-k2-blurb">
-            Aereon Wong — creative travel content creator and CAAM-licensed drone pilot in Kuala Lumpur. Aerial films,
-            launch campaigns, hotels and tourism, from KLCC rooftops to island resorts.
+          <p className="k3-blurb">
+            Creative travel and tech content, and CAAM-licensed aerial work — launch campaigns, hotels and tourism, from
+            KLCC rooftops to island resorts. Creating since {since}.
           </p>
-          <div className="v3-kit-ctas">
-            <a className="v3-btn v3-btn-primary" href={`mailto:${EMAIL}?subject=Collaboration`}>
-              Book a collaboration
+          <div className="k3-cta">
+            <a className="k3-btn solid" href={`mailto:${EMAIL}?subject=Collaboration`}>
+              <Mail /> Work with me
             </a>
-            <a className="v3-btn v3-k2-ghost" href={IG} target="_blank" rel="noopener noreferrer">
+            <a className="k3-btn ghost" href={IG} target="_blank" rel="noopener noreferrer">
               <Icon name="instagram" /> @aereonwong
             </a>
           </div>
-        </div>
 
-        {/* Telemetry along the foot of the frame: three readings, one line. */}
-        <dl className="v3-k2-telemetry">
-          {audience.followers ? (
-            <div>
-              <dt>Followers</dt>
-              <dd>{compact(audience.followers)}</dd>
-            </div>
-          ) : null}
-          {reach ? (
-            <div>
-              <dt>Reached · 30 days</dt>
-              <dd>{compact(reach)}</dd>
-            </div>
-          ) : null}
-          {views ? (
-            <div>
-              <dt>Views · 30 days</dt>
-              <dd>{compact(views)}</dd>
-            </div>
-          ) : null}
-        </dl>
-      </header>
-
-      <main className="v3-k2-main">
-        {/* ------------------------------------------------ reach: the skyline */}
-        {reach ? (
-          <Reveal className="v3-k2-section v3-k2-reach" aria-labelledby="k2-reach">
-            <h2 className="v3-k2-h2" id="k2-reach">
-              Reach
-            </h2>
-            <p className="v3-k2-statement">
-              In the last 30 days the work reached{' '}
-              <b>
-                <CountUp value={reach} format="compact" />
-              </b>{' '}
-              accounts
-              {newPct !== null ? (
-                <>
-                  {' '}— and{' '}
-                  <b className="v3-k2-mark-word">
-                    <CountUp value={newPct} format="pct" />
-                  </b>{' '}
-                  of them did not follow yet. A post here travels past the fan base, to people meeting your brand for the
-                  first time.
-                </>
-              ) : (
-                '.'
-              )}
-            </p>
-            {view?.adPct ? (
-              <p className="v3-k2-fine">
-                Instagram&rsquo;s own &ldquo;accounts reached&rdquo; — about {Math.round(view.adPct)}% of it came through boosted posts.
-              </p>
+          <dl className="k3-stats">
+            {audience.followers ? (
+              <div className="k3-stat">
+                <dd className="num">{compact(audience.followers)}</dd>
+                <dt>Followers</dt>
+              </div>
             ) : null}
-
-            {days.length >= 7 ? (
-              <figure className="v3-k2-skyline" aria-label={`Accounts reached each day, ${shortDate(days[0].day)} to ${shortDate(days.at(-1)!.day)}`}>
-                <div className="v3-k2-bars">
-                  {days.map((d, i) => {
-                    const isPeak = d === peak
-                    return (
-                      <span
-                        key={d.day}
-                        className="v3-k2-bar"
-                        data-peak={isPeak || undefined}
-                        data-edge={i >= days.length - 4 ? 'end' : i < 4 ? 'start' : undefined}
-                        style={{ ['--h' as string]: ((d.reach ?? 0) / top).toFixed(3), ['--i' as string]: i }}
-                        title={`${shortDate(d.day)} · ${compact(d.reach ?? 0)} reached`}
-                      >
-                        {isPeak ? (
-                          <span className="v3-k2-peak">
-                            <span className="v3-k2-peak-v">{compact(d.reach ?? 0)}</span>
-                            <span className="v3-k2-peak-d">{shortDate(d.day)}</span>
-                          </span>
-                        ) : null}
-                      </span>
-                    )
-                  })}
-                </div>
-                <figcaption className="v3-k2-axis">
-                  <span>{shortDate(days[0].day)}</span>
-                  <span>Accounts reached, day by day</span>
-                  <span>{shortDate(days.at(-1)!.day)}</span>
-                </figcaption>
-              </figure>
+            {reach ? (
+              <div className="k3-stat">
+                <dd className="num">{compact(reach)}</dd>
+                <dt>Reached · 30 days</dt>
+              </div>
             ) : null}
-          </Reveal>
-        ) : null}
+            {views ? (
+              <div className="k3-stat">
+                <dd className="num">{compact(views)}</dd>
+                <dt>Views · 30 days</dt>
+              </div>
+            ) : null}
+            {newPct !== null ? (
+              <div className="k3-stat">
+                <dd className="num">{Math.round(newPct)}%</dd>
+                <dt>Of reach · not following yet</dt>
+              </div>
+            ) : null}
+            <div className="k3-stat">
+              <dd>CAAM</dd>
+              <dt>Licensed drone pilot</dt>
+            </div>
+          </dl>
+          {reach && adPct ? (
+            <p className="k3-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
+          ) : null}
+        </section>
 
-        {/* ------------------------------------------------ who is watching */}
-        {view && ages.length ? (
-          <Reveal className="v3-k2-section v3-k2-who" aria-labelledby="k2-who">
-            <h2 className="v3-k2-h2" id="k2-who">
+        {/* ------------------------------------------------ audience */}
+        {view && (view.countries.length || view.ages.length || women || men) ? (
+          <section className="k3-section" aria-labelledby="k3-aud">
+            <h2 className="k3-h2" id="k3-aud">
               Who&rsquo;s watching
             </h2>
-            <div className="v3-k2-who-grid">
-              <p className="v3-k2-statement v3-k2-who-lede">
-                <b>
-                  <CountUp value={audience.followers} format="compact" />
-                </b>{' '}
-                followers.
-                {view.coreAgePct !== null ? (
-                  <>
-                    {' '}
-                    <b>{inTen(view.coreAgePct)}</b> are 25–44 — working adults with their own money to spend.
-                  </>
-                ) : null}
-                {view.homePct !== null ? (
-                  <>
-                    {' '}
-                    <b>
-                      <CountUp value={view.homePct} format="pct" />
-                    </b>{' '}
-                    live in Malaysia
-                    {view.cities[0] ? (
-                      <>
-                        {' '}— <b>{Math.round(view.cities[0].pct)}%</b> in {view.cities[0].label} alone
-                      </>
+            <div className="k3-cards k3-cards-3">
+              {view.countries.length ? (
+                <div className="k3-card">
+                  <h3>Where they are</h3>
+                  <ShareList items={view.countries} />
+                </div>
+              ) : null}
+              {view.ages.length ? (
+                <div className="k3-card">
+                  <h3>Age</h3>
+                  <ShareList items={[...view.ages].sort((a, b) => b.pct - a.pct)} />
+                </div>
+              ) : null}
+              {women || men ? (
+                <div className="k3-card">
+                  <h3>Gender</h3>
+                  <div className="k3-gender">
+                    {women ? (
+                      <p>
+                        <b className="num">{Math.round(women.pct)}%</b> women
+                      </p>
                     ) : null}
-                    .
-                  </>
-                ) : null}
-              </p>
-
-              <AudienceBreakdown view={view} />
+                    {men ? (
+                      <p>
+                        <b className="num">{Math.round(men.pct)}%</b> men
+                      </p>
+                    ) : null}
+                  </div>
+                  {view.cities[0] ? <p className="k3-note">Top city: {view.cities[0].label}</p> : null}
+                </div>
+              ) : null}
             </div>
-          </Reveal>
+          </section>
         ) : null}
 
-        {/* ------------------------------------------------ attention */}
-        {watch || shares || engaged ? (
-          <Reveal className="v3-k2-section v3-k2-attention" aria-labelledby="k2-att">
-            <h2 className="v3-k2-h2" id="k2-att">
-              Watched, not scrolled past
+        {/* ------------------------------------------------ best work */}
+        {posts.length ? (
+          <section className="k3-section" aria-labelledby="k3-work">
+            <h2 className="k3-h2" id="k3-work">
+              Recent best work
             </h2>
-            <p className="v3-k2-statement">
-              {watch ? (
-                <>
-                  Each Reel play holds attention for{' '}
-                  <b>
-                    <CountUp value={watch.avgSec} format="sec" />
-                  </b>{' '}
-                  on average, and the Reels posted this past month have been watched for{' '}
-                  <b>
-                    <CountUp value={watch.totalHours} format="hours" />
-                  </b>{' '}
-                  hours in all.{' '}
-                </>
-              ) : null}
-              {shares ? (
-                <>
-                  People shared the work <b>{compact(shares)}</b> times
-                  {saves ? (
-                    <>
-                      {' '}and saved it <b>{compact(saves)}</b> times
-                    </>
-                  ) : null}
-                  {engaged ? (
-                    <>
-                      , and <b>{compact(engaged)}</b> accounts interacted
-                    </>
-                  ) : null}
-                  .
-                </>
-              ) : null}
-            </p>
-            {view?.formats.length ? <Formats items={view.formats} /> : null}
-          </Reveal>
-        ) : null}
-
-        {/* ------------------------------------------------ the work */}
-        {audience.best.length ? (
-          <Reveal className="v3-k2-section" aria-labelledby="k2-work">
-            <h2 className="v3-k2-h2" id="k2-work">
-              Best work, last 3 months
-            </h2>
-            <p className="v3-k2-note">The furthest-travelling posts of the past three months — tap one to play it.</p>
-            <PostGrid posts={audience.best.slice(0, 8)} limit={8} />
-          </Reveal>
+            <ul className="k3-posts">
+              {posts.map(p => (
+                <li key={p.id}>
+                  <a href={p.permalink} target="_blank" rel="noopener noreferrer" aria-label={`Open on Instagram: ${p.caption.slice(0, 80)}`}>
+                    <span className="k3-post-fallback">{p.caption.slice(0, 90)}</span>
+                    {p.thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.thumb} alt="" loading="lazy" />
+                    ) : null}
+                    {p.reach !== undefined ? (
+                      <span className="k3-post-reach">
+                        <b className="num">{compact(p.reach)}</b> reached
+                      </span>
+                    ) : null}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
 
         {/* ------------------------------------------------ services */}
         {services.length ? (
-          <Reveal className="v3-k2-section" aria-labelledby="k2-make">
-            <h2 className="v3-k2-h2" id="k2-make">
+          <section className="k3-section" aria-labelledby="k3-make">
+            <h2 className="k3-h2" id="k3-make">
               What I make
             </h2>
-            <div className="v3-k2-services">
-              {services.map((sv, i) => (
-                <div key={sv.title} className="v3-k2-service" style={{ ['--i' as string]: i }}>
-                  <h3>{sv.title}</h3>
-                  <p>{sv.line}</p>
+            <div className="k3-cards" style={{ ['--cols' as string]: Math.min(4, services.length) }}>
+              {services.map(s => (
+                <div className="k3-card" key={s.title}>
+                  <h3>{s.title}</h3>
+                  <p className="k3-note">{s.line}</p>
                 </div>
               ))}
             </div>
-          </Reveal>
+          </section>
         ) : null}
 
         {/* ------------------------------------------------ brands */}
-        <Reveal className="v3-k2-section" aria-labelledby="k2-brands">
-          <h2 className="v3-k2-h2" id="k2-brands">
+        <section className="k3-section" aria-labelledby="k3-brands">
+          <h2 className="k3-h2" id="k3-brands">
             Brands I&rsquo;ve made work for
           </h2>
-          <ul className="v3-kit-logos v3-k2-logos">
-            {KIT_BRANDS.map((b, i) => (
-              <li key={b.slug} style={{ ['--i' as string]: i }}>
-                <span className="v3-k2-logo-mark">
-                  <span
-                    className="v3-logo"
-                    aria-hidden="true"
-                    style={{
-                      ['--logo' as string]: `url(/img/brands/${b.slug}.svg)`,
-                      width: logoSize(b.aspect).w,
-                      height: logoSize(b.aspect).h,
-                    }}
-                  />
-                </span>
-                <span className="v3-k2-logo-name">{b.name}</span>
-                <span className="v3-k2-logo-kind">{b.kind}</span>
+          <ul className="k3-logos" style={{ ['--cols' as string]: wallColumns(KIT_BRANDS.length) }}>
+            {KIT_BRANDS.map(b => (
+              <li key={b.slug} title={`${b.name} · ${b.kind}`}>
+                <span
+                  className="v3-logo"
+                  role="img"
+                  aria-label={b.name}
+                  style={{
+                    ['--logo' as string]: `url(/img/brands/${b.slug}.svg)`,
+                    width: logoSize(b.aspect).w,
+                    height: logoSize(b.aspect).h,
+                  }}
+                />
               </li>
             ))}
           </ul>
-        </Reveal>
-      </main>
+        </section>
 
-      {/* ------------------------------------------------ the close */}
-      <footer className="v3-k2-close">
-        <div className="v3-k2-photo v3-k2-photo-close" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/img/klcc-sunset.jpg" alt="" loading="lazy" />
-        </div>
-        <div className="v3-k2-close-body">
-          <h2 className="v3-k2-headline v3-k2-close-h">Let&rsquo;s make something that travels.</h2>
-          <p className="v3-k2-blurb">Based in Kuala Lumpur, working across Malaysia and the region since {since}.</p>
-          <div className="v3-kit-ctas">
-            <a className="v3-btn v3-btn-primary" href={`mailto:${EMAIL}?subject=Collaboration`}>
-              {EMAIL}
+        {/* ------------------------------------------------ close */}
+        <section className="k3-close" aria-label="Get in touch">
+          <h2 className="k3-h2">Let&rsquo;s make something that travels.</h2>
+          <div className="k3-cta">
+            <a className="k3-btn solid" href={`mailto:${EMAIL}?subject=Collaboration`}>
+              <Mail /> {EMAIL}
             </a>
-            <a className="v3-btn v3-k2-ghost" href={IG} target="_blank" rel="noopener noreferrer">
-              <Icon name="instagram" /> Message on Instagram
+            <a className="k3-btn ghost" href={IG} target="_blank" rel="noopener noreferrer">
+              <Icon name="instagram" /> Instagram
             </a>
           </div>
-          {updated ? (
-            <p className="v3-k2-source">
-              Figures are Instagram&rsquo;s own account insights for @aereonwong, updated {longDate(updated)}.
-            </p>
-          ) : null}
-        </div>
-      </footer>
-    </div>
-  )
-}
+        </section>
 
-function Formats({ items }: { items: Share[] }) {
-  const shown = items.filter(f => f.pct >= 1 && f.key !== 'AD')
-  const total = shown.reduce((t, f) => t + f.value, 0)
-  if (!total) return null
-  return (
-    <div className="v3-k2-formats">
-      <div className="v3-k2-stack" role="img" aria-label={shown.map(f => `${f.label} ${Math.round((f.value / total) * 100)}%`).join(', ')}>
-        {shown.map((f, i) => (
-          <i key={f.key} style={{ ['--w' as string]: (f.value / total).toFixed(3), ['--i' as string]: i }} />
-        ))}
+        <footer className="k3-foot">
+          <span>SY Creative Production Sdn. Bhd.</span>
+          <span>Aerial · Travel · Tech · Hotels · Events</span>
+          <span>{updated ? `Instagram figures as of ${longDate(updated.slice(0, 10))}` : 'Photos: Aereon Wong · Kuala Lumpur'}</span>
+        </footer>
       </div>
-      <ul className="v3-k2-stack-k">
-        {shown.map(f => (
-          <li key={f.key}>
-            {f.label} <b>{Math.round((f.value / total) * 100)}%</b>
-          </li>
-        ))}
-      </ul>
-      <p className="v3-k2-fine">Where the 30-day reach came from, by format (organic)</p>
     </div>
   )
 }
