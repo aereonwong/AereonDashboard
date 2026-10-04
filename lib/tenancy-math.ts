@@ -147,5 +147,9 @@ export function tenantStats(g: TenantGroup, costs: Cost[], today: string) {
   const rent = rentSoFar(g.terms, today)
   const tagged = g.name ? costs.filter(c => same(c.tenant_name, g.name)) : []
   const taggedTotal = r2(tagged.reduce((a, c) => a + c.amount, 0))
-  return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), deposits: depositsOf(g.terms) }
+  // If the tenant stays to the very end: every payment of every term, less the same tagged bills.
+  const full = rentSoFar(g.terms, g.end)
+  const fullNet = r2(full.total - taggedTotal)
+  const estimate = { payments: full.payments, unpriced: full.unpriced, rent: full.total, net: fullNet, perMonth: full.payments ? r2(fullNet / full.payments) : null }
+  return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), estimate, deposits: depositsOf(g.terms) }
 }
