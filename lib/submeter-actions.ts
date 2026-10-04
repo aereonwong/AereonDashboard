@@ -33,7 +33,8 @@ const done = (error: { message: string } | null): Result => {
   return error ? { ok: false, error: /does not exist|schema cache/.test(error.message) ? missing : error.message } : { ok: true }
 }
 
-/** One reading date, every unit at once: fields `unit` and `reading` come in matching pairs; a blank reading skips that unit. */
+/** One reading date, every unit at once: fields `unit`, `reading` and `tenant` come in matching sets; a blank reading skips that unit.
+ *  The tenant is who the usage since the unit's previous reading is billed to. */
 export async function addSubmeterReadings(form: FormData): Promise<Result> {
   const propertyId = String(form.get('property_id') ?? '')
   const blocked = await guard(propertyId)
@@ -44,8 +45,9 @@ export async function addSubmeterReadings(form: FormData): Promise<Result> {
   if (rateRaw === 'bad' || rateRaw == null || rateRaw <= 0) return { ok: false, error: 'The rate must be an amount in RM per kWh, e.g. 0.50' }
   const units = form.getAll('unit').map(String)
   const values = form.getAll('reading')
+  const tenants = form.getAll('tenant')
   const note = text(form.get('note'), 300)
-  const rows: { property_id: string; unit: string; read_on: string; reading: number; rate: number; legacy: false; note: string | null }[] = []
+  const rows: { property_id: string; unit: string; read_on: string; reading: number; rate: number; legacy: false; note: string | null; tenant_name?: string }[] = []
   for (let i = 0; i < units.length; i++) {
     const v = num(values[i] ?? null)
     if (v === 'bad') return { ok: false, error: `${units[i]}: type the meter reading, e.g. 7945` }
@@ -59,7 +61,8 @@ export async function addSubmeterReadings(form: FormData): Promise<Result> {
     ])
     if (before.data && v < Number(before.data.reading)) return { ok: false, error: `${unit}: ${v} is lower than the ${before.data.reading} read on ${before.data.read_on}. A meter only counts up — check the photo.` }
     if (after.data && v > Number(after.data.reading)) return { ok: false, error: `${unit}: ${v} is higher than the ${after.data.reading} read on ${after.data.read_on}.` }
-    rows.push({ property_id: propertyId, unit, read_on: date, reading: v, rate: rateRaw, legacy: false, note })
+    const tenant = text(tenants[i] ?? null, 80)
+    rows.push({ property_id: propertyId, unit, read_on: date, reading: v, rate: rateRaw, legacy: false, note, ...(tenant ? { tenant_name: tenant } : {}) })
   }
   if (!rows.length) return { ok: false, error: 'Type at least one meter reading' }
   return done((await supabase.from('submeter_reading').upsert(rows, { onConflict: 'property_id,unit,read_on' })).error)
@@ -81,6 +84,15 @@ export async function addSubmeterBill(form: FormData): Promise<Result> {
   return done(
     (await supabase.from('submeter_bill').upsert({ property_id: propertyId, bill_date: date, amount, kwh, kw, kvarh, note: text(form.get('note'), 300) }, { onConflict: 'property_id,bill_date' })).error,
   )
+}
+
+/** Re-tag who one reading's usage is billed to; a blank name clears it. */
+export async function setReadingTenant(id: number, tenant: string): Promise<Result> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
+  return done((await supabase.from('submeter_reading').update({ tenant_name: tenant.trim().slice(0, 80) || null }).eq('id', id)).error)
 }
 
 async function remove(table: 'submeter_reading' | 'submeter_bill', id: number): Promise<Result> {

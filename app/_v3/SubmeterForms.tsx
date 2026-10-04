@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading } from '@/lib/submeter-actions'
+import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading, setReadingTenant } from '@/lib/submeter-actions'
+import Icon from '@/app/_components/Icon'
 import { today } from './pages/property/shared'
 
 // Add forms and delete buttons for the Sub-meter page. Typing a reading or bill that already exists
@@ -9,7 +10,8 @@ import { today } from './pages/property/shared'
 
 type Msg = { ok: boolean; text: string } | null
 
-export function ReadingForm({ propertyId, units, rate }: { propertyId: string; units: string[]; rate: number }) {
+/** One meter per unit, each billed to a tenant (preset to whoever the unit's last reading was billed to). */
+export function ReadingForm({ propertyId, units, tenants, rate, tagging }: { propertyId: string; units: { unit: string; tenant: string | null }[]; tenants: string[]; rate: number; tagging: boolean }) {
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `reading-${propertyId}`
@@ -31,12 +33,30 @@ export function ReadingForm({ propertyId, units, rate }: { propertyId: string; u
         <span>Date you read the meters</span>
         <input className="v3-select" type="date" name="read_on" defaultValue={today()} required />
       </label>
-      {units.map(u => (
-        <label key={u}>
-          <span>{u} meter</span>
-          <input type="hidden" name="unit" value={u} />
-          <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
-        </label>
+      {units.map(({ unit, tenant }) => (
+        <fieldset key={unit} className="v3-sub-meter">
+          <legend>{unit}</legend>
+          <input type="hidden" name="unit" value={unit} />
+          <label>
+            <span>Meter reading</span>
+            <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
+          </label>
+          {tagging ? (
+            <label>
+              <span>Billed to</span>
+              <select className="v3-select" name="tenant" defaultValue={tenant ?? ''}>
+                <option value="">No tenant (empty unit)</option>
+                {tenants.map(t => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <input type="hidden" name="tenant" value="" />
+          )}
+        </fieldset>
       ))}
       <details>
         <summary>Rate and note</summary>
@@ -121,9 +141,10 @@ export function DeleteRow({ id, kind }: { id: number; kind: 'reading' | 'bill' }
     <span className="v3-prop-actions">
       <button
         type="button"
-        className="v3-btn"
+        className="v3-btn v3-sub-del"
         disabled={pending}
         aria-label={`Delete this ${kind}`}
+        title={`Delete this ${kind}`}
         onClick={() => {
           if (confirm(`Delete this ${kind}?`))
             start(async () => {
@@ -132,8 +153,42 @@ export function DeleteRow({ id, kind }: { id: number; kind: 'reading' | 'bill' }
             })
         }}
       >
-        {pending ? '…' : 'Delete'}
+        {pending ? '…' : <Icon name="close" />}
       </button>
+      {err ? <span className="v3-prop-msg">{err}</span> : null}
+    </span>
+  )
+}
+
+/** Who a reading's usage is billed to, changed in place from the charges table. */
+export function TenantTag({ id, tenant, tenants }: { id: number; tenant: string | null; tenants: string[] }) {
+  const [pending, start] = useTransition()
+  const [err, setErr] = useState<string | null>(null)
+  const options = tenant && !tenants.includes(tenant) ? [tenant, ...tenants] : tenants
+  return (
+    <span className="v3-prop-actions">
+      <select
+        className="v3-select v3-sub-tag"
+        aria-label="Billed to"
+        defaultValue={tenant ?? ''}
+        disabled={pending}
+        data-empty={!tenant}
+        onChange={e => {
+          const v = e.currentTarget.value
+          setErr(null)
+          start(async () => {
+            const r = await setReadingTenant(id, v)
+            if (!r.ok) setErr(r.error)
+          })
+        }}
+      >
+        <option value="">Not tagged</option>
+        {options.map(t => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
+      </select>
       {err ? <span className="v3-prop-msg">{err}</span> : null}
     </span>
   )

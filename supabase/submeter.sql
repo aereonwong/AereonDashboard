@@ -32,6 +32,11 @@ create table if not exists submeter_bill (
   unique (property_id, bill_date)
 );
 
+-- Who each unit's usage is billed to (added 4 Oct 2026). Set on the reading that closes the usage, so a new tenant
+-- in the same unit starts on their first reading. It matches the tenant name on the Tenancy page. Electricity is
+-- collected from the tenant, never counted as a property cost.
+alter table submeter_reading add column if not exists tenant_name text;
+
 -- Server-side only, like every other table here: RLS on, no policies.
 alter table submeter_reading enable row level security;
 alter table submeter_bill    enable row level security;
