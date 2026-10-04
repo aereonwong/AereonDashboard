@@ -8,7 +8,9 @@
 //   leak gap  = (both sub-meters in a cycle − TNB's kWh) ÷ TNB's kWh. Near 0 = nothing leaks.
 //   cost/kWh  = what TNB really charged per kWh = bill RM ÷ bill kWh. A segment's cost is the usage
 //               times the cost/kWh of the cycles it overlaps, weighted by the days they overlap.
-//   buffer    = charged − cost. The flat rate is meant to stay clearly above cost.
+//   buffer    = charged − cost. The flat rate is meant to stay clearly above cost. It is worked out
+//               separately: electricity is collected from the tenants, never a cost of the property.
+//   tenant    = who a segment is billed to: the tenant named on the reading that closes it.
 
 /** What tenants pay per kWh from the 4 Oct 2026 decision on: one flat rate for every unit. */
 export const FLAT_RATE = 0.5
@@ -28,6 +30,7 @@ export type Reading = {
   rate: number | null // RM per kWh charged for the usage since the previous reading
   legacy: boolean // recorded before the flat rate
   note: string | null
+  tenant_name: string | null // who the usage since the previous reading is billed to
 }
 
 export type Bill = {
@@ -44,6 +47,7 @@ export type Bill = {
 export type Segment = {
   id: number // the reading that closes the segment
   unit: string
+  tenant: string | null
   from: string
   to: string
   days: number
@@ -192,7 +196,7 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       if (kwh >= 0) seen.push(perDay)
       const charged = b.rate != null ? r2(kwh * b.rate) : null
       const cost = cpk != null ? r2(kwh * cpk) : null
-      out.push({ id: b.id, unit, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
+      out.push({ id: b.id, unit, tenant: b.tenant_name ?? null, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
     }
   }
   return out.sort((x, y) => y.to.localeCompare(x.to) || x.unit.localeCompare(y.unit))
@@ -223,4 +227,65 @@ export function leakSummary(cs: Cycle[]) {
     worstCost: costs.length ? Math.max(...costs) : null,
     latestCost: priced.length ? (priced[priced.length - 1].perKwh as number) : null,
   }
+}
+
+/** The date a year before `iso`. */
+export const yearBefore = (iso: string) => `${+iso.slice(0, 4) - 1}${iso.slice(4)}`
+
+export type TenantBilling = {
+  unit: string
+  tenant: string | null
+  current: boolean // the unit's latest reading is billed to this tenant
+  segments: Segment[] // newest first
+  from: string
+  to: string
+  kwh: number
+  billed: number // every charge with a rate, whole history
+  billed12: number // charges read in the last 12 months
+  perDay: number | null // kWh a day over the last 12 months of readings
+}
+
+/** What each tenant of each unit has been billed: one row per unit + tenant, the current tenant of each unit first. */
+export function billing(segs: Segment[], today: string): TenantBilling[] {
+  const since = yearBefore(today)
+  const groups = new Map<string, Segment[]>()
+  for (const s of segs) {
+    const key = `${s.unit}\u0000${s.tenant ?? ''}`
+    groups.set(key, [...(groups.get(key) ?? []), s])
+  }
+  const latest = new Map<string, Segment>() // per unit
+  for (const s of segs) if (!latest.has(s.unit) || s.to > latest.get(s.unit)!.to) latest.set(s.unit, s)
+  const units = [...new Set(segs.map(s => s.unit))].sort()
+  return [...groups.values()]
+    .map(rows => {
+      const sorted = [...rows].sort((a, b) => b.to.localeCompare(a.to))
+      const ok = sorted.filter(s => s.kwh >= 0)
+      const recent = ok.filter(s => s.to > since)
+      const days = recent.reduce((t, s) => t + s.days, 0)
+      return {
+        unit: sorted[0].unit,
+        tenant: sorted[0].tenant,
+        current: latest.get(sorted[0].unit)?.tenant === sorted[0].tenant,
+        segments: sorted,
+        from: sorted[sorted.length - 1].from,
+        to: sorted[0].to,
+        kwh: r2(ok.reduce((t, s) => t + s.kwh, 0)),
+        billed: r2(ok.reduce((t, s) => t + (s.charged ?? 0), 0)),
+        billed12: r2(recent.reduce((t, s) => t + (s.charged ?? 0), 0)),
+        perDay: days > 0 ? recent.reduce((t, s) => t + s.kwh, 0) / days : null,
+      }
+    })
+    .sort((a, b) => units.indexOf(a.unit) - units.indexOf(b.unit) || Number(b.current) - Number(a.current) || b.to.localeCompare(a.to))
+}
+
+/** Each unit's share of the electricity over the last 12 months of readings (kWh a day, so uneven gaps don't skew it). */
+export function usageShare(segs: Segment[], today: string): { unit: string; perDay: number; share: number }[] {
+  const since = yearBefore(today)
+  const per = [...new Set(segs.map(s => s.unit))].map(unit => {
+    const rows = segs.filter(s => s.unit === unit && s.kwh >= 0 && s.to > since)
+    const days = rows.reduce((t, s) => t + s.days, 0)
+    return { unit, perDay: days > 0 ? rows.reduce((t, s) => t + s.kwh, 0) / days : 0 }
+  })
+  const total = per.reduce((t, u) => t + u.perDay, 0)
+  return per.map(u => ({ ...u, share: total > 0 ? u.perDay / total : 0 }))
 }
