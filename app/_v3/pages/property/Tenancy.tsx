@@ -67,7 +67,7 @@ function PropertyTenants({ view, today }: { view: LoanView; today: string }) {
 function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view: LoanView; today: string; names: string[] }) {
   const { loan, costs } = view
   const st = tenantStats(g, costs, today)
-  const cash = cashResult(g, costs, view.months, today)
+  const cash = cashResult(g, costs, view.months, today, groupTenants(view.tenancies, today))
   const term = currentTerm(g.terms, today)
   const left = daysBetween(today, g.end)
   const lastTerm = g.terms[g.terms.length - 1]
