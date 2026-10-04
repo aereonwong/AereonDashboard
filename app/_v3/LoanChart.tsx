@@ -1,11 +1,11 @@
 import type { LoanMonth } from '@/lib/property-math'
 
 // Two strips on one time axis. Top: the outstanding balance. Bottom: each month's interest as a
-// solid bar inside a pale bar for the full-rate interest — the pale part is what the flexi
+// solid bar inside a grey bar for the full-rate interest — the grey part is what the flexi
 // account saved. Payment holidays and empty months leave a gap. Hover a bar for the figures.
 
 const W = 960
-const H = 300
+const H = 320
 const PAD = { l: 56, r: 8, t: 10, b: 24 }
 const SPLIT = 170 // balance strip ends, interest strip starts
 const sen = (n: number | null) => (n == null ? '—' : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
@@ -22,7 +22,7 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
   const lo = Math.min(...bals)
   const hi = Math.max(...bals)
   const pad = (hi - lo) * 0.08 || 1000
-  const yb = (v: number) => PAD.t + (SPLIT - 18 - PAD.t) * (1 - (v - (lo - pad)) / (hi - lo + 2 * pad))
+  const yb = (v: number) => PAD.t + (SPLIT - 34 - PAD.t) * (1 - (v - (lo - pad)) / (hi - lo + 2 * pad))
   let d = ''
   months.forEach((m, i) => {
     if (m.outstanding_balance == null) return
@@ -45,9 +45,9 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
           <line x1={PAD.l} x2={W - PAD.r} y1={H - PAD.b} y2={H - PAD.b} />
         </g>
         <g className="axis">
-          <text x={PAD.l - 8} y={yb(hi) + 4} textAnchor="end">{k(hi)}</text>
-          <text x={PAD.l - 8} y={yb(lo) + 4} textAnchor="end">{k(lo)}</text>
-          <text x={PAD.l - 8} y={yi(top) + 4} textAnchor="end">{k(top)}</text>
+          <text x={PAD.l - 8} y={yb(hi) + 5} textAnchor="end">{k(hi)}</text>
+          <text x={PAD.l - 8} y={yb(lo) + 5} textAnchor="end">{k(lo)}</text>
+          <text x={PAD.l - 8} y={yi(top) + 14} textAnchor="end">{k(top)}</text>
           <text x={PAD.l - 8} y={H - PAD.b} textAnchor="end">0</text>
           {years.filter((_, j) => j % every === 0).map(p => (
             <text key={p.y} x={PAD.l + band * p.i} y={H - 6}>{p.y}</text>
