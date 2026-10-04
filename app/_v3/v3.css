@@ -1201,10 +1201,13 @@ html[data-v3accent] .v3[data-world="canon"] a.v3-btn-primary { color: var(--on-a
 .v3-prop-added { display: block; font-size: var(--t-xs); color: var(--mark); }
 .v3-prop-table .v3-tag[data-q="statement"] { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, transparent); }
 .v3-prop-table .v3-tag[data-q="derived"], .v3-prop-table .v3-tag[data-q="estimated"] { color: var(--mark); }
-.v3-loan-chart .full { fill: var(--accent-soft); }
+.v3-loan-chart .full { fill: var(--ink-3); opacity: 0.55; }
+.v3-loan-chart .axis text { font-size: 15px; }
 .v3-loan-chart .paid { fill: var(--accent); }
 .v3-loan-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
 .v3-loan-key.paid { background: var(--accent); }
-.v3-loan-key.full { background: var(--accent-soft); }
-.v3-prop .v3-kpi-value { font-size: clamp(1.05rem, 1.9vw, 1.625rem); white-space: nowrap; }
+.v3-loan-key.full { background: var(--ink-3); opacity: 0.55; }
+/* The amount sizes to its own card, so "RM 411,742.97" never leaves it at any width. */
+.v3-prop .v3-kpi { container-type: inline-size; }
+.v3-prop .v3-kpi-value { font-size: clamp(0.95rem, 10.5cqi, 1.625rem); white-space: nowrap; }
 .v3-prop-table td:first-child { white-space: nowrap; }
