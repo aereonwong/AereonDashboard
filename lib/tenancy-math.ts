@@ -170,14 +170,19 @@ export function tenantStats(g: TenantGroup, costs: Cost[], today: string) {
 
 export type CashFrame = { payments: number; unpriced: number; rent: number; bills: number; maintenance: number; loan: number; result: number; perMonth: number | null }
 
+/** The rent running under every tenant of the property on a date: a term counts from its start to its last day. */
+const rentOn = (groups: TenantGroup[], date: string) => groups.reduce((a, g) => a + g.terms.filter(t => t.start_date <= date && date <= t.end_date).reduce((b, t) => b + (t.monthly_rent ?? 0), 0), 0)
+
 /**
  * The tenant's whole cash picture, two ways: so far (payments already due) and the whole tenancy
  * (every payment, assuming they all arrive). Per payment month it takes the rent, the loan instalment
  * and the property's maintenance fee for that month; a month with no figure of its own uses the
  * nearest one on record (the latest, for months still to come). Bills you bore for the tenant count once.
+ * A dual-key property has two tenants at once under one loan and one maintenance fee: pass every group in `all`
+ * and each tenant carries the share of those two that their rent is of the rents paid that month (alone = all of it).
  * The loan instalment includes principal, which is equity you keep, so this is cash, not profit.
  */
-export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { soFar: CashFrame; whole: CashFrame } {
+export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string, all: TenantGroup[] = [g]): { soFar: CashFrame; whole: CashFrame } {
   const near = (m: Map<string, number>, key: string) => {
     if (m.has(key)) return m.get(key)!
     const keys = [...m.keys()].sort()
@@ -202,12 +207,24 @@ export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: s
         }
         payments++
         rent += t.monthly_rent
-        maintenance += near(maint, due.slice(0, 7))
-        loan += near(inst, due.slice(0, 7))
+        const share = t.monthly_rent / (rentOn(all, due) || t.monthly_rent)
+        maintenance += near(maint, due.slice(0, 7)) * share
+        loan += near(inst, due.slice(0, 7)) * share
       }
     const bills = r2(mine.filter(c => c.cost_date <= upTo || upTo === g.end).reduce((a, c) => a + c.amount, 0))
     const result = r2(rent - bills - maintenance - loan)
     return { payments, unpriced, rent: r2(rent), bills, maintenance: r2(maintenance), loan: r2(loan), result, perMonth: payments ? r2(result / payments) : null }
   }
   return { soFar: frame(today), whole: frame(g.end) }
+}
+
+/**
+ * The property's estimated net per month across every tenant running now, before and after the loan.
+ * Each tenant's own monthly figure is added up (their tenancies differ in length); the loan and the
+ * maintenance fee are split by rent, so they are counted once.
+ */
+export function propertyMonthly(groups: TenantGroup[], costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { beforeLoan: number | null; afterLoan: number | null } {
+  const frames = groups.filter(g => g.status === 'current').map(g => cashResult(g, costs, loanMonths, today, groups).whole).filter(f => f.payments)
+  if (!frames.length) return { beforeLoan: null, afterLoan: null }
+  return { beforeLoan: r2(frames.reduce((a, f) => a + (f.rent - f.bills - f.maintenance) / f.payments, 0)), afterLoan: r2(frames.reduce((a, f) => a + f.result / f.payments, 0)) }
 }

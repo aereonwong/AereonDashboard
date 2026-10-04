@@ -112,6 +112,9 @@ group **Property**: `/property` Overview (one card per property; the future prop
 - **Recovered from deposit**: a bill tagged to a tenant can be ticked `recovered_from_deposit` — the owner paid it but it was
   deducted from the tenant's deposit, so it is NOT a cost (excluded from `costTotals`, tenant net and estimate). The tenant card
   shows the deposit settlement (held − deducted = due back; `deposit_refunded` = actually paid back; the difference is kept).
+- **Dual key** (a property with two tenants at once, e.g. main unit + studio): each unit is simply its own tenant name; there is no unit column.
+  `cashResult(..., all)` splits the one loan instalment and one maintenance fee between concurrent tenants by rent share, and Overview adds
+  the live tenants together (`propertyMonthly`), so nothing is counted twice. Single-tenant properties are unchanged.
 - **Costs**: `property_cost`, kinds maintenance_fee / repair / agent_fee / stamping_fee / other; one row per bill,
   listed ten to a page. Monthly maintenance is entered as one row per month (no recurring rule yet).
 - Run `supabase/tenancy.sql` once (safe to repeat); the Tenancy and Costs pages ask for it until the columns exist.

@@ -1,5 +1,5 @@
 import type { PropertyRead, LoanView } from '@/lib/property'
-import { cashResult, costTotals, groupTenants, spanLabel } from '@/lib/tenancy-math'
+import { costTotals, groupTenants, propertyMonthly, spanLabel } from '@/lib/tenancy-math'
 import { dmy, plural, rm, thisYear, today as now } from './shared'
 
 // 👉 v3 Property → Overview: one card per property, the few figures that matter, and a way into
@@ -34,12 +34,15 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
   const today = now()
   const last = [...months].reverse().find(m => m.outstanding_balance != null)
   const groups = groupTenants(tenancies, today)
-  const g = groups.find(x => x.status === 'current') ?? groups[0]
-  const rent = g ? ([...g.terms].reverse().find(t => t.start_date <= today) ?? g.terms[0]).monthly_rent : null
+  // A dual-key property has two tenants at once: the card shows both, rent added together.
+  const live = groups.filter(x => x.status === 'current')
+  const g = live[0] ?? groups[0]
+  const shown = live.length ? live : g ? [g] : []
+  const rentOf = (x: (typeof groups)[number]) => ([...x.terms].reverse().find(t => t.start_date <= today) ?? x.terms[0]).monthly_rent
+  const rent = shown.length ? (shown.some(x => rentOf(x) == null) ? null : shown.reduce((a, x) => a + (rentOf(x) ?? 0), 0)) : null
   const gap = rent != null && last?.instalment != null ? rent - last.instalment : null
   const c = costTotals(costs, year)
-  const cash = g ? cashResult(g, costs, months, today).whole : null
-  const beforeLoan = cash && cash.payments ? Math.round(((cash.rent - cash.bills - cash.maintenance) / cash.payments) * 100) / 100 : null
+  const net = propertyMonthly(groups, costs, months, today)
   return (
     <article className="v3-panel v3-prop-card" aria-labelledby={`o-${loan.id}`}>
       <h2 className="v3-chapter-title" id={`o-${loan.id}`}>
@@ -59,7 +62,7 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
           <>
             <div>
               <dt>Tenant</dt>
-              <dd>{g ? `${g.name ?? 'Not named'}${g.status === 'ended' ? ' (ended)' : ''}` : 'Not rented out'}</dd>
+              <dd>{g ? `${shown.map(x => x.name ?? 'Not named').join(' + ')}${g.status === 'ended' ? ' (ended)' : ''}` : 'Not rented out'}</dd>
             </div>
             {g ? (
               <>
@@ -70,7 +73,8 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
                 <div>
                   <dt>Tenancy ends</dt>
                   <dd>
-                    {dmy(g.end)} · {spanLabel(g.start, g.end)} in all
+                    {shown.map(x => `${x.name ? `${x.name} ` : ''}${dmy(x.end)}`).join(' · ')}
+                    {shown.length === 1 ? ` · ${spanLabel(g.start, g.end)} in all` : ''}
                   </dd>
                 </div>
                 <div>
@@ -79,11 +83,11 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
                 </div>
                 <div>
                   <dt>Estimated net / month, after bills and maintenance</dt>
-                  <dd className="num">{rm(beforeLoan)}</dd>
+                  <dd className="num">{rm(net.beforeLoan)}</dd>
                 </div>
                 <div>
                   <dt>Estimated net / month, after the loan too</dt>
-                  <dd className="num">{rm(cash?.perMonth)}</dd>
+                  <dd className="num">{rm(net.afterLoan)}</dd>
                 </div>
               </>
             ) : null}
