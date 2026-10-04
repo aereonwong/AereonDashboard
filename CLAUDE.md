@@ -13,7 +13,7 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 
 ## Live
 
-- App: https://aereonwong.vercel.app (public landing at `/`, everything else behind a passcode).
+- App: https://aereonwong.com (own domain since Oct 2026; the old aereonwong.vercel.app is gone) (public landing at `/`, everything else behind a passcode).
   The original https://cashflowos-aereon.vercel.app still points at the same project and is kept on
   purpose: the Telegram webhook is registered against it. Remove it only after re-pointing the webhook.
 - Repo: https://github.com/aereonwong/AereonDashboard (public, owner-only access; renamed from
@@ -132,7 +132,7 @@ until then the login page is the old passcode form. A verified Google account mu
   edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
   Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
   `AUTH_SECRET` or set `PASSCODE_LOGIN=off` instead.
-- Google redirects only to one host (`APP_BASE_URL`, default https://aereonwong.vercel.app), registered in
+- Google redirects only to one host (`APP_BASE_URL`, default https://aereonwong.com), registered in
   Google Cloud. `/api/logout` (POST) clears the cookie.
 
 ## Raising an invoice or a quotation
