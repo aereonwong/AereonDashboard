@@ -28,6 +28,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
     items: [
       { href: '/cash-in', label: 'Cash In', icon: 'cash-in' },
       { href: '/cash-out', label: 'Cash Out', icon: 'cash-out' },
+      { href: '/property', label: 'Property', icon: 'home' },
       { href: '/leads', label: 'Leads', icon: 'leads' },
       { href: '/customers', label: 'Customers', icon: 'customers' },
       { href: '/content', label: 'Content', icon: 'content' },

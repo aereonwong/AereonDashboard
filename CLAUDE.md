@@ -97,6 +97,24 @@ Summary, Invoice Details, Instagram and Clients together.
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
+## Property tab — home loans (added 4 Oct 2026)
+
+`/property` replaces the "Interest Rate" Numbers sheet (Dropbox/Personal/Property) for Aereon's home loans.
+Which properties, banks and spreads they are is private: see `.property-data/loans.json` (git-ignored).
+- Tables in `supabase/property.sql` (`property_loan`, `property_loan_month`, `property_bank_rate`,
+  `property_data_issue`). Only raw inputs are stored; all maths is `lib/property-math.ts`.
+- **Monthly job: one figure**, the outstanding balance from the statement, typed on the page. Saving
+  marks it `statement` and opens next month as `pending` with the instalment carried over.
+- The rate is never typed. It is the bank's published BR on each day of the period + the loan's spread.
+  When a bank changes its rate, add a row to `property_bank_rate` (and `.property-data/bank_rates.json`).
+- A row dated month M pays interest for the period ending on M's instalment day (`cycle_day`), which the
+  bank figures prove to the sen. One loan's `cycle_day` is still an unconfirmed 1 (see loans.json notes).
+- Everything about the loans is private: it lives in Supabase and `.property-data/` (git-ignored), loaded
+  by `npm run property:import` (`-- --dry` works it out offline). The repo is public: never commit
+  balances, property or bank names, or spreads, not even in comments or commit messages.
+- `property_data_issue` holds what the spreadsheet move found. Aereon approves each fix; don't apply
+  open ones without asking.
+
 ## Raising an invoice or a quotation
 
 `/invoice` and `/quote` in Telegram — the interview flow, numbering rules, Canva template editing,
