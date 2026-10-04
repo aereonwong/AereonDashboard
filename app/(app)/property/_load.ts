@@ -17,5 +17,5 @@ export async function loadProperty() {
   }
   const ref = process.env.SUPABASE_URL?.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1]
   const sqlUrl = ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : null
-  return { read, version, sql: file('property.sql'), tenancySql: file('tenancy.sql'), sqlUrl }
+  return { read, version, sql: file('property.sql'), tenancySql: file('tenancy.sql'), submeterSql: file('submeter.sql'), sqlUrl }
 }

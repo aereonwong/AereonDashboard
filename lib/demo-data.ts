@@ -1,6 +1,7 @@
 import type { Rec } from './records'
 import type { BankRate, DataIssue, Loan, LoanMonthRow } from './property-math'
 import type { Cost, Tenancy } from './tenancy-math'
+import type { Bill, Reading } from './submeter-math'
 
 // 👉 DEMO DATA — the fake business behind Settings → "Use demo data".
 // Nothing here touches Supabase: these rows are generated in memory, so your real
@@ -241,4 +242,20 @@ export function demoProperty(): {
   ]
   costs.push({ id: 3, property_id: loan.id, cost_date: '2026-06-01', kind: 'agent_fee', amount: 1_150, description: 'Renewal fee', vendor: 'Demo Realty', tenant_name: null, recovered_from_deposit: false })
   return { loans: [loan], months, rates, issues: [], tenancies, costs }
+}
+
+// Sub-meter demo: two units on the invented property, a few months of readings and TNB bills.
+export function demoSubmeter(): { readings: Reading[]; bills: Bill[] } {
+  const id = 'demo-residence'
+  const rows: [string, string, number, number | null, boolean][] = [
+    ['Main unit', '2026-05-12', 1000, null, true], ['Main unit', '2026-06-12', 1380, 0.52, true], ['Main unit', '2026-07-12', 1770, 0.5, false], ['Main unit', '2026-08-12', 2150, 0.5, false],
+    ['Studio', '2026-05-12', 400, null, true], ['Studio', '2026-06-12', 520, 0.35, true], ['Studio', '2026-07-12', 650, 0.5, false], ['Studio', '2026-08-12', 790, 0.5, false],
+  ]
+  const readings = rows.map(([unit, read_on, reading, rate, legacy], i) => ({ id: i + 1, property_id: id, unit, read_on, reading, rate, legacy, note: null }))
+  const bills: Bill[] = [
+    { id: 1, property_id: id, bill_date: '2026-06-12', amount: 205, kwh: 500, kw: 4, kvarh: 150, note: null },
+    { id: 2, property_id: id, bill_date: '2026-07-12', amount: 215, kwh: 520, kw: 4, kvarh: 160, note: null },
+    { id: 3, property_id: id, bill_date: '2026-08-12', amount: 222, kwh: 520, kw: 5, kvarh: 170, note: null },
+  ]
+  return { readings, bills }
 }

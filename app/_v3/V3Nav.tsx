@@ -41,6 +41,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
       { href: '/property/loans', label: 'Loans', icon: 'wallet' },
       { href: '/property/tenancy', label: 'Tenancy', icon: 'users' },
       { href: '/property/costs', label: 'Running costs', icon: 'cash-out' },
+      { href: '/property/submeter', label: 'Sub-meter', icon: 'chart' },
     ],
   },
   {
