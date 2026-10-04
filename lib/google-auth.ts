@@ -14,7 +14,7 @@ import { supabase, supabaseConfigured } from '@/lib/supabase'
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
 export const OAUTH_COOKIE = 'g_oauth'
-const CANONICAL = 'https://aereonwong.vercel.app'
+const CANONICAL = 'https://aereonwong.com'
 
 export const googleConfigured = () =>
   !!(process.env.GOOGLE_CLIENT_ID ?? '').trim() && !!(process.env.GOOGLE_CLIENT_SECRET ?? '').trim()

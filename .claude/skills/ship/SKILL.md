@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # /ship
 
-Merging into `main` deploys https://aereonwong.vercel.app, so every step below is a gate. If any
+Merging into `main` deploys https://aereonwong.com, so every step below is a gate. If any
 gate fails, stop and explain in plain words — never skip ahead to the merge.
 
 ## 1. Know exactly what is being shipped
@@ -56,5 +56,5 @@ Fix every BLOCKER they report before going on. Mention any WARNINGs to Aereon in
 ## 7. Confirm it's live
 
 - After merge, the production deploy takes a minute or two. Check the affected page on
-  https://aereonwong.vercel.app actually renders (Playwright or `curl -I` for public paths).
+  https://aereonwong.com actually renders (Playwright or `curl -I` for public paths).
 - Tell Aereon in two or three plain sentences: what shipped, the PR link, and that it's live.
