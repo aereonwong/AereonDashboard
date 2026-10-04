@@ -5,8 +5,8 @@ import Icon from '@/app/_components/Icon'
 import LoanChart from '../LoanChart'
 import LoanRecord from '../LoanRecord'
 import LoanIssue from '../LoanIssue'
-import { CostForm, DeleteCost, TermForm } from '../TenancyForms'
-import { KIND_LABEL, costTotals, currentTerm, daysBetween, nextRentDue, rentSoFar, type Cost, type Tenancy } from '@/lib/tenancy-math'
+import { CostForm, CostTable, TermForm, TermTable } from '../TenancyForms'
+import { costTotals, currentTerm, daysBetween, nextRentDue, rentSoFar } from '@/lib/tenancy-math'
 
 // 👉 v3 Property: one chapter per home loan. Monthly job: type the outstanding balance from the
 // statement; everything else on the page is worked out from it (lib/property-math.ts).
@@ -285,7 +285,7 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
             <h3 className="v3-panel-title">Running costs</h3>
             <p className="v3-panel-note">all time {rm(c.all)}</p>
           </div>
-          {costs.length ? <CostTable costs={costs} /> : <p className="v3-empty">No costs yet. Add the agent fee, stamping fee, maintenance fee and any repair as they come.</p>}
+          {costs.length ? <CostTable costs={costs} rent={rent} /> : <p className="v3-empty">No costs yet. Add the agent fee, stamping fee, maintenance fee and any repair as they come.</p>}
         </section>
       </div>
 
@@ -299,7 +299,7 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
         </div>
         <TermTable terms={terms} today={today} />
         <details className="v3-prop-more">
-          <summary>Renewed or changed the rent?</summary>
+          <summary>Add a term (renewal, or a new rent)</summary>
           <TermForm
             propertyId={loan.id}
             from={term ? new Date(Date.parse(term.end_date) + 86_400_000).toISOString().slice(0, 10) : today}
@@ -309,70 +309,6 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
         </details>
       </section>
     </section>
-  )
-}
-
-function TermTable({ terms, today }: { terms: Tenancy[]; today: string }) {
-  return (
-    <div className="v3-table-wrap">
-      <table className="v3-table v3-prop-table">
-        <thead>
-          <tr>
-            <th>Term</th>
-            <th>Rent / month</th>
-            <th>Deposit</th>
-            <th>Tenant</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {terms.map(t => (
-            <tr key={t.id} title={t.notes ?? undefined}>
-              <td>
-                {dmy(t.start_date)} – {dmy(t.end_date)}
-              </td>
-              <td className="num">{sen(t.monthly_rent)}</td>
-              <td className="num">{sen(t.deposit)}</td>
-              <td>{t.tenant_name ?? '—'}</td>
-              <td>{t.start_date > today ? 'Upcoming' : t.end_date < today ? 'Ended' : 'Current'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function CostTable({ costs }: { costs: Cost[] }) {
-  return (
-    <div className="v3-table-wrap">
-      <table className="v3-table v3-prop-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Kind</th>
-            <th>Amount</th>
-            <th>What for</th>
-            <th>
-              <span className="sr-only">Delete</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {costs.map(c => (
-            <tr key={c.id}>
-              <td>{dmy(c.cost_date)}</td>
-              <td>{KIND_LABEL[c.kind]}</td>
-              <td className="num">{sen(c.amount)}</td>
-              <td>{[c.description, c.vendor].filter(Boolean).join(' · ') || '—'}</td>
-              <td>
-                <DeleteCost id={c.id} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   )
 }
 

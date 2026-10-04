@@ -1240,3 +1240,6 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-prop-tenancy .v3-prop-table td:not(.num) { white-space: normal; }
 .v3-prop-tenancy .v3-prop-table td:first-child { white-space: nowrap; }
 .v3-prop-tenancy .v3-prop-table th:last-child, .v3-prop-tenancy .v3-prop-table td:last-child { text-align: left; }
+.v3-prop-edit td { white-space: normal; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.v3-prop-edit .v3-prop-form { max-width: 28rem; padding-block: var(--space-3); }
+.v3-prop-table .v3-prop-actions { flex-wrap: nowrap; }
