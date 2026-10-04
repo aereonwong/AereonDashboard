@@ -1,5 +1,5 @@
 import type { PropertyRead, LoanView } from '@/lib/property'
-import { currentTerm, daysBetween, groupTenants, spanLabel, tenantStats, type TenantGroup } from '@/lib/tenancy-math'
+import { cashResult, currentTerm, daysBetween, groupTenants, spanLabel, tenantStats, type TenantGroup } from '@/lib/tenancy-math'
 import { TenantName, TermForm, TermTable } from '../../TenancyForms'
 import TenancySetup from './TenancySetup'
 import { dmy, plural, rm, today as now } from './shared'
@@ -67,11 +67,11 @@ function PropertyTenants({ view, today }: { view: LoanView; today: string }) {
 function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view: LoanView; today: string; names: string[] }) {
   const { loan, costs } = view
   const st = tenantStats(g, costs, today)
+  const cash = cashResult(g, costs, view.months, today)
   const term = currentTerm(g.terms, today)
   const left = daysBetween(today, g.end)
   const lastTerm = g.terms[g.terms.length - 1]
   const anyDeposit = st.deposits.total > 0
-  const maintenance = [...costs].filter(c => c.kind === 'maintenance_fee').sort((a, b) => b.cost_date.localeCompare(a.cost_date))[0]?.amount ?? null
   return (
     <article className="v3-panel v3-prop-tenant" aria-label={g.name ?? 'Tenant'}>
       <div className="v3-prop-tenant-head">
@@ -110,49 +110,79 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
         </div>
       </div>
 
-      <section className="v3-panel" aria-label="Estimate if the tenancy runs to the end">
+      <section className="v3-panel" aria-label="Cash result after maintenance and the loan">
         <div className="v3-panel-head">
-          <h3 className="v3-panel-title">If the tenant stays to the end</h3>
-          <p className="v3-panel-note">An estimate: every rent payment of the tenancy is paid, nothing is late or missed.</p>
+          <h3 className="v3-panel-title">What this tenant leaves you</h3>
+          <p className="v3-panel-note">
+            Rent less the bills you bore for them, the maintenance fee and the loan instalment, month for month. The whole-tenancy column
+            assumes every payment arrives on time.
+          </p>
         </div>
-        <dl className="v3-prop-deposits">
-          <div>
-            <dt>
-              Rent over the whole tenancy ({plural(st.estimate.payments, 'payment')})
-            </dt>
-            <dd className="num">{rm(st.estimate.rent)}</dd>
-          </div>
-          <div>
-            <dt>Less bills you bear for them (agent fee, repairs not deducted from the deposit)</dt>
-            <dd className="num">{st.taggedTotal ? `− ${rm(st.taggedTotal)}` : rm(0)}</dd>
-          </div>
-          <div>
-            <dt>
-              <b>Net over the tenancy</b>
-            </dt>
-            <dd className="num">
-              <b>{rm(st.estimate.net)}</b>
-            </dd>
-          </div>
-          <div>
-            <dt>
-              <b>Estimated net per month</b> (÷ {st.estimate.payments})
-            </dt>
-            <dd className="num">
-              <b>{rm(st.estimate.perMonth)}</b>
-            </dd>
-          </div>
-          {maintenance != null && st.estimate.perMonth != null ? (
-            <div>
-              <dt>After the monthly maintenance fee ({rm(maintenance)})</dt>
-              <dd className="num">{rm(Math.round((st.estimate.perMonth - maintenance) * 100) / 100)}</dd>
-            </div>
-          ) : null}
-        </dl>
-        {st.estimate.unpriced ? <p className="v3-panel-note">{plural(st.estimate.unpriced, 'payment')} in terms with no rent entered are left out.</p> : null}
+        <div className="v3-table-wrap">
+          <table className="v3-table v3-prop-table v3-prop-cash">
+            <thead>
+              <tr>
+                <th />
+                <th>So far ({plural(cash.soFar.payments, 'month')})</th>
+                <th>Whole tenancy ({plural(cash.whole.payments, 'month')})</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Rent</td>
+                <td className="num">{rm(cash.soFar.rent)}</td>
+                <td className="num">{rm(cash.whole.rent)}</td>
+              </tr>
+              <tr>
+                <td>Bills you bore for them (agent fee, repairs you absorbed)</td>
+                <td className="num">− {rm(cash.soFar.bills)}</td>
+                <td className="num">− {rm(cash.whole.bills)}</td>
+              </tr>
+              <tr className="v3-prop-sub-row">
+                <td>Net from the tenant</td>
+                <td className="num">{rm(Math.round((cash.soFar.rent - cash.soFar.bills) * 100) / 100)}</td>
+                <td className="num">{rm(Math.round((cash.whole.rent - cash.whole.bills) * 100) / 100)}</td>
+              </tr>
+              <tr>
+                <td>Maintenance fee</td>
+                <td className="num">− {rm(cash.soFar.maintenance)}</td>
+                <td className="num">− {rm(cash.whole.maintenance)}</td>
+              </tr>
+              <tr>
+                <td>Loan instalments</td>
+                <td className="num">− {rm(cash.soFar.loan)}</td>
+                <td className="num">− {rm(cash.whole.loan)}</td>
+              </tr>
+              <tr className="v3-prop-total-row">
+                <td>
+                  <b>Cash result</b>
+                </td>
+                <td className="num">
+                  <b>{rm(cash.soFar.result)}</b>
+                </td>
+                <td className="num">
+                  <b>{rm(cash.whole.result)}</b>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <b>Per month</b>
+                </td>
+                <td className="num">
+                  <b>{rm(cash.soFar.perMonth)}</b>
+                </td>
+                <td className="num">
+                  <b>{rm(cash.whole.perMonth)}</b>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p className="v3-panel-note">
           {st.settlement.recoveredCount ? `Bills deducted from their deposit (${rm(st.settlement.recoveredTotal)}) are not counted: you recovered them. ` : ''}
-          Stamping fee and any renewal agent fee count once they are entered and tagged to this tenant.
+          A loan instalment is mostly principal, which is equity you keep, so this is cash, not profit. Loan figures before 2025 are approximate.
+          {cash.whole.unpriced ? ` ${plural(cash.whole.unpriced, 'month')} in terms with no rent entered are left out.` : ''} Stamping fee and any renewal agent
+          fee count once entered and tagged to this tenant.
         </p>
       </section>
 
