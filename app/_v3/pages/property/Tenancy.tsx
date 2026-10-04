@@ -71,6 +71,7 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
   const left = daysBetween(today, g.end)
   const lastTerm = g.terms[g.terms.length - 1]
   const anyDeposit = st.deposits.total > 0
+  const maintenance = [...costs].filter(c => c.kind === 'maintenance_fee').sort((a, b) => b.cost_date.localeCompare(a.cost_date))[0]?.amount ?? null
   return (
     <article className="v3-panel v3-prop-tenant" aria-label={g.name ?? 'Tenant'}>
       <div className="v3-prop-tenant-head">
@@ -98,7 +99,9 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
         <div className="v3-kpi">
           <div className="v3-kpi-label">Rent due so far</div>
           <div className="v3-kpi-value">{rm(st.rent.total)}</div>
-          <div className="v3-kpi-note">{plural(st.rent.payments, 'payment')}</div>
+          <div className="v3-kpi-note">
+            {st.rent.payments} of {st.estimate.payments} payments, assumed paid on time
+          </div>
         </div>
         <div className="v3-kpi">
           <div className="v3-kpi-label">Net from this tenant</div>
@@ -106,6 +109,49 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
           <div className="v3-kpi-note">{st.taggedCount ? `after ${rm(st.taggedTotal)} agent and stamping bills` : 'no bills tagged to them yet'}</div>
         </div>
       </div>
+
+      <section className="v3-panel" aria-label="Estimate if the tenancy runs to the end">
+        <div className="v3-panel-head">
+          <h3 className="v3-panel-title">If the tenant stays to the end</h3>
+          <p className="v3-panel-note">An estimate: every rent payment of the tenancy is paid, nothing is late or missed.</p>
+        </div>
+        <dl className="v3-prop-deposits">
+          <div>
+            <dt>
+              Rent over the whole tenancy ({plural(st.estimate.payments, 'payment')})
+            </dt>
+            <dd className="num">{rm(st.estimate.rent)}</dd>
+          </div>
+          <div>
+            <dt>Less agent and stamping bills tagged to them</dt>
+            <dd className="num">{st.taggedTotal ? `− ${rm(st.taggedTotal)}` : rm(0)}</dd>
+          </div>
+          <div>
+            <dt>
+              <b>Net over the tenancy</b>
+            </dt>
+            <dd className="num">
+              <b>{rm(st.estimate.net)}</b>
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <b>Estimated net per month</b> (÷ {st.estimate.payments})
+            </dt>
+            <dd className="num">
+              <b>{rm(st.estimate.perMonth)}</b>
+            </dd>
+          </div>
+          {maintenance != null && st.estimate.perMonth != null ? (
+            <div>
+              <dt>After the monthly maintenance fee ({rm(maintenance)})</dt>
+              <dd className="num">{rm(Math.round((st.estimate.perMonth - maintenance) * 100) / 100)}</dd>
+            </div>
+          ) : null}
+        </dl>
+        {st.estimate.unpriced ? <p className="v3-panel-note">{plural(st.estimate.unpriced, 'payment')} in terms with no rent entered are left out.</p> : null}
+        <p className="v3-panel-note">Stamping fee and any renewal agent fee count once they are entered and tagged to this tenant.</p>
+      </section>
 
       <div className="v3-grid v3-prop-grid">
         <section className="v3-panel v3-span-4" aria-label="Deposits">
