@@ -86,3 +86,75 @@ export async function setIssueStatus(id: number, status: 'open' | 'fixed' | 'ign
   revalidatePath('/property')
   return error ? { ok: false, error: error.message } : { ok: true }
 }
+
+// ── Tenancy and running costs ────────────────────────────────────────────────
+
+const text = (v: FormDataEntryValue | null, max: number) => String(v ?? '').trim().slice(0, max) || null
+const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s))
+
+async function guard(propertyId: string): Promise<Result | null> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on — switch it off in Settings to record real figures.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  const { data: loan } = await supabase.from('property_loan').select('id').eq('id', propertyId).maybeSingle()
+  return loan ? null : { ok: false, error: 'Unknown property' }
+}
+
+const done = (error: { message: string } | null): Result => {
+  revalidatePath('/property')
+  return error ? { ok: false, error: /does not exist|schema cache/.test(error.message) ? 'Run supabase/tenancy.sql first (the Property page shows the one step).' : error.message } : { ok: true }
+}
+
+/** Record a bill: maintenance fee, repair or anything else the property cost. */
+export async function addPropertyCost(form: FormData): Promise<Result> {
+  const propertyId = String(form.get('property_id') ?? '')
+  const blocked = await guard(propertyId)
+  if (blocked) return blocked
+  const date = String(form.get('cost_date') ?? '')
+  const kind = String(form.get('kind') ?? '')
+  const amount = money(form.get('amount'))
+  if (!isDate(date)) return { ok: false, error: 'Pick the date of the bill' }
+  if (!['maintenance_fee', 'repair', 'agent_fee', 'other'].includes(kind)) return { ok: false, error: 'Pick what kind of cost it is' }
+  if (amount === 'bad' || amount == null) return { ok: false, error: 'Type the amount, e.g. 350' }
+  const { error } = await supabase.from('property_cost').insert({
+    property_id: propertyId,
+    cost_date: date,
+    kind,
+    amount,
+    description: text(form.get('description'), 300),
+    vendor: text(form.get('vendor'), 120),
+  })
+  return done(error)
+}
+
+export async function deletePropertyCost(id: number): Promise<Result> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
+  return done((await supabase.from('property_cost').delete().eq('id', id)).error)
+}
+
+/** Add a tenancy term — the first lease, or a renewal (a new row, so the old rent stays in the history). */
+export async function addTenancyTerm(form: FormData): Promise<Result> {
+  const propertyId = String(form.get('property_id') ?? '')
+  const blocked = await guard(propertyId)
+  if (blocked) return blocked
+  const start = String(form.get('start_date') ?? '')
+  const end = String(form.get('end_date') ?? '')
+  const rent = money(form.get('monthly_rent'))
+  const deposit = money(form.get('deposit'))
+  if (!isDate(start) || !isDate(end)) return { ok: false, error: 'Pick the start and end dates' }
+  if (end <= start) return { ok: false, error: 'The end date must be after the start date' }
+  if (rent === 'bad' || deposit === 'bad') return { ok: false, error: 'Rent and deposit must be amounts in RM' }
+  const { error } = await supabase.from('property_tenancy').insert({
+    property_id: propertyId,
+    start_date: start,
+    end_date: end,
+    monthly_rent: rent,
+    deposit,
+    tenant_name: text(form.get('tenant_name'), 120),
+    notes: text(form.get('notes'), 500),
+  })
+  return done(error)
+}

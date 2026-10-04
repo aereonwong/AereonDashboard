@@ -1234,3 +1234,9 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-signout .who { color: var(--ink-3); overflow-wrap: anywhere; }
 .v3-signout button { font: inherit; font-size: var(--t-xs); text-align: left; color: var(--ink-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
 .v3-signout button:hover { color: var(--ink); }
+.v3-prop-tenancy { display: grid; gap: var(--space-5); }
+.v3-prop-tenancy .v3-kpi { container-type: inline-size; }
+.v3-prop-tenancy .v3-kpi-value { font-size: clamp(0.95rem, 10.5cqi, 1.625rem); white-space: nowrap; }
+.v3-prop-tenancy .v3-prop-table td:not(.num) { white-space: normal; }
+.v3-prop-tenancy .v3-prop-table td:first-child { white-space: nowrap; }
+.v3-prop-tenancy .v3-prop-table th:last-child, .v3-prop-tenancy .v3-prop-table td:last-child { text-align: left; }

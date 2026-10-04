@@ -5,6 +5,8 @@ import Icon from '@/app/_components/Icon'
 import LoanChart from '../LoanChart'
 import LoanRecord from '../LoanRecord'
 import LoanIssue from '../LoanIssue'
+import { CostForm, DeleteCost, TermForm } from '../TenancyForms'
+import { KIND_LABEL, costTotals, currentTerm, daysBetween, nextRentDue, rentSoFar, type Cost, type Tenancy } from '@/lib/tenancy-math'
 
 // 👉 v3 Property: one chapter per home loan. Monthly job: type the outstanding balance from the
 // statement; everything else on the page is worked out from it (lib/property-math.ts).
@@ -26,7 +28,7 @@ const STATUS: Record<string, string> = {
 }
 const QUALITY: Record<string, string> = { statement: 'Statement', derived: 'Worked out', estimated: 'Estimate', unchecked: 'Unchecked' }
 
-export default function Property({ read, sql, sqlUrl }: { read: PropertyRead; sql: string; sqlUrl: string | null }) {
+export default function Property({ read, sql, sqlUrl, tenancySql }: { read: PropertyRead; sql: string; sqlUrl: string | null; tenancySql: string }) {
   if (!read.ready) return <Setup sql={sql} sqlUrl={sqlUrl} />
 
   const lasts = read.loans.map(l => [...l.months].reverse().find(m => m.outstanding_balance != null))
@@ -58,6 +60,25 @@ export default function Property({ read, sql, sqlUrl }: { read: PropertyRead; sq
       {read.loans.map(l => (
         <LoanChapter key={l.loan.id} view={l} year={year} />
       ))}
+      {!read.tenancyReady ? (
+        <section className="v3-panel" aria-labelledby="t-tenancy-setup">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-tenancy-setup">
+              One step switches on tenancy and costs
+            </h2>
+          </div>
+          <p className="v3-lede" style={{ marginTop: 0 }}>
+            Paste this into Supabase&rsquo;s SQL editor and press Run. It adds two new, empty tables and touches nothing else. Then load
+            the tenancy terms with <code>npm run property:import -- --tenancy</code>.
+          </p>
+          <pre className="v3-sql">{tenancySql}</pre>
+          {sqlUrl ? (
+            <a className="v3-btn v3-btn-primary" href={sqlUrl} target="_blank" rel="noreferrer" style={{ marginTop: 'var(--space-4)', textDecoration: 'none' }}>
+              Open the Supabase SQL editor <Icon name="external" />
+            </a>
+          ) : null}
+        </section>
+      ) : null}
       <p className="v3-panel-note v3-prop-foot">
         Rate = the bank&rsquo;s published base rate on each day + the fixed spread from the letter of offer. Full-rate interest =
         what the month would cost with no cash in the flexi account. Flexi saving = full-rate interest − interest charged.
@@ -67,7 +88,7 @@ export default function Property({ read, sql, sqlUrl }: { read: PropertyRead; sq
 }
 
 function LoanChapter({ view, year }: { view: LoanView; year: string }) {
-  const { loan, months, warnings, issues } = view
+  const { loan, months, warnings, issues, tenancies, costs } = view
   const filled = months.filter(m => m.outstanding_balance != null)
   const last = filled.at(-1)
   const ytd = months.filter(m => m.month.startsWith(year))
@@ -136,6 +157,8 @@ function LoanChapter({ view, year }: { view: LoanView; year: string }) {
         </section>
       </div>
 
+      {tenancies.length || costs.length ? <TenancyPanel view={view} year={year} instalment={last?.instalment ?? null} /> : null}
+
       {open.length || warnings.length ? (
         <section className="v3-panel" aria-labelledby={`c-${loan.id}`}>
           <div className="v3-panel-head">
@@ -192,6 +215,164 @@ function LoanChapter({ view, year }: { view: LoanView; year: string }) {
         ) : null}
       </section>
     </section>
+  )
+}
+
+const dmy = (iso: string) => `${Number(iso.slice(8, 10))} ${MON[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
+
+function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string; instalment: number | null }) {
+  const { loan, tenancies, costs } = view
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
+  const term = currentTerm(tenancies, today)
+  const live = term != null && term.start_date <= today && today <= term.end_date
+  const left = term ? daysBetween(today, term.end_date) : null
+  const next = term && live ? nextRentDue(term, today) : null
+  const so = rentSoFar(tenancies, today)
+  const c = costTotals(costs, year)
+  const rent = term?.monthly_rent ?? null
+  const gap = rent != null && instalment != null ? rent - instalment : null
+  const terms = [...tenancies].sort((a, b) => b.start_date.localeCompare(a.start_date))
+  const first = tenancies.map(t => t.start_date).sort()[0]
+
+  return (
+    <section className="v3-prop-tenancy" aria-labelledby={`tn-${loan.id}`}>
+      <div className="v3-prop-head">
+        <h3 className="v3-chapter-title" id={`tn-${loan.id}`}>
+          Tenancy
+        </h3>
+        <p className="v3-panel-note">
+          {term ? `${term.tenant_name ? `${term.tenant_name} · ` : ''}let since ${dmy(first)} · ${plural(tenancies.length, 'term')}` : 'No tenancy recorded yet'}
+        </p>
+      </div>
+
+      <div className="v3-kpis">
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Rent</div>
+          <div className="v3-kpi-value">{rm(rent)}</div>
+          <div className="v3-kpi-note">{next ? `next due ${dmy(next)}` : live ? 'per month' : term ? 'term has ended' : ' '}</div>
+        </div>
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Term ends</div>
+          <div className="v3-kpi-value">{term ? dmy(term.end_date) : '—'}</div>
+          <div className="v3-kpi-note">
+            {left == null ? ' ' : left < 0 ? `ended ${plural(-left, 'day')} ago` : left === 0 ? 'last day' : `${plural(left, 'day')} left`}
+          </div>
+        </div>
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Rent vs instalment</div>
+          <div className="v3-kpi-value">{gap == null ? '—' : `${gap >= 0 ? '+' : '−'}${rm(Math.abs(gap))}`}</div>
+          <div className="v3-kpi-note">{gap == null ? ' ' : gap >= 0 ? 'rent covers the instalment' : 'a month you top up'}</div>
+        </div>
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Costs {year}</div>
+          <div className="v3-kpi-value">{rm(c.year)}</div>
+          <div className="v3-kpi-note">
+            repairs {rm(c.repairsYear)} · maintenance {rm(c.feesYear)} · agent {rm(c.agentYear)}
+          </div>
+        </div>
+      </div>
+
+      <div className="v3-grid v3-prop-grid">
+        <section className="v3-panel v3-span-4" aria-label={`Add a cost for ${loan.name}`}>
+          <div className="v3-panel-head">
+            <h3 className="v3-panel-title">Add a cost</h3>
+          </div>
+          <CostForm propertyId={loan.id} />
+        </section>
+        <section className="v3-panel v3-span-8" aria-label={`${loan.name} costs`}>
+          <div className="v3-panel-head">
+            <h3 className="v3-panel-title">Running costs</h3>
+            <p className="v3-panel-note">all time {rm(c.all)}</p>
+          </div>
+          {costs.length ? <CostTable costs={costs} /> : <p className="v3-empty">No costs yet. Add the maintenance fee, agent fee and any repair as they come.</p>}
+        </section>
+      </div>
+
+      <section className="v3-panel" aria-label={`${loan.name} tenancy terms`}>
+        <div className="v3-panel-head">
+          <h3 className="v3-panel-title">Terms</h3>
+          <p className="v3-panel-note">
+            Rent due so far {rm(so.total)} over {plural(so.payments, 'payment')}
+            {so.unpriced ? ` · ${plural(so.unpriced, 'payment')} in terms with no rent entered are left out` : ''}
+          </p>
+        </div>
+        <TermTable terms={terms} today={today} />
+        <details className="v3-prop-more">
+          <summary>Renewed or changed the rent?</summary>
+          <TermForm
+            propertyId={loan.id}
+            from={term ? new Date(Date.parse(term.end_date) + 86_400_000).toISOString().slice(0, 10) : today}
+            rent={rent}
+            tenant={term?.tenant_name ?? null}
+          />
+        </details>
+      </section>
+    </section>
+  )
+}
+
+function TermTable({ terms, today }: { terms: Tenancy[]; today: string }) {
+  return (
+    <div className="v3-table-wrap">
+      <table className="v3-table v3-prop-table">
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>Rent / month</th>
+            <th>Deposit</th>
+            <th>Tenant</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {terms.map(t => (
+            <tr key={t.id} title={t.notes ?? undefined}>
+              <td>
+                {dmy(t.start_date)} – {dmy(t.end_date)}
+              </td>
+              <td className="num">{sen(t.monthly_rent)}</td>
+              <td className="num">{sen(t.deposit)}</td>
+              <td>{t.tenant_name ?? '—'}</td>
+              <td>{t.start_date > today ? 'Upcoming' : t.end_date < today ? 'Ended' : 'Current'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function CostTable({ costs }: { costs: Cost[] }) {
+  return (
+    <div className="v3-table-wrap">
+      <table className="v3-table v3-prop-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Kind</th>
+            <th>Amount</th>
+            <th>What for</th>
+            <th>
+              <span className="sr-only">Delete</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {costs.map(c => (
+            <tr key={c.id}>
+              <td>{dmy(c.cost_date)}</td>
+              <td>{KIND_LABEL[c.kind]}</td>
+              <td className="num">{sen(c.amount)}</td>
+              <td>{[c.description, c.vendor].filter(Boolean).join(' · ') || '—'}</td>
+              <td>
+                <DeleteCost id={c.id} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

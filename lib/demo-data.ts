@@ -1,5 +1,6 @@
 import type { Rec } from './records'
 import type { BankRate, DataIssue, Loan, LoanMonthRow } from './property-math'
+import type { Cost, Tenancy } from './tenancy-math'
 
 // 👉 DEMO DATA — the fake business behind Settings → "Use demo data".
 // Nothing here touches Supabase: these rows are generated in memory, so your real
@@ -201,6 +202,8 @@ export function demoProperty(): {
   months: LoanMonthRow[]
   rates: BankRate[]
   issues: DataIssue[]
+  tenancies: Tenancy[]
+  costs: Cost[]
 } {
   const loan: Loan = {
     id: 'demo-residence', name: 'Demo Residence', location: 'Bandar Contoh', bank: 'Demo Bank', loan_type: 'Full flexi',
@@ -228,5 +231,14 @@ export function demoProperty(): {
     })
     if (!pending) bal = next
   }
-  return { loans: [loan], months, rates, issues: [] }
+  const tenancies: Tenancy[] = [
+    { id: 1, property_id: loan.id, start_date: '2025-06-01', end_date: '2026-05-31', monthly_rent: 2_100, deposit: 4_200, tenant_name: 'Demo Tenant', notes: null },
+    { id: 2, property_id: loan.id, start_date: '2026-06-01', end_date: '2028-05-31', monthly_rent: 2_300, deposit: 4_200, tenant_name: 'Demo Tenant', notes: 'Renewed for two years' },
+  ]
+  const costs: Cost[] = [
+    { id: 1, property_id: loan.id, cost_date: day(20), kind: 'maintenance_fee', amount: 180, description: 'Quarterly maintenance fee', vendor: 'Demo Management' },
+    { id: 2, property_id: loan.id, cost_date: day(75), kind: 'repair', amount: 350, description: 'Aircond service and gas top-up', vendor: 'Demo Cooling' },
+  ]
+  costs.push({ id: 3, property_id: loan.id, cost_date: '2026-06-01', kind: 'agent_fee', amount: 1_150, description: 'Renewal fee', vendor: 'Demo Realty' })
+  return { loans: [loan], months, rates, issues: [], tenancies, costs }
 }

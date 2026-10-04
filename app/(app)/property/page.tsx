@@ -14,16 +14,18 @@ const rm = (n: number | null | undefined) =>
 
 export default async function PropertyPage() {
   const [read, { version }] = await Promise.all([readProperty(), readVersion()])
-  let sql = ''
-  try {
-    sql = readFileSync(join(process.cwd(), 'supabase', 'property.sql'), 'utf8')
-  } catch {
-    sql = '-- supabase/property.sql could not be read'
+  const file = (name: string) => {
+    try {
+      return readFileSync(join(process.cwd(), 'supabase', name), 'utf8')
+    } catch {
+      return `-- supabase/${name} could not be read`
+    }
   }
+  const sql = file('property.sql')
   const ref = process.env.SUPABASE_URL?.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1]
   const sqlUrl = ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : null
 
-  if (version === 'v3') return <V3Property read={read} sql={sql} sqlUrl={sqlUrl} />
+  if (version === 'v3') return <V3Property read={read} sql={sql} sqlUrl={sqlUrl} tenancySql={file('tenancy.sql')} />
 
   // v1 and v2: the headline figures in the classic look.
   return (
