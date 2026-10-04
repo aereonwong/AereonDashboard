@@ -1288,12 +1288,13 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 
 /* Property → Sub-meter: units stacked per TNB bill, tenant cards, the charges table. */
 .v3-sub-chart .v3-sub-bar[data-i="0"] { fill: var(--accent); }
-.v3-sub-chart .v3-sub-bar[data-i="1"] { fill: color-mix(in srgb, var(--accent) 42%, transparent); }
+.v3-sub-chart .v3-sub-bar[data-i="1"] { fill: color-mix(in srgb, var(--accent) 55%, transparent); stroke: var(--accent); stroke-width: 1; }
 .v3-sub-chart .v3-sub-bar[data-i="2"] { fill: var(--ink-3); }
 .v3-sub-chart .v3-sub-tnb { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
+.v3-sub-chart .v3-sub-tnb-halo { stroke: var(--ground); stroke-width: 6; stroke-linecap: round; opacity: 0.85; }
 .v3-sub-chart .v3-sub-high { stroke: var(--ink-3); stroke-width: 1.25; stroke-dasharray: 5 5; }
 .v3-sub-key[data-i="0"] { background: var(--accent); }
-.v3-sub-key[data-i="1"] { background: color-mix(in srgb, var(--accent) 42%, transparent); }
+.v3-sub-key[data-i="1"] { background: color-mix(in srgb, var(--accent) 55%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
 .v3-sub-key[data-i="2"] { background: var(--ink-3); }
 .v3 .v3-legend i.tnb, .v3[data-world="canon"] .v3-legend i.tnb { border-color: var(--ink); }
 .v3-sub-meter { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-2) var(--space-3) var(--space-3); margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
@@ -1306,6 +1307,7 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-sub-share { display: grid; gap: var(--space-1); }
 .v3-sub-share-bar { height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
 .v3-sub-share-bar span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.v3-table-wrap:has(> .v3-sub-table) { position: relative; }
 .v3-sub-table td { vertical-align: top; }
 .v3-sub-sub { font-size: var(--t-xs); color: var(--ink-3); font-weight: 400; }
 .v3-sub-note { white-space: normal; max-width: 34ch; margin-top: 2px; }

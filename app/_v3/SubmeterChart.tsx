@@ -96,7 +96,12 @@ export default function SubmeterChart({ cycles, high }: { cycles: ChartCycle[]; 
                 base += u.kwh
                 return <rect key={u.unit} className="v3-sub-bar" data-i={j} x={cx(i) - bw / 2} y={y(base)} width={bw} height={Math.max(0, y0 - y(base))} />
               })}
-              {c.tnbKwh != null ? <line className="v3-sub-tnb" x1={cx(i) - bw / 2 - 6} x2={cx(i) + bw / 2 + 6} y1={y(c.tnbKwh)} y2={y(c.tnbKwh)} /> : null}
+              {c.tnbKwh != null ? (
+                <>
+                  <line className="v3-sub-tnb-halo" x1={cx(i) - bw / 2 - 6} x2={cx(i) + bw / 2 + 6} y1={y(c.tnbKwh)} y2={y(c.tnbKwh)} />
+                  <line className="v3-sub-tnb" x1={cx(i) - bw / 2 - 6} x2={cx(i) + bw / 2 + 6} y1={y(c.tnbKwh)} y2={y(c.tnbKwh)} />
+                </>
+              ) : null}
             </g>
           )
         })}
