@@ -106,7 +106,7 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
         <div className="v3-kpi">
           <div className="v3-kpi-label">Net from this tenant</div>
           <div className="v3-kpi-value">{rm(st.net)}</div>
-          <div className="v3-kpi-note">{st.taggedCount ? `after ${rm(st.taggedTotal)} agent and stamping bills` : 'no bills tagged to them yet'}</div>
+          <div className="v3-kpi-note">{st.taggedCount ? `after ${rm(st.taggedTotal)} of bills tagged to them` : 'no bills tagged to them yet'}</div>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
             <dd className="num">{rm(st.estimate.rent)}</dd>
           </div>
           <div>
-            <dt>Less agent and stamping bills tagged to them</dt>
+            <dt>Less all bills tagged to them</dt>
             <dd className="num">{st.taggedTotal ? `− ${rm(st.taggedTotal)}` : rm(0)}</dd>
           </div>
           <div>

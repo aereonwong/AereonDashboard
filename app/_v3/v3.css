@@ -1262,3 +1262,15 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-prop-facts dt { color: var(--ink-2); }
 .v3-prop-facts dd { margin: 0; text-align: right; }
 .v3-prop-links { display: flex; gap: var(--space-4); flex-wrap: wrap; margin: 0; font-size: var(--t-sm); }
+.v3-loan-chart { touch-action: pan-y; outline-offset: 4px; cursor: crosshair; }
+.v3-loan-band { fill: var(--ink); opacity: 0.07; pointer-events: none; }
+.v3-loan-dot { fill: var(--ground); stroke: var(--accent); stroke-width: 3; pointer-events: none; }
+.v3-tip.v3-loan-tip { min-width: 14rem; max-width: calc(100% - 16px); top: 2%; transform: none; }
+/* The card parks in the corner away from the pointer, so it never covers the month and never leaves the chart. */
+.v3-tip.v3-loan-tip[data-side="left"] { left: 8px; }
+.v3-tip.v3-loan-tip[data-side="right"] { right: 8px; }
+.v3-loan-tip-head { color: var(--ink-3); font-size: var(--t-xs); margin-bottom: var(--space-2); }
+.v3-loan-tip dl { margin: 0; display: grid; gap: 2px; }
+.v3-loan-tip dl div { display: flex; justify-content: space-between; gap: var(--space-4); }
+.v3-loan-tip dt { color: var(--ink-2); }
+.v3-loan-tip dd { margin: 0; }
