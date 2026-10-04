@@ -1,4 +1,5 @@
 import type { Rec } from './records'
+import type { BankRate, DataIssue, Loan, LoanMonthRow } from './property-math'
 
 // 👉 DEMO DATA — the fake business behind Settings → "Use demo data".
 // Nothing here touches Supabase: these rows are generated in memory, so your real
@@ -192,4 +193,40 @@ export function demoRecords(): Rec[] {
   }
 
   return out.sort((a, b) => b.created_at.localeCompare(a.created_at))
+}
+
+// Property tab demo: one invented flexi loan, 30 months, generated in memory.
+export function demoProperty(): {
+  loans: Loan[]
+  months: LoanMonthRow[]
+  rates: BankRate[]
+  issues: DataIssue[]
+} {
+  const loan: Loan = {
+    id: 'demo-residence', name: 'Demo Residence', location: 'Bandar Contoh', bank: 'Demo Bank', loan_type: 'Full flexi',
+    rate_basis: 'BR', spread: 0.5, cycle_day: 1, loan_amount: 450_000, tenure_months: 420, first_month: '2024-04-01', notes: null, sort: 1,
+  }
+  const rates: BankRate[] = [
+    { bank: 'Demo Bank', effective_date: '2023-05-01', base_rate: 3.8, sbr: null, source: 'demo' },
+    { bank: 'Demo Bank', effective_date: '2025-07-15', base_rate: 3.55, sbr: null, source: 'demo' },
+  ]
+  const months: LoanMonthRow[] = []
+  let bal = 450_000
+  const start = Date.UTC(2024, 3, 1)
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start)
+    d.setUTCMonth(d.getUTCMonth() + i)
+    const month = d.toISOString().slice(0, 10)
+    const pending = i === 29
+    const cash = Math.min(bal * 0.9, 40_000 + i * 9_000) // flexi cash building up
+    const rate = (month >= '2025-08-01' ? 4.05 : 4.3) / 100
+    const interest = Math.round(((bal - cash) * rate * 30) / 365 * 100) / 100
+    const next = Math.round((bal - (2_250 - interest)) * 100) / 100
+    months.push({
+      property_id: loan.id, month, opening_balance: i === 0 ? bal : null, outstanding_balance: pending ? null : next,
+      instalment: 2_250, interest_charged: null, status: pending ? 'pending' : 'normal', quality: pending ? 'unchecked' : 'statement', note: null,
+    })
+    if (!pending) bal = next
+  }
+  return { loans: [loan], months, rates, issues: [] }
 }

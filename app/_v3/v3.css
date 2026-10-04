@@ -1161,3 +1161,50 @@ html[data-v3accent] .v3[data-world="canon"] a.v3-btn-primary { color: var(--on-a
 .v3-keep-rate b { position: relative; padding-left: var(--space-2); font-size: var(--t-sm); }
 .v3-keep-row[data-progress] { color: var(--ink-3); }
 .v3-keep-wip { display: block; font-size: 10px; color: var(--ink-3); font-family: var(--f-ui); }
+
+/* ---------------------------------------------------------------- property (home loans) */
+
+.v3-prop { scroll-margin-top: var(--space-6); margin-bottom: var(--space-8); display: grid; gap: var(--space-5); }
+
+.v3-prop-jump { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.v3-prop-jump .v3-chip { text-decoration: none; }
+.v3-prop-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.v3-prop-head .v3-chapter-title { margin: 0; }
+.v3-prop-grid { align-items: start; }
+.v3-prop-foot { margin-top: var(--space-6); max-width: 80ch; }
+.v3-prop-form { display: grid; gap: var(--space-3); }
+.v3-prop-form label { display: grid; gap: var(--space-1); font-size: var(--t-sm); color: var(--ink-2); }
+.v3-prop-form .v3-select { max-width: none; width: 100%; }
+.v3-prop-form input.v3-select { font-size: var(--t-md); padding-block: var(--space-2); }
+.v3-prop-form details { display: grid; gap: var(--space-3); font-size: var(--t-sm); }
+.v3-prop-form details[open] { padding-bottom: var(--space-1); }
+.v3-prop-form details label { margin-top: var(--space-3); }
+.v3-prop-form summary, .v3-prop-more summary { cursor: pointer; color: var(--ink-2); font-size: var(--t-sm); }
+.v3-prop-form .v3-btn-primary { justify-content: center; }
+.v3-prop-msg { margin: 0; min-height: 1.2em; font-size: var(--t-sm); color: var(--neg); }
+.v3-prop-msg[data-ok="true"] { color: var(--pos); }
+.v3-prop-issues { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.v3-prop-issue { border: 1px solid var(--line); border-left: 3px solid var(--line-2); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
+.v3-prop-issue[data-sev="high"] { border-left-color: var(--neg); }
+.v3-prop-issue[data-sev="medium"] { border-left-color: var(--mark); }
+.v3-prop-issue p { margin: 0 0 var(--space-3); color: var(--ink-2); font-size: var(--t-sm); max-width: 90ch; }
+.v3-prop-issue-top { display: flex; gap: var(--space-3); align-items: baseline; flex-wrap: wrap; }
+.v3-prop-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-3) 0; font-size: var(--t-sm); }
+.v3-prop-cmp small { display: block; font-size: var(--t-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.04em; }
+@media (max-width: 640px) { .v3-prop-cmp { grid-template-columns: 1fr; } }
+.v3-prop-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.v3-prop-more { margin-top: var(--space-4); }
+.v3-prop-more ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); color: var(--ink-2); font-size: var(--t-sm); display: grid; gap: var(--space-1); }
+.v3-prop-table td.num, .v3-prop-table th:not(:first-child):not(:last-child) { text-align: right; white-space: nowrap; }
+.v3-prop-table tr[data-status="moratorium"] td, .v3-prop-table tr[data-status="missing"] td,
+.v3-prop-table tr[data-status="pending"] td { color: var(--ink-3); }
+.v3-prop-added { display: block; font-size: var(--t-xs); color: var(--mark); }
+.v3-prop-table .v3-tag[data-q="statement"] { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, transparent); }
+.v3-prop-table .v3-tag[data-q="derived"], .v3-prop-table .v3-tag[data-q="estimated"] { color: var(--mark); }
+.v3-loan-chart .full { fill: var(--accent-soft); }
+.v3-loan-chart .paid { fill: var(--accent); }
+.v3-loan-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.v3-loan-key.paid { background: var(--accent); }
+.v3-loan-key.full { background: var(--accent-soft); }
+.v3-prop .v3-kpi-value { font-size: clamp(1.05rem, 1.9vw, 1.625rem); white-space: nowrap; }
+.v3-prop-table td:first-child { white-space: nowrap; }

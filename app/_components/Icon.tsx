@@ -5,7 +5,7 @@ export type IconName =
   | 'dashboard' | 'cash-in' | 'cash-out' | 'leads' | 'customers' | 'invoice' | 'clients'
   | 'instagram' | 'content' | 'tasks' | 'approvals' | 'robot' | 'vault' | 'settings'
   | 'chart' | 'calendar' | 'trend' | 'eye' | 'heart' | 'share' | 'bookmark' | 'sparkle'
-  | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet'
+  | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet' | 'home'
   | 'news' | 'play' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
   | 'drive' | 'upload' | 'download' | 'design' | 'plus' | 'alert' | 'undo' | 'edit'
 
@@ -37,6 +37,7 @@ const P: Record<IconName, React.ReactNode> = {
   pie: <><path d="M12 3a9 9 0 1 0 9 9h-9V3Z" /><path d="M14.5 3.4A9 9 0 0 1 20.6 9.5h-6.1V3.4Z" /></>,
   refresh: <><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v4.5h-4.5" /></>,
   camera: <><rect x="3" y="7" width="18" height="13" rx="3" /><circle cx="12" cy="13.5" r="3.6" /><path d="M8.5 7 10 4.5h4L15.5 7" /></>,
+  home: <><path d="M3.5 10.5 12 4l8.5 6.5" /><path d="M5.5 9v10.5a1 1 0 0 0 1 1h4v-6h3v6h4a1 1 0 0 0 1-1V9" /></>,
   wallet: <><rect x="3" y="6" width="18" height="13" rx="3" /><path d="M3 10h18" /><circle cx="17" cy="14" r="1.3" /></>,
   news: <><path d="M5 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 2 0V9" /><path d="M5 4v15a2 2 0 0 0 2 2h13" /><path d="M8.5 8.5h6M8.5 12h6M8.5 15.5h3.5" /></>,
   play: <><path d="M8 5.5v13l10.5-6.5L8 5.5Z" /></>,
