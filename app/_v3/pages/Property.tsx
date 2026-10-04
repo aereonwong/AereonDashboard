@@ -234,19 +234,22 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
   const gap = rent != null && instalment != null ? rent - instalment : null
   const terms = [...tenancies].sort((a, b) => b.start_date.localeCompare(a.start_date))
   const first = tenancies.map(t => t.start_date).sort()[0]
+  const rented = tenancies.length > 0
 
   return (
     <section className="v3-prop-tenancy" aria-labelledby={`tn-${loan.id}`}>
       <div className="v3-prop-head">
         <h3 className="v3-chapter-title" id={`tn-${loan.id}`}>
-          Tenancy
+          {rented ? 'Tenancy' : 'Running costs'}
         </h3>
         <p className="v3-panel-note">
-          {term ? `${term.tenant_name ? `${term.tenant_name} · ` : ''}let since ${dmy(first)} · ${plural(tenancies.length, 'term')}` : 'No tenancy recorded yet'}
+          {term ? `${term.tenant_name ? `${term.tenant_name} · ` : ''}let since ${dmy(first)} · ${plural(tenancies.length, 'term')}` : `${loan.name} is not rented out`}
         </p>
       </div>
 
       <div className="v3-kpis">
+        {rented ? (
+          <>
         <div className="v3-kpi">
           <div className="v3-kpi-label">Rent</div>
           <div className="v3-kpi-value">{rm(rent)}</div>
@@ -264,13 +267,22 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
           <div className="v3-kpi-value">{gap == null ? '—' : `${gap >= 0 ? '+' : '−'}${rm(Math.abs(gap))}`}</div>
           <div className="v3-kpi-note">{gap == null ? ' ' : gap >= 0 ? 'rent covers the instalment' : 'a month you top up'}</div>
         </div>
+          </>
+        ) : null}
         <div className="v3-kpi">
           <div className="v3-kpi-label">Costs {year}</div>
           <div className="v3-kpi-value">{rm(c.year)}</div>
           <div className="v3-kpi-note">
-            agent &amp; stamping {rm(c.signingYear)} · other {rm(c.year - c.signingYear)}
+            {c.signingYear > 0 ? `agent & stamping ${rm(c.signingYear)} · other ${rm(c.year - c.signingYear)}` : plural(costs.filter(x => x.cost_date.startsWith(year)).length, 'bill')}
           </div>
         </div>
+        {!rented ? (
+          <div className="v3-kpi">
+            <div className="v3-kpi-label">Costs all time</div>
+            <div className="v3-kpi-value">{rm(c.all)}</div>
+            <div className="v3-kpi-note">{plural(costs.length, 'bill')} since {costs.length ? dmy(costs.map(x => x.cost_date).sort()[0]) : '—'}</div>
+          </div>
+        ) : null}
       </div>
 
       <div className="v3-grid v3-prop-grid">
@@ -289,6 +301,7 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
         </section>
       </div>
 
+      {rented ? (
       <section className="v3-panel" aria-label={`${loan.name} tenancy terms`}>
         <div className="v3-panel-head">
           <h3 className="v3-panel-title">Terms</h3>
@@ -308,6 +321,12 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
           />
         </details>
       </section>
+      ) : (
+        <details className="v3-prop-more">
+          <summary>Renting {loan.name} out? Add a tenancy</summary>
+          <TermForm propertyId={loan.id} from={today} rent={null} tenant={null} />
+        </details>
+      )}
     </section>
   )
 }
