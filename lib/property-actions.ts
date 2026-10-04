@@ -100,12 +100,20 @@ async function guard(propertyId: string): Promise<Result | null> {
   return loan ? null : { ok: false, error: 'Unknown property' }
 }
 
+/** The optional `id` field of an edit form: null = a new row, 'bad' = not a valid id. */
+const rowId = (form: FormData): number | null | 'bad' => {
+  const raw = String(form.get('id') ?? '')
+  if (!raw) return null
+  const n = Number(raw)
+  return Number.isInteger(n) && n > 0 ? n : 'bad'
+}
+
 const done = (error: { message: string } | null): Result => {
   revalidatePath('/property')
   return error ? { ok: false, error: /does not exist|schema cache/.test(error.message) ? 'Run supabase/tenancy.sql first (the Property page shows the one step).' : error.message } : { ok: true }
 }
 
-/** Record a bill: maintenance fee, repair or anything else the property cost. */
+/** Record a bill (or, with an `id` field, correct one): maintenance fee, repair, agent or stamping fee, anything else. */
 export async function addPropertyCost(form: FormData): Promise<Result> {
   const propertyId = String(form.get('property_id') ?? '')
   const blocked = await guard(propertyId)
@@ -116,15 +124,17 @@ export async function addPropertyCost(form: FormData): Promise<Result> {
   if (!isDate(date)) return { ok: false, error: 'Pick the date of the bill' }
   if (!['maintenance_fee', 'repair', 'agent_fee', 'stamping_fee', 'other'].includes(kind)) return { ok: false, error: 'Pick what kind of cost it is' }
   if (amount === 'bad' || amount == null) return { ok: false, error: 'Type the amount, e.g. 350' }
-  const { error } = await supabase.from('property_cost').insert({
+  const row = {
     property_id: propertyId,
     cost_date: date,
     kind,
     amount,
     description: text(form.get('description'), 300),
     vendor: text(form.get('vendor'), 120),
-  })
-  return done(error)
+  }
+  const id = rowId(form)
+  if (id === 'bad') return { ok: false, error: 'Bad request' }
+  return done(id ? (await supabase.from('property_cost').update(row).eq('id', id).eq('property_id', propertyId)).error : (await supabase.from('property_cost').insert(row)).error)
 }
 
 export async function deletePropertyCost(id: number): Promise<Result> {
@@ -135,7 +145,7 @@ export async function deletePropertyCost(id: number): Promise<Result> {
   return done((await supabase.from('property_cost').delete().eq('id', id)).error)
 }
 
-/** Add a tenancy term — the first lease, or a renewal (a new row, so the old rent stays in the history). */
+/** Add a tenancy term — the first lease, or a renewal (a new row, so the old rent stays in the history) — or, with an `id` field, correct one. */
 export async function addTenancyTerm(form: FormData): Promise<Result> {
   const propertyId = String(form.get('property_id') ?? '')
   const blocked = await guard(propertyId)
@@ -147,7 +157,7 @@ export async function addTenancyTerm(form: FormData): Promise<Result> {
   if (!isDate(start) || !isDate(end)) return { ok: false, error: 'Pick the start and end dates' }
   if (end <= start) return { ok: false, error: 'The end date must be after the start date' }
   if (rent === 'bad' || deposit === 'bad') return { ok: false, error: 'Rent and deposit must be amounts in RM' }
-  const { error } = await supabase.from('property_tenancy').insert({
+  const row = {
     property_id: propertyId,
     start_date: start,
     end_date: end,
@@ -155,6 +165,16 @@ export async function addTenancyTerm(form: FormData): Promise<Result> {
     deposit,
     tenant_name: text(form.get('tenant_name'), 120),
     notes: text(form.get('notes'), 500),
-  })
-  return done(error)
+  }
+  const id = rowId(form)
+  if (id === 'bad') return { ok: false, error: 'Bad request' }
+  return done(id ? (await supabase.from('property_tenancy').update(row).eq('id', id).eq('property_id', propertyId)).error : (await supabase.from('property_tenancy').insert(row)).error)
+}
+
+export async function deleteTenancyTerm(id: number): Promise<Result> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
+  return done((await supabase.from('property_tenancy').delete().eq('id', id)).error)
 }
