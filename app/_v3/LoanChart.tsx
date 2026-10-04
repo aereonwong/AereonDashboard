@@ -1,8 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import type { LoanMonth } from '@/lib/property-math'
 
 // Two strips on one time axis. Top: the outstanding balance. Bottom: each month's interest as a
 // solid bar inside a grey bar for the full-rate interest — the grey part is what the flexi
-// account saved. Payment holidays and empty months leave a gap. Hover a bar for the figures.
+// account saved. Payment holidays and empty months leave a gap. Move across the chart (or use the arrow
+// keys) and the month under the pointer is marked, with its figures in a card.
 
 const W = 960
 const H = 320
@@ -11,7 +15,12 @@ const SPLIT = 170 // balance strip ends, interest strip starts
 const sen = (n: number | null) => (n == null ? '—' : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
 const k = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}K` : String(Math.round(n)))
 
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const label = (iso: string) => `${MON[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`
+const STATUS: Record<string, string> = { moratorium: 'Payment holiday', interest_only: 'Interest only', pending: 'Waiting for the statement', missing: 'No data' }
+
 export default function LoanChart({ months }: { months: LoanMonth[] }) {
+  const [at, setAt] = useState<number | null>(null)
   if (months.filter(m => m.outstanding_balance != null).length < 2) return <p className="v3-empty">Record two months to see the trend.</p>
 
   const n = months.length
@@ -37,9 +46,34 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
   const years = months.map((m, i) => ({ i, y: m.month.slice(0, 4) })).filter((p, i, a) => i === 0 || p.y !== a[i - 1].y)
   const every = Math.max(1, Math.ceil(years.length / 10))
 
+  const m = at == null ? null : months[at]
+  const move = (e: React.PointerEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - r.left) / r.width) * W
+    setAt(Math.min(n - 1, Math.max(0, Math.floor((x - PAD.l) / band)))) // the margins count as the first and last month
+  }
+  const key = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      setAt(a => Math.min(n - 1, Math.max(0, (a ?? (e.key === 'ArrowLeft' ? n : -1)) + (e.key === 'ArrowLeft' ? -1 : 1))))
+    } else if (e.key === 'Escape') setAt(null)
+  }
+
   return (
-    <div>
-      <svg className="v3-chart v3-loan-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Outstanding balance and monthly interest over time">
+    <div style={{ position: 'relative' }}>
+      <svg
+        className="v3-chart v3-loan-chart"
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        tabIndex={0}
+        aria-label="Outstanding balance and monthly interest over time. Use the left and right arrow keys to read each month."
+        onPointerMove={move}
+        onPointerDown={move}
+        onPointerLeave={e => e.pointerType === 'mouse' && setAt(null)} // a finger lifting is not leaving: the tapped month stays until you tap elsewhere
+        onKeyDown={key}
+        onBlur={() => setAt(null)}
+      >
+        {at != null ? <rect className="v3-loan-band" x={cx(at) - band / 2} y={PAD.t} width={band} height={H - PAD.b - PAD.t} /> : null}
         <g className="v3-gridlines">
           <line x1={PAD.l} x2={W - PAD.r} y1={SPLIT} y2={SPLIT} />
           <line x1={PAD.l} x2={W - PAD.r} y1={H - PAD.b} y2={H - PAD.b} />
@@ -57,15 +91,47 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
         {months.map((m, i) =>
           m.fullRate == null && m.interest == null ? null : (
             <g key={m.month}>
-              <title>
-                {`${m.month.slice(0, 7)} · interest RM ${sen(m.interest)} · full rate RM ${sen(m.fullRate)} · saved RM ${sen(m.saved)} · outstanding RM ${sen(m.outstanding_balance)}`}
-              </title>
               <rect className="full" x={cx(i) - bw / 2} y={yi(m.fullRate ?? 0)} width={bw} height={H - PAD.b - yi(m.fullRate ?? 0)} />
               <rect className="paid" x={cx(i) - bw / 2} y={yi(m.interest ?? 0)} width={bw} height={H - PAD.b - yi(m.interest ?? 0)} />
             </g>
           ),
         )}
+        {at != null && m?.outstanding_balance != null ? <circle className="v3-loan-dot" cx={cx(at)} cy={yb(m.outstanding_balance)} r={6} /> : null}
       </svg>
+      {m ? (
+        <div className="v3-tip v3-loan-tip" role="status" data-side={cx(at!) < W / 2 ? 'right' : 'left'}>
+          <div className="v3-loan-tip-head">
+            {label(m.month)}
+            {m.status !== 'normal' ? <span> · {STATUS[m.status] ?? m.status}</span> : null}
+          </div>
+          <dl>
+            <div>
+              <dt>Outstanding</dt>
+              <dd className="num">{m.outstanding_balance != null ? `RM ${sen(m.outstanding_balance)}` : '—'}</dd>
+            </div>
+            <div>
+              <dt>Instalment</dt>
+              <dd className="num">{m.instalment != null ? `RM ${sen(m.instalment)}` : '—'}</dd>
+            </div>
+            <div>
+              <dt>Interest charged</dt>
+              <dd className="num">{m.interest != null ? `RM ${sen(m.interest)}` : '—'}</dd>
+            </div>
+            <div>
+              <dt>Full-rate interest</dt>
+              <dd className="num">{m.fullRate != null ? `RM ${sen(m.fullRate)}` : '—'}</dd>
+            </div>
+            <div>
+              <dt>Saved by flexi</dt>
+              <dd className="num">{m.saved != null ? `RM ${sen(m.saved)}` : '—'}</dd>
+            </div>
+            <div>
+              <dt>Rate</dt>
+              <dd className="num">{m.rate != null ? `${m.rate.toFixed(2)}%` : '—'}</dd>
+            </div>
+          </dl>
+        </div>
+      ) : null}
       <div className="v3-legend">
         <span>
           <i />
