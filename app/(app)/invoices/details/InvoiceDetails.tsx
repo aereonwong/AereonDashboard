@@ -352,8 +352,7 @@ export default function InvoiceDetails({
             <tr>
               <Th k="no">Invoice</Th>
               <Th k="date">Date</Th>
-              <Th k="client">Client</Th>
-              <th>Project</th>
+              <Th k="client">Client · project</Th>
               <Th k="amount" right>
                 Amount
               </Th>
@@ -368,6 +367,8 @@ export default function InvoiceDetails({
             {shown.map(r => {
               const isBusy = busy.has(r.id) || r.drive === 'uploading'
               const canPdf = r.drive === 'uploaded' || (r.hasDesign && ready)
+              const paid = r.payment === 'paid'
+              const days = waited(r.date, options.today)
               return (
                 <tr key={r.id}>
                   <td className="idt-no">{r.no}</td>
@@ -375,12 +376,10 @@ export default function InvoiceDetails({
                     {r.date}
                     {r.createdAt !== r.date ? <span className="idt-sub">filed {r.createdAt}</span> : null}
                   </td>
-                  <td>
+                  <td className="idt-who">
                     <div className="idt-client" title={r.client}>
                       {r.client}
                     </div>
-                  </td>
-                  <td>
                     <div className="idt-proj" title={r.project}>
                       {r.project || '—'}
                     </div>
@@ -407,49 +406,59 @@ export default function InvoiceDetails({
                     {r.currency !== 'MYR' ? <span className="idt-fx">{r.currency}</span> : null}
                     {money(r.amount, r.currency)}
                   </td>
+
+                  {/* Payment and Drive share one shape: status on top, a quiet detail
+                      underneath, and the one action for that status on the right. */}
                   <td>
-                    <div className="idt-pay">
-                      <span className={`idt-pill ${r.payment}`}>
-                        <span className="idt-dot" /> {PAYMENT_LABEL[r.payment]}
-                      </span>
+                    <div className="idt-cell">
+                      <div className="idt-state">
+                        <span className={`idt-pill ${r.payment}`}>
+                          <span className="idt-dot" /> {PAYMENT_LABEL[r.payment]}
+                        </span>
+                        {paid && r.paidAt ? (
+                          <span className="idt-sub idt-num">on {r.paidAt}</span>
+                        ) : r.payment === 'outstanding' || r.payment === 'overdue' ? (
+                          <span className="idt-sub idt-num" data-age={ageOf(days)} title={r.dueDate ? `Due ${r.dueDate}` : undefined}>
+                            {days} day{days === 1 ? '' : 's'} waiting
+                          </span>
+                        ) : r.dueDate ? (
+                          <span className="idt-sub idt-num">due {r.dueDate}</span>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
-                        className={`idt-paybtn${r.payment === 'paid' ? ' on' : ''}`}
+                        className={`idt-act idt-paid${paid ? ' on' : ''}${busy.has(r.id) ? ' busy' : ''}`}
                         disabled={busy.has(r.id) || !!locked}
+                        aria-pressed={paid}
                         onClick={() =>
-                          r.payment === 'paid'
+                          paid
                             ? withBusy(r.id, () => markUnpaid(r.id), `${r.no} no longer marked paid`)
                             : withBusy(r.id, () => markPaid(r.id), `${r.no} marked paid`)
                         }
-                        aria-label={r.payment === 'paid' ? `Undo paid for ${r.no}` : `Mark ${r.no} paid`}
-                        title={locked ?? (r.payment === 'paid' ? 'Marked paid — click to undo' : 'Mark paid')}
+                        aria-label={paid ? `Undo paid for ${r.no}` : `Mark ${r.no} paid`}
+                        title={locked ?? (paid ? 'Marked paid — click to undo' : 'Mark paid')}
                       >
-                        {r.payment === 'paid' ? 'Undo' : (
-                          <>
-                            <Icon name="check" /> Paid
-                          </>
-                        )}
+                        <Icon name="check" />
                       </button>
                     </div>
-                    {r.payment === 'paid' && r.paidAt ? (
-                      <span className="idt-sub idt-num">on {r.paidAt}</span>
-                    ) : r.payment === 'outstanding' || r.payment === 'overdue' ? (
-                      <span className="idt-sub idt-num" data-age={ageOf(waited(r.date, options.today))}>
-                        {waited(r.date, options.today)} days since invoice{r.dueDate ? ` · due ${r.dueDate}` : ''}
-                      </span>
-                    ) : r.dueDate ? (
-                      <span className="idt-sub idt-num">due {r.dueDate}</span>
-                    ) : null}
                   </td>
                   <td>
-                    {r.drive === 'uploaded' ? (
-                      <span className="idt-drive uploaded">
-                        <a href={r.driveUrl ?? undefined} target="_blank" rel="noopener noreferrer" title="Open the PDF in Google Drive">
-                          <Icon name="drive" /> In Drive
-                        </a>
+                    <div className="idt-cell">
+                      <div className="idt-state">
+                        {r.drive === 'uploaded' && r.driveUrl ? (
+                          <a className="idt-pill drive uploaded" href={r.driveUrl} target="_blank" rel="noopener noreferrer" title="Open the PDF in Google Drive">
+                            <span className="idt-dot" /> {DRIVE_LABEL.uploaded}
+                          </a>
+                        ) : (
+                          <span className={`idt-pill drive ${isBusy ? 'uploading' : r.drive}`} title={r.drive === 'failed' ? r.driveError ?? undefined : undefined}>
+                            <span className="idt-dot" /> {isBusy && r.drive !== 'uploaded' ? 'Uploading…' : DRIVE_LABEL[r.drive]}
+                          </span>
+                        )}
+                      </div>
+                      {r.drive === 'uploaded' ? (
                         <button
                           type="button"
-                          className={`idt-act idt-reup${isBusy ? ' busy' : ''}`}
+                          className={`idt-act${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready || !r.hasDesign}
                           onClick={() => {
                             confirmThen(
@@ -473,9 +482,7 @@ export default function InvoiceDetails({
                         >
                           <Icon name="refresh" />
                         </button>
-                      </span>
-                    ) : (
-                      <span className={`idt-drive ${r.drive}`}>
+                      ) : (
                         <button
                           type="button"
                           className={`idt-act ${r.drive === 'failed' ? 'bad' : 'go'}${isBusy ? ' busy' : ''}`}
@@ -492,14 +499,15 @@ export default function InvoiceDetails({
                                 : 'Upload PDF to Google Drive')
                           }
                         >
-                          <Icon name={isBusy ? 'refresh' : r.drive === 'failed' ? 'alert' : 'upload'} />
+                          <Icon name={isBusy ? 'refresh' : 'upload'} />
                         </button>
-                        {isBusy ? 'Uploading…' : DRIVE_LABEL[r.drive]}
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </td>
+
                   <td>
                     <div className="idt-acts">
+                      {/* Work on the record … */}
                       <button
                         type="button"
                         className={`idt-act${r.igPosts.length ? ' linked' : ''}`}
@@ -551,8 +559,13 @@ export default function InvoiceDetails({
                         >
                           <Icon name={busy.has(r.id) ? 'refresh' : 'undo'} />
                         </button>
-                      ) : null}
+                      ) : (
+                        <span className="idt-act idt-act-gap" aria-hidden="true" />
+                      )}
 
+                      <span className="idt-acts-rule" aria-hidden="true" />
+
+                      {/* … and look at the document. */}
                       {r.hasDesign && ready && !locked ? (
                         <a className="idt-act" href={`/api/invoices/${r.id}/preview`} target="_blank" rel="noopener" aria-label={`Preview ${r.no} from Canva`} title="Preview — fresh export from Canva">
                           <Icon name="eye" />
@@ -582,7 +595,6 @@ export default function InvoiceDetails({
                           <Icon name="download" />
                         </span>
                       )}
-
                     </div>
                   </td>
                 </tr>
