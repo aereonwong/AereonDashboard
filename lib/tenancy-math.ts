@@ -18,7 +18,7 @@ export type Tenancy = {
   notes: string | null
 }
 
-export type CostKind = 'maintenance_fee' | 'repair' | 'agent_fee' | 'other'
+export type CostKind = 'maintenance_fee' | 'repair' | 'agent_fee' | 'stamping_fee' | 'other'
 export type Cost = {
   id: number
   property_id: string
@@ -29,7 +29,7 @@ export type Cost = {
   vendor: string | null
 }
 
-export const KIND_LABEL: Record<CostKind, string> = { maintenance_fee: 'Maintenance fee', repair: 'Repair', agent_fee: 'Agent fee', other: 'Other' }
+export const KIND_LABEL: Record<CostKind, string> = { maintenance_fee: 'Maintenance fee', repair: 'Repair', agent_fee: 'Agent fee', stamping_fee: 'Stamping fee', other: 'Other' }
 
 const day = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))
 
@@ -83,5 +83,5 @@ export function nextRentDue(t: Tenancy, today: string): string | null {
 export function costTotals(costs: Cost[], year: string) {
   const inYear = costs.filter(c => c.cost_date.startsWith(year))
   const sum = (cs: Cost[]) => Math.round(cs.reduce((a, c) => a + c.amount, 0) * 100) / 100
-  return { year: sum(inYear), all: sum(costs), repairsYear: sum(inYear.filter(c => c.kind === 'repair')), feesYear: sum(inYear.filter(c => c.kind === 'maintenance_fee')), agentYear: sum(inYear.filter(c => c.kind === 'agent_fee')) }
+  return { year: sum(inYear), all: sum(costs), repairsYear: sum(inYear.filter(c => c.kind === 'repair')), feesYear: sum(inYear.filter(c => c.kind === 'maintenance_fee')), signingYear: sum(inYear.filter(c => c.kind === 'agent_fee' || c.kind === 'stamping_fee')) }
 }

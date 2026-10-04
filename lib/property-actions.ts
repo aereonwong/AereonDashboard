@@ -114,7 +114,7 @@ export async function addPropertyCost(form: FormData): Promise<Result> {
   const kind = String(form.get('kind') ?? '')
   const amount = money(form.get('amount'))
   if (!isDate(date)) return { ok: false, error: 'Pick the date of the bill' }
-  if (!['maintenance_fee', 'repair', 'agent_fee', 'other'].includes(kind)) return { ok: false, error: 'Pick what kind of cost it is' }
+  if (!['maintenance_fee', 'repair', 'agent_fee', 'stamping_fee', 'other'].includes(kind)) return { ok: false, error: 'Pick what kind of cost it is' }
   if (amount === 'bad' || amount == null) return { ok: false, error: 'Type the amount, e.g. 350' }
   const { error } = await supabase.from('property_cost').insert({
     property_id: propertyId,

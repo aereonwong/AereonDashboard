@@ -268,7 +268,7 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
           <div className="v3-kpi-label">Costs {year}</div>
           <div className="v3-kpi-value">{rm(c.year)}</div>
           <div className="v3-kpi-note">
-            repairs {rm(c.repairsYear)} · maintenance {rm(c.feesYear)} · agent {rm(c.agentYear)}
+            agent &amp; stamping {rm(c.signingYear)} · other {rm(c.year - c.signingYear)}
           </div>
         </div>
       </div>
@@ -278,14 +278,14 @@ function TenancyPanel({ view, year, instalment }: { view: LoanView; year: string
           <div className="v3-panel-head">
             <h3 className="v3-panel-title">Add a cost</h3>
           </div>
-          <CostForm propertyId={loan.id} />
+          <CostForm propertyId={loan.id} rent={rent} />
         </section>
         <section className="v3-panel v3-span-8" aria-label={`${loan.name} costs`}>
           <div className="v3-panel-head">
             <h3 className="v3-panel-title">Running costs</h3>
             <p className="v3-panel-note">all time {rm(c.all)}</p>
           </div>
-          {costs.length ? <CostTable costs={costs} /> : <p className="v3-empty">No costs yet. Add the maintenance fee, agent fee and any repair as they come.</p>}
+          {costs.length ? <CostTable costs={costs} /> : <p className="v3-empty">No costs yet. Add the agent fee, stamping fee, maintenance fee and any repair as they come.</p>}
         </section>
       </div>
 
