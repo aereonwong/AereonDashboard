@@ -219,14 +219,24 @@ export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: s
 }
 
 /**
- * The property's estimated month across every tenant running now: rent in, what holding it costs (bills you bore + maintenance),
- * the loan instalment, and what is left. Each tenant's own monthly figure is added up (their tenancies differ in length), and the
- * loan and maintenance fee are split by rent between concurrent tenants, so they are counted once. rent − upkeep − loan = net.
+ * The property's month as it stands today: the rent of every tenant running now, less what holding it costs (this month's
+ * maintenance fee, plus the bills you bore for those tenants spread over their tenancies) and the loan instalment now
+ * (the latest on record). rent − upkeep − loan = net. The loan and the fee are the property's own, so nothing is split here.
  */
 export function propertyMonthly(groups: TenantGroup[], costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { rent: number; upkeep: number; loan: number; net: number } | null {
-  const frames = groups.filter(g => g.status === 'current').map(g => cashResult(g, costs, loanMonths, today, groups).whole).filter(f => f.payments)
-  if (!frames.length) return null
-  const per = (k: (f: CashFrame) => number) => r2(frames.reduce((a, f) => a + k(f) / f.payments, 0))
-  const rent = per(f => f.rent), upkeep = per(f => f.bills + f.maintenance), loan = per(f => f.loan)
-  return { rent, upkeep, loan, net: r2(rent - upkeep - loan) }
+  const live = groups.filter(g => g.status === 'current')
+  const rents = live.map(g => (g.terms.find(t => t.start_date <= today && today <= t.end_date) ?? g.terms[g.terms.length - 1]).monthly_rent)
+  const nums = rents.filter((r): r is number => r != null)
+  if (!live.length || nums.length < rents.length) return null
+  const latest = (rows: { m: string; v: number }[]) => [...rows].filter(r => r.m <= today.slice(0, 7)).sort((a, b) => a.m.localeCompare(b.m)).at(-1)?.v ?? [...rows].sort((a, b) => a.m.localeCompare(b.m))[0]?.v ?? 0
+  const loan = latest(loanMonths.filter(l => l.instalment != null).map(l => ({ m: l.month.slice(0, 7), v: l.instalment! })))
+  const byMonth = new Map<string, number>()
+  for (const c of costs) if (c.kind === 'maintenance_fee' && !c.recovered_from_deposit) byMonth.set(c.cost_date.slice(0, 7), (byMonth.get(c.cost_date.slice(0, 7)) ?? 0) + c.amount)
+  const maintenance = latest([...byMonth].map(([m, v]) => ({ m, v })))
+  const bills = live.reduce((a, g) => {
+    const f = cashResult(g, costs, loanMonths, today, groups).whole
+    return a + (f.payments ? f.bills / f.payments : 0)
+  }, 0)
+  const rent = r2(nums.reduce((a, r) => a + r, 0)), upkeep = r2(maintenance + bills)
+  return { rent, upkeep, loan: r2(loan), net: r2(rent - upkeep - loan) }
 }

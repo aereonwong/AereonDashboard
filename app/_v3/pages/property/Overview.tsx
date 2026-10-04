@@ -83,14 +83,14 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
           )}
           {month ? (
             <>
-              <h3 className="v3-prop-sub">A month, on average</h3>
+              <h3 className="v3-prop-sub">A month, as it stands</h3>
               <dl className="v3-prop-facts">
                 <div>
                   <dt>Rent</dt>
                   <dd className="num">{rm(month.rent)}</dd>
                 </div>
                 <div>
-                  <dt>Maintenance and bills you bore</dt>
+                  <dt>Maintenance and bills you bore (fees spread over the tenancy)</dt>
                   <dd className="num">− {rm(month.upkeep)}</dd>
                 </div>
                 <div>
