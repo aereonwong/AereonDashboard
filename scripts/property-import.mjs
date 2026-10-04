@@ -6,6 +6,9 @@
 //   npm run property:import -- --tenancy  load only the tenancy terms (.property-data/tenancies.json, optional);
 //                                          they are replaced as a set. Run supabase/tenancy.sql first.
 //
+//   npm run property:import -- --submeter load the sub-meter history (.property-data/submeter.json: readings and TNB bills);
+//                                          rows are upserted, so running it again is safe. Run supabase/submeter.sql first.
+//
 // Everything lives in .property-data/ (git-ignored: the repo is public), bank rates included,
 // since which banks they are says who lends to Aereon.
 import { readFileSync } from 'node:fs'
@@ -14,11 +17,12 @@ import { computeLoan, validate } from '../lib/property-math.ts'
 
 const dry = process.argv.includes('--dry')
 const read = f => JSON.parse(readFileSync(new URL(`../.property-data/${f}`, import.meta.url), 'utf8'))
-const loans = read('loans.json')
-const months = read('loan_months.json')
-const issues = read('issues.json')
+const submeterOnly = process.argv.includes('--submeter')
+const loans = submeterOnly ? [] : read('loans.json')
+const months = submeterOnly ? [] : read('loan_months.json')
+const issues = submeterOnly ? [] : read('issues.json')
 
-const rates = read('bank_rates.json')
+const rates = submeterOnly ? [] : read('bank_rates.json')
 
 const fmt = n => (n == null ? '—' : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
 for (const loan of loans) {
@@ -45,6 +49,12 @@ const step = async (label, p) => {
     process.exit(1)
   }
   console.log(`✓ ${label}`)
+}
+if (submeterOnly) {
+  const data = read('submeter.json')
+  await step(`${data.readings.length} sub-meter readings`, db.from('submeter_reading').upsert(data.readings, { onConflict: 'property_id,unit,read_on' }))
+  await step(`${data.bills.length} TNB bills`, db.from('submeter_bill').upsert(data.bills, { onConflict: 'property_id,bill_date' }))
+  process.exit(0)
 }
 if (process.argv.includes('--tenancy')) {
   let terms = []
