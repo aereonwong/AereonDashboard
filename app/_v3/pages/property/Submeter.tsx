@@ -70,7 +70,7 @@ function PropertySubmeter({ id, name, location, readings, bills, today }: { id: 
           <h2 className="v3-chapter-title" id={`s-${id}`}>
             {name}
           </h2>
-          <p className="v3-panel-note">{[location, units.length ? units.join(' + ') : null].filter(Boolean).join(' · ')}</p>
+          <p className="v3-panel-note">{location ?? (units.length ? units.join(' + ') : null)}</p>
         </div>
         {last ? (
           <p className="v3-panel-note">
