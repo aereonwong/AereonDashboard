@@ -115,6 +115,26 @@ Which properties, banks and spreads they are is private: see `.property-data/loa
 - `property_data_issue` holds what the spreadsheet move found. Aereon approves each fix; don't apply
   open ones without asking.
 
+## Sign-in (Google + backup passcode, added 4 Oct 2026)
+
+Front door is **Sign in with Google** (`lib/google-auth.ts`, `app/api/auth/google/**`: OIDC code flow +
+PKCE, hand-written, no auth library). Active only when `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` are set;
+until then the login page is the old passcode form. A verified Google account must also be allowed:
+- `ADMIN_EMAILS` (env, comma-separated) — always in, needs no database. This is the break-glass list:
+  keep a second Google account on it.
+- `app_users` table (`supabase/app-users.sql`) — the managed list: `role` owner/admin/viewer, `active` flag,
+  `last_login_at`. Future User Management page edits this. Roles are stored but not yet enforced anywhere.
+- Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
+  Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. Google sessions
+  are not re-checked against the list per request: removing someone takes effect at their next sign-in, or at
+  once by rotating `AUTH_SECRET`.
+- Backup access ladder: second Google account → passcode (`APP_PASSCODE`, behind "Use backup passcode") →
+  edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
+  Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
+  `AUTH_SECRET` or set `PASSCODE_LOGIN=off` instead.
+- Google redirects only to one host (`APP_BASE_URL`, default https://aereonwong.vercel.app), registered in
+  Google Cloud. `/api/logout` (POST) clears the cookie.
+
 ## Raising an invoice or a quotation
 
 `/invoice` and `/quote` in Telegram — the interview flow, numbering rules, Canva template editing,

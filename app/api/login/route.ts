@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { SESSION_COOKIE, SESSION_DAYS, mintSession } from '@/lib/session'
+import { SESSION_COOKIE, SESSION_DAYS, mintSession, passcodeLoginOn, sessionSecret } from '@/lib/session'
 import { clientKey, takeAttempt, lockedFor, recordFail, clearFails, WRONG_DELAY_MS } from '@/lib/login-guard'
 
 // 🔒 Don't edit — this keeps your robot safe.
@@ -25,6 +25,10 @@ export async function POST(req: Request) {
   // isn't gated in this state anyway (see proxy.ts).
   if (!passcode) {
     return NextResponse.json({ ok: false, reason: 'no_passcode_set' }, { status: 200 })
+  }
+  // Passcode retired (PASSCODE_LOGIN=off) → Google is the only way in.
+  if (!passcodeLoginOn()) {
+    return NextResponse.json({ ok: false, reason: 'passcode_off' }, { status: 403 })
   }
 
   // Locked out? Refuse before even looking at the passcode.
@@ -64,7 +68,7 @@ export async function POST(req: Request) {
   await clearFails(who)
 
   // Mint the opaque cookie: expiry + nonce, signed (see lib/session.ts).
-  const token = mintSession(passcode)
+  const token = mintSession(sessionSecret())
 
   const res = NextResponse.json({ ok: true })
   res.cookies.set(SESSION_COOKIE, token, {

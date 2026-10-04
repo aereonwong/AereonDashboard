@@ -1,21 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { SESSION_COOKIE, isValidSession } from '@/lib/session'
+import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The passcode gate. In Next 16 this file is called `proxy.ts` (the old name
 // `middleware.ts` is deprecated and would print scary warnings for beginners).
 //
-// It's "a lock on the door, not bank-grade auth": if APP_PASSCODE is set and the
-// visitor has no VALID session cookie (signature checked in lib/session.ts — a
-// cookie that merely exists proves nothing), we bounce them to /login. If APP_PASSCODE is NOT
-// set, we DON'T gate anything — the app shows a calm setup banner instead, so a
-// half-configured clone never locks you out of your own HQ.
+// It's "a lock on the door, not bank-grade auth": if a session secret is set
+// (AUTH_SECRET, or APP_PASSCODE) and the visitor has no VALID session cookie
+// (signature checked in lib/session.ts — a cookie that merely exists proves
+// nothing), we bounce them to /login. If neither is set, we DON'T gate anything —
+// the app shows a calm setup banner instead, so a half-configured clone never
+// locks you out of your own HQ.
 export function proxy(req: NextRequest) {
-  const passcode = (process.env.APP_PASSCODE ?? '').trim()
-  if (!passcode) return NextResponse.next()          // no lock installed → open door
+  const secret = sessionSecret()
+  if (!secret) return NextResponse.next()            // no lock installed → open door
 
   const session = req.cookies.get(SESSION_COOKIE)?.value
-  if (isValidSession(session, passcode)) return NextResponse.next()   // signed by us → allow
+  if (isValidSession(session, secret)) return NextResponse.next()   // signed by us → allow
 
   const url = req.nextUrl.clone()
   url.pathname = '/login'
@@ -25,7 +26,9 @@ export function proxy(req: NextRequest) {
 // The matcher protects every page EXCEPT the ones below, which must stay reachable
 // without the cookie:
 //   • /                       — the public landing page (no private data on it)
-//   • /login, /api/login      — you can't log in through a locked login page
+//   • /login, /api/login, /api/auth/google/*, /api/logout — you can't log in through a locked
+//     login page (Google sign-in start + callback). Only that subfolder is public; any
+//     other route under /api/auth stays behind the gate.
 //   • /api/telegram           — Telegram's webhook (has its own secret-header guard)
 //   • /api/cron-daily         — the daily cron (has its own fail-closed Bearer guard)
 //   • /api/cron-news          — the daily news digest cron (same fail-closed Bearer guard)
@@ -37,6 +40,6 @@ export function proxy(req: NextRequest) {
 // Each name is anchored (`(?:/|$)`) so `/login-admin` or `/imgs-private` stay private.
 export const config = {
   matcher: [
-    '/((?!$|(?:login|api/login|api/telegram|api/cron-daily|api/cron-news|api/cron-instagram|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico)(?:/|$)).*)',
+    '/((?!$|(?:login|api/login|api/auth/google|api/logout|api/telegram|api/cron-daily|api/cron-news|api/cron-instagram|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico)(?:/|$)).*)',
   ],
 }
