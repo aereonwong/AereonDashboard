@@ -8,7 +8,7 @@ import { addPropertyCost, addTenancyTerm, deletePropertyCost } from '@/lib/prope
 type Msg = { ok: boolean; text: string } | null
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
 
-export function CostForm({ propertyId }: { propertyId: string }) {
+export function CostForm({ propertyId, rent }: { propertyId: string; rent: number | null }) {
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<Msg>(null)
   return (
@@ -31,13 +31,31 @@ export function CostForm({ propertyId }: { propertyId: string }) {
           <option value="repair">Repair</option>
           <option value="maintenance_fee">Maintenance fee</option>
           <option value="agent_fee">Agent fee</option>
+          <option value="stamping_fee">Stamping fee (tenancy agreement)</option>
           <option value="other">Other</option>
         </select>
       </label>
       <label>
         <span>Amount (RM)</span>
-        <input className="v3-select num" name="amount" inputMode="decimal" autoComplete="off" placeholder="e.g. 350" required />
+        <input className="v3-select num" name="amount" id={`amt-${propertyId}`} inputMode="decimal" autoComplete="off" placeholder="e.g. 350" required />
       </label>
+      {rent != null ? (
+        <label>
+          <span>…or months of rent (agent fee: 1, or 1.5 for a 2-year renewal)</span>
+          <input
+            className="v3-select num"
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="e.g. 1.5"
+            aria-label="Months of rent"
+            onChange={e => {
+              const n = Number(e.target.value)
+              const amt = document.getElementById(`amt-${propertyId}`) as HTMLInputElement | null
+              if (amt && Number.isFinite(n) && n > 0) amt.value = String(Math.round(n * rent * 100) / 100)
+            }}
+          />
+        </label>
+      ) : null}
       <label>
         <span>Date of the bill</span>
         <input className="v3-select" type="date" name="cost_date" defaultValue={today()} required />
