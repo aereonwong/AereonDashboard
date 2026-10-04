@@ -3,6 +3,9 @@
 //   npm run property:import            first load into Supabase (refuses if months already exist)
 //   npm run property:import -- --force  overwrite anyway (undoes months recorded on the page)
 //
+//   npm run property:import -- --tenancy  load only the tenancy terms (.property-data/tenancies.json, optional);
+//                                          they are replaced as a set. Run supabase/tenancy.sql first.
+//
 // Everything lives in .property-data/ (git-ignored: the repo is public), bank rates included,
 // since which banks they are says who lends to Aereon.
 import { readFileSync } from 'node:fs'
@@ -42,6 +45,18 @@ const step = async (label, p) => {
     process.exit(1)
   }
   console.log(`✓ ${label}`)
+}
+if (process.argv.includes('--tenancy')) {
+  let terms = []
+  try {
+    terms = read('tenancies.json')
+  } catch {
+    console.error('No .property-data/tenancies.json — nothing to load.')
+    process.exit(1)
+  }
+  await step('old tenancy terms cleared', db.from('property_tenancy').delete().gte('id', 0))
+  await step(`${terms.length} tenancy terms`, db.from('property_tenancy').insert(terms))
+  process.exit(0)
 }
 // One-time load. Once months exist, the page is where figures change: re-running would put
 // recorded months back to "pending" and reopen findings marked fixed. --force overrides.
