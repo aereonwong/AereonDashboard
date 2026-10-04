@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Icon from '@/app/_components/Icon'
 import { statusFigures, type DetailRow, type FormOptions, type Payment } from '@/lib/invoice-figures'
-import type { DriveStatus } from '@/lib/invoice-drive'
 import { markPaid, markUnpaid } from '@/lib/v3/payments'
 import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
@@ -27,12 +26,6 @@ const PAYMENT_LABEL: Record<Payment, string> = {
   outstanding: 'Awaiting',
   overdue: 'Overdue',
   untracked: 'Not tracked',
-}
-const DRIVE_LABEL: Record<DriveStatus, string> = {
-  uploaded: 'In Drive',
-  none: 'Not uploaded',
-  failed: 'Upload failed',
-  uploading: 'Uploading',
 }
 const rm = (n: number) => `RM ${Math.round(n).toLocaleString('en-MY')}`
 const money = (n: number, cur: string) =>
@@ -443,18 +436,39 @@ export default function InvoiceDetails({
                     </div>
                   </td>
                   <td>
-                    <div className="idt-cell">
-                      <div className="idt-state">
-                        {r.drive === 'uploaded' && r.driveUrl ? (
-                          <a className="idt-pill drive uploaded" href={r.driveUrl} target="_blank" rel="noopener noreferrer" title="Open the PDF in Google Drive">
-                            <span className="idt-dot" /> {DRIVE_LABEL.uploaded}
+                    {/* Drive is two fixed slots, like the row toolbar: where the PDF is
+                        (green Drive icon opens it; otherwise upload / retry), then re-upload. */}
+                    <div className="idt-acts idt-drive">
+                      {r.drive === 'uploaded' ? (
+                        r.driveUrl ? (
+                          <a className="idt-act idt-indrive" href={r.driveUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.no} in Google Drive`} title="In Google Drive — open the PDF">
+                            <Icon name="drive" />
                           </a>
                         ) : (
-                          <span className={`idt-pill drive ${isBusy ? 'uploading' : r.drive}`} title={r.drive === 'failed' ? r.driveError ?? undefined : undefined}>
-                            <span className="idt-dot" /> {isBusy && r.drive !== 'uploaded' ? 'Uploading…' : DRIVE_LABEL[r.drive]}
+                          <span className="idt-act idt-indrive" title="In Google Drive">
+                            <Icon name="drive" />
                           </span>
-                        )}
-                      </div>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className={`idt-act ${r.drive === 'failed' ? 'bad' : 'go'}${isBusy ? ' busy' : ''}`}
+                          disabled={isBusy || !!locked || !ready || !r.hasDesign}
+                          onClick={() => withBusy(r.id, () => uploadToDrive(r.id), `${r.no} uploaded to Google Drive`)}
+                          aria-label={`Upload ${r.no} to Google Drive`}
+                          title={
+                            locked ??
+                            offline ??
+                            (!r.hasDesign
+                              ? 'No Canva design linked — nothing to upload'
+                              : r.drive === 'failed'
+                                ? `Retry upload — ${r.driveError ?? 'last try failed'}`
+                                : 'Upload PDF to Google Drive')
+                          }
+                        >
+                          <Icon name={isBusy ? 'refresh' : r.drive === 'failed' ? 'alert' : 'upload'} />
+                        </button>
+                      )}
                       {r.drive === 'uploaded' ? (
                         <button
                           type="button"
@@ -483,24 +497,9 @@ export default function InvoiceDetails({
                           <Icon name="refresh" />
                         </button>
                       ) : (
-                        <button
-                          type="button"
-                          className={`idt-act ${r.drive === 'failed' ? 'bad' : 'go'}${isBusy ? ' busy' : ''}`}
-                          disabled={isBusy || !!locked || !ready || !r.hasDesign}
-                          onClick={() => withBusy(r.id, () => uploadToDrive(r.id), `${r.no} uploaded to Google Drive`)}
-                          aria-label={`Upload ${r.no} to Google Drive`}
-                          title={
-                            locked ??
-                            offline ??
-                            (!r.hasDesign
-                              ? 'No Canva design linked — nothing to upload'
-                              : r.drive === 'failed'
-                                ? `Retry upload — ${r.driveError ?? 'last try failed'}`
-                                : 'Upload PDF to Google Drive')
-                          }
-                        >
-                          <Icon name={isBusy ? 'refresh' : 'upload'} />
-                        </button>
+                        <span className="idt-act" aria-disabled="true" title="Not in Drive yet — nothing to re-upload">
+                          <Icon name="refresh" />
+                        </span>
                       )}
                     </div>
                   </td>
