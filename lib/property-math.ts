@@ -135,7 +135,10 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[])
 
     const live = m.status === 'normal' || m.status === 'interest_only'
     const fullRate = m.status === 'moratorium' ? 0 : opening != null && factor != null && live ? r2(opening * factor) : null
-    const saved = m.status === 'normal' && fullRate != null && interest != null ? r2(fullRate - interest) : null
+    // Under RM1 either way is the bank's day-count rounding, not a saving (a loan with no flexi cash
+    // lands within a few sen of zero every month), so it reads as 0 rather than −0.24.
+    const rawSaved = m.status === 'normal' && fullRate != null && interest != null ? r2(fullRate - interest) : null
+    const saved = rawSaved != null && Math.abs(rawSaved) < 1 ? 0 : rawSaved
     const flexiCash =
       m.status === 'normal' && factor && interest != null && opening != null ? Math.max(0, r2(opening - interest / factor)) : null
 

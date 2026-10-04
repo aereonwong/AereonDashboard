@@ -53,7 +53,7 @@ export default function LoanRecord({
       )}
       <label>
         <span>Outstanding balance (RM)</span>
-        <input className="v3-select num" name="outstanding" inputMode="decimal" autoComplete="off" placeholder="e.g. 370,630.12" required />
+        <input className="v3-select num" name="outstanding" inputMode="decimal" autoComplete="off" placeholder="e.g. 123,456.78" required />
       </label>
       {last ? (
         <p className="v3-panel-note">

@@ -1,6 +1,7 @@
 // Loads the Property tab's loan history into Supabase — run once, after supabase/property.sql.
 //   npm run property:import -- --dry   work everything out locally and print it; nothing is sent
-//   npm run property:import            upsert loans, months and findings into Supabase
+//   npm run property:import            first load into Supabase (refuses if months already exist)
+//   npm run property:import -- --force  overwrite anyway (undoes months recorded on the page)
 //
 // Everything lives in .property-data/ (git-ignored: the repo is public), bank rates included,
 // since which banks they are says who lends to Aereon.
@@ -41,6 +42,13 @@ const step = async (label, p) => {
     process.exit(1)
   }
   console.log(`✓ ${label}`)
+}
+// One-time load. Once months exist, the page is where figures change: re-running would put
+// recorded months back to "pending" and reopen findings marked fixed. --force overrides.
+const { count } = await db.from('property_loan_month').select('*', { count: 'exact', head: true })
+if (count && !process.argv.includes('--force')) {
+  console.error(`Already loaded (${count} months in Supabase). Nothing changed. Use --force to overwrite with .property-data/.`)
+  process.exit(1)
 }
 await step(`${rates.length} bank rates`, db.from('property_bank_rate').upsert(rates))
 await step(`${loans.length} loans`, db.from('property_loan').upsert(loans))

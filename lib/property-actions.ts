@@ -30,7 +30,7 @@ export async function recordLoanMonth(form: FormData): Promise<Result> {
   const outstanding = money(form.get('outstanding'))
   const instalment = money(form.get('instalment'))
   const interest = money(form.get('interest'))
-  if (outstanding === 'bad' || outstanding == null) return { ok: false, error: 'Type the outstanding balance, e.g. 370630.12' }
+  if (outstanding === 'bad' || outstanding == null) return { ok: false, error: 'Type the outstanding balance, e.g. 123456.78' }
   if (instalment === 'bad' || interest === 'bad') return { ok: false, error: 'Instalment and interest must be amounts in RM' }
   const note = String(form.get('note') ?? '').trim().slice(0, 500) || null
 

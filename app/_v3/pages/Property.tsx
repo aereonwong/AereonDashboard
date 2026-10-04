@@ -31,7 +31,7 @@ export default function Property({ read, sql, sqlUrl }: { read: PropertyRead; sq
 
   const lasts = read.loans.map(l => [...l.months].reverse().find(m => m.outstanding_balance != null))
   const owed = lasts.reduce((a, m) => a + (m?.outstanding_balance ?? 0), 0)
-  const year = new Date().getUTCFullYear().toString()
+  const year = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).slice(0, 4) // Malaysia's year, not the server's
   const ytd = read.loans.flatMap(l => l.months.filter(m => m.month.startsWith(year)))
 
   return (
