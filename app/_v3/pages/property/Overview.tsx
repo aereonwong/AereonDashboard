@@ -39,65 +39,79 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
   const g = live[0] ?? groups[0]
   const shown = live.length ? live : g ? [g] : []
   const rentOf = (x: (typeof groups)[number]) => ([...x.terms].reverse().find(t => t.start_date <= today) ?? x.terms[0]).monthly_rent
-  const rent = shown.length ? (shown.some(x => rentOf(x) == null) ? null : shown.reduce((a, x) => a + (rentOf(x) ?? 0), 0)) : null
-  const gap = rent != null && last?.instalment != null ? rent - last.instalment : null
   const c = costTotals(costs, year)
-  const net = propertyMonthly(groups, costs, months, today)
+  const month = propertyMonthly(groups, costs, months, today)
   return (
     <article className="v3-panel v3-prop-card" aria-labelledby={`o-${loan.id}`}>
       <h2 className="v3-chapter-title" id={`o-${loan.id}`}>
         {loan.name}
       </h2>
       <p className="v3-panel-note">{[loan.location, loan.bank].filter(Boolean).join(' · ')}</p>
+      <h3 className="v3-prop-sub">Loan</h3>
       <dl className="v3-prop-facts">
         <div>
           <dt>Outstanding</dt>
           <dd className="num">{rm(last?.outstanding_balance)}</dd>
         </div>
         <div>
-          <dt>Loan rate</dt>
+          <dt>Rate</dt>
           <dd className="num">{last?.rate != null ? `${last.rate.toFixed(2)}%` : '—'}</dd>
         </div>
-        {tenancyReady ? (
-          <>
-            <div>
-              <dt>Tenant</dt>
-              <dd>{g ? `${shown.map(x => x.name ?? 'Not named').join(' + ')}${g.status === 'ended' ? ' (ended)' : ''}` : 'Not rented out'}</dd>
-            </div>
-            {g ? (
-              <>
+        <div>
+          <dt>Instalment</dt>
+          <dd className="num">{last?.instalment != null ? `${rm(last.instalment)} / month` : '—'}</dd>
+        </div>
+      </dl>
+      {tenancyReady ? (
+        <>
+          <h3 className="v3-prop-sub">{shown.length > 1 ? 'Tenants' : 'Tenant'}</h3>
+          {shown.length ? (
+            <dl className="v3-prop-facts">
+              {shown.map(x => (
+                <div key={x.key}>
+                  <dt>
+                    {x.name ?? 'Not named'}
+                    {x.status === 'ended' ? ' (ended)' : ''}
+                    <span className="v3-prop-dim"> · ends {dmy(x.end)} · {spanLabel(x.start, x.end)}</span>
+                  </dt>
+                  <dd className="num">{rm(rentOf(x))} / month</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="v3-panel-note">Not rented out.</p>
+          )}
+          {month ? (
+            <>
+              <h3 className="v3-prop-sub">A month, on average</h3>
+              <dl className="v3-prop-facts">
                 <div>
                   <dt>Rent</dt>
-                  <dd className="num">{rm(rent)} / month</dd>
+                  <dd className="num">{rm(month.rent)}</dd>
                 </div>
                 <div>
-                  <dt>Tenancy ends</dt>
-                  <dd>
-                    {shown.map(x => `${x.name ? `${x.name} ` : ''}${dmy(x.end)}`).join(' · ')}
-                    {shown.length === 1 ? ` · ${spanLabel(g.start, g.end)} in all` : ''}
-                  </dd>
+                  <dt>Maintenance and bills you bore</dt>
+                  <dd className="num">− {rm(month.upkeep)}</dd>
                 </div>
                 <div>
-                  <dt>Rent vs instalment</dt>
-                  <dd className="num">{gap == null ? '—' : `${gap >= 0 ? '+' : '−'}${rm(Math.abs(gap))}`}</dd>
+                  <dt>Loan instalment</dt>
+                  <dd className="num">− {rm(month.loan)}</dd>
                 </div>
-                <div>
-                  <dt>Estimated net / month, after bills and maintenance</dt>
-                  <dd className="num">{rm(net.beforeLoan)}</dd>
+                <div className="v3-prop-net">
+                  <dt>Net per month</dt>
+                  <dd className="num">{rm(month.net)}</dd>
                 </div>
-                <div>
-                  <dt>Estimated net / month, after the loan too</dt>
-                  <dd className="num">{rm(net.afterLoan)}</dd>
-                </div>
-              </>
-            ) : null}
+              </dl>
+            </>
+          ) : null}
+          <dl className="v3-prop-facts">
             <div>
               <dt>Costs {year}</dt>
               <dd className="num">{rm(c.year)}</dd>
             </div>
-          </>
-        ) : null}
-      </dl>
+          </dl>
+        </>
+      ) : null}
       <p className="v3-prop-links">
         <a href={`/property/loans#${loan.id}`}>Loans</a>
         <a href={`/property/tenancy#${loan.id}`}>Tenancy</a>

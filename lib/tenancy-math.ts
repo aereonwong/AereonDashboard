@@ -219,12 +219,14 @@ export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: s
 }
 
 /**
- * The property's estimated net per month across every tenant running now, before and after the loan.
- * Each tenant's own monthly figure is added up (their tenancies differ in length); the loan and the
- * maintenance fee are split by rent, so they are counted once.
+ * The property's estimated month across every tenant running now: rent in, what holding it costs (bills you bore + maintenance),
+ * the loan instalment, and what is left. Each tenant's own monthly figure is added up (their tenancies differ in length), and the
+ * loan and maintenance fee are split by rent between concurrent tenants, so they are counted once. rent − upkeep − loan = net.
  */
-export function propertyMonthly(groups: TenantGroup[], costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { beforeLoan: number | null; afterLoan: number | null } {
+export function propertyMonthly(groups: TenantGroup[], costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { rent: number; upkeep: number; loan: number; net: number } | null {
   const frames = groups.filter(g => g.status === 'current').map(g => cashResult(g, costs, loanMonths, today, groups).whole).filter(f => f.payments)
-  if (!frames.length) return { beforeLoan: null, afterLoan: null }
-  return { beforeLoan: r2(frames.reduce((a, f) => a + (f.rent - f.bills - f.maintenance) / f.payments, 0)), afterLoan: r2(frames.reduce((a, f) => a + f.result / f.payments, 0)) }
+  if (!frames.length) return null
+  const per = (k: (f: CashFrame) => number) => r2(frames.reduce((a, f) => a + k(f) / f.payments, 0))
+  const rent = per(f => f.rent), upkeep = per(f => f.bills + f.maintenance), loan = per(f => f.loan)
+  return { rent, upkeep, loan, net: r2(rent - upkeep - loan) }
 }
