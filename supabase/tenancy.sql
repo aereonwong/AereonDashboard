@@ -9,7 +9,10 @@ create table if not exists property_tenancy (
   start_date    date not null,
   end_date      date not null,                    -- last day of the term
   monthly_rent  numeric(10,2),                    -- blank = not entered yet
-  deposit       numeric(10,2),
+  advance_rent       numeric(10,2),               -- first month's rent, paid in advance
+  security_deposit   numeric(10,2),               -- refundable, usually 2 months
+  utility_deposit    numeric(10,2),               -- refundable, usually half a month
+  access_card_deposit numeric(10,2),              -- refundable, per card x number of cards
   tenant_name   text,
   notes         text,
   created_at    timestamptz not null default now(),
@@ -25,6 +28,7 @@ create table if not exists property_cost (
   amount        numeric(10,2) not null check (amount >= 0),
   description   text,
   vendor        text,
+  tenant_name   text,                             -- the tenant this bill belongs to (agent fee, ...); blank = the property's own
   created_at    timestamptz not null default now()
 );
 create index if not exists property_cost_property_date on property_cost (property_id, cost_date desc);
@@ -32,3 +36,11 @@ create index if not exists property_cost_property_date on property_cost (propert
 -- Server-side only, like every other table here: RLS on, no policies.
 alter table property_tenancy enable row level security;
 alter table property_cost    enable row level security;
+
+-- Upgrade for tables made by the first version of this file. Safe to run twice; no-ops on a fresh install.
+alter table property_tenancy drop column if exists deposit;
+alter table property_tenancy add column if not exists advance_rent        numeric(10,2);
+alter table property_tenancy add column if not exists security_deposit    numeric(10,2);
+alter table property_tenancy add column if not exists utility_deposit     numeric(10,2);
+alter table property_tenancy add column if not exists access_card_deposit numeric(10,2);
+alter table property_cost    add column if not exists tenant_name         text;

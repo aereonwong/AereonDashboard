@@ -232,13 +232,13 @@ export function demoProperty(): {
     if (!pending) bal = next
   }
   const tenancies: Tenancy[] = [
-    { id: 1, property_id: loan.id, start_date: '2025-06-01', end_date: '2026-05-31', monthly_rent: 2_100, deposit: 4_200, tenant_name: 'Demo Tenant', notes: null },
-    { id: 2, property_id: loan.id, start_date: '2026-06-01', end_date: '2028-05-31', monthly_rent: 2_300, deposit: 4_200, tenant_name: 'Demo Tenant', notes: 'Renewed for two years' },
+    { id: 1, property_id: loan.id, start_date: '2025-06-01', end_date: '2026-05-31', monthly_rent: 2_100, advance_rent: 2_100, security_deposit: 4_200, utility_deposit: 1_050, access_card_deposit: 100, tenant_name: 'Demo Tenant', notes: null },
+    { id: 2, property_id: loan.id, start_date: '2026-06-01', end_date: '2028-05-31', monthly_rent: 2_300, advance_rent: null, security_deposit: null, utility_deposit: null, access_card_deposit: null, tenant_name: 'Demo Tenant', notes: 'Renewed for two years' },
   ]
   const costs: Cost[] = [
-    { id: 1, property_id: loan.id, cost_date: day(20), kind: 'maintenance_fee', amount: 180, description: 'Quarterly maintenance fee', vendor: 'Demo Management' },
-    { id: 2, property_id: loan.id, cost_date: day(75), kind: 'repair', amount: 350, description: 'Aircond service and gas top-up', vendor: 'Demo Cooling' },
+    { id: 1, property_id: loan.id, cost_date: day(20), kind: 'maintenance_fee', amount: 180, description: 'Quarterly maintenance fee', vendor: 'Demo Management', tenant_name: null },
+    { id: 2, property_id: loan.id, cost_date: day(75), kind: 'repair', amount: 350, description: 'Aircond service and gas top-up', vendor: 'Demo Cooling', tenant_name: null },
   ]
-  costs.push({ id: 3, property_id: loan.id, cost_date: '2026-06-01', kind: 'agent_fee', amount: 1_150, description: 'Renewal fee', vendor: 'Demo Realty' })
+  costs.push({ id: 3, property_id: loan.id, cost_date: '2026-06-01', kind: 'agent_fee', amount: 1_150, description: 'Renewal fee', vendor: 'Demo Realty', tenant_name: null })
   return { loans: [loan], months, rates, issues: [], tenancies, costs }
 }

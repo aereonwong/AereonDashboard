@@ -13,7 +13,10 @@ export type Tenancy = {
   start_date: string
   end_date: string
   monthly_rent: number | null
-  deposit: number | null
+  advance_rent: number | null
+  security_deposit: number | null
+  utility_deposit: number | null
+  access_card_deposit: number | null
   tenant_name: string | null
   notes: string | null
 }
@@ -27,6 +30,7 @@ export type Cost = {
   amount: number
   description: string | null
   vendor: string | null
+  tenant_name: string | null
 }
 
 export const KIND_LABEL: Record<CostKind, string> = { maintenance_fee: 'Maintenance fee', repair: 'Repair', agent_fee: 'Agent fee', stamping_fee: 'Stamping fee', other: 'Other' }
@@ -84,4 +88,64 @@ export function costTotals(costs: Cost[], year: string) {
   const inYear = costs.filter(c => c.cost_date.startsWith(year))
   const sum = (cs: Cost[]) => Math.round(cs.reduce((a, c) => a + c.amount, 0) * 100) / 100
   return { year: sum(inYear), all: sum(costs), repairsYear: sum(inYear.filter(c => c.kind === 'repair')), feesYear: sum(inYear.filter(c => c.kind === 'maintenance_fee')), signingYear: sum(inYear.filter(c => c.kind === 'agent_fee' || c.kind === 'stamping_fee')) }
+}
+
+// ── Tenants: terms grouped under one name, so an extension counts with the tenancy it extends ──
+
+export type TenantGroup = {
+  key: string
+  name: string | null // null = no name entered yet
+  terms: Tenancy[] // oldest first: the first is the original term, the rest are extensions
+  start: string
+  end: string
+  status: 'current' | 'upcoming' | 'ended'
+}
+
+const same = (a: string | null, b: string | null) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase()
+
+/** Newest tenancy first. Terms with the same tenant name form one group; an unnamed term stands alone. */
+export function groupTenants(terms: Tenancy[], today: string): TenantGroup[] {
+  const groups: TenantGroup[] = []
+  for (const t of [...terms].sort((a, b) => a.start_date.localeCompare(b.start_date))) {
+    const g = t.tenant_name?.trim() ? groups.find(x => x.name && same(x.name, t.tenant_name)) : undefined
+    if (g) g.terms.push(t)
+    else groups.push({ key: t.tenant_name?.trim() ? t.tenant_name.trim().toLowerCase() : `term-${t.id}`, name: t.tenant_name?.trim() || null, terms: [t], start: t.start_date, end: t.end_date, status: 'ended' })
+  }
+  for (const g of groups) {
+    g.start = g.terms[0].start_date
+    g.end = g.terms.reduce((e, t) => (t.end_date > e ? t.end_date : e), g.terms[0].end_date)
+    g.status = g.start > today ? 'upcoming' : g.end < today ? 'ended' : 'current'
+  }
+  return groups.sort((a, b) => b.start.localeCompare(a.start))
+}
+
+/** "3 years", "18 months" — the length of a start–end span (end is the last day). */
+export function spanLabel(start: string, end: string): string {
+  const months = Math.round(daysBetween(start, end) / 30.4375)
+  return months % 12 === 0 ? `${months / 12} year${months === 12 ? '' : 's'}` : `${months} months`
+}
+
+export const DEPOSIT_FIELDS = [
+  { key: 'advance_rent', label: 'Advance rental' },
+  { key: 'security_deposit', label: 'Security deposit' },
+  { key: 'utility_deposit', label: 'Utility deposit' },
+  { key: 'access_card_deposit', label: 'Access cards' },
+] as const
+
+const r2 = (n: number) => Math.round(n * 100) / 100
+
+/** What the tenant handed over at signing, and the part of it that is refundable (everything but the advance rent). */
+export function depositsOf(terms: Tenancy[]) {
+  const sum = (k: (typeof DEPOSIT_FIELDS)[number]['key']) => r2(terms.reduce((a, t) => a + (t[k] ?? 0), 0))
+  const parts = DEPOSIT_FIELDS.map(f => ({ ...f, amount: sum(f.key) }))
+  const total = r2(parts.reduce((a, p) => a + p.amount, 0))
+  return { parts, total, refundable: r2(total - sum('advance_rent')) }
+}
+
+/** One tenant's score so far: rent that has fallen due, less the bills tagged to them. */
+export function tenantStats(g: TenantGroup, costs: Cost[], today: string) {
+  const rent = rentSoFar(g.terms, today)
+  const tagged = g.name ? costs.filter(c => same(c.tenant_name, g.name)) : []
+  const taggedTotal = r2(tagged.reduce((a, c) => a + c.amount, 0))
+  return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), deposits: depositsOf(g.terms) }
 }

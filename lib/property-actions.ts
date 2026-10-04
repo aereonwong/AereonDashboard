@@ -73,7 +73,7 @@ export async function recordLoanMonth(form: FormData): Promise<Result> {
     { property_id: propertyId, month: addMonth(month), instalment: carried, status: 'pending', quality: 'unchecked' },
     { onConflict: 'property_id,month', ignoreDuplicates: true },
   )
-  revalidatePath('/property')
+  revalidatePath('/property', 'layout')
   return { ok: true }
 }
 
@@ -83,7 +83,7 @@ export async function setIssueStatus(id: number, status: 'open' | 'fixed' | 'ign
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   if (!['open', 'fixed', 'ignored'].includes(status) || !Number.isInteger(id)) return { ok: false, error: 'Bad request' }
   const { error } = await supabase.from('property_data_issue').update({ status }).eq('id', id)
-  revalidatePath('/property')
+  revalidatePath('/property', 'layout')
   return error ? { ok: false, error: error.message } : { ok: true }
 }
 
@@ -109,7 +109,7 @@ const rowId = (form: FormData): number | null | 'bad' => {
 }
 
 const done = (error: { message: string } | null): Result => {
-  revalidatePath('/property')
+  revalidatePath('/property', 'layout')
   return error ? { ok: false, error: /does not exist|schema cache/.test(error.message) ? 'Run supabase/tenancy.sql first (the Property page shows the one step).' : error.message } : { ok: true }
 }
 
@@ -131,6 +131,7 @@ export async function addPropertyCost(form: FormData): Promise<Result> {
     amount,
     description: text(form.get('description'), 300),
     vendor: text(form.get('vendor'), 120),
+    tenant_name: text(form.get('tenant_name'), 120),
   }
   const id = rowId(form)
   if (id === 'bad') return { ok: false, error: 'Bad request' }
@@ -153,16 +154,21 @@ export async function addTenancyTerm(form: FormData): Promise<Result> {
   const start = String(form.get('start_date') ?? '')
   const end = String(form.get('end_date') ?? '')
   const rent = money(form.get('monthly_rent'))
-  const deposit = money(form.get('deposit'))
+  const deposits = {
+    advance_rent: money(form.get('advance_rent')),
+    security_deposit: money(form.get('security_deposit')),
+    utility_deposit: money(form.get('utility_deposit')),
+    access_card_deposit: money(form.get('access_card_deposit')),
+  }
   if (!isDate(start) || !isDate(end)) return { ok: false, error: 'Pick the start and end dates' }
   if (end <= start) return { ok: false, error: 'The end date must be after the start date' }
-  if (rent === 'bad' || deposit === 'bad') return { ok: false, error: 'Rent and deposit must be amounts in RM' }
+  if (rent === 'bad' || Object.values(deposits).includes('bad')) return { ok: false, error: 'Rent and deposits must be amounts in RM' }
   const row = {
     property_id: propertyId,
     start_date: start,
     end_date: end,
     monthly_rent: rent,
-    deposit,
+    ...(deposits as Record<keyof typeof deposits, number | null>),
     tenant_name: text(form.get('tenant_name'), 120),
     notes: text(form.get('notes'), 500),
   }
@@ -177,4 +183,16 @@ export async function deleteTenancyTerm(id: number): Promise<Result> {
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
   return done((await supabase.from('property_tenancy').delete().eq('id', id)).error)
+}
+
+/** Rename a tenant everywhere: every term of the group (by id) and every bill tagged to the old name. */
+export async function renameTenant(propertyId: string, termIds: number[], oldName: string | null, newName: string): Promise<Result> {
+  const blocked = await guard(propertyId)
+  if (blocked) return blocked
+  const name = newName.trim().slice(0, 120) || null
+  if (!termIds.length || termIds.length > 50 || !termIds.every(n => Number.isInteger(n) && n > 0)) return { ok: false, error: 'Bad request' }
+  const t = await supabase.from('property_tenancy').update({ tenant_name: name }).in('id', termIds).eq('property_id', propertyId)
+  if (t.error) return done(t.error)
+  if (oldName?.trim()) return done((await supabase.from('property_cost').update({ tenant_name: name }).eq('property_id', propertyId).eq('tenant_name', oldName)).error)
+  return done(null)
 }

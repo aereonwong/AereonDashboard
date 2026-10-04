@@ -1,11 +1,8 @@
-// 👉 Property — Aereon's home loans: outstanding balance,
+// 👉 Property overview — Aereon's home loans: outstanding balance,
 // the rate the bank charges, the interest paid and what the flexi account saved.
 // Replaces the "Interest Rate" Numbers sheet. Data: supabase/property.sql, lib/property.ts.
-import { readFileSync } from 'fs'
-import { join } from 'path'
-import { readProperty } from '@/lib/property'
-import { readVersion } from '@/lib/v3/version'
-import V3Property from '@/app/_v3/pages/Property'
+import { loadProperty } from './_load'
+import Overview from '@/app/_v3/pages/property/Overview'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,19 +10,8 @@ const rm = (n: number | null | undefined) =>
   n == null ? '—' : `RM ${n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export default async function PropertyPage() {
-  const [read, { version }] = await Promise.all([readProperty(), readVersion()])
-  const file = (name: string) => {
-    try {
-      return readFileSync(join(process.cwd(), 'supabase', name), 'utf8')
-    } catch {
-      return `-- supabase/${name} could not be read`
-    }
-  }
-  const sql = file('property.sql')
-  const ref = process.env.SUPABASE_URL?.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1]
-  const sqlUrl = ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : null
-
-  if (version === 'v3') return <V3Property read={read} sql={sql} sqlUrl={sqlUrl} tenancySql={file('tenancy.sql')} />
+  const { read, version } = await loadProperty()
+  if (version === 'v3') return <Overview read={read} />
 
   // v1 and v2: the headline figures in the classic look.
   return (

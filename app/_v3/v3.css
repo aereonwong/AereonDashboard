@@ -1243,3 +1243,22 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-prop-edit td { white-space: normal; background: color-mix(in srgb, var(--ink) 4%, transparent); }
 .v3-prop-edit .v3-prop-form { max-width: 28rem; padding-block: var(--space-3); }
 .v3-prop-table .v3-prop-actions { flex-wrap: nowrap; }
+.v3-prop-tenant { display: grid; gap: var(--space-4); }
+.v3-prop-tenant-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.v3-prop-tenantname { display: inline-flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.v3-prop-tenantname .v3-chapter-title { margin: 0; }
+.v3-prop-tenantname input.v3-select { max-width: 16rem; }
+.v3-prop-deposits { margin: 0 0 var(--space-3); display: grid; gap: var(--space-2); }
+.v3-prop-deposits div { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--t-sm); }
+.v3-prop-deposits dt { color: var(--ink-2); }
+.v3-prop-deposits dd { margin: 0; }
+.v3-pager { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+.v3-prop-filter { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.v3-prop-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: var(--space-5); align-items: start; }
+.v3-prop-card { display: grid; gap: var(--space-3); }
+.v3-prop-card .v3-chapter-title { margin: 0; }
+.v3-prop-facts { margin: 0; display: grid; gap: var(--space-2); }
+.v3-prop-facts div { display: flex; justify-content: space-between; gap: var(--space-4); font-size: var(--t-sm); border-bottom: 1px solid var(--line); padding-bottom: var(--space-2); }
+.v3-prop-facts dt { color: var(--ink-2); }
+.v3-prop-facts dd { margin: 0; text-align: right; }
+.v3-prop-links { display: flex; gap: var(--space-4); flex-wrap: wrap; margin: 0; font-size: var(--t-sm); }
