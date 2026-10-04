@@ -311,7 +311,10 @@ function TenantCard({ p, share: s }: { p: TenantBilling; share: number | null })
         </div>
         <div>
           <dt>Billed in total</dt>
-          <dd className="num">{rm(p.billed)}</dd>
+          <dd className="num">
+            {rm(p.billed)}
+            {p.unrated ? <span className="v3-sub-est"> + {plural(p.unrated, 'reading')} with no rate</span> : null}
+          </dd>
         </div>
         <div>
           <dt>Uses a day</dt>

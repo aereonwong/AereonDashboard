@@ -241,9 +241,13 @@ export type TenantBilling = {
   to: string
   kwh: number
   billed: number // every charge with a rate, whole history
-  billed12: number // charges read in the last 12 months
+  billed12: number // charges for the days in the last 12 months (a segment straddling the cut-off counts only its days inside)
   perDay: number | null // kWh a day over the last 12 months of readings
+  unrated: number // segments with no rate: their kWh are not in `billed`
 }
+
+/** The part of a segment that falls on or after `since`, as a fraction of its days. */
+const inside = (s: Segment, since: string) => (s.days <= 0 || s.to <= since ? 0 : s.from >= since ? 1 : daysBetween(since, s.to) / s.days)
 
 /** What each tenant of each unit has been billed: one row per unit + tenant, the current tenant of each unit first. */
 export function billing(segs: Segment[], today: string): TenantBilling[] {
@@ -260,8 +264,8 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
     .map(rows => {
       const sorted = [...rows].sort((a, b) => b.to.localeCompare(a.to))
       const ok = sorted.filter(s => s.kwh >= 0)
-      const recent = ok.filter(s => s.to > since)
-      const days = recent.reduce((t, s) => t + s.days, 0)
+      const recent = ok.filter(s => inside(s, since) > 0)
+      const days = recent.reduce((t, s) => t + s.days * inside(s, since), 0)
       return {
         unit: sorted[0].unit,
         tenant: sorted[0].tenant,
@@ -271,8 +275,9 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
         to: sorted[0].to,
         kwh: r2(ok.reduce((t, s) => t + s.kwh, 0)),
         billed: r2(ok.reduce((t, s) => t + (s.charged ?? 0), 0)),
-        billed12: r2(recent.reduce((t, s) => t + (s.charged ?? 0), 0)),
-        perDay: days > 0 ? recent.reduce((t, s) => t + s.kwh, 0) / days : null,
+        billed12: r2(recent.reduce((t, s) => t + (s.charged ?? 0) * inside(s, since), 0)),
+        perDay: days > 0 ? recent.reduce((t, s) => t + s.kwh * inside(s, since), 0) / days : null,
+        unrated: ok.filter(s => s.charged == null).length,
       }
     })
     .sort((a, b) => units.indexOf(a.unit) - units.indexOf(b.unit) || Number(b.current) - Number(a.current) || b.to.localeCompare(a.to))
@@ -282,9 +287,9 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
 export function usageShare(segs: Segment[], today: string): { unit: string; perDay: number; share: number }[] {
   const since = yearBefore(today)
   const per = [...new Set(segs.map(s => s.unit))].map(unit => {
-    const rows = segs.filter(s => s.unit === unit && s.kwh >= 0 && s.to > since)
-    const days = rows.reduce((t, s) => t + s.days, 0)
-    return { unit, perDay: days > 0 ? rows.reduce((t, s) => t + s.kwh, 0) / days : 0 }
+    const rows = segs.filter(s => s.unit === unit && s.kwh >= 0 && inside(s, since) > 0)
+    const days = rows.reduce((t, s) => t + s.days * inside(s, since), 0)
+    return { unit, perDay: days > 0 ? rows.reduce((t, s) => t + s.kwh * inside(s, since), 0) / days : 0 }
   })
   const total = per.reduce((t, u) => t + u.perDay, 0)
   return per.map(u => ({ ...u, share: total > 0 ? u.perDay / total : 0 }))
