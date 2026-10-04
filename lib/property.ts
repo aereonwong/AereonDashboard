@@ -28,8 +28,8 @@ export async function readProperty(): Promise<PropertyRead> {
     supabase.from('property_tenancy').select('*').order('start_date'),
     supabase.from('property_cost').select('*').order('cost_date', { ascending: false }).limit(2000),
     // New columns from the second version of supabase/tenancy.sql: if they are missing the page asks for the SQL again.
-    supabase.from('property_tenancy').select('advance_rent').limit(1),
-    supabase.from('property_cost').select('tenant_name').limit(1),
+    supabase.from('property_tenancy').select('advance_rent, deposit_refunded').limit(1),
+    supabase.from('property_cost').select('tenant_name, recovered_from_deposit').limit(1),
   ])
   // The tables don't exist until supabase/property.sql has been run once.
   if (loans.error || months.error || rates.error || issues.error) return { ready: false }
@@ -51,7 +51,7 @@ export async function readProperty(): Promise<PropertyRead> {
       }) as LoanMonthRow),
       rates: (rates.data ?? []).map(r => ({ ...r, base_rate: num(r.base_rate), sbr: num(r.sbr) }) as BankRate),
       issues: (issues.data ?? []) as DataIssue[],
-      tenancies: tenancies.error ? [] : (tenancies.data ?? []).map(t => ({ ...t, monthly_rent: num(t.monthly_rent), advance_rent: num(t.advance_rent), security_deposit: num(t.security_deposit), utility_deposit: num(t.utility_deposit), access_card_deposit: num(t.access_card_deposit) }) as Tenancy),
+      tenancies: tenancies.error ? [] : (tenancies.data ?? []).map(t => ({ ...t, monthly_rent: num(t.monthly_rent), advance_rent: num(t.advance_rent), security_deposit: num(t.security_deposit), utility_deposit: num(t.utility_deposit), access_card_deposit: num(t.access_card_deposit), deposit_refunded: num(t.deposit_refunded) }) as Tenancy),
       costs: costs.error ? [] : (costs.data ?? []).map(c => ({ ...c, amount: Number(c.amount) }) as Cost),
     }),
   }

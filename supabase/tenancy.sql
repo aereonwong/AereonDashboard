@@ -13,6 +13,7 @@ create table if not exists property_tenancy (
   security_deposit   numeric(10,2),               -- refundable, usually 2 months
   utility_deposit    numeric(10,2),               -- refundable, usually half a month
   access_card_deposit numeric(10,2),              -- refundable, per card x number of cards
+  deposit_refunded    numeric(10,2),              -- what was actually paid back to the tenant at the end
   tenant_name   text,
   notes         text,
   created_at    timestamptz not null default now(),
@@ -29,6 +30,7 @@ create table if not exists property_cost (
   description   text,
   vendor        text,
   tenant_name   text,                             -- the tenant this bill belongs to (agent fee, ...); blank = the property's own
+  recovered_from_deposit boolean not null default false, -- paid by the owner but deducted from the tenant's deposit: not a cost to the owner
   created_at    timestamptz not null default now()
 );
 create index if not exists property_cost_property_date on property_cost (property_id, cost_date desc);
@@ -44,3 +46,5 @@ alter table property_tenancy add column if not exists security_deposit    numeri
 alter table property_tenancy add column if not exists utility_deposit     numeric(10,2);
 alter table property_tenancy add column if not exists access_card_deposit numeric(10,2);
 alter table property_cost    add column if not exists tenant_name         text;
+alter table property_tenancy add column if not exists deposit_refunded    numeric(10,2);
+alter table property_cost    add column if not exists recovered_from_deposit boolean not null default false;

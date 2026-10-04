@@ -109,6 +109,9 @@ group **Property**: `/property` Overview (one card per property; the future prop
   same `tenant_name` form one tenant group (original + extensions). A tenant's score = rent due so far less bills tagged
   to them (`property_cost.tenant_name`). Deposits are columns on the original term (advance rent, security, utility,
   access cards). Renaming a tenant (`renameTenant`) changes every term and tagged bill. Rent due is computed, never stored.
+- **Recovered from deposit**: a bill tagged to a tenant can be ticked `recovered_from_deposit` — the owner paid it but it was
+  deducted from the tenant's deposit, so it is NOT a cost (excluded from `costTotals`, tenant net and estimate). The tenant card
+  shows the deposit settlement (held − deducted = due back; `deposit_refunded` = actually paid back; the difference is kept).
 - **Costs**: `property_cost`, kinds maintenance_fee / repair / agent_fee / stamping_fee / other; one row per bill,
   listed ten to a page. Monthly maintenance is entered as one row per month (no recurring rule yet).
 - Run `supabase/tenancy.sql` once (safe to repeat); the Tenancy and Costs pages ask for it until the columns exist.
