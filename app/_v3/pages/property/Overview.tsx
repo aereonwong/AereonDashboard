@@ -1,5 +1,5 @@
 import type { PropertyRead, LoanView } from '@/lib/property'
-import { costTotals, groupTenants, spanLabel } from '@/lib/tenancy-math'
+import { cashResult, costTotals, groupTenants, spanLabel } from '@/lib/tenancy-math'
 import { dmy, plural, rm, thisYear, today as now } from './shared'
 
 // 👉 v3 Property → Overview: one card per property, the few figures that matter, and a way into
@@ -38,6 +38,8 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
   const rent = g ? ([...g.terms].reverse().find(t => t.start_date <= today) ?? g.terms[0]).monthly_rent : null
   const gap = rent != null && last?.instalment != null ? rent - last.instalment : null
   const c = costTotals(costs, year)
+  const cash = g ? cashResult(g, costs, months, today).whole : null
+  const beforeLoan = cash && cash.payments ? Math.round(((cash.rent - cash.bills - cash.maintenance) / cash.payments) * 100) / 100 : null
   return (
     <article className="v3-panel v3-prop-card" aria-labelledby={`o-${loan.id}`}>
       <h2 className="v3-chapter-title" id={`o-${loan.id}`}>
@@ -74,6 +76,14 @@ function Card({ view, year, tenancyReady }: { view: LoanView; year: string; tena
                 <div>
                   <dt>Rent vs instalment</dt>
                   <dd className="num">{gap == null ? '—' : `${gap >= 0 ? '+' : '−'}${rm(Math.abs(gap))}`}</dd>
+                </div>
+                <div>
+                  <dt>Estimated net / month, after bills and maintenance</dt>
+                  <dd className="num">{rm(beforeLoan)}</dd>
+                </div>
+                <div>
+                  <dt>Estimated net / month, after the loan too</dt>
+                  <dd className="num">{rm(cash?.perMonth)}</dd>
                 </div>
               </>
             ) : null}

@@ -7,7 +7,7 @@ export const monthName = (iso: string) => `${FULL[Number(iso.slice(5, 7)) - 1]} 
 export const dmy = (iso: string) => `${Number(iso.slice(8, 10))} ${MON[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`
 export const sen = (n: number | null | undefined) =>
   n == null ? '—' : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-export const rm = (n: number | null | undefined) => (n == null ? '—' : `RM ${sen(n)}`)
+export const rm = (n: number | null | undefined) => (n == null ? '—' : n < 0 ? `− RM ${sen(-n)}` : `RM ${sen(n)}`)
 export const plural = (n: number, w: string) => `${n} ${n === 1 ? w : /[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`}`
 /** Today's date in Malaysia (YYYY-MM-DD), not the server's. */
 export const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })

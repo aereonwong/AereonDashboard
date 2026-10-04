@@ -165,3 +165,49 @@ export function tenantStats(g: TenantGroup, costs: Cost[], today: string) {
   const settlement = { recoveredTotal, recoveredCount: recovered.length, dueBack, refunded: deposits.refunded, kept: deposits.refunded == null ? null : r2(dueBack - deposits.refunded) }
   return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), estimate, deposits, settlement }
 }
+
+// ── Cash result: rent less what it costs you to hold the property while they live there ──
+
+export type CashFrame = { payments: number; unpriced: number; rent: number; bills: number; maintenance: number; loan: number; result: number; perMonth: number | null }
+
+/**
+ * The tenant's whole cash picture, two ways: so far (payments already due) and the whole tenancy
+ * (every payment, assuming they all arrive). Per payment month it takes the rent, the loan instalment
+ * and the property's maintenance fee for that month; a month with no figure of its own uses the
+ * nearest one on record (the latest, for months still to come). Bills you bore for the tenant count once.
+ * The loan instalment includes principal, which is equity you keep, so this is cash, not profit.
+ */
+export function cashResult(g: TenantGroup, costs: Cost[], loanMonths: { month: string; instalment: number | null }[], today: string): { soFar: CashFrame; whole: CashFrame } {
+  const near = (m: Map<string, number>, key: string) => {
+    if (m.has(key)) return m.get(key)!
+    const keys = [...m.keys()].sort()
+    if (!keys.length) return 0
+    return m.get([...keys].reverse().find(k => k < key) ?? keys[0])!
+  }
+  const inst = new Map<string, number>()
+  for (const l of loanMonths) if (l.instalment != null) inst.set(l.month.slice(0, 7), l.instalment)
+  const maint = new Map<string, number>()
+  for (const c of costs) if (c.kind === 'maintenance_fee' && !c.recovered_from_deposit) maint.set(c.cost_date.slice(0, 7), (maint.get(c.cost_date.slice(0, 7)) ?? 0) + c.amount)
+  const mine = g.name ? costs.filter(c => same(c.tenant_name, g.name) && !c.recovered_from_deposit) : []
+
+  const frame = (upTo: string): CashFrame => {
+    let payments = 0, unpriced = 0, rent = 0, maintenance = 0, loan = 0
+    for (const t of g.terms)
+      for (let k = 0; ; k++) {
+        const due = addMonths(t.start_date, k)
+        if (due > t.end_date || due > upTo) break
+        if (t.monthly_rent == null) {
+          unpriced++
+          continue
+        }
+        payments++
+        rent += t.monthly_rent
+        maintenance += near(maint, due.slice(0, 7))
+        loan += near(inst, due.slice(0, 7))
+      }
+    const bills = r2(mine.filter(c => c.cost_date <= upTo || upTo === g.end).reduce((a, c) => a + c.amount, 0))
+    const result = r2(rent - bills - maintenance - loan)
+    return { payments, unpriced, rent: r2(rent), bills, maintenance: r2(maintenance), loan: r2(loan), result, perMonth: payments ? r2(result / payments) : null }
+  }
+  return { soFar: frame(today), whole: frame(g.end) }
+}
