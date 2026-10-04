@@ -99,6 +99,22 @@ Summary, Invoice Details, Instagram and Clients together.
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
+## Property section (own sidebar group since 4 Oct 2026)
+
+Property is its own section, apart from the studio Dashboard — nothing property-related feeds it. v3 sidebar
+group **Property**: `/property` Overview (one card per property; the future property dashboard grows here),
+`/property/loans`, `/property/tenancy`, `/property/costs`. Pages live in `app/(app)/property/**`, v3 UI in
+`app/_v3/pages/property/` (loader `app/(app)/property/_load.ts`); v1/v2 only keep the one-table view at `/property`.
+- **Tenancy** (`supabase/tenancy.sql`, `lib/tenancy-math.ts`): `property_tenancy` is one row per term; terms with the
+  same `tenant_name` form one tenant group (original + extensions). A tenant's score = rent due so far less bills tagged
+  to them (`property_cost.tenant_name`). Deposits are columns on the original term (advance rent, security, utility,
+  access cards). Renaming a tenant (`renameTenant`) changes every term and tagged bill. Rent due is computed, never stored.
+- **Costs**: `property_cost`, kinds maintenance_fee / repair / agent_fee / stamping_fee / other; one row per bill,
+  listed ten to a page. Monthly maintenance is entered as one row per month (no recurring rule yet).
+- Run `supabase/tenancy.sql` once (safe to repeat); the Tenancy and Costs pages ask for it until the columns exist.
+  Tenancy terms load with `npm run property:import -- --tenancy` (from `.property-data/tenancies.json`, replaces all terms).
+- Same privacy rule as the loans: tenant names, rents, fees and deposits live only in Supabase and `.property-data/`.
+
 ## Property tab — home loans (added 4 Oct 2026)
 
 `/property` replaces the "Interest Rate" Numbers sheet (Dropbox/Personal/Property) for Aereon's home loans.
