@@ -124,18 +124,21 @@ PKCE, hand-written, no auth library). Active only when `GOOGLE_CLIENT_ID` + `GOO
 until then the login page is the old passcode form. A verified Google account must also be allowed:
 - `ADMIN_EMAILS` (env, comma-separated) — always in, needs no database. This is the break-glass list:
   keep a second Google account on it.
-- `app_users` table (`supabase/app-users.sql`) — the managed list: `role` owner/admin/viewer, `active` flag,
-  `last_login_at`. Future User Management page edits this. Roles are stored but not yet enforced anywhere.
+- `app_users` table (`supabase/app-users.sql`) — the managed list, edited on the **Users** page (`/users`,
+  `app/(app)/users/`): role owner/admin/viewer, `active` (Lock), `last_login_at`. Owner manages everyone; admin
+  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Roles gate
+  only the Users page so far — a viewer can still use every other tab and server action (not read-only yet).
 - Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
-  Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. Google sessions
-  are not re-checked against the list per request: removing someone takes effect at their next sign-in, or at
-  once by rotating `AUTH_SECRET`.
+  Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. `signedIn()`
+  (lib/auth.ts, used by the (app) layout and every server action) re-checks a Google account against the list,
+  so Lock/Remove cuts someone off on their next click. The proxy only checks the cookie signature.
 - Backup access ladder: second Google account → passcode (`APP_PASSCODE`, behind "Use backup passcode") →
   edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
   Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
   `AUTH_SECRET` or set `PASSCODE_LOGIN=off` instead.
 - Google redirects only to one host (`APP_BASE_URL`, default https://aereonwong.com), registered in
-  Google Cloud. `/api/logout` (POST) clears the cookie.
+  Google Cloud. `/api/logout` (POST) clears the cookie; Sign out is in the v3 rail, the classic sidebar and Settings → Account.
+  The login page (`app/login/`) is Studio Standard: KLCC photo beside the form, passcode folded under the Google button.
 
 ## Raising an invoice or a quotation
 

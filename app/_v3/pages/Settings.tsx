@@ -1,6 +1,7 @@
 import type { Version } from '@/lib/v3/catalog'
 import type { Site } from '@/lib/v3/site'
 import DemoToggle from '@/app/_components/DemoToggle'
+import AccountPanel from '../AccountPanel'
 import { VersionPicker, Theme, LandingSwitch, AccentPicker } from '../SettingsControls'
 
 // 👉 v3 Settings: what you actually change, in the order you change it.
@@ -15,6 +16,8 @@ export default function Settings({ version, site, demo }: { version: Version; si
       </header>
 
       <div className="v3-grid">
+        <AccountPanel />
+
         <section className="v3-panel v3-span-12" aria-labelledby="t-ver">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-ver">
