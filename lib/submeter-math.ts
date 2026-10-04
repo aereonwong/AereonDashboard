@@ -53,6 +53,7 @@ export type Segment = {
   charged: number | null
   legacy: boolean
   costPerKwh: number | null // TNB's real cost per kWh over the segment, if bills cover it
+  costEstimated: boolean // the cost leans on a bill without kWh, or on bills covering only part of the days
   cost: number | null
   buffer: number | null
   flags: string[]
@@ -66,6 +67,7 @@ export type Cycle = {
   tnbKwh: number | null
   gap: number | null // fraction, e.g. 0.025 = sub-meters read 2.5% more than TNB
   perKwh: number | null
+  perKwhFrom: 'bill' | 'submeters' // 'submeters' = the bill has no kWh, so the sub-meter total stands in: an estimate
   high: boolean // a month above 600 kWh
 }
 
@@ -122,7 +124,7 @@ export function cycles(bills: Bill[], readings: Reading[]): Cycle[] {
       const rows = readings.filter(r => r.unit === unit)
       const a = meterAt(rows, start)
       const b = meterAt(rows, bill.bill_date)
-      return { unit, kwh: a == null || b == null ? null : r2(b - a) }
+      return { unit, kwh: a == null || b == null || b < a ? null : r2(b - a) } // a meter that goes backwards is left out, not subtracted
     })
     const covered = per.length > 0 && per.every(u => u.kwh != null)
     const sub = covered ? r2(per.reduce((t, u) => t + (u.kwh ?? 0), 0)) : null
@@ -135,26 +137,30 @@ export function cycles(bills: Bill[], readings: Reading[]): Cycle[] {
       tnbKwh: bill.kwh,
       gap: sub != null && bill.kwh ? (sub - bill.kwh) / bill.kwh : null,
       perKwh: basis ? r4(bill.amount / basis) : null,
+      perKwhFrom: bill.kwh ? 'bill' : 'submeters',
       high: (basis ?? 0) > HIGH_USE_KWH,
     }
   })
 }
 
-/** TNB's cost per kWh over [from, to]: the cycles it overlaps, weighted by days. Null if the bills cover under half of it. */
-function costPerKwh(cs: Cycle[], from: string, to: string): number | null {
+/** TNB's cost per kWh over [from, to]: the cycles it overlaps, weighted by days. Null if the bills cover under half of it;
+ *  `estimated` when it leans on a bill without kWh or the bills cover under 95% of the days. */
+function costPerKwh(cs: Cycle[], from: string, to: string): { value: number; estimated: boolean } | null {
   const span = daysBetween(from, to)
   if (span <= 0) return null
   let days = 0
   let weighted = 0
+  let fromSubmeters = false
   for (const c of cs) {
     if (c.perKwh == null) continue
     const o = Math.min(daysBetween(from, c.bill.bill_date), span) - Math.max(daysBetween(from, c.start), 0)
     if (o > 0) {
       days += o
       weighted += o * c.perKwh
+      if (c.perKwhFrom === 'submeters') fromSubmeters = true
     }
   }
-  return days / span >= 0.5 ? r4(weighted / days) : null
+  return days / span >= 0.5 ? { value: r4(weighted / days), estimated: fromSubmeters || days / span < 0.95 } : null
 }
 
 const median = (xs: number[]) => {
@@ -174,7 +180,8 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       const days = daysBetween(a.read_on, b.read_on)
       const kwh = r2(b.reading - a.reading)
       const perDay = days > 0 ? kwh / days : 0
-      const cpk = costPerKwh(cs, a.read_on, b.read_on)
+      const cp = costPerKwh(cs, a.read_on, b.read_on)
+      const cpk = cp?.value ?? null
       const flags: string[] = []
       if (kwh < 0) flags.push('Meter went backwards')
       if (days > LONG_GAP_DAYS) flags.push(`${days} days since the last reading`)
@@ -185,7 +192,7 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       if (kwh >= 0) seen.push(perDay)
       const charged = b.rate != null ? r2(kwh * b.rate) : null
       const cost = cpk != null ? r2(kwh * cpk) : null
-      out.push({ id: b.id, unit, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
+      out.push({ id: b.id, unit, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
     }
   }
   return out.sort((x, y) => y.to.localeCompare(x.to) || x.unit.localeCompare(y.unit))
@@ -194,7 +201,7 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
 /** Charged against cost over the segments that have both, split into the old rates and the flat rate. */
 export function buffers(segs: Segment[]) {
   const sum = (rows: Segment[]) => {
-    const used = rows.filter(s => s.charged != null && s.cost != null)
+    const used = rows.filter(s => s.kwh >= 0 && s.charged != null && s.cost != null)
     const charged = r2(used.reduce((t, s) => t + (s.charged ?? 0), 0))
     const cost = r2(used.reduce((t, s) => t + (s.cost ?? 0), 0))
     return { n: used.length, kwh: r2(used.reduce((t, s) => t + s.kwh, 0)), charged, cost, buffer: r2(charged - cost), pct: cost > 0 ? (charged - cost) / cost : null }

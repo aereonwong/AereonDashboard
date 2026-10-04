@@ -120,7 +120,7 @@ function PropertySubmeter({ id, name, location, readings, bills, today }: { id: 
             <h3 className="v3-panel-title">Against each TNB bill</h3>
           </div>
           <p className="v3-panel-note" style={{ marginTop: 0 }}>
-            Readings are laid on a straight line, so each unit&rsquo;s usage is worked out to the 12th even when you read on another day. Gap near zero means nothing leaks. Months over {HIGH_USE_KWH} kWh add TNB&rsquo;s retail charge and service tax. When a bill has no kWh typed, the two sub-meters stand in for it.
+            Readings are laid on a straight line, so each unit&rsquo;s usage is worked out to the 12th even when you read on another day. Gap near zero means nothing leaks. Months over {HIGH_USE_KWH} kWh add TNB&rsquo;s retail charge and service tax. Figures marked est. lean on a bill with no kWh typed (the two sub-meters stand in for TNB&rsquo;s kWh) or on bills covering only part of a reading gap.
           </p>
           {cs.length === 0 ? (
             <p className="v3-empty">No TNB bills yet.</p>
@@ -163,7 +163,17 @@ function PropertySubmeter({ id, name, location, readings, bills, today }: { id: 
                       ))}
                       <td className="r num">{pct(c.gap)}</td>
                       <td className="r num">{sen(c.bill.amount)}</td>
-                      <td className="r num">{per(c.perKwh)}</td>
+                      <td className="r num">
+                        {per(c.perKwh)}
+                        {c.perKwhFrom === 'submeters' ? (
+                          <>
+                            {' '}
+                            <span className="v3-tag" data-q="estimated">
+                              est.
+                            </span>
+                          </>
+                        ) : null}
+                      </td>
                       <td>
                         <DeleteRow id={c.bill.id} kind="bill" />
                       </td>
@@ -236,7 +246,17 @@ function PropertySubmeter({ id, name, location, readings, bills, today }: { id: 
                       <td className="r num">{s.perDay.toFixed(1)}</td>
                       <td className="r num">{s.rate != null ? sen(s.rate) : '—'}</td>
                       <td className="r num">{s.charged != null ? sen(s.charged) : '—'}</td>
-                      <td className="r num">{s.cost != null ? sen(s.cost) : '—'}</td>
+                      <td className="r num">
+                        {s.cost != null ? sen(s.cost) : '—'}
+                        {s.cost != null && s.costEstimated ? (
+                          <>
+                            {' '}
+                            <span className="v3-tag" data-q="estimated">
+                              est.
+                            </span>
+                          </>
+                        ) : null}
+                      </td>
                       <td className="r num">{s.buffer != null ? rm(s.buffer) : '—'}</td>
                       <td>
                         <DeleteRow id={s.id} kind="reading" />
@@ -256,7 +276,7 @@ function PropertySubmeter({ id, name, location, readings, bills, today }: { id: 
               ) : null}
               {buf.old.n ? (
                 <li>
-                  <b>On the old rates ({plural(buf.old.n, 'reading')} with bills to compare):</b> charged {rm(buf.old.charged)}, cost {rm(buf.old.cost)}, buffer {rm(buf.old.buffer)} ({pct(buf.old.pct)}). Costs before Apr 2026 are estimated from the bill amounts.
+                  <b>On the old rates ({plural(buf.old.n, 'reading')} with bills to compare):</b> charged {rm(buf.old.charged)}, cost {rm(buf.old.cost)}, buffer {rm(buf.old.buffer)} ({pct(buf.old.pct)}).
                 </li>
               ) : null}
             </ul>
