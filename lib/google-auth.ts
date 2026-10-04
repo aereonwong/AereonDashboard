@@ -1,6 +1,5 @@
 import 'server-only'
 import crypto from 'node:crypto'
-import { supabase, supabaseConfigured } from '@/lib/supabase'
 
 // 🔒 Sign in with Google (OpenID Connect, authorization-code flow + PKCE).
 // Hand-written on purpose: no auth library, nothing new to trust. The ID token is
@@ -98,35 +97,4 @@ export async function identityFromCode(
   if (!okIssuer || !okAudience || !okTime || !okNonce) return null
   if (c.email_verified !== true || typeof c.email !== 'string' || typeof c.sub !== 'string') return null
   return { email: c.email.trim().toLowerCase(), sub: c.sub }
-}
-
-// ---- Who is allowed ---------------------------------------------------------
-
-const envEmails = () =>
-  (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map(s => s.trim().toLowerCase())
-    .filter(Boolean)
-
-export type AccessRole = 'owner' | 'admin' | 'viewer'
-
-/** Emails in ADMIN_EMAILS always get in (break-glass: needs no database).
- *  Anyone else must be an active row in `app_users` (the future User Management). */
-export async function accessFor(email: string): Promise<AccessRole | null> {
-  const e = email.trim().toLowerCase()
-  if (envEmails().includes(e)) return 'admin'
-  if (!supabaseConfigured) return null
-  const { data } = await supabase.from('app_users').select('role, active').eq('email', e).maybeSingle()
-  if (!data || !data.active) return null
-  return data.role as AccessRole
-}
-
-/** Best-effort audit trail; never blocks a sign-in. */
-export async function noteLogin(email: string): Promise<void> {
-  if (!supabaseConfigured) return
-  await supabase
-    .from('app_users')
-    .update({ last_login_at: new Date().toISOString() })
-    .eq('email', email)
-    .then(() => {}, () => {})
 }

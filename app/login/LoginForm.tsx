@@ -2,6 +2,7 @@
 import { useState } from 'react'
 
 const GOOGLE_ERRORS: Record<string, string> = {
+  revoked: 'Your access was removed. Ask Aereon if that is a mistake.',
   not_allowed: "That Google account isn't on the list for this app.",
   google_failed: "Google sign-in didn't complete. Try again.",
   google_cancelled: 'Google sign-in was cancelled.',
@@ -18,6 +19,7 @@ export default function LoginForm({ google, passcode: passcodeOn, initialError }
   const [passcode, setPasscode] = useState('')
   const [error, setError] = useState(GOOGLE_ERRORS[initialError] ?? '')
   const [busy, setBusy] = useState(false)
+  const [going, setGoing] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -54,48 +56,51 @@ export default function LoginForm({ google, passcode: passcodeOn, initialError }
   const passcodeForm = (
     <form onSubmit={submit}>
       <input
-        className="login-input"
+        className="v3-input"
         type="password"
         inputMode="text"
         autoComplete="current-password"
         placeholder="Backup passcode"
+        aria-label="Backup passcode"
         value={passcode}
         onChange={e => setPasscode(e.target.value)}
         autoFocus={!google}
       />
-      <button className="btn" type="submit" disabled={busy || !passcode} style={{ width: '100%', marginTop: 12 }}>
+      <button className="lg-submit" type="submit" disabled={busy || !passcode}>
         {busy ? 'Checking…' : 'Unlock'}
       </button>
     </form>
   )
 
   return (
-    <div className="login-wrap">
-      <div className="login-card">
-        <div className="brand" style={{ marginBottom: 8 }}>
-          <span className="logo" aria-hidden="true">🤖</span> Aereon Dashboard
-        </div>
-        <h1 className="ph" style={{ fontSize: 18 }}>{google ? 'Sign in' : 'Enter your passcode'}</h1>
-        <p className="cap" style={{ margin: '4px 0 16px' }}>
-          Private numbers. Only approved accounts get in.
-        </p>
-        {google ? (
-          <a className="btn" href="/api/auth/google" style={{ display: 'block', width: '100%', boxSizing: 'border-box', textAlign: 'center' }}>
-            Continue with Google
-          </a>
-        ) : null}
-        {error ? <p className="login-error" role="alert">{error}</p> : null}
-        {passcodeOn ? (
-          google ? (
-            <details style={{ marginTop: 16 }}>
-              <summary className="cap" style={{ cursor: 'pointer' }}>Use backup passcode</summary>
-              <div style={{ marginTop: 10 }}>{passcodeForm}</div>
-            </details>
-          ) : (
-            passcodeForm
-          )
-        ) : null}
+    <>
+      <div className="lg-brand">
+        <span className="lg-mark" aria-hidden="true">A</span> Aereon Dashboard
       </div>
-    </div>
+      <h1 className="lg-title">{google ? 'Sign in' : 'Enter your passcode'}</h1>
+      <p className="lg-sub">{google ? 'Use the Google account you were approved with.' : 'Private numbers. Passcode only.'}</p>
+      {google ? (
+        <a className="lg-google" href="/api/auth/google" aria-busy={going} onClick={() => setGoing(true)}>
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z" />
+            <path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z" />
+            <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
+          </svg>
+          {going ? 'Opening Google…' : 'Continue with Google'}
+        </a>
+      ) : null}
+      {error ? <p className="lg-error" role="alert">{error}</p> : null}
+      {passcodeOn ? (
+        google ? (
+          <details className="lg-backup">
+            <summary>Use backup passcode</summary>
+            {passcodeForm}
+          </details>
+        ) : (
+          passcodeForm
+        )
+      ) : null}
+    </>
   )
 }

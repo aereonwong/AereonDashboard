@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server'
-import {
-  OAUTH_COOKIE,
-  accessFor,
-  canonicalOrigin,
-  googleConfigured,
-  identityFromCode,
-  noteLogin,
-} from '@/lib/google-auth'
+import { OAUTH_COOKIE, canonicalOrigin, googleConfigured, identityFromCode } from '@/lib/google-auth'
+import { accessFor, noteLogin } from '@/lib/access'
 import { SESSION_COOKIE, SESSION_DAYS, mintSession, safeEqual, sessionSecret } from '@/lib/session'
 
 // Step 2: Google sends the browser back here with ?code&state. Check the state

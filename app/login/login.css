@@ -1,0 +1,56 @@
+/* Login — Studio Standard. Tokens come from .v3[data-world="canon"] (v3.css). */
+
+.lg { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr); min-height: 100dvh; background: var(--film); }
+
+.lg-art { position: relative; overflow: hidden; background: #15151a; min-height: 100dvh; }
+.lg-photo { object-fit: cover; object-position: 50% 40%; }
+.lg-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(10, 10, 11, 0.72), rgba(10, 10, 11, 0) 55%); }
+.lg-art-copy { position: absolute; left: var(--space-6); right: var(--space-6); bottom: var(--space-6); z-index: 1; color: #fff; max-width: 30rem; }
+.lg-kicker { margin: 0 0 var(--space-2); font-size: var(--t-xs); letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+.lg-line { margin: 0; font-family: var(--f-display); font-size: var(--t-xl); font-weight: 600; line-height: 1.25; text-wrap: balance; }
+
+.lg-pane { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: var(--space-6) var(--space-5); gap: var(--space-6); border-left: 1px solid var(--line); }
+.lg-box { width: 100%; max-width: 22rem; animation: lg-in 420ms var(--ease) both; }
+@keyframes lg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .lg-box { animation: none; } }
+
+.lg-brand { display: flex; align-items: center; gap: var(--space-3); font-weight: 700; font-family: var(--f-display); margin-bottom: var(--space-6); }
+.lg-mark { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.lg-title { margin: 0; font-family: var(--f-display); font-size: var(--t-2xl); font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+.lg-sub { margin: var(--space-2) 0 var(--space-5); color: var(--ink-2); }
+
+.lg-google, .lg-submit {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-3);
+  width: 100%; min-height: 46px; box-sizing: border-box; font: inherit; font-weight: 600; cursor: pointer;
+  border-radius: var(--radius); text-decoration: none; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.lg-google { background: var(--film); color: var(--ink); border: 1px solid var(--line-2); }
+.lg-google:hover { background: color-mix(in srgb, var(--ink) 5%, var(--film)); border-color: var(--ink-3); }
+.lg-google[aria-busy="true"] { pointer-events: none; opacity: 0.7; }
+.lg-google svg { width: 18px; height: 18px; flex: none; }
+.lg-submit { background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); margin-top: var(--space-3); }
+.lg-submit:hover:not([disabled]) { filter: brightness(1.06); }
+.lg-submit[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+.lg-error { margin: var(--space-4) 0 0; padding: var(--space-3); border-radius: var(--radius); font-size: var(--t-sm); color: var(--neg); background: color-mix(in srgb, var(--neg) 9%, transparent); border: 1px solid color-mix(in srgb, var(--neg) 30%, transparent); }
+
+.lg-backup { margin-top: var(--space-5); border-top: 1px solid var(--line); padding-top: var(--space-4); }
+.lg-backup summary { cursor: pointer; color: var(--ink-2); font-size: var(--t-sm); list-style: none; display: flex; align-items: center; gap: var(--space-2); }
+.lg-backup summary::-webkit-details-marker { display: none; }
+.lg-backup summary::before { content: "›"; display: inline-block; transition: transform var(--dur) var(--ease); }
+.lg-backup[open] summary::before { transform: rotate(90deg); }
+.lg-backup summary:hover { color: var(--ink); }
+.lg-backup form { margin-top: var(--space-3); }
+.lg .v3-input { min-height: 46px; font-size: var(--t-md); }
+
+.lg-foot { margin: 0; font-size: var(--t-xs); color: var(--ink-3); text-align: center; }
+.lg-foot a { color: var(--ink-2); }
+
+@media (max-width: 860px) {
+  .lg { grid-template-columns: 1fr; grid-template-rows: 200px auto; }
+  .lg-art { min-height: 0; height: 200px; }
+  .lg-photo { object-position: 50% 32%; }
+  .lg-art-copy { left: var(--space-5); right: var(--space-5); bottom: var(--space-4); }
+  .lg-line { font-size: var(--t-lg); }
+  .lg-pane { border-left: 0; justify-content: flex-start; padding-top: var(--space-6); }
+}

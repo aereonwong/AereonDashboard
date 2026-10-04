@@ -41,6 +41,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
       { href: '/approvals', label: 'Approvals', icon: 'approvals' },
       { href: '/employees', label: 'AI Employees', icon: 'robot' },
       { href: '/vault', label: 'Vault', icon: 'vault' },
+      { href: '/users', label: 'Users', icon: 'users' },
       { href: '/settings', label: 'Settings', icon: 'settings' },
     ],
   },

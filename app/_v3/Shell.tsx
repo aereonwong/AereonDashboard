@@ -7,10 +7,12 @@ import { V3Nav, V3MobileBar } from './V3Nav'
 export default function Shell({
   pending,
   demo,
+  who,
   children,
 }: {
   pending: number
   demo: boolean
+  who: string | null
   children: React.ReactNode
 }) {
   return (
@@ -29,6 +31,12 @@ export default function Shell({
           <V3Nav pending={pending} />
           <div className="v3-rail-foot">
             <a href="/settings">Switch version</a>
+            {who ? (
+              <form className="v3-signout" method="post" action="/api/logout">
+                <span className="who">{who === 'pw' ? 'Signed in with passcode' : who}</span>
+                <button type="submit">Sign out</button>
+              </form>
+            ) : null}
           </div>
         </aside>
         <main className="v3-main">
