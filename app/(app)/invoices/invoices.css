@@ -11,6 +11,8 @@
   --i-pos: var(--pos, #2e7d4f);
   --i-neg: var(--neg, #b3452c);
   --i-warn: var(--warn, #b7791f);
+  /* Amber as small text: pulled toward the ink so it clears 4.5:1 in light and dark. */
+  --i-warn-text: color-mix(in srgb, var(--i-warn) 72%, var(--i-ink));
   --i-accent: var(--accent, var(--clay, #c2410c));
   --i-ground: var(--ground, var(--paper, #fff));
   color: var(--i-ink);
@@ -88,37 +90,51 @@
 .idt-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .idt-no { font-family: var(--f-code, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 12.5px; white-space: nowrap; }
 .idt-sub { display: block; font-size: 12px; color: var(--i-dim); margin-top: 1px; }
-.idt-proj { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.idt-client { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Client · project is the one elastic column: it takes the room left over and
+   truncates, so the money, status and action columns always fit beside it. */
+.idt-table td.idt-who { width: 100%; max-width: 0; min-width: 180px; }
+.idt-client, .idt-proj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idt-client { font-weight: 550; }
+.idt-proj { font-size: 12.5px; color: var(--i-dim); margin-top: 1px; }
 .idt-fx { font-size: 10.5px; border: 1px solid var(--i-line2); border-radius: 99px; padding: 0 5px; margin-right: 4px; color: var(--i-dim); }
 
 .idt-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .idt-pill.paid { color: var(--i-pos); }
-.idt-pill.outstanding { color: var(--i-warn); }
+.idt-pill.outstanding { color: var(--i-warn-text); }
 .idt-pill.overdue { color: var(--i-neg); }
 .idt-pill.untracked { color: var(--i-dim); font-weight: 500; }
 .idt-pill.paid .idt-dot { background: var(--i-pos); }
 .idt-pill.outstanding .idt-dot { background: var(--i-warn); }
 .idt-pill.overdue .idt-dot { background: var(--i-neg); }
 .idt-pill.untracked .idt-dot { background: transparent; border: 1.5px solid var(--i-dim); width: 7px; height: 7px; }
+/* Drive uses the same status grammar as Payment. */
+.idt-pill.drive.uploaded { color: var(--i-pos); text-decoration: none; }
+.idt-pill.drive.uploaded .idt-dot { background: var(--i-pos); }
+a.idt-pill.drive.uploaded:hover { text-decoration: underline; text-underline-offset: 3px; }
+.idt-pill.drive.none { color: var(--i-dim); font-weight: 500; }
+.idt-pill.drive.none .idt-dot { background: transparent; border: 1.5px solid var(--i-dim); width: 7px; height: 7px; }
+.idt-pill.drive.failed { color: var(--i-neg); }
+.idt-pill.drive.failed .idt-dot { background: var(--i-neg); }
+.idt-pill.drive.uploading { color: var(--i-warn-text); }
+.idt-pill.drive.uploading .idt-dot { background: var(--i-warn); }
+
+/* Status cell: status + detail stacked on the left, its one action on the right. */
+.idt-cell { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.idt-state { min-width: 0; white-space: nowrap; }
+.idt-state .idt-sub { white-space: nowrap; }
 
 /* ── row actions: icon buttons ──────────────────────────────────────────── */
 .idt-acts { display: flex; gap: 2px; justify-content: flex-end; }
-/* The actions column stays pinned to the right edge, so Preview / Canva / PDF are
-   always in reach even when a narrow window makes the table scroll sideways. */
-.idt-table th:last-child, .idt-table td:last-child {
-  position: sticky; right: 0; z-index: 1;
-  background: var(--i-ground);
-  box-shadow: -1px 0 0 var(--i-line);
-}
-.idt-table th:last-child { z-index: 2; }
+.idt-acts { align-items: center; }
+.idt-acts-rule { width: 1px; height: 16px; background: var(--i-line2); margin: 0 4px; flex: none; }
+.idt-act-gap { visibility: hidden; }
 .idt-act {
-  width: 30px; height: 30px; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
+  width: 28px; height: 28px; flex: none; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
   background: none; color: var(--i-dim); cursor: pointer; text-decoration: none; position: relative;
 }
 .idt-act:hover { background: color-mix(in srgb, var(--i-ink) 8%, transparent); color: var(--i-ink); }
 .idt-act[aria-disabled='true'], .idt-act:disabled { opacity: .3; cursor: not-allowed; background: none; }
-.idt-act .ico-svg { width: 17px; height: 17px; }
+.idt-act .ico-svg { width: 16px; height: 16px; }
 .idt-act.on { color: var(--i-pos); }
 .idt-act.bad { color: var(--i-neg); }
 .idt-act.go { color: var(--i-accent); }
@@ -126,13 +142,6 @@
 @keyframes idt-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .idt-act.busy .ico-svg { animation: none; opacity: .5; } }
 
-.idt-drive { display: inline-flex; align-items: center; gap: 2px; min-width: 112px; font-size: 12px; white-space: nowrap; }
-.idt-drive.uploaded { color: var(--i-pos); }
-.idt-drive.none { color: var(--i-dim); }
-.idt-drive.failed { color: var(--i-neg); }
-.idt-drive.uploading { color: var(--i-warn); }
-.idt-drive .ico-svg { width: 15px; height: 15px; }
-.idt-drive.uploaded a { display: inline-flex; align-items: center; gap: 4px; color: inherit; }
 .idt-reup { width: 26px; height: 26px; opacity: .55; }
 .idt-reup:hover, .idt-reup:focus-visible, .idt-reup.busy { opacity: 1; }
 
@@ -256,18 +265,21 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 @media (max-width: 560px) { .idt-link-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Payment cell: status pill with its own Paid button; days waiting underneath. */
-.idt-pay { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .idt-paybtn { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); transition: background 160ms ease, border-color 160ms ease, color 160ms ease; }
 .idt-paybtn svg { width: 12px; height: 12px; }
 .idt-paybtn:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 8%, transparent); }
-.idt-paybtn.on { color: var(--i-dim); border-color: transparent; font-weight: 500; }
-.idt-paybtn.on:hover:not(:disabled) { color: var(--i-ink); border-color: var(--i-line2); background: transparent; }
 .idt-paybtn:disabled { opacity: 0.45; cursor: not-allowed; }
-.idt-sub[data-age="mid"] { color: var(--i-warn); }
+.idt-sub[data-age="mid"] { color: var(--i-warn-text); }
 .idt-sub[data-age="old"] { color: var(--i-neg); }
-/* "N days since invoice · due …" may wrap, so the Payment column doesn't push the row actions off-screen. */
-.idt-sub[data-age] { white-space: normal; max-width: 150px; }
+/* Paid toggle: a ring until pressed, then a filled green check. */
+.idt-act.idt-paid { border: 1.5px solid color-mix(in srgb, var(--i-dim) 80%, transparent); border-radius: 50%; width: 26px; height: 26px; }
+.idt-act.idt-paid .ico-svg { width: 14px; height: 14px; opacity: .8; }
+.idt-act.idt-paid:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 10%, transparent); }
+.idt-act.idt-paid:hover:not(:disabled) .ico-svg { opacity: 1; }
+.idt-act.idt-paid.on { border-color: transparent; background: color-mix(in srgb, var(--i-pos) 16%, transparent); color: var(--i-pos); }
+.idt-act.idt-paid.on .ico-svg { opacity: 1; }
+.idt-act.idt-paid.on:hover:not(:disabled) { background: color-mix(in srgb, var(--i-ink) 8%, transparent); color: var(--i-dim); border-color: transparent; }
 .idt-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 12px; padding: 10px 14px; border: 1px dashed var(--i-line2); border-radius: 12px; font-size: 13px; color: var(--i-dim); }
 .idt-bulk input[type="date"] { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); }
 @media (prefers-reduced-motion: reduce) { .idt-paybtn { transition: none; } }
