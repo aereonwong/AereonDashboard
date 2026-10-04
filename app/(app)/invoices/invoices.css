@@ -11,6 +11,8 @@
   --i-pos: var(--pos, #2e7d4f);
   --i-neg: var(--neg, #b3452c);
   --i-warn: var(--warn, #b7791f);
+  /* Amber as small text: pulled toward the ink so it clears 4.5:1 in light and dark. */
+  --i-warn-text: color-mix(in srgb, var(--i-warn) 72%, var(--i-ink));
   --i-accent: var(--accent, var(--clay, #c2410c));
   --i-ground: var(--ground, var(--paper, #fff));
   color: var(--i-ink);
@@ -98,7 +100,7 @@
 
 .idt-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .idt-pill.paid { color: var(--i-pos); }
-.idt-pill.outstanding { color: var(--i-warn); }
+.idt-pill.outstanding { color: var(--i-warn-text); }
 .idt-pill.overdue { color: var(--i-neg); }
 .idt-pill.untracked { color: var(--i-dim); font-weight: 500; }
 .idt-pill.paid .idt-dot { background: var(--i-pos); }
@@ -113,7 +115,7 @@ a.idt-pill.drive.uploaded:hover { text-decoration: underline; text-underline-off
 .idt-pill.drive.none .idt-dot { background: transparent; border: 1.5px solid var(--i-dim); width: 7px; height: 7px; }
 .idt-pill.drive.failed { color: var(--i-neg); }
 .idt-pill.drive.failed .idt-dot { background: var(--i-neg); }
-.idt-pill.drive.uploading { color: var(--i-warn); }
+.idt-pill.drive.uploading { color: var(--i-warn-text); }
 .idt-pill.drive.uploading .idt-dot { background: var(--i-warn); }
 
 /* Status cell: status + detail stacked on the left, its one action on the right. */
@@ -268,11 +270,11 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 .idt-paybtn svg { width: 12px; height: 12px; }
 .idt-paybtn:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 8%, transparent); }
 .idt-paybtn:disabled { opacity: 0.45; cursor: not-allowed; }
-.idt-sub[data-age="mid"] { color: var(--i-warn); }
+.idt-sub[data-age="mid"] { color: var(--i-warn-text); }
 .idt-sub[data-age="old"] { color: var(--i-neg); }
 /* Paid toggle: a ring until pressed, then a filled green check. */
-.idt-act.idt-paid { border: 1.5px solid var(--i-line2); border-radius: 50%; width: 26px; height: 26px; }
-.idt-act.idt-paid .ico-svg { width: 14px; height: 14px; opacity: .55; }
+.idt-act.idt-paid { border: 1.5px solid color-mix(in srgb, var(--i-dim) 80%, transparent); border-radius: 50%; width: 26px; height: 26px; }
+.idt-act.idt-paid .ico-svg { width: 14px; height: 14px; opacity: .8; }
 .idt-act.idt-paid:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 10%, transparent); }
 .idt-act.idt-paid:hover:not(:disabled) .ico-svg { opacity: 1; }
 .idt-act.idt-paid.on { border-color: transparent; background: color-mix(in srgb, var(--i-pos) 16%, transparent); color: var(--i-pos); }
