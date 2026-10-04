@@ -132,6 +132,7 @@ export async function addPropertyCost(form: FormData): Promise<Result> {
     description: text(form.get('description'), 300),
     vendor: text(form.get('vendor'), 120),
     tenant_name: text(form.get('tenant_name'), 120),
+    recovered_from_deposit: form.get('recovered_from_deposit') === 'on' && !!text(form.get('tenant_name'), 120), // only a tenant's bill can come out of their deposit
   }
   const id = rowId(form)
   if (id === 'bad') return { ok: false, error: 'Bad request' }
@@ -159,6 +160,7 @@ export async function addTenancyTerm(form: FormData): Promise<Result> {
     security_deposit: money(form.get('security_deposit')),
     utility_deposit: money(form.get('utility_deposit')),
     access_card_deposit: money(form.get('access_card_deposit')),
+    deposit_refunded: money(form.get('deposit_refunded')),
   }
   if (!isDate(start) || !isDate(end)) return { ok: false, error: 'Pick the start and end dates' }
   if (end <= start) return { ok: false, error: 'The end date must be after the start date' }

@@ -102,6 +102,12 @@ export function CostForm({
           </select>
         </label>
       ) : null}
+      {tenants.length ? (
+        <label className="v3-prop-check">
+          <input type="checkbox" name="recovered_from_deposit" defaultChecked={initial?.recovered_from_deposit ?? false} />
+          <span>Deducted from that tenant&rsquo;s deposit, so not a cost to me (needs a tenant above)</span>
+        </label>
+      ) : null}
       <button className="v3-btn v3-btn-primary" type="submit" disabled={pending}>
         {pending ? 'Saving…' : initial ? 'Save changes' : 'Add cost'}
       </button>
@@ -179,7 +185,7 @@ export function TermForm({
         <span>Rent per month (RM)</span>
         <input className="v3-select num" name="monthly_rent" inputMode="decimal" autoComplete="off" defaultValue={initial ? money(initial.monthly_rent) : money(rent)} />
       </label>
-      <details open={!!initial && DEPOSIT_FIELDS.some(f => initial[f.key] != null)}>
+      <details open={!!initial && (DEPOSIT_FIELDS.some(f => initial[f.key] != null) || initial.deposit_refunded != null)}>
         <summary>Deposits collected at signing</summary>
         {DEPOSIT_FIELDS.map(f => (
           <label key={f.key}>
@@ -187,6 +193,10 @@ export function TermForm({
             <input className="v3-select num" name={f.key} inputMode="decimal" autoComplete="off" defaultValue={money(initial?.[f.key])} />
           </label>
         ))}
+        <label>
+          <span>Paid back to the tenant at the end (RM)</span>
+          <input className="v3-select num" name="deposit_refunded" inputMode="decimal" autoComplete="off" defaultValue={money(initial?.deposit_refunded)} />
+        </label>
       </details>
       <label>
         <span>Note</span>
@@ -273,7 +283,8 @@ export function CostsBrowser({ costs, rent, tenants }: { costs: Cost[]; rent: nu
   const pages = Math.max(1, Math.ceil(rows.length / PAGE))
   const at = Math.min(page, pages - 1)
   const shown = rows.slice(at * PAGE, at * PAGE + PAGE)
-  const total = Math.round(rows.reduce((a, c) => a + c.amount, 0) * 100) / 100
+  const total = Math.round(rows.filter(c => !c.recovered_from_deposit).reduce((a, c) => a + c.amount, 0) * 100) / 100
+  const recovered = Math.round(rows.filter(c => c.recovered_from_deposit).reduce((a, c) => a + c.amount, 0) * 100) / 100
 
   return (
     <div>
@@ -298,7 +309,7 @@ export function CostsBrowser({ costs, rent, tenants }: { costs: Cost[]; rent: nu
           </select>
         </label>
         <span className="v3-panel-note">
-          {rows.length} bill{rows.length === 1 ? '' : 's'} · RM {sen(total)}
+          {rows.length} bill{rows.length === 1 ? '' : 's'} · RM {sen(total)} to you{recovered ? ` · RM ${sen(recovered)} recovered from deposits` : ''}
         </span>
       </div>
       {rows.length === 0 ? (
@@ -320,11 +331,11 @@ export function CostsBrowser({ costs, rent, tenants }: { costs: Cost[]; rent: nu
             <tbody>
               {shown.map(c => (
                 <Fragment key={c.id}>
-                  <tr>
+                  <tr data-recovered={c.recovered_from_deposit || undefined}>
                     <td>{dmy(c.cost_date)}</td>
                     <td>{KIND_LABEL[c.kind]}</td>
                     <td className="num">{sen(c.amount)}</td>
-                    <td>{[c.description, c.vendor, c.tenant_name ? `for ${c.tenant_name}` : null].filter(Boolean).join(' · ') || '—'}</td>
+                    <td>{[c.description, c.vendor, c.tenant_name ? `for ${c.tenant_name}` : null, c.recovered_from_deposit ? 'deducted from deposit — not your cost' : null].filter(Boolean).join(' · ') || '—'}</td>
                     <td>
                       <RowButtons editing={open === c.id} toggle={() => setOpen(open === c.id ? null : c.id)} remove={() => deletePropertyCost(c.id)} what="cost" />
                     </td>

@@ -17,6 +17,7 @@ export type Tenancy = {
   security_deposit: number | null
   utility_deposit: number | null
   access_card_deposit: number | null
+  deposit_refunded: number | null
   tenant_name: string | null
   notes: string | null
 }
@@ -31,6 +32,7 @@ export type Cost = {
   description: string | null
   vendor: string | null
   tenant_name: string | null
+  recovered_from_deposit: boolean // deducted from the tenant's deposit, so not a cost to the owner
 }
 
 export const KIND_LABEL: Record<CostKind, string> = { maintenance_fee: 'Maintenance fee', repair: 'Repair', agent_fee: 'Agent fee', stamping_fee: 'Stamping fee', other: 'Other' }
@@ -84,7 +86,9 @@ export function nextRentDue(t: Tenancy, today: string): string | null {
   }
 }
 
-export function costTotals(costs: Cost[], year: string) {
+/** What the property cost the owner: bills deducted from a tenant's deposit are not counted. */
+export function costTotals(all: Cost[], year: string) {
+  const costs = all.filter(c => !c.recovered_from_deposit)
   const inYear = costs.filter(c => c.cost_date.startsWith(year))
   const sum = (cs: Cost[]) => Math.round(cs.reduce((a, c) => a + c.amount, 0) * 100) / 100
   return { year: sum(inYear), all: sum(costs), repairsYear: sum(inYear.filter(c => c.kind === 'repair')), feesYear: sum(inYear.filter(c => c.kind === 'maintenance_fee')), signingYear: sum(inYear.filter(c => c.kind === 'agent_fee' || c.kind === 'stamping_fee')) }
@@ -139,17 +143,25 @@ export function depositsOf(terms: Tenancy[]) {
   const sum = (k: (typeof DEPOSIT_FIELDS)[number]['key']) => r2(terms.reduce((a, t) => a + (t[k] ?? 0), 0))
   const parts = DEPOSIT_FIELDS.map(f => ({ ...f, amount: sum(f.key) }))
   const total = r2(parts.reduce((a, p) => a + p.amount, 0))
-  return { parts, total, refundable: r2(total - sum('advance_rent')) }
+  const refunded = terms.some(t => t.deposit_refunded != null) ? r2(terms.reduce((a, t) => a + (t.deposit_refunded ?? 0), 0)) : null
+  return { parts, total, refundable: r2(total - sum('advance_rent')), refunded }
 }
 
-/** One tenant's score so far: rent that has fallen due, less the bills tagged to them. */
+/** One tenant's score so far: rent that has fallen due, less the bills you bore for them. Bills deducted from their deposit are recovered, so they are not a cost. */
 export function tenantStats(g: TenantGroup, costs: Cost[], today: string) {
   const rent = rentSoFar(g.terms, today)
-  const tagged = g.name ? costs.filter(c => same(c.tenant_name, g.name)) : []
+  const mine = g.name ? costs.filter(c => same(c.tenant_name, g.name)) : []
+  const tagged = mine.filter(c => !c.recovered_from_deposit)
+  const recovered = mine.filter(c => c.recovered_from_deposit)
   const taggedTotal = r2(tagged.reduce((a, c) => a + c.amount, 0))
+  const recoveredTotal = r2(recovered.reduce((a, c) => a + c.amount, 0))
   // If the tenant stays to the very end: every payment of every term, less the same tagged bills.
   const full = rentSoFar(g.terms, g.end)
   const fullNet = r2(full.total - taggedTotal)
   const estimate = { payments: full.payments, unpriced: full.unpriced, rent: full.total, net: fullNet, perMonth: full.payments ? r2(fullNet / full.payments) : null }
-  return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), estimate, deposits: depositsOf(g.terms) }
+  const deposits = depositsOf(g.terms)
+  // The deposit settlement: what is held, less the bills deducted, is due back; anything paid back less than that stays with the owner.
+  const dueBack = r2(deposits.refundable - recoveredTotal)
+  const settlement = { recoveredTotal, recoveredCount: recovered.length, dueBack, refunded: deposits.refunded, kept: deposits.refunded == null ? null : r2(dueBack - deposits.refunded) }
+  return { rent, taggedTotal, taggedCount: tagged.length, net: r2(rent.total - taggedTotal), estimate, deposits, settlement }
 }

@@ -106,7 +106,7 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
         <div className="v3-kpi">
           <div className="v3-kpi-label">Net from this tenant</div>
           <div className="v3-kpi-value">{rm(st.net)}</div>
-          <div className="v3-kpi-note">{st.taggedCount ? `after ${rm(st.taggedTotal)} of bills tagged to them` : 'no bills tagged to them yet'}</div>
+          <div className="v3-kpi-note">{st.taggedCount ? `after ${rm(st.taggedTotal)} of bills you bore for them` : 'no bills you bore for them yet'}</div>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
             <dd className="num">{rm(st.estimate.rent)}</dd>
           </div>
           <div>
-            <dt>Less all bills tagged to them</dt>
+            <dt>Less bills you bear for them (agent fee, repairs not deducted from the deposit)</dt>
             <dd className="num">{st.taggedTotal ? `− ${rm(st.taggedTotal)}` : rm(0)}</dd>
           </div>
           <div>
@@ -150,7 +150,10 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
           ) : null}
         </dl>
         {st.estimate.unpriced ? <p className="v3-panel-note">{plural(st.estimate.unpriced, 'payment')} in terms with no rent entered are left out.</p> : null}
-        <p className="v3-panel-note">Stamping fee and any renewal agent fee count once they are entered and tagged to this tenant.</p>
+        <p className="v3-panel-note">
+          {st.settlement.recoveredCount ? `Bills deducted from their deposit (${rm(st.settlement.recoveredTotal)}) are not counted: you recovered them. ` : ''}
+          Stamping fee and any renewal agent fee count once they are entered and tagged to this tenant.
+        </p>
       </section>
 
       <div className="v3-grid v3-prop-grid">
@@ -171,6 +174,41 @@ function TenantCard({ group: g, view, today, names }: { group: TenantGroup; view
                     </div>
                   ))}
               </dl>
+              {st.settlement.recoveredCount || st.settlement.refunded != null ? (
+                <>
+                  <h4 className="v3-prop-sub">Deposit settlement</h4>
+                  <dl className="v3-prop-deposits">
+                    <div>
+                      <dt>Refundable deposit held</dt>
+                      <dd className="num">{rm(st.deposits.refundable)}</dd>
+                    </div>
+                    <div>
+                      <dt>Less bills deducted ({st.settlement.recoveredCount})</dt>
+                      <dd className="num">− {rm(st.settlement.recoveredTotal)}</dd>
+                    </div>
+                    <div>
+                      <dt>
+                        <b>Due back to the tenant</b>
+                      </dt>
+                      <dd className="num">
+                        <b>{rm(st.settlement.dueBack)}</b>
+                      </dd>
+                    </div>
+                    {st.settlement.refunded != null ? (
+                      <>
+                        <div>
+                          <dt>Actually paid back</dt>
+                          <dd className="num">{rm(st.settlement.refunded)}</dd>
+                        </div>
+                        <div>
+                          <dt>{(st.settlement.kept ?? 0) >= 0 ? 'Kept by you beyond the bills' : 'Paid back more than due'}</dt>
+                          <dd className="num">{rm(Math.abs(st.settlement.kept ?? 0))}</dd>
+                        </div>
+                      </>
+                    ) : null}
+                  </dl>
+                </>
+              ) : null}
               <p className="v3-panel-note">
                 {rm(st.deposits.refundable)} of it is refundable (everything except the advance rental). Edit the original term to change it.
               </p>

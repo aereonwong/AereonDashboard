@@ -1274,3 +1274,7 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-loan-tip dl div { display: flex; justify-content: space-between; gap: var(--space-4); }
 .v3-loan-tip dt { color: var(--ink-2); }
 .v3-loan-tip dd { margin: 0; }
+.v3-prop-check { display: flex !important; align-items: flex-start; gap: var(--space-2); }
+.v3-prop-check input { margin-top: 0.25em; }
+.v3-prop-sub { margin: var(--space-4) 0 var(--space-2); font-size: var(--t-sm); color: var(--ink-2); font-weight: 600; }
+.v3-prop-table tr[data-recovered] td { color: var(--ink-3); }
