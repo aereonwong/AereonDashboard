@@ -108,7 +108,7 @@ Which properties, banks and spreads they are is private: see `.property-data/loa
 - The rate is never typed. It is the bank's published BR on each day of the period + the loan's spread.
   When a bank changes its rate, add a row to `property_bank_rate` (and `.property-data/bank_rates.json`).
 - A row dated month M pays interest for the period ending on M's instalment day (`cycle_day`), which the
-  bank figures prove to the sen. One loan's `cycle_day` is still an unconfirmed 1 (see loans.json notes).
+  bank figures prove to the sen. Both loans' instalment days are confirmed by Aereon (in loans.json).
 - Everything about the loans is private: it lives in Supabase and `.property-data/` (git-ignored), loaded
   by `npm run property:import` (`-- --dry` works it out offline). The repo is public: never commit
   balances, property or bank names, or spreads, not even in comments or commit messages.
