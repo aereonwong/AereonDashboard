@@ -13,9 +13,11 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 
 ## Live
 
-- App: https://aereonwong.com (own domain since Oct 2026; the old aereonwong.vercel.app is gone) (public landing at `/`, everything else behind a passcode).
-  The original https://cashflowos-aereon.vercel.app still points at the same project and is kept on
-  purpose: the Telegram webhook is registered against it. Remove it only after re-pointing the webhook.
+- App: https://aereonwong.com (public landing at `/`, everything else behind a passcode). Domain bought
+  at Cloudflare on 4 Oct 2026; DNS-only records (A 216.198.79.1 + 64.29.17.1, www CNAME to Vercel).
+  `www.aereonwong.com` serves the same app. The old `aereonwong.vercel.app` and
+  `cashflowos-aereon.vercel.app` were removed from the project on 4 Oct 2026 and now return 404; the
+  Telegram webhook was re-pointed to `https://aereonwong.com/api/telegram` first.
 - Repo: https://github.com/aereonwong/AereonDashboard (public, owner-only access; renamed from
   cashflowos-aereon on 26 Sep 2026 — GitHub redirects the old URL)
 - Hosting: Vercel project `aereondashboard` (Hobby; renamed from cashflowos-aereon, same project ID)
