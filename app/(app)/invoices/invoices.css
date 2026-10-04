@@ -127,7 +127,6 @@ a.idt-pill.drive.uploaded:hover { text-decoration: underline; text-underline-off
 .idt-acts { display: flex; gap: 2px; justify-content: flex-end; }
 .idt-acts { align-items: center; }
 .idt-acts-rule { width: 1px; height: 16px; background: var(--i-line2); margin: 0 4px; flex: none; }
-.idt-act-gap { visibility: hidden; }
 .idt-act {
   width: 28px; height: 28px; flex: none; display: inline-grid; place-items: center; border-radius: 8px; border: 0;
   background: none; color: var(--i-dim); cursor: pointer; text-decoration: none; position: relative;
@@ -272,14 +271,11 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 .idt-paybtn:disabled { opacity: 0.45; cursor: not-allowed; }
 .idt-sub[data-age="mid"] { color: var(--i-warn-text); }
 .idt-sub[data-age="old"] { color: var(--i-neg); }
-/* Paid toggle: a ring until pressed, then a filled green check. */
-.idt-act.idt-paid { border: 1.5px solid color-mix(in srgb, var(--i-dim) 80%, transparent); border-radius: 50%; width: 26px; height: 26px; }
-.idt-act.idt-paid .ico-svg { width: 14px; height: 14px; opacity: .8; }
-.idt-act.idt-paid:hover:not(:disabled) { border-color: var(--i-pos); color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 10%, transparent); }
-.idt-act.idt-paid:hover:not(:disabled) .ico-svg { opacity: 1; }
-.idt-act.idt-paid.on { border-color: transparent; background: color-mix(in srgb, var(--i-pos) 16%, transparent); color: var(--i-pos); }
-.idt-act.idt-paid.on .ico-svg { opacity: 1; }
-.idt-act.idt-paid.on:hover:not(:disabled) { background: color-mix(in srgb, var(--i-ink) 8%, transparent); color: var(--i-dim); border-color: transparent; }
+/* Paid toggle: an ordinary row icon until pressed, then green — same size,
+   shape and hover as every other action in the row. */
+.idt-act.idt-paid:hover:not(:disabled) { color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 10%, transparent); }
+.idt-act.idt-paid.on { color: var(--i-pos); background: color-mix(in srgb, var(--i-pos) 14%, transparent); }
+.idt-act.idt-paid.on:hover:not(:disabled) { color: var(--i-dim); background: color-mix(in srgb, var(--i-ink) 8%, transparent); }
 .idt-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 12px; padding: 10px 14px; border: 1px dashed var(--i-line2); border-radius: 12px; font-size: 13px; color: var(--i-dim); }
 .idt-bulk input[type="date"] { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--i-line2); background: transparent; color: var(--i-ink); }
 @media (prefers-reduced-motion: reduce) { .idt-paybtn { transition: none; } }

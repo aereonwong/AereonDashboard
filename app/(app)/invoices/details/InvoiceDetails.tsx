@@ -560,7 +560,9 @@ export default function InvoiceDetails({
                           <Icon name={busy.has(r.id) ? 'refresh' : 'undo'} />
                         </button>
                       ) : (
-                        <span className="idt-act idt-act-gap" aria-hidden="true" />
+                        <span className="idt-act" aria-disabled="true" title="No edit to undo">
+                          <Icon name="undo" />
+                        </span>
                       )}
 
                       <span className="idt-acts-rule" aria-hidden="true" />
