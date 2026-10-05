@@ -1,6 +1,6 @@
 import type { PropertyRead } from '@/lib/property'
 import type { SubmeterRead } from '@/lib/submeter'
-import { FLAT_RATE, HIGH_USE_KWH, LONG_GAP_DAYS, billing, buffers, cycles, daysBetween, leakSummary, nextReadingDue, segments, unitsOf, usageShare, type Bill, type Reading, type Segment, type TenantBilling } from '@/lib/submeter-math'
+import { FLAT_RATE, HIGH_USE_KWH, LONG_GAP_DAYS, billing, buffers, cycles, daysBetween, leakSummary, nextReadingDue, segments, unitState, unitsOf, usageShare, type Bill, type Reading, type Segment, type TenantBilling } from '@/lib/submeter-math'
 import { groupTenants } from '@/lib/tenancy-math'
 import { BillForm, DeleteRow, PaidCell, ReadingForm, TenantTag } from '../../SubmeterForms'
 import SubmeterChart, { type ChartCycle } from '../../SubmeterChart'
@@ -50,7 +50,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
         <TenancySetup sql={submeterSql} sqlUrl={sqlUrl} />
       ) : (
         <>
-          {!sub.tenantReady || !sub.paidReady ? <TenancySetup sql={submeterSql.slice(submeterSql.indexOf('-- Who each unit'), submeterSql.indexOf('-- Server-side only')).trim()} sqlUrl={sqlUrl} /> : null}
+          {!sub.tenantReady || !sub.paidReady || !sub.kindReady ? <TenancySetup sql={submeterSql.slice(submeterSql.indexOf('-- Who each unit'), submeterSql.indexOf('-- Server-side only')).trim()} sqlUrl={sqlUrl} /> : null}
           {shown.map(l => (
             <PropertySubmeter
               key={l.loan.id}
@@ -62,6 +62,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
               tenantNames={groupTenants(l.tenancies, today).map(g => g.name).filter((n): n is string => !!n)}
               tagging={sub.tenantReady}
               paying={sub.paidReady}
+              kinds={sub.kindReady}
               today={today}
             />
           ))}
@@ -71,7 +72,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
   )
 }
 
-function PropertySubmeter({ id, name, location, readings, bills, tenantNames, tagging, paying, today }: { id: string; name: string; location: string | null; readings: Reading[]; bills: Bill[]; tenantNames: string[]; tagging: boolean; paying: boolean; today: string }) {
+function PropertySubmeter({ id, name, location, readings, bills, tenantNames, tagging, paying, kinds, today }: { id: string; name: string; location: string | null; readings: Reading[]; bills: Bill[]; tenantNames: string[]; tagging: boolean; paying: boolean; kinds: boolean; today: string }) {
   const cs = cycles(bills, readings)
   const segs = segments(readings, cs)
   const buf = buffers(segs)
@@ -90,7 +91,11 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
   const perDay = shares.reduce((t, u) => t + u.perDay, 0)
   const overWorst = leak.worstCost ? FLAT_RATE / leak.worstCost - 1 : null
   // Who each unit is billed to now: the tenant on its latest reading; the form starts there.
-  const currentTenant = (unit: string) => people.find(p => p.unit === unit && p.current)?.tenant ?? null
+  const state = unitState(readings)
+  const currentTenant = (unit: string) => (state.get(unit)?.kind === 'move_in' ? (state.get(unit)?.tenant ?? null) : (people.find(p => p.unit === unit && p.current)?.tenant ?? null))
+  // A tenant who has moved in but not been read since: no bill yet, only their starting number.
+  const arrivals = [...state.entries()].filter(([, st]) => st.kind === 'move_in').map(([unit, st]) => ({ unit, ...st }))
+  const between = segs.filter(x => x.vacant)
   // Who was billed for a unit on a date: the segment around it.
   const tenantOn = (unit: string, date: string) => segs.find(s => s.unit === unit && s.from < date && date <= s.to)?.tenant ?? null
   const chart: ChartCycle[] = cs.slice(-12).map(c => ({
@@ -176,7 +181,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
           <p className="v3-panel-note" style={{ marginTop: 0 }}>
             Read both on the 12th, the day TNB bills, and take a photo.
           </p>
-          <ReadingForm propertyId={id} units={(units.length ? units : ['Main unit', 'Studio']).map(unit => ({ unit, tenant: currentTenant(unit) }))} tenants={tenants} rate={FLAT_RATE} tagging={tagging} />
+          <ReadingForm propertyId={id} units={(units.length ? units : ['Main unit', 'Studio']).map(unit => ({ unit, tenant: currentTenant(unit), empty: state.get(unit)?.kind === 'move_out' }))} tenants={tenants} rate={FLAT_RATE} tagging={tagging} kinds={kinds} />
           <details className="v3-sub-billform">
             <summary>Add the TNB bill</summary>
             <BillForm propertyId={id} />
@@ -184,8 +189,26 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
         </section>
       </div>
 
-      {people.length ? (
+      {people.length || arrivals.length ? (
         <div className="v3-prop-cards" aria-label="Who to bill">
+          {arrivals.map(a => (
+            <section key={`in-${a.unit}`} className="v3-panel v3-prop-card v3-sub-card" aria-label={`${who(a.tenant)} moved in`}>
+              <div className="v3-prop-tenant-head">
+                <div>
+                  <h3 className="v3-chapter-title">{who(a.tenant)}</h3>
+                  <p className="v3-panel-note" style={{ margin: 0 }}>
+                    {a.unit} · moved in {dmy(a.date)}
+                  </p>
+                </div>
+                <span className="v3-tag v3-sub-kind">Moved in</span>
+              </div>
+              <div>
+                <div className="v3-kpi-label">Starting reading</div>
+                <div className="v3-kpi-value">{kwh(a.reading)}</div>
+                <div className="v3-kpi-note">Their first bill comes with the next reading, counted from this number.</div>
+              </div>
+            </section>
+          ))}
           {people.map(p => (
             <TenantCard key={`${p.unit}-${p.tenant}`} p={p} share={shares.find(u => u.unit === p.unit)?.share ?? null} paying={paying} />
           ))}
@@ -208,7 +231,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
             <div key={`${p.unit}-${p.tenant}`} className="v3-sub-group">
               <div className="v3-sub-group-head">
                 <h4>
-                  {who(p.tenant)} <span className="v3-sub-sub">{p.unit}{p.current ? '' : ' · earlier tenant'}</span>
+                  {who(p.tenant)} <span className="v3-sub-sub">{p.unit}{p.movedOut ? ` · moved out ${dmy(p.movedOut.date)}` : p.current ? '' : ' · earlier tenant'}</span>
                 </h4>
                 <span className="v3-panel-note">
                   {plural(p.segments.length, 'reading')} · billed {rm(p.billed)}
@@ -236,6 +259,15 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
                     {p.segments.map(s => (
                       <ChargeRow key={s.id} s={s} reading={byId.get(s.id)} tenants={tenants} tagging={tagging} paying={paying} earlier={earlierUnpaid(s)} />
                     ))}
+                    <tr className="v3-sub-startrow">
+                      <td colSpan={2 + (paying ? 1 : 0) + (tagging ? 1 : 0)}>
+                        {dmy(p.start.date)} <span className="v3-tag v3-sub-kind">Starting reading</span>
+                      </td>
+                      <td className="r num">{kwh(p.start.reading)}</td>
+                      <td colSpan={4} className="v3-sub-sub">
+                        billing starts here
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -243,6 +275,51 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
           ))
         )}
       </section>
+
+      {between.length ? (
+        <section className="v3-panel" aria-label={`${name} between tenants`}>
+          <div className="v3-panel-head">
+            <h3 className="v3-panel-title">Between tenants</h3>
+          </div>
+          <p className="v3-panel-note" style={{ marginTop: 0 }}>
+            Electricity used after a move-out and before the next move-in — cleaning, repairs, viewings. Your own use: billed to nobody.
+          </p>
+          <div className="v3-table-wrap">
+            <table className="v3-table v3-prop-table v3-sub-table">
+              <thead>
+                <tr>
+                  <th>Gap</th>
+                  <th>Unit</th>
+                  <th className="r">Used</th>
+                  <th className="r">At TNB&rsquo;s cost</th>
+                  <th>
+                    <span className="sr-only">Delete</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {between.map(x => (
+                  <tr key={x.id}>
+                    <td>
+                      {dmy(x.from)} – {dmy(x.to)}
+                      <div className="v3-sub-sub">{plural(x.days, 'day')}{byId.get(x.id)?.tenant_name ? ` · until ${byId.get(x.id)?.tenant_name} moved in` : ''}</div>
+                    </td>
+                    <td>{x.unit}</td>
+                    <td className="r num">{kwh(x.kwh)} kWh</td>
+                    <td className="r num">
+                      {x.cost != null ? rm(x.cost) : '—'}
+                      {x.cost != null && x.costEstimated ? <i className="v3-sub-est"> est.</i> : null}
+                    </td>
+                    <td>
+                      <DeleteRow id={x.id} kind="reading" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
 
       <section className="v3-panel" aria-label={`${name} TNB bills`}>
         <div className="v3-panel-head">
@@ -320,10 +397,11 @@ function TenantCard({ p, share: s, paying }: { p: TenantBilling; share: number |
         <div>
           <h3 className="v3-chapter-title">{who(p.tenant)}</h3>
           <p className="v3-panel-note" style={{ margin: 0 }}>
-            {p.unit} · {p.current ? `billed since ${dmy(p.from)}` : `${dmy(p.from)} – ${dmy(p.to)}`}
+            {p.unit} · {p.current ? `billed from ${dmy(p.start.date)} at ${kwh(p.start.reading)}` : `${dmy(p.from)} – ${dmy(p.to)}`}
+            {p.movedOut ? ` · final reading ${kwh(p.movedOut.reading)}` : ''}
           </p>
         </div>
-        {p.current ? null : <span className="v3-tag">Earlier tenant</span>}
+        {p.movedOut ? <span className="v3-tag v3-sub-kind">Moved out</span> : p.current ? null : <span className="v3-tag">Earlier tenant</span>}
       </div>
       <div>
         <div className="v3-kpi-label">
@@ -381,6 +459,7 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
     <tr data-paid={paying && !!s.paidOn ? true : undefined}>
       <td>
         {dmy(s.to)}
+        {s.kind === 'move_out' ? <span className="v3-tag v3-sub-kind"> Final reading</span> : null}
         <div className="v3-sub-sub">
           {plural(s.days, 'day')} from {dmy(s.from)}
         </div>

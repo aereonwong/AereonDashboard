@@ -46,8 +46,9 @@ export async function addSubmeterReadings(form: FormData): Promise<Result> {
   const units = form.getAll('unit').map(String)
   const values = form.getAll('reading')
   const tenants = form.getAll('tenant')
+  const kinds = form.getAll('kind').map(String)
   const note = text(form.get('note'), 300)
-  const rows: { property_id: string; unit: string; read_on: string; reading: number; rate: number; legacy: false; note: string | null; tenant_name?: string }[] = []
+  const rows: { property_id: string; unit: string; read_on: string; reading: number; rate: number | null; legacy: false; note: string | null; tenant_name?: string; kind?: string }[] = []
   for (let i = 0; i < units.length; i++) {
     const v = num(values[i] ?? null)
     if (v === 'bad') return { ok: false, error: `${units[i]}: type the meter reading, e.g. 7945` }
@@ -62,10 +63,18 @@ export async function addSubmeterReadings(form: FormData): Promise<Result> {
     if (before.data && v < Number(before.data.reading)) return { ok: false, error: `${unit}: ${v} is lower than the ${before.data.reading} read on ${before.data.read_on}. A meter only counts up — check the photo.` }
     if (after.data && v > Number(after.data.reading)) return { ok: false, error: `${unit}: ${v} is higher than the ${after.data.reading} read on ${after.data.read_on}.` }
     const tenant = text(tenants[i] ?? null, 80)
-    rows.push({ property_id: propertyId, unit, read_on: date, reading: v, rate: rateRaw, legacy: false, note, ...(tenant ? { tenant_name: tenant } : {}) })
+    const kind = kinds[i] === 'move_in' || kinds[i] === 'move_out' ? kinds[i] : 'reading'
+    if (kind === 'move_in' && !tenant) return { ok: false, error: `${unit}: pick the tenant moving in` }
+    // A move-in reading is a starting number, not a charge, so it carries no rate.
+    rows.push({ property_id: propertyId, unit, read_on: date, reading: v, rate: kind === 'move_in' ? null : rateRaw, legacy: false, note, ...(tenant ? { tenant_name: tenant } : {}), ...(kind !== 'reading' ? { kind } : {}) })
   }
   if (!rows.length) return { ok: false, error: 'Type at least one meter reading' }
-  return done((await supabase.from('submeter_reading').upsert(rows, { onConflict: 'property_id,unit,read_on' })).error)
+  // Every row says its kind, so re-typing a date as a regular reading also clears a mistaken move-in. Before the kind
+  // column exists, plain readings still save without it.
+  const typed = rows.map(r => ({ ...r, kind: r.kind ?? 'reading' }))
+  const first = await supabase.from('submeter_reading').upsert(typed, { onConflict: 'property_id,unit,read_on' })
+  if (first.error && /kind/.test(first.error.message) && rows.every(r => !r.kind)) return done((await supabase.from('submeter_reading').upsert(rows, { onConflict: 'property_id,unit,read_on' })).error)
+  return done(first.error)
 }
 
 /** A TNB bill (issued on the 12th). kWh is what TNB billed; kW and kVARh are kept for reference. */
