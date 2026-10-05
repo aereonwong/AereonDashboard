@@ -95,6 +95,38 @@ export async function setReadingTenant(id: number, tenant: string): Promise<Resu
   return done((await supabase.from('submeter_reading').update({ tenant_name: tenant.trim().slice(0, 80) || null }).eq('id', id)).error)
 }
 
+/** Record when the tenant paid one reading's charge (null = not paid yet). With `earlier`, the same tenant's unpaid
+ *  charges on the same unit before this reading are marked paid on the same date — for catching up on a backlog. */
+export async function setReadingPaid(id: number, paidOn: string | null, earlier = false): Promise<Result & { marked?: number }> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
+  if (paidOn != null) {
+    if (!isDate(paidOn)) return { ok: false, error: 'Pick the date the tenant paid' }
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
+    if (paidOn > today) return { ok: false, error: 'The payment date can’t be in the future' }
+  }
+  const { data: row, error } = await supabase.from('submeter_reading').select('property_id, unit, tenant_name, read_on').eq('id', id).maybeSingle()
+  if (error) return done(error)
+  if (!row) return { ok: false, error: 'Reading not found' }
+  if (paidOn != null && paidOn < row.read_on) return { ok: false, error: `The payment date can’t be before the reading on ${row.read_on}` }
+  const one = await supabase.from('submeter_reading').update({ paid_on: paidOn }).eq('id', id)
+  if (one.error || !earlier || paidOn == null) return done(one.error)
+  // The same charges the popup counted: this tenant, this unit, before this reading, unpaid, with a rate and a
+  // charge above zero. Charges are worked out from consecutive readings, so the unit's first reading never qualifies.
+  const all = await supabase.from('submeter_reading').select('id, read_on, reading, rate, tenant_name, paid_on').eq('property_id', row.property_id).eq('unit', row.unit).order('read_on')
+  if (all.error) return done(all.error)
+  const rows = all.data ?? []
+  const ids = rows
+    .filter((r, i) => i > 0 && r.read_on < row.read_on && r.paid_on == null && (r.tenant_name ?? null) === (row.tenant_name ?? null) && r.rate != null && (Number(r.reading) - Number(rows[i - 1].reading)) * Number(r.rate) > 0)
+    .map(r => r.id)
+  if (!ids.length) return done(null)
+  const more = await supabase.from('submeter_reading').update({ paid_on: paidOn }).in('id', ids).select('id')
+  const r = done(more.error)
+  return r.ok ? { ok: true, marked: (more.data?.length ?? 0) + 1 } : r
+}
+
 async function remove(table: 'submeter_reading' | 'submeter_bill', id: number): Promise<Result> {
   await requireSession()
   if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
