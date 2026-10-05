@@ -196,7 +196,7 @@ export function TenantTag({ id, tenant, tenants }: { id: number; tenant: string 
 
 /** Paid or not, per charge. Clicking opens a popup to record the date the tenant paid — today by default, or any
  *  earlier day when it is recorded late — or to clear it. An in-page dialog: some browsers block native pop-ups. */
-export function PaidCell({ id, paidOn, what, earlier, tenant }: { id: number; paidOn: string | null; what: string; earlier: number; tenant: string }) {
+export function PaidCell({ id, paidOn, readOn, what, earlier, tenant }: { id: number; paidOn: string | null; readOn: string; what: string; earlier: number; tenant: string }) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -209,12 +209,12 @@ export function PaidCell({ id, paidOn, what, earlier, tenant }: { id: number; pa
           Mark paid
         </button>
       )}
-      {open ? <PaidDialog id={id} paidOn={paidOn} what={what} earlier={earlier} tenant={tenant} onClose={() => setOpen(false)} /> : null}
+      {open ? <PaidDialog id={id} paidOn={paidOn} readOn={readOn} what={what} earlier={earlier} tenant={tenant} onClose={() => setOpen(false)} /> : null}
     </>
   )
 }
 
-function PaidDialog({ id, paidOn, what, earlier, tenant, onClose }: { id: number; paidOn: string | null; what: string; earlier: number; tenant: string; onClose: () => void }) {
+function PaidDialog({ id, paidOn, readOn, what, earlier, tenant, onClose }: { id: number; paidOn: string | null; readOn: string; what: string; earlier: number; tenant: string; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   const [date, setDate] = useState(paidOn ?? today())
   const [alsoEarlier, setAlsoEarlier] = useState(false)
@@ -257,7 +257,7 @@ function PaidDialog({ id, paidOn, what, earlier, tenant, onClose }: { id: number
         </p>
         <label>
           <span>Date {tenant} paid</span>
-          <input className="v3-select" type="date" value={date} max={today()} onChange={e => setDate(e.currentTarget.value)} required autoFocus />
+          <input className="v3-select" type="date" value={date} min={readOn} max={today()} onChange={e => setDate(e.currentTarget.value)} required autoFocus />
         </label>
         {earlier > 0 ? (
           <label className="v3-sub-check">

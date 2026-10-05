@@ -408,7 +408,7 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
       {paying ? (
         <td>
           {s.charged != null && s.charged > 0 ? (
-            <PaidCell id={s.id} paidOn={s.paidOn} tenant={who(s.tenant)} earlier={earlier} what={`${who(s.tenant)} · ${s.unit} · ${dmy(s.from)} – ${dmy(s.to)} · ${rm(s.charged)}`} />
+            <PaidCell id={s.id} paidOn={s.paidOn} readOn={s.to} tenant={who(s.tenant)} earlier={earlier} what={`${who(s.tenant)} · ${s.unit} · ${dmy(s.from)} – ${dmy(s.to)} · ${rm(s.charged)}`} />
           ) : null}
         </td>
       ) : null}
