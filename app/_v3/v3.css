@@ -1338,3 +1338,6 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-sub-group-head h4 { margin: 0; font-size: var(--t-md); font-weight: 600; }
 .v3-sub-group-owed { color: var(--ink); }
 .v3-sub-group-paid { color: var(--pos); }
+.v3-sub-hint { margin: 0; font-size: var(--t-xs); color: var(--ink-3); }
+.v3-sub-kind { margin-left: 4px; color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-sub-startrow td { color: var(--ink-3); border-bottom: 0; }

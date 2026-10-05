@@ -11,7 +11,7 @@ import { dmy, today } from './pages/property/shared'
 type Msg = { ok: boolean; text: string } | null
 
 /** One meter per unit, each billed to a tenant (preset to whoever the unit's last reading was billed to). */
-export function ReadingForm({ propertyId, units, tenants, rate, tagging }: { propertyId: string; units: { unit: string; tenant: string | null }[]; tenants: string[]; rate: number; tagging: boolean }) {
+export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }: { propertyId: string; units: { unit: string; tenant: string | null; empty: boolean }[]; tenants: string[]; rate: number; tagging: boolean; kinds: boolean }) {
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `reading-${propertyId}`
@@ -33,30 +33,8 @@ export function ReadingForm({ propertyId, units, tenants, rate, tagging }: { pro
         <span>Date you read the meters</span>
         <input className="v3-select" type="date" name="read_on" defaultValue={today()} required />
       </label>
-      {units.map(({ unit, tenant }) => (
-        <fieldset key={unit} className="v3-sub-meter">
-          <legend>{unit}</legend>
-          <input type="hidden" name="unit" value={unit} />
-          <label>
-            <span>Meter reading</span>
-            <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
-          </label>
-          {tagging ? (
-            <label>
-              <span>Billed to</span>
-              <select className="v3-select" name="tenant" defaultValue={tenant ?? ''}>
-                <option value="">No tenant (empty unit)</option>
-                {tenants.map(t => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <input type="hidden" name="tenant" value="" />
-          )}
-        </fieldset>
+      {units.map(u => (
+        <UnitMeter key={u.unit} {...u} tenants={tenants} tagging={tagging} kinds={kinds} />
       ))}
       <details>
         <summary>Rate and note</summary>
@@ -157,6 +135,51 @@ export function DeleteRow({ id, kind }: { id: number; kind: 'reading' | 'bill' }
       </button>
       {err ? <span className="v3-prop-msg">{err}</span> : null}
     </span>
+  )
+}
+
+/** One unit's meter in the reading form: the number, what kind of reading it is, and who it is billed to.
+ *  After a move-out the unit is empty, so the next reading starts as a move-in. */
+function UnitMeter({ unit, tenant, empty, tenants, tagging, kinds }: { unit: string; tenant: string | null; empty: boolean; tenants: string[]; tagging: boolean; kinds: boolean }) {
+  const [kind, setKind] = useState(empty && kinds ? 'move_in' : 'reading')
+  return (
+    <fieldset className="v3-sub-meter">
+      <legend>{unit}</legend>
+      <input type="hidden" name="unit" value={unit} />
+      <label>
+        <span>Meter reading</span>
+        <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
+      </label>
+      {kinds ? (
+        <label>
+          <span>Type</span>
+          <select className="v3-select" name="kind" value={kind} onChange={e => setKind(e.currentTarget.value)}>
+            <option value="reading">Regular reading</option>
+            <option value="move_out">Move-out: tenant&rsquo;s final reading</option>
+            <option value="move_in">Move-in: new tenant&rsquo;s starting reading</option>
+          </select>
+        </label>
+      ) : (
+        <input type="hidden" name="kind" value="reading" />
+      )}
+      {tagging ? (
+        <label>
+          <span>{kind === 'move_in' ? 'Tenant moving in' : kind === 'move_out' ? 'Tenant moving out' : 'Billed to'}</span>
+          <select className="v3-select" name="tenant" defaultValue={empty ? '' : (tenant ?? '')} required={kind !== 'reading'}>
+            <option value="">{kind === 'move_in' ? 'Pick the new tenant' : kind === 'move_out' ? 'Pick the tenant' : 'No tenant: empty unit, my own use'}</option>
+            {tenants.map(t => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <input type="hidden" name="tenant" value="" />
+      )}
+      {kind === 'move_in' ? <p className="v3-sub-hint">Their starting number — not a charge. Use since the last reading is billed to you (owner) with no charge.</p> : null}
+      {kind === 'move_out' ? <p className="v3-sub-hint">Billed to them up to today. Moving in the same day? This is enough — the new tenant&rsquo;s first bill starts here.</p> : null}
+    </fieldset>
   )
 }
 

@@ -11,6 +11,11 @@
 //   buffer    = charged − cost. The flat rate is meant to stay clearly above cost. It is worked out
 //               separately: electricity is collected from the tenants, never a cost of the property.
 //   tenant    = who a segment is billed to: the tenant named on the reading that closes it.
+//   kind      = what a reading marks. 'reading' bills the usage since the last one; 'move_out' is a tenant's
+//               final reading (billed as usual); 'move_in' is a new tenant's starting number — never a charge.
+//               The usage that ends at a move-in reading happened between tenants (cleaning, viewings):
+//               the owner's own electricity, billed to the owner with no charge. A same-day handover needs only the move-out:
+//               the new tenant's first bill starts from it. A unit's very first reading is a starting point too.
 
 /** What tenants pay per kWh from the 4 Oct 2026 decision on: one flat rate for every unit. */
 export const FLAT_RATE = 0.5
@@ -32,7 +37,12 @@ export type Reading = {
   note: string | null
   tenant_name: string | null // who the usage since the previous reading is billed to
   paid_on: string | null // when the tenant paid this reading's charge; null = still to collect
+  kind?: ReadingKind // missing on rows from before the column = 'reading'
 }
+
+export type ReadingKind = 'reading' | 'move_in' | 'move_out'
+export const KIND_LABEL: Record<ReadingKind, string> = { reading: 'Regular reading', move_out: 'Move-out (final reading)', move_in: 'Move-in (starting reading)' }
+const kindOf = (r: Reading): ReadingKind => r.kind ?? 'reading'
 
 export type Bill = {
   id: number
@@ -50,6 +60,9 @@ export type Segment = {
   unit: string
   tenant: string | null
   paidOn: string | null
+  kind: ReadingKind // of the reading that closes the segment
+  vacant: boolean // the owner's use, no charge: ends at a move-in reading, or has no tenant
+  startReading: number // the meter at `from`
   from: string
   to: string
   days: number
@@ -190,8 +203,14 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       const cp = costPerKwh(cs, a.read_on, b.read_on)
       const cpk = cp?.value ?? null
       const flags: string[] = []
+      // Owner's own use, no charge: up to a move-in, or any reading saved with no tenant (an empty unit).
+      const vacant = kindOf(b) === 'move_in' || !b.tenant_name
       if (kwh < 0) flags.push('Meter went backwards')
-      if (days > LONG_GAP_DAYS) flags.push(`${days} days since the last reading`)
+      if (days > LONG_GAP_DAYS && !vacant) flags.push(`${days} days since the last reading`)
+      if (vacant) {
+        out.push({ id: b.id, unit, tenant: null, paidOn: null, kind: kindOf(b), vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: null, charged: null, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost: cpk != null ? r2(kwh * cpk) : null, buffer: null, flags })
+        continue
+      }
       if (seen.length >= 3) {
         const m = median(seen)
         if (m > 0 && Math.abs(perDay - m) / m > 0.4) flags.push(`${perDay > m ? 'Usage up' : 'Usage down'} ${Math.round((Math.abs(perDay - m) / m) * 100)}% on this unit's usual — check the reading`)
@@ -199,7 +218,7 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       if (kwh >= 0) seen.push(perDay)
       const charged = b.rate != null ? r2(kwh * b.rate) : null
       const cost = cpk != null ? r2(kwh * cpk) : null
-      out.push({ id: b.id, unit, tenant: b.tenant_name ?? null, paidOn: b.paid_on ?? null, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
+      out.push({ id: b.id, unit, tenant: b.tenant_name ?? null, paidOn: b.paid_on ?? null, kind: kindOf(b), vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
     }
   }
   return out.sort((x, y) => y.to.localeCompare(x.to) || x.unit.localeCompare(y.unit))
@@ -249,14 +268,20 @@ export type TenantBilling = {
   unrated: number // segments with no rate: their kWh are not in `billed`
   owed: number // charges not marked paid yet
   owedCount: number
+  start: { date: string; reading: number } // where this tenant's billing starts: their move-in, or the reading before their first bill
+  movedOut: { date: string; reading: number } | null // their final reading, when one is marked
 }
 
 /** The part of a segment that falls on or after `since`, as a fraction of its days. */
 const inside = (s: Segment, since: string) => (s.days <= 0 || s.to <= since ? 0 : s.from >= since ? 1 : daysBetween(since, s.to) / s.days)
 
 /** What each tenant of each unit has been billed: one row per unit + tenant, the current tenant of each unit first. */
-export function billing(segs: Segment[], today: string): TenantBilling[] {
+export function billing(all: Segment[], today: string): TenantBilling[] {
   const since = yearBefore(today)
+  const segs = all.filter(s => !s.vacant)
+  // A unit's tenant now: whoever its latest reading is billed to — nobody after a move-out, the newcomer after a move-in.
+  const last = new Map<string, Segment>()
+  for (const s of all) if (!last.has(s.unit) || s.to > last.get(s.unit)!.to) last.set(s.unit, s)
   const groups = new Map<string, Segment[]>()
   for (const s of segs) {
     const key = `${s.unit}\u0000${s.tenant ?? ''}`
@@ -274,7 +299,7 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
       return {
         unit: sorted[0].unit,
         tenant: sorted[0].tenant,
-        current: latest.get(sorted[0].unit)?.tenant === sorted[0].tenant,
+        current: latest.get(sorted[0].unit)?.tenant === sorted[0].tenant && last.get(sorted[0].unit) === latest.get(sorted[0].unit) && sorted[0].kind !== 'move_out',
         segments: sorted,
         from: sorted[sorted.length - 1].from,
         to: sorted[0].to,
@@ -285,6 +310,8 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
         unrated: ok.filter(s => s.charged == null).length,
         owed: r2(ok.reduce((t, s) => t + (s.paidOn ? 0 : (s.charged ?? 0)), 0)),
         owedCount: ok.filter(s => !s.paidOn && s.charged != null && s.charged > 0).length,
+        start: { date: sorted[sorted.length - 1].from, reading: sorted[sorted.length - 1].startReading },
+        movedOut: sorted[0].kind === 'move_out' ? { date: sorted[0].to, reading: sorted[0].startReading + sorted[0].kwh } : null,
       }
     })
     .sort((a, b) => units.indexOf(a.unit) - units.indexOf(b.unit) || Number(b.current) - Number(a.current) || b.to.localeCompare(a.to))
@@ -300,4 +327,11 @@ export function usageShare(segs: Segment[], today: string): { unit: string; perD
   })
   const total = per.reduce((t, u) => t + u.perDay, 0)
   return per.map(u => ({ ...u, share: total > 0 ? u.perDay / total : 0 }))
+}
+
+/** Per unit, how its latest reading leaves it: a tenant who moved in and has no bill yet, or empty after a move-out. */
+export function unitState(readings: Reading[]): Map<string, { kind: ReadingKind; tenant: string | null; date: string; reading: number }> {
+  const out = new Map<string, { kind: ReadingKind; tenant: string | null; date: string; reading: number }>()
+  for (const r of [...readings].sort(byDate)) out.set(r.unit, { kind: kindOf(r), tenant: r.tenant_name, date: r.read_on, reading: r.reading })
+  return out
 }
