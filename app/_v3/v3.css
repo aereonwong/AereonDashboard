@@ -1321,3 +1321,20 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-sub-margin summary { cursor: pointer; list-style-position: outside; }
 .v3-sub-margin[open] summary { margin-bottom: var(--space-3); }
 .v3-sub-chartnote { margin-top: var(--space-4); max-width: 80ch; }
+.v3-sub-paid { cursor: pointer; background: none; font: inherit; font-size: 11px; color: var(--mark); border-color: color-mix(in srgb, var(--mark) 45%, transparent); }
+.v3-sub-paid:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.v3-sub-paid[data-paid="true"] { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, transparent); }
+.v3-sub-table tr[data-paid] .v3-sub-owe { font-weight: 400; color: var(--ink-3); }
+.v3-sub-owed { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-size: var(--t-sm); color: var(--pos); background: color-mix(in srgb, var(--pos) 10%, transparent); }
+.v3-sub-owed[data-owed="true"] { color: var(--ink); background: color-mix(in srgb, var(--mark) 12%, transparent); }
+.v3-sub-dialog { width: min(26rem, calc(100vw - 32px)); padding: var(--space-5); border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--ground); color: var(--ink); box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5); }
+.v3-sub-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.v3-sub-dialog .v3-panel-title { margin: 0; }
+.v3-prop-form label.v3-sub-check { display: flex; gap: var(--space-2); align-items: flex-start; color: var(--ink-2); }
+.v3-sub-check input { margin-top: 3px; accent-color: var(--accent); }
+.v3-sub-dialog-foot { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.v3-sub-group + .v3-sub-group { margin-top: var(--space-6); }
+.v3-sub-group-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.v3-sub-group-head h4 { margin: 0; font-size: var(--t-md); font-weight: 600; }
+.v3-sub-group-owed { color: var(--ink); }
+.v3-sub-group-paid { color: var(--pos); }

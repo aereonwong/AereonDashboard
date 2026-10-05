@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading, setReadingTenant } from '@/lib/submeter-actions'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading, setReadingPaid, setReadingTenant } from '@/lib/submeter-actions'
 import Icon from '@/app/_components/Icon'
-import { today } from './pages/property/shared'
+import { dmy, today } from './pages/property/shared'
 
 // Add forms and delete buttons for the Sub-meter page. Typing a reading or bill that already exists
 // for the same unit and date (or bill date) replaces it, so that is how a mistake is corrected.
@@ -191,5 +191,100 @@ export function TenantTag({ id, tenant, tenants }: { id: number; tenant: string 
       </select>
       {err ? <span className="v3-prop-msg">{err}</span> : null}
     </span>
+  )
+}
+
+/** Paid or not, per charge. Clicking opens a popup to record the date the tenant paid — today by default, or any
+ *  earlier day when it is recorded late — or to clear it. An in-page dialog: some browsers block native pop-ups. */
+export function PaidCell({ id, paidOn, what, earlier, tenant }: { id: number; paidOn: string | null; what: string; earlier: number; tenant: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      {paidOn ? (
+        <button type="button" className="v3-tag v3-sub-paid" data-paid="true" onClick={() => setOpen(true)} title="Change or clear the payment date">
+          Paid {dmy(paidOn)}
+        </button>
+      ) : (
+        <button type="button" className="v3-tag v3-sub-paid" onClick={() => setOpen(true)}>
+          Mark paid
+        </button>
+      )}
+      {open ? <PaidDialog id={id} paidOn={paidOn} what={what} earlier={earlier} tenant={tenant} onClose={() => setOpen(false)} /> : null}
+    </>
+  )
+}
+
+function PaidDialog({ id, paidOn, what, earlier, tenant, onClose }: { id: number; paidOn: string | null; what: string; earlier: number; tenant: string; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const [date, setDate] = useState(paidOn ?? today())
+  const [alsoEarlier, setAlsoEarlier] = useState(false)
+  const [pending, start] = useTransition()
+  const [err, setErr] = useState<string | null>(null)
+  useEffect(() => {
+    ref.current?.showModal()
+  }, [])
+  const save = (value: string | null) => {
+    setErr(null)
+    start(async () => {
+      const r = await setReadingPaid(id, value, alsoEarlier)
+      if (r.ok) onClose()
+      else setErr(r.error)
+    })
+  }
+  return (
+    <dialog
+      ref={ref}
+      className="v3-sub-dialog"
+      aria-labelledby={`paid-${id}`}
+      onCancel={e => {
+        e.preventDefault()
+        onClose()
+      }}
+      onClick={e => e.target === e.currentTarget && onClose()} // a click on the backdrop closes it
+    >
+      <form
+        className="v3-prop-form"
+        onSubmit={e => {
+          e.preventDefault()
+          save(date)
+        }}
+      >
+        <h2 className="v3-panel-title" id={`paid-${id}`}>
+          {paidOn ? 'Payment received' : 'Record a payment'}
+        </h2>
+        <p className="v3-panel-note" style={{ margin: 0 }}>
+          {what}
+        </p>
+        <label>
+          <span>Date {tenant} paid</span>
+          <input className="v3-select" type="date" value={date} max={today()} onChange={e => setDate(e.currentTarget.value)} required autoFocus />
+        </label>
+        {earlier > 0 ? (
+          <label className="v3-sub-check">
+            <input type="checkbox" checked={alsoEarlier} onChange={e => setAlsoEarlier(e.currentTarget.checked)} />
+            <span>
+              Also mark {tenant}&rsquo;s {earlier === 1 ? 'earlier unpaid charge' : `${earlier} earlier unpaid charges`} on this unit as paid on this date
+            </span>
+          </label>
+        ) : null}
+        <p className="v3-prop-msg" role="status">
+          {err}
+        </p>
+        <div className="v3-sub-dialog-foot">
+          {paidOn ? (
+            <button type="button" className="v3-btn" disabled={pending} onClick={() => save(null)}>
+              Not paid yet
+            </button>
+          ) : null}
+          <span style={{ flex: 1 }} />
+          <button type="button" className="v3-btn" onClick={onClose} disabled={pending}>
+            Cancel
+          </button>
+          <button type="submit" className="v3-btn v3-btn-primary" disabled={pending || !date}>
+            {pending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </form>
+    </dialog>
   )
 }

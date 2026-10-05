@@ -95,6 +95,33 @@ export async function setReadingTenant(id: number, tenant: string): Promise<Resu
   return done((await supabase.from('submeter_reading').update({ tenant_name: tenant.trim().slice(0, 80) || null }).eq('id', id)).error)
 }
 
+/** Record when the tenant paid one reading's charge (null = not paid yet). With `earlier`, the same tenant's unpaid
+ *  charges on the same unit before this reading are marked paid on the same date — for catching up on a backlog. */
+export async function setReadingPaid(id: number, paidOn: string | null, earlier = false): Promise<Result & { marked?: number }> {
+  await requireSession()
+  if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
+  if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
+  if (paidOn != null) {
+    if (!isDate(paidOn)) return { ok: false, error: 'Pick the date the tenant paid' }
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
+    if (paidOn > today) return { ok: false, error: 'The payment date can’t be in the future' }
+  }
+  const { data: row, error } = await supabase.from('submeter_reading').select('property_id, unit, tenant_name, read_on').eq('id', id).maybeSingle()
+  if (error) return done(error)
+  if (!row) return { ok: false, error: 'Reading not found' }
+  const one = await supabase.from('submeter_reading').update({ paid_on: paidOn }).eq('id', id)
+  if (one.error || !earlier || paidOn == null) return done(one.error)
+  // The unit's first reading is only a starting point (no charge), so it is left alone.
+  const first = await supabase.from('submeter_reading').select('read_on').eq('property_id', row.property_id).eq('unit', row.unit).order('read_on').limit(1).maybeSingle()
+  if (first.error) return done(first.error)
+  let q = supabase.from('submeter_reading').update({ paid_on: paidOn }).eq('property_id', row.property_id).eq('unit', row.unit).lt('read_on', row.read_on).gt('read_on', first.data?.read_on ?? '0000-01-01').is('paid_on', null)
+  q = row.tenant_name ? q.eq('tenant_name', row.tenant_name) : q.is('tenant_name', null)
+  const more = await q.select('id')
+  const r = done(more.error)
+  return r.ok ? { ok: true, marked: (more.data?.length ?? 0) + 1 } : r
+}
+
 async function remove(table: 'submeter_reading' | 'submeter_bill', id: number): Promise<Result> {
   await requireSession()
   if (await demoMode()) return { ok: false, error: 'Demo data is on.' }

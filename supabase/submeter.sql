@@ -37,6 +37,10 @@ create table if not exists submeter_bill (
 -- collected from the tenant, never counted as a property cost.
 alter table submeter_reading add column if not exists tenant_name text;
 
+-- When the tenant paid the charge on this reading (added 4 Oct 2026). Blank = still to collect. Typed when the
+-- money arrives, or later: it is the real payment date, not the day it was recorded.
+alter table submeter_reading add column if not exists paid_on date;
+
 -- Server-side only, like every other table here: RLS on, no policies.
 alter table submeter_reading enable row level security;
 alter table submeter_bill    enable row level security;
