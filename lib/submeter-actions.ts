@@ -65,6 +65,7 @@ export async function addSubmeterReadings(form: FormData): Promise<Result> {
     const tenant = text(tenants[i] ?? null, 80)
     const kind = kinds[i] === 'move_in' || kinds[i] === 'move_out' ? kinds[i] : 'reading'
     if (kind === 'move_in' && !tenant) return { ok: false, error: `${unit}: pick the tenant moving in` }
+    if (kind === 'move_out' && !tenant) return { ok: false, error: `${unit}: pick the tenant moving out` }
     // A move-in reading is a starting number, not a charge, so it carries no rate.
     rows.push({ property_id: propertyId, unit, read_on: date, reading: v, rate: kind === 'move_in' ? null : rateRaw, legacy: false, note, ...(tenant ? { tenant_name: tenant } : {}), ...(kind !== 'reading' ? { kind } : {}) })
   }

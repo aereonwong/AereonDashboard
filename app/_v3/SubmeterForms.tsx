@@ -165,8 +165,8 @@ function UnitMeter({ unit, tenant, empty, tenants, tagging, kinds }: { unit: str
       {tagging ? (
         <label>
           <span>{kind === 'move_in' ? 'Tenant moving in' : kind === 'move_out' ? 'Tenant moving out' : 'Billed to'}</span>
-          <select className="v3-select" name="tenant" defaultValue={empty ? '' : (tenant ?? '')} required={kind === 'move_in'}>
-            <option value="">{kind === 'move_in' ? 'Pick the new tenant' : 'No tenant (empty unit)'}</option>
+          <select className="v3-select" name="tenant" defaultValue={empty ? '' : (tenant ?? '')} required={kind !== 'reading'}>
+            <option value="">{kind === 'move_in' ? 'Pick the new tenant' : kind === 'move_out' ? 'Pick the tenant' : 'No tenant: empty unit, my own use'}</option>
             {tenants.map(t => (
               <option key={t} value={t}>
                 {t}

@@ -278,7 +278,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
           <div className="v3-sub-group">
             <div className="v3-sub-group-head">
               <h4>
-                You (owner) <span className="v3-sub-sub">between tenants</span>
+                You (owner) <span className="v3-sub-sub">empty unit</span>
               </h4>
               <span className="v3-panel-note">
                 {plural(between.length, 'gap')} · no charge
@@ -288,13 +288,13 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
               </span>
             </div>
             <p className="v3-panel-note" style={{ margin: 'var(--space-2) 0 0' }}>
-              Usage from a move-out to the next move-in — cleaning, repairs, viewings — is yours: billed to you with no charge.
+              Usage while a unit has no tenant — from a move-out to the next move-in, or a reading saved with no tenant — is yours: billed to you with no charge.
             </p>
             <div className="v3-table-wrap">
               <table className="v3-table v3-prop-table v3-sub-table">
                 <thead>
                   <tr>
-                    <th>Move-in on</th>
+                    <th>Read on</th>
                     <th className="r">Charge</th>
                     <th>Unit</th>
                     <th className="r">Used</th>

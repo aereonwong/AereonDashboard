@@ -61,7 +61,7 @@ export type Segment = {
   tenant: string | null
   paidOn: string | null
   kind: ReadingKind // of the reading that closes the segment
-  vacant: boolean // ends at a move-in reading: between tenants, billed to nobody
+  vacant: boolean // the owner's use, no charge: ends at a move-in reading, or has no tenant
   startReading: number // the meter at `from`
   from: string
   to: string
@@ -203,11 +203,12 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       const cp = costPerKwh(cs, a.read_on, b.read_on)
       const cpk = cp?.value ?? null
       const flags: string[] = []
-      const vacant = kindOf(b) === 'move_in'
+      // Owner's own use, no charge: up to a move-in, or any reading saved with no tenant (an empty unit).
+      const vacant = kindOf(b) === 'move_in' || !b.tenant_name
       if (kwh < 0) flags.push('Meter went backwards')
       if (days > LONG_GAP_DAYS && !vacant) flags.push(`${days} days since the last reading`)
       if (vacant) {
-        out.push({ id: b.id, unit, tenant: null, paidOn: null, kind: 'move_in', vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: null, charged: null, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost: cpk != null ? r2(kwh * cpk) : null, buffer: null, flags })
+        out.push({ id: b.id, unit, tenant: null, paidOn: null, kind: kindOf(b), vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: null, charged: null, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost: cpk != null ? r2(kwh * cpk) : null, buffer: null, flags })
         continue
       }
       if (seen.length >= 3) {
