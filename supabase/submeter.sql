@@ -43,7 +43,7 @@ alter table submeter_reading add column if not exists paid_on date;
 
 -- What a reading marks (added 5 Oct 2026): 'reading' bills the usage since the previous one; 'move_out' is a
 -- tenant's final reading (billed as usual); 'move_in' is a new tenant's starting number, never a charge. Usage that
--- ends at a move-in reading happened between tenants and is billed to nobody.
+-- ends at a move-in reading happened between tenants: billed to the owner, no charge.
 alter table submeter_reading add column if not exists kind text not null default 'reading' check (kind in ('reading', 'move_in', 'move_out'));
 
 -- Server-side only, like every other table here: RLS on, no policies.

@@ -177,7 +177,7 @@ function UnitMeter({ unit, tenant, empty, tenants, tagging, kinds }: { unit: str
       ) : (
         <input type="hidden" name="tenant" value="" />
       )}
-      {kind === 'move_in' ? <p className="v3-sub-hint">Their starting number — not a charge. Use since the last reading counts as between tenants (yours).</p> : null}
+      {kind === 'move_in' ? <p className="v3-sub-hint">Their starting number — not a charge. Use since the last reading is billed to you (owner) with no charge.</p> : null}
       {kind === 'move_out' ? <p className="v3-sub-hint">Billed to them up to today. Moving in the same day? This is enough — the new tenant&rsquo;s first bill starts here.</p> : null}
     </fieldset>
   )

@@ -14,7 +14,7 @@
 //   kind      = what a reading marks. 'reading' bills the usage since the last one; 'move_out' is a tenant's
 //               final reading (billed as usual); 'move_in' is a new tenant's starting number — never a charge.
 //               The usage that ends at a move-in reading happened between tenants (cleaning, viewings):
-//               the owner's own electricity, billed to nobody. A same-day handover needs only the move-out:
+//               the owner's own electricity, billed to the owner with no charge. A same-day handover needs only the move-out:
 //               the new tenant's first bill starts from it. A unit's very first reading is a starting point too.
 
 /** What tenants pay per kWh from the 4 Oct 2026 decision on: one flat rate for every unit. */

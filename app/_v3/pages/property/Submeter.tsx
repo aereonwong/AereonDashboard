@@ -274,52 +274,61 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
             </div>
           ))
         )}
-      </section>
-
-      {between.length ? (
-        <section className="v3-panel" aria-label={`${name} between tenants`}>
-          <div className="v3-panel-head">
-            <h3 className="v3-panel-title">Between tenants</h3>
-          </div>
-          <p className="v3-panel-note" style={{ marginTop: 0 }}>
-            Electricity used after a move-out and before the next move-in — cleaning, repairs, viewings. Your own use: billed to nobody.
-          </p>
-          <div className="v3-table-wrap">
-            <table className="v3-table v3-prop-table v3-sub-table">
-              <thead>
-                <tr>
-                  <th>Gap</th>
-                  <th>Unit</th>
-                  <th className="r">Used</th>
-                  <th className="r">At TNB&rsquo;s cost</th>
-                  <th>
-                    <span className="sr-only">Delete</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {between.map(x => (
-                  <tr key={x.id}>
-                    <td>
-                      {dmy(x.from)} – {dmy(x.to)}
-                      <div className="v3-sub-sub">{plural(x.days, 'day')}{byId.get(x.id)?.tenant_name ? ` · until ${byId.get(x.id)?.tenant_name} moved in` : ''}</div>
-                    </td>
-                    <td>{x.unit}</td>
-                    <td className="r num">{kwh(x.kwh)} kWh</td>
-                    <td className="r num">
-                      {x.cost != null ? rm(x.cost) : '—'}
-                      {x.cost != null && x.costEstimated ? <i className="v3-sub-est"> est.</i> : null}
-                    </td>
-                    <td>
-                      <DeleteRow id={x.id} kind="reading" />
-                    </td>
+        {between.length ? (
+          <div className="v3-sub-group">
+            <div className="v3-sub-group-head">
+              <h4>
+                You (owner) <span className="v3-sub-sub">between tenants</span>
+              </h4>
+              <span className="v3-panel-note">
+                {plural(between.length, 'gap')} · no charge · {rm(between.reduce((t, x) => t + (x.cost ?? 0), 0))} at TNB&rsquo;s cost
+              </span>
+            </div>
+            <p className="v3-panel-note" style={{ margin: 'var(--space-2) 0 0' }}>
+              Usage from a move-out to the next move-in — cleaning, repairs, viewings — is yours: billed to you with no charge.
+            </p>
+            <div className="v3-table-wrap">
+              <table className="v3-table v3-prop-table v3-sub-table">
+                <thead>
+                  <tr>
+                    <th>Move-in on</th>
+                    <th className="r">Charge</th>
+                    <th>Unit</th>
+                    <th className="r">Used</th>
+                    <th className="r">At TNB&rsquo;s cost</th>
+                    <th>
+                      <span className="sr-only">Delete</span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {between.map(x => (
+                    <tr key={x.id}>
+                      <td>
+                        {dmy(x.to)}
+                        <div className="v3-sub-sub">
+                          {plural(x.days, 'day')} from {dmy(x.from)}
+                          {byId.get(x.id)?.tenant_name ? `, until ${byId.get(x.id)?.tenant_name} moved in` : ''}
+                        </div>
+                      </td>
+                      <td className="r num v3-sub-sub">No charge</td>
+                      <td>{x.unit}</td>
+                      <td className="r num">{kwh(x.kwh)} kWh</td>
+                      <td className="r num">
+                        {x.cost != null ? rm(x.cost) : '—'}
+                        {x.cost != null && x.costEstimated ? <i className="v3-sub-est"> est.</i> : null}
+                      </td>
+                      <td>
+                        <DeleteRow id={x.id} kind="reading" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
       <section className="v3-panel" aria-label={`${name} TNB bills`}>
         <div className="v3-panel-head">
