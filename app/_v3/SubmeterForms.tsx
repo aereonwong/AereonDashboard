@@ -263,7 +263,7 @@ function PaidDialog({ id, paidOn, what, earlier, tenant, onClose }: { id: number
           <label className="v3-sub-check">
             <input type="checkbox" checked={alsoEarlier} onChange={e => setAlsoEarlier(e.currentTarget.checked)} />
             <span>
-              Also mark {tenant}&rsquo;s {earlier === 1 ? 'earlier unpaid charge' : `${earlier} earlier unpaid charges`} on this unit as paid on this date
+              Also mark {tenant}&rsquo;s {earlier === 1 ? 'earlier unpaid charge' : `${earlier} earlier unpaid charges`} on this unit as paid on this same date
             </span>
           </label>
         ) : null}

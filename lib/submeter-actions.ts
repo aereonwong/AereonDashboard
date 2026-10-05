@@ -110,14 +110,19 @@ export async function setReadingPaid(id: number, paidOn: string | null, earlier 
   const { data: row, error } = await supabase.from('submeter_reading').select('property_id, unit, tenant_name, read_on').eq('id', id).maybeSingle()
   if (error) return done(error)
   if (!row) return { ok: false, error: 'Reading not found' }
+  if (paidOn != null && paidOn < row.read_on) return { ok: false, error: `The payment date can’t be before the reading on ${row.read_on}` }
   const one = await supabase.from('submeter_reading').update({ paid_on: paidOn }).eq('id', id)
   if (one.error || !earlier || paidOn == null) return done(one.error)
-  // The unit's first reading is only a starting point (no charge), so it is left alone.
-  const first = await supabase.from('submeter_reading').select('read_on').eq('property_id', row.property_id).eq('unit', row.unit).order('read_on').limit(1).maybeSingle()
-  if (first.error) return done(first.error)
-  let q = supabase.from('submeter_reading').update({ paid_on: paidOn }).eq('property_id', row.property_id).eq('unit', row.unit).lt('read_on', row.read_on).gt('read_on', first.data?.read_on ?? '0000-01-01').is('paid_on', null)
-  q = row.tenant_name ? q.eq('tenant_name', row.tenant_name) : q.is('tenant_name', null)
-  const more = await q.select('id')
+  // The same charges the popup counted: this tenant, this unit, before this reading, unpaid, with a rate and a
+  // charge above zero. Charges are worked out from consecutive readings, so the unit's first reading never qualifies.
+  const all = await supabase.from('submeter_reading').select('id, read_on, reading, rate, tenant_name, paid_on').eq('property_id', row.property_id).eq('unit', row.unit).order('read_on')
+  if (all.error) return done(all.error)
+  const rows = all.data ?? []
+  const ids = rows
+    .filter((r, i) => i > 0 && r.read_on < row.read_on && r.paid_on == null && (r.tenant_name ?? null) === (row.tenant_name ?? null) && r.rate != null && (Number(r.reading) - Number(rows[i - 1].reading)) * Number(r.rate) > 0)
+    .map(r => r.id)
+  if (!ids.length) return done(null)
+  const more = await supabase.from('submeter_reading').update({ paid_on: paidOn }).in('id', ids).select('id')
   const r = done(more.error)
   return r.ok ? { ok: true, marked: (more.data?.length ?? 0) + 1 } : r
 }
