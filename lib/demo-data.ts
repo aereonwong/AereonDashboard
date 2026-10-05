@@ -159,7 +159,7 @@ export function demoRecords(): Rec[] {
   for (const [title, dueIn, owner] of [
     ['Deliver Lumipix final cut', 1, 'me'],
     ['Send Bayu Tourism invoice reminder', 0, 'me'],
-    ['Book CAAM permit for mall shoot', 4, 'me'],
+    ['Book flight permit for mall shoot', 4, 'me'],
     ['Back up September footage', -2, 'me'],
   ] as [string, number, string][]) {
     out.push(

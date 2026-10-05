@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ? {
         title: 'Aereon Wong — tech & travel, shot from the sky',
         description:
-          'Kuala Lumpur travel and tech content creator and CAAM-licensed drone pilot. Aerial films, launch campaigns, hotels and tourism.',
+          'Kuala Lumpur travel and tech content creator and drone pilot. Aerial films, launch campaigns, hotels and tourism.',
       }
     : {}
 }
@@ -144,10 +144,6 @@ export default async function Landing({
                 <div className="l">Views · {span}</div>
               </div>
             ) : null}
-            <div className="land-stat">
-              <div className="v">CAAM</div>
-              <div className="l">Licensed drone pilot</div>
-            </div>
           </div>
 
           {brands.length > 0 ? (

@@ -107,7 +107,7 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
             shot from <span className="k3-tint">the sky</span>.
           </h1>
           <p className="k3-blurb">
-            Creative travel and tech content, and CAAM-licensed aerial work — launch campaigns, hotels and tourism, from
+            Creative travel and tech content, and aerial work — launch campaigns, hotels and tourism, from
             KLCC rooftops to island resorts. Creating since {since}.
           </p>
           <div className="k3-cta">
@@ -144,10 +144,6 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
                 <dt>Of reach · not following yet</dt>
               </div>
             ) : null}
-            <div className="k3-stat">
-              <dd>CAAM</dd>
-              <dt>Licensed drone pilot</dt>
-            </div>
           </dl>
           {reach && adPct ? (
             <p className="k3-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
