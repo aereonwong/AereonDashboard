@@ -633,7 +633,6 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-kit-statement { font-family: var(--f-display); font-size: clamp(1.6rem, 3.4vw, 2.8rem); line-height: 1.22; font-weight: 600; max-width: 30ch; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
 .v3-kit-statement b { font-weight: 800; }
 .v3[data-world="canon"] .v3-kit-statement b { color: var(--accent); }
-.v3-kit-credential { display: inline-flex; align-items: center; gap: 8px; margin-top: var(--space-4); font-size: var(--t-sm); color: var(--ink-2); padding: 5px 12px; border: 1px solid var(--line-2); border-radius: 99px; }
 
 /* Phones */
 @media (max-width: 720px) {

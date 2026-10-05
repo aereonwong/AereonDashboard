@@ -78,7 +78,6 @@ export default function MediaKit({
                   Creative visual travel content creator and professional drone pilot in Kuala Lumpur. Aerial films, launch
                   campaigns, hotels and tourism — from KLCC rooftops to island resorts.
                 </p>
-                <span className="v3-kit-credential">CAAM-licensed drone pilot</span>
                 <div className="v3-kit-ctas">
                   <a className="v3-btn v3-btn-primary" href={`mailto:${EMAIL}?subject=Collaboration`}>
                     Book a collaboration
