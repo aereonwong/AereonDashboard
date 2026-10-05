@@ -220,13 +220,13 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
                   <thead>
                     <tr>
                       <th>Read on</th>
+                      <th className="r">Charge</th>
+                      {paying ? <th>Paid</th> : null}
                       {tagging ? <th>Billed to</th> : null}
                       <th className="r">Meter</th>
                       <th className="r">Used</th>
                       <th className="r">kWh/day</th>
                       <th className="r">Rate</th>
-                      <th className="r">Charge</th>
-                      {paying ? <th>Paid</th> : null}
                       <th>
                         <span className="sr-only">Delete</span>
                       </th>
@@ -395,6 +395,14 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
         ) : null}
         {reading?.note ? <div className="v3-sub-sub v3-sub-note">{reading.note}</div> : null}
       </td>
+      <td className="r num v3-sub-owe">{s.charged != null ? rm(s.charged) : '—'}</td>
+      {paying ? (
+        <td>
+          {s.charged != null && s.charged > 0 ? (
+            <PaidCell id={s.id} paidOn={s.paidOn} readOn={s.to} tenant={who(s.tenant)} earlier={earlier} what={`${who(s.tenant)} · ${s.unit} · ${dmy(s.from)} – ${dmy(s.to)} · ${rm(s.charged)}`} />
+          ) : null}
+        </td>
+      ) : null}
       {tagging ? (
         <td>
           <TenantTag id={s.id} tenant={s.tenant} tenants={tenants} />
@@ -404,14 +412,6 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
       <td className="r num">{kwh(s.kwh)} kWh</td>
       <td className="r num">{s.perDay.toFixed(1)}</td>
       <td className="r num">{s.rate != null ? sen(s.rate) : '—'}</td>
-      <td className="r num v3-sub-owe">{s.charged != null ? rm(s.charged) : '—'}</td>
-      {paying ? (
-        <td>
-          {s.charged != null && s.charged > 0 ? (
-            <PaidCell id={s.id} paidOn={s.paidOn} readOn={s.to} tenant={who(s.tenant)} earlier={earlier} what={`${who(s.tenant)} · ${s.unit} · ${dmy(s.from)} – ${dmy(s.to)} · ${rm(s.charged)}`} />
-          ) : null}
-        </td>
-      ) : null}
       <td>
         <DeleteRow id={s.id} kind="reading" />
       </td>
