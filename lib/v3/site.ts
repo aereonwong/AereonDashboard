@@ -11,7 +11,8 @@ import type { World } from './catalog'
 // checks the session — kept apart so the public landing page, which imports
 // readSite, never carries a callable save action with it.
 
-export type Landing = 'classic' | 'kit'
+/** classic = Front door, kit = media kit, reel = motion-reel landing (5 Oct 2026). */
+export type Landing = 'classic' | 'kit' | 'reel'
 /** Which media kit: v1 (26 Sep 2026) or v2 (2 Oct 2026, with audience data). */
 export type KitVersion = 'v1' | 'v2'
 export type Site = { landing: Landing; world: World; kit: KitVersion }
@@ -34,7 +35,7 @@ export async function readSite(): Promise<Site> {
     const r = await siteRow()
     const m = (r?.meta ?? {}) as Partial<Site>
     return {
-      landing: m.landing === 'kit' ? 'kit' : 'classic',
+      landing: m.landing === 'kit' || m.landing === 'reel' ? m.landing : 'classic',
       world: 'canon', // the only look; an older saved Contact Sheet or HUD choice is ignored
       kit: m.kit === 'v2' ? 'v2' : 'v1',
     }

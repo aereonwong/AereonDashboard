@@ -95,6 +95,7 @@ export function LandingSwitch({ landing, kit }: { landing: Landing; kit: KitVers
           [
             ['classic', 'Front door', 'The current landing page: a simple entrance to the app.'],
             ['kit', 'Creator media kit', 'A public page that sells you to brands: who you are, your reach, your best work and how to book you.'],
+            ['reel', 'Motion reel', 'Opens on a 30-second motion-graphics film built from your live numbers, posts and brands, then the media kit (with your audience breakdown) below it.'],
           ] as [Landing, string, string][]
         ).map(([id, name, note]) => (
           <button
@@ -121,6 +122,9 @@ export function LandingSwitch({ landing, kit }: { landing: Landing; kit: KitVers
         </a>
         <a className="v3-btn" href="/?preview=kit&kit=v2" target="_blank" rel="noreferrer">
           Preview kit v2
+        </a>
+        <a className="v3-btn" href="/?preview=reel" target="_blank" rel="noreferrer">
+          Preview motion reel
         </a>
         <span className="v3-panel-note">Only you see a preview; visitors see whichever option is chosen above.</span>
       </div>
