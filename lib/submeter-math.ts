@@ -335,3 +335,52 @@ export function unitState(readings: Reading[]): Map<string, { kind: ReadingKind;
   for (const r of [...readings].sort(byDate)) out.set(r.unit, { kind: kindOf(r), tenant: r.tenant_name, date: r.read_on, reading: r.reading })
   return out
 }
+
+export type TnbVsTenants = {
+  bill: Bill
+  start: string
+  covered: boolean // every unit's readings span the whole bill period, so the billed figure is complete
+  tnb: number // what the owner paid TNB
+  billed: number // tenant charges for the same days (each charge split across bill periods by days)
+  collected: number // the part of `billed` whose charge is marked paid
+  ownerKwh: number // the owner's own use in the period (empty unit / before a move-in), no charge
+  diff: number // billed − tnb: the profit (or loss) on the electricity
+}
+
+/** Days two date ranges share (a range is (from, to]: a segment's usage runs after its first reading up to its second). */
+const overlap = (aFrom: string, aTo: string, bFrom: string, bTo: string) => Math.max(0, daysBetween(aFrom < bFrom ? bFrom : aFrom, aTo < bTo ? aTo : bTo))
+
+/** Per TNB bill: what the owner paid against what the tenants were billed for the same days, and how much is collected.
+ *  Totals only count bill periods the readings fully cover, so a half-read month never looks like a loss. */
+export function tnbVsTenants(cs: Cycle[], segs: Segment[]) {
+  const rows: TnbVsTenants[] = cs.map(c => {
+    let billed = 0
+    let collected = 0
+    let ownerKwh = 0
+    for (const s of segs) {
+      const o = overlap(s.from, s.to, c.start, c.bill.bill_date)
+      if (!o || s.days <= 0 || s.kwh < 0) continue
+      const part = o / s.days
+      if (s.vacant) ownerKwh += s.kwh * part
+      else if (s.charged != null) {
+        billed += s.charged * part
+        if (s.paidOn) collected += s.charged * part
+      }
+    }
+    return { bill: c.bill, start: c.start, covered: c.sub != null, tnb: c.bill.amount, billed: r2(billed), collected: r2(collected), ownerKwh: r2(ownerKwh), diff: r2(billed - c.bill.amount) }
+  })
+  const done = rows.filter(r => r.covered)
+  const sum = (k: 'tnb' | 'billed' | 'collected' | 'diff') => r2(done.reduce((t, r) => t + r[k], 0))
+  const tnb = sum('tnb')
+  return {
+    rows,
+    n: done.length,
+    from: done[0]?.start ?? null,
+    to: done[done.length - 1]?.bill.bill_date ?? null,
+    tnb,
+    billed: sum('billed'),
+    collected: sum('collected'),
+    diff: sum('diff'),
+    pct: tnb > 0 ? sum('diff') / tnb : null,
+  }
+}

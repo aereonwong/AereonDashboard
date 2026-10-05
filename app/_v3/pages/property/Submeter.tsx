@@ -1,6 +1,6 @@
 import type { PropertyRead } from '@/lib/property'
 import type { SubmeterRead } from '@/lib/submeter'
-import { FLAT_RATE, HIGH_USE_KWH, LONG_GAP_DAYS, billing, buffers, cycles, daysBetween, leakSummary, nextReadingDue, segments, unitState, unitsOf, usageShare, type Bill, type Reading, type Segment, type TenantBilling } from '@/lib/submeter-math'
+import { FLAT_RATE, HIGH_USE_KWH, LONG_GAP_DAYS, billing, cycles, daysBetween, leakSummary, nextReadingDue, segments, tnbVsTenants, unitState, unitsOf, usageShare, type Bill, type Reading, type Segment, type TenantBilling } from '@/lib/submeter-math'
 import { groupTenants } from '@/lib/tenancy-math'
 import { BillForm, DeleteRow, PaidCell, ReadingForm, TenantTag } from '../../SubmeterForms'
 import SubmeterChart, { type ChartCycle } from '../../SubmeterChart'
@@ -75,7 +75,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
 function PropertySubmeter({ id, name, location, readings, bills, tenantNames, tagging, paying, kinds, today }: { id: string; name: string; location: string | null; readings: Reading[]; bills: Bill[]; tenantNames: string[]; tagging: boolean; paying: boolean; kinds: boolean; today: string }) {
   const cs = cycles(bills, readings)
   const segs = segments(readings, cs)
-  const buf = buffers(segs)
+  const pnl = tnbVsTenants(cs, segs)
   const leak = leakSummary(cs)
   const units = unitsOf(readings)
   const people = billing(segs, today)
@@ -333,6 +333,8 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
         ) : null}
       </section>
 
+      {pnl.rows.length ? <TnbVsBilled pnl={pnl} /> : null}
+
       <section className="v3-panel" aria-label={`${name} TNB bills`}>
         <div className="v3-panel-head">
           <h3 className="v3-panel-title">TNB bills</h3>
@@ -396,7 +398,6 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
         )}
       </section>
 
-      {buf.old.n || buf.flat.n ? <Margin people={people} buf={buf} /> : null}
     </section>
   )
 }
@@ -510,59 +511,82 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
   )
 }
 
-/** What the rate earned above TNB's cost — kept apart from the collection view, and from rent and costs. */
-function Margin({ people, buf }: { people: TenantBilling[]; buf: ReturnType<typeof buffers> }) {
-  const rows = people.map(p => {
-    const b = buffers(p.segments)
-    const charged = b.flat.charged + b.old.charged
-    const cost = b.flat.cost + b.old.cost
-    return { p, n: b.flat.n + b.old.n, charged, cost, margin: charged - cost }
-  })
+/** What you paid TNB against what the tenants were billed for the same days — the profit on the electricity.
+ *  Kept apart from rent and costs: the tenants' payments come back to you, so only the difference is yours. */
+function TnbVsBilled({ pnl }: { pnl: ReturnType<typeof tnbVsTenants> }) {
+  const scale = Math.max(1, ...pnl.rows.map(r => Math.abs(r.diff)))
   return (
-    <details className="v3-panel v3-sub-margin">
-      <summary>
-        <span className="v3-panel-title">Margin over TNB</span>
-        <span className="v3-panel-note"> · worked out separately, not part of rent or costs</span>
-      </summary>
-      <p className="v3-panel-note">Charged is what the tenant was billed; TNB cost is the same kWh at what TNB actually charged per kWh over those days. Only readings that bills cover are counted.</p>
+    <section className="v3-panel" aria-label="TNB paid against billed to tenants">
+      <div className="v3-panel-head">
+        <h3 className="v3-panel-title">TNB paid vs billed to tenants</h3>
+      </div>
+      <p className="v3-panel-note" style={{ marginTop: 0 }}>
+        Each TNB bill against the tenant charges for the same days (a charge spanning two bills is split by days). The difference is your profit on the electricity — separate from rent and running costs. Single months swing when readings fall between bill dates; the total over many bills is the real figure.
+      </p>
+      {pnl.n ? (
+        <div className="v3-sub-pnl">
+          <div>
+            <div className="v3-kpi-label">You paid TNB</div>
+            <div className="v3-kpi-value">{rm(pnl.tnb)}</div>
+            <div className="v3-kpi-note">
+              {plural(pnl.n, 'bill')} · {pnl.from ? dmy(pnl.from) : ''} – {pnl.to ? dmy(pnl.to) : ''}
+            </div>
+          </div>
+          <div>
+            <div className="v3-kpi-label">Billed to tenants</div>
+            <div className="v3-kpi-value">{rm(pnl.billed)}</div>
+            <div className="v3-kpi-note">
+              {rm(pnl.collected)} collected · {rm(pnl.billed - pnl.collected)} still to collect
+            </div>
+          </div>
+          <div data-tone={pnl.diff >= 0 ? 'pos' : 'neg'}>
+            <div className="v3-kpi-label">{pnl.diff >= 0 ? 'Your profit' : 'Your loss'}</div>
+            <div className="v3-kpi-value">{rm(pnl.diff)}</div>
+            <div className="v3-kpi-note">{pct(pnl.pct)} on what TNB charged</div>
+          </div>
+        </div>
+      ) : (
+        <p className="v3-empty">No TNB bill is fully covered by readings yet — read both meters on or after a bill date.</p>
+      )}
       <div className="v3-table-wrap">
         <table className="v3-table v3-prop-table v3-sub-table">
           <thead>
             <tr>
-              <th>Tenant</th>
-              <th className="r">Readings</th>
-              <th className="r">Charged</th>
-              <th className="r">TNB cost</th>
-              <th className="r">Margin</th>
+              <th>TNB bill</th>
+              <th className="r">You paid</th>
+              <th className="r">Billed</th>
+              <th className="r">Collected</th>
+              <th className="r">Difference</th>
+              <th>
+                <span className="sr-only">Profit or loss</span>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
-              <tr key={`${r.p.unit}-${r.p.tenant}`}>
+            {[...pnl.rows].reverse().map(r => (
+              <tr key={r.bill.id} data-partial={!r.covered || undefined}>
                 <td>
-                  {who(r.p.tenant)} <span className="v3-sub-sub">{r.p.unit}</span>
+                  {dmy(r.bill.bill_date)}
+                  <div className="v3-sub-sub">
+                    {dmy(r.start)} – {dmy(r.bill.bill_date)}
+                    {r.ownerKwh > 0.05 ? ` · your own use ${kwh(r.ownerKwh)} kWh` : ''}
+                  </div>
+                  {!r.covered ? <span className="v3-tag">readings don&rsquo;t cover it yet</span> : null}
                 </td>
-                <td className="r num">{r.n}</td>
-                <td className="r num">{sen(r.charged)}</td>
-                <td className="r num">{sen(r.cost)}</td>
-                <td className="r num">{rm(r.margin)}</td>
+                <td className="r num">{sen(r.tnb)}</td>
+                <td className="r num">{sen(r.billed)}</td>
+                <td className="r num">{sen(r.collected)}</td>
+                <td className="r num v3-sub-diff" data-tone={r.covered ? (r.diff >= 0 ? 'pos' : 'neg') : undefined}>
+                  {r.covered ? rm(r.diff) : '—'}
+                </td>
+                <td className="v3-sub-diffbar">
+                  {r.covered ? <span data-tone={r.diff >= 0 ? 'pos' : 'neg'} style={{ width: `${(Math.abs(r.diff) / scale) * 100}%` }} /> : null}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <ul className="v3-prop-more" style={{ listStyle: 'none', padding: 0 }}>
-        {buf.flat.n ? (
-          <li>
-            <b>On the RM {sen(FLAT_RATE)} flat rate:</b> charged {rm(buf.flat.charged)}, cost {rm(buf.flat.cost)}, margin {rm(buf.flat.buffer)} ({pct(buf.flat.pct)}).
-          </li>
-        ) : null}
-        {buf.old.n ? (
-          <li>
-            <b>On the old rates:</b> charged {rm(buf.old.charged)}, cost {rm(buf.old.cost)}, margin {rm(buf.old.buffer)} ({pct(buf.old.pct)}).
-          </li>
-        ) : null}
-      </ul>
-    </details>
+    </section>
   )
 }
