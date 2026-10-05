@@ -12,6 +12,7 @@ import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 
 export const dynamic = 'force-dynamic'
 
@@ -146,9 +147,17 @@ export default async function Landing({
             ) : null}
           </div>
 
+          {/* Product, car and hotel reviews, events, aerial and travel — not just KLCC. */}
+          {showcase.items.length ? (
+            <div className="land-work">
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Work across the board</p>
+              <ShowcaseGrid limit={5} />
+            </div>
+          ) : null}
+
           {brands.length > 0 ? (
             <>
-              <p className="eyebrow" style={{ marginBottom: 10 }}>Selected work</p>
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Brands I&apos;ve worked with</p>
               <div className="land-tags">
                 {brands.map(b => (
                   <span className="land-tag" key={b}>{b}</span>

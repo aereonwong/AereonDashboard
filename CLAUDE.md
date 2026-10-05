@@ -99,6 +99,17 @@ Summary, Invoice Details, Instagram and Clients together.
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
+## Showcase — work across the board (added 5 Oct 2026)
+
+The landing page and both media kits show a spread of Aereon's work, not just the recent feed (lately
+mostly KLCC). `npm run ig:archive` (Composio CLI, like `ig:refresh`) lists two years of posts, gets each
+one's reach, and `lib/showcase.ts` picks one tile per kind: product review, event, car review, hotel
+review, aerial (drone flying or from above; a drone show stays an event), travel in Singapore / Bali / Brunei / Malaysia / abroad — KLCC at most once.
+Tiles are **blended** (strongest, weakest, next strongest…) and reach is printed only on tiles at or
+above the two-year median; weaker ones show their label alone. Output: `lib/showcase.json` + covers in
+`public/img/work/` (saved locally — Instagram image URLs expire). Not refreshed by the cron; re-run the
+script when new work should be able to make it. Classifier rules are order-sensitive; comments say why.
+
 ## Property section (own sidebar group since 4 Oct 2026)
 
 Property is its own section, apart from the studio Dashboard — nothing property-related feeds it. v3 sidebar

@@ -7,6 +7,7 @@ import type { Share } from '@/lib/instagram'
 import Icon from '@/app/_components/Icon'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 
 // 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
 // door's calm: one KLCC night photo behind everything, Aereon's portrait first,
@@ -191,8 +192,17 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
           </section>
         ) : null}
 
-        {/* ------------------------------------------------ best work */}
-        {posts.length ? (
+        {/* ------------------------------------------------ work */}
+        {/* Two years of work, one tile per kind (lib/showcase.ts); the recent
+            feed is only the fallback, since lately it is mostly KLCC. */}
+        {showcase.items.length ? (
+          <section className="k3-section" aria-labelledby="k3-work">
+            <h2 className="k3-h2" id="k3-work">
+              Work across the board
+            </h2>
+            <ShowcaseGrid />
+          </section>
+        ) : posts.length ? (
           <section className="k3-section" aria-labelledby="k3-work">
             <h2 className="k3-h2" id="k3-work">
               Recent best work
