@@ -2,6 +2,7 @@ import '../v3.css'
 import { v3Fonts } from '../fonts'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import PostGrid from '../PostGrid'
 import Icon from '@/app/_components/Icon'
 import { compact, num } from '../fmt'
@@ -126,7 +127,14 @@ export default function MediaKit({
         </section>
 
         {/* ---------------- Best work, playable ---------------- */}
-        {audience.best.length ? (
+        {showcase.items.length ? (
+          <section className="v3-kit-section" aria-labelledby="k-work">
+            <h2 className="v3-kit-h2" id="k-work">
+              Work across the board
+            </h2>
+            <ShowcaseGrid />
+          </section>
+        ) : audience.best.length ? (
           <section className="v3-kit-section" aria-labelledby="k-work">
             <h2 className="v3-kit-h2" id="k-work">
               Best work, last 3 months
