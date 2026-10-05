@@ -90,6 +90,7 @@ export type Cycle = {
   high: boolean // a month above 600 kWh
 }
 
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 const r2 = (n: number) => Math.round(n * 100) / 100
 const r4 = (n: number) => Math.round(n * 10_000) / 10_000
 const dayNum = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86_400_000
@@ -334,4 +335,67 @@ export function unitState(readings: Reading[]): Map<string, { kind: ReadingKind;
   const out = new Map<string, { kind: ReadingKind; tenant: string | null; date: string; reading: number }>()
   for (const r of [...readings].sort(byDate)) out.set(r.unit, { kind: kindOf(r), tenant: r.tenant_name, date: r.read_on, reading: r.reading })
   return out
+}
+
+export type TnbVsTenants = {
+  bill: Bill
+  start: string
+  covered: boolean // the billed figure is complete: readings span the period, and no charge in it lacks a rate or runs backwards
+  why: string | null // why it isn't complete
+  tnb: number // what the owner paid TNB
+  billed: number // tenant charges for the same days (each charge split across bill periods by days)
+  collected: number // the part of `billed` whose charge is marked paid
+  ownerKwh: number // the owner's own use in the period (empty unit / before a move-in), no charge
+  diff: number // billed − tnb: the profit (or loss) on the electricity
+}
+
+/** Days two date ranges share (a range is (from, to]: a segment's usage runs after its first reading up to its second). */
+const overlap = (aFrom: string, aTo: string, bFrom: string, bTo: string) => Math.max(0, daysBetween(aFrom < bFrom ? bFrom : aFrom, aTo < bTo ? aTo : bTo))
+
+/** Per TNB bill: what the owner paid against what the tenants were billed for the same days, and how much is collected.
+ *  Totals only count bill periods the readings fully cover, so a half-read month never looks like a loss. */
+export function tnbVsTenants(cs: Cycle[], segs: Segment[]) {
+  const rows: TnbVsTenants[] = cs.map(c => {
+    let billed = 0
+    let collected = 0
+    let ownerKwh = 0
+    let unrated = 0
+    let backwards = 0
+    for (const s of segs) {
+      const o = overlap(s.from, s.to, c.start, c.bill.bill_date)
+      if (!o || s.days <= 0) continue
+      if (s.kwh < 0) {
+        backwards++
+        continue
+      }
+      if (!s.vacant && s.charged == null) unrated++
+      const part = o / s.days
+      if (s.vacant) ownerKwh += s.kwh * part
+      else if (s.charged != null) {
+        billed += s.charged * part
+        if (s.paidOn) collected += s.charged * part
+      }
+    }
+    const why = c.sub == null ? 'readings don’t cover it yet' : unrated ? `${plural(unrated, 'charge')} with no rate` : backwards ? 'a meter went backwards' : null
+    return { bill: c.bill, start: c.start, covered: why == null, why, tnb: c.bill.amount, billed: r2(billed), collected: r2(collected), ownerKwh: r2(ownerKwh), diff: r2(billed - c.bill.amount) }
+  })
+  const done = rows.filter(r => r.covered)
+  const sum = (k: 'tnb' | 'billed' | 'collected' | 'diff') => r2(done.reduce((t, r) => t + r[k], 0))
+  const tnb = sum('tnb')
+  // Bills more than 35 days apart leave days that belong to no bill period: their charges are not in the totals.
+  const sorted = [...cs].sort((a, b) => a.bill.bill_date.localeCompare(b.bill.bill_date))
+  const gapDays = sorted.slice(1).reduce((t, c, i) => t + Math.max(0, daysBetween(sorted[i].bill.bill_date, c.start)), 0)
+  return {
+    rows,
+    gapDays,
+    skipped: rows.length - done.length,
+    n: done.length,
+    from: done[0]?.start ?? null,
+    to: done[done.length - 1]?.bill.bill_date ?? null,
+    tnb,
+    billed: sum('billed'),
+    collected: sum('collected'),
+    diff: sum('diff'),
+    pct: tnb > 0 ? sum('diff') / tnb : null,
+  }
 }
