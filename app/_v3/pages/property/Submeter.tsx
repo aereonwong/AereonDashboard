@@ -530,6 +530,8 @@ function TnbVsBilled({ pnl }: { pnl: ReturnType<typeof tnbVsTenants> }) {
             <div className="v3-kpi-value">{rm(pnl.tnb)}</div>
             <div className="v3-kpi-note">
               {plural(pnl.n, 'bill')} · {pnl.from ? dmy(pnl.from) : ''} – {pnl.to ? dmy(pnl.to) : ''}
+              {pnl.skipped ? ` · ${plural(pnl.skipped, 'bill')} left out` : ''}
+              {pnl.gapDays ? ` · ${plural(pnl.gapDays, 'day')} between bills not counted` : ''}
             </div>
           </div>
           <div>
@@ -571,7 +573,7 @@ function TnbVsBilled({ pnl }: { pnl: ReturnType<typeof tnbVsTenants> }) {
                     {dmy(r.start)} – {dmy(r.bill.bill_date)}
                     {r.ownerKwh > 0.05 ? ` · your own use ${kwh(r.ownerKwh)} kWh` : ''}
                   </div>
-                  {!r.covered ? <span className="v3-tag">readings don&rsquo;t cover it yet</span> : null}
+                  {r.why ? <span className="v3-tag">{r.why} · not in the totals</span> : null}
                 </td>
                 <td className="r num">{sen(r.tnb)}</td>
                 <td className="r num">{sen(r.billed)}</td>
