@@ -281,7 +281,10 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
                 You (owner) <span className="v3-sub-sub">between tenants</span>
               </h4>
               <span className="v3-panel-note">
-                {plural(between.length, 'gap')} · no charge · {rm(between.reduce((t, x) => t + (x.cost ?? 0), 0))} at TNB&rsquo;s cost
+                {plural(between.length, 'gap')} · no charge
+                {between.some(x => x.cost != null)
+                  ? ` · ${rm(between.reduce((t, x) => t + (x.cost ?? 0), 0))} at TNB’s cost${between.some(x => x.cost == null) ? ' so far' : ''}`
+                  : ' · TNB cost shows once that month’s bill is in'}
               </span>
             </div>
             <p className="v3-panel-note" style={{ margin: 'var(--space-2) 0 0' }}>
@@ -315,7 +318,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
                       <td>{x.unit}</td>
                       <td className="r num">{kwh(x.kwh)} kWh</td>
                       <td className="r num">
-                        {x.cost != null ? rm(x.cost) : '—'}
+                        {x.cost != null ? rm(x.cost) : <span className="v3-sub-sub">needs the TNB bill</span>}
                         {x.cost != null && x.costEstimated ? <i className="v3-sub-est"> est.</i> : null}
                       </td>
                       <td>
