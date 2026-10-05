@@ -10,6 +10,7 @@ import { readSite } from '@/lib/v3/site'
 import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
+import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,7 @@ const BRAND_WORDS = [
 // When the media kit is on, links shared with brands preview as a creator page.
 export async function generateMetadata(): Promise<Metadata> {
   const site = await readSite()
-  return site.landing === 'kit'
+  return site.landing === 'kit' || site.landing === 'reel'
     ? {
         title: 'Aereon Wong — tech & travel, shot from the sky',
         description:
@@ -46,6 +47,15 @@ export default async function Landing({
   // A private preview, so the kit can be checked before it goes public. Only
   // honoured for someone signed in; everyone else sees the saved setting.
   const preview = signedIn && sp.preview === 'kit'
+  const reelPreview = signedIn && sp.preview === 'reel'
+  // The motion reel wins only when chosen, or when previewed explicitly.
+  if ((site.landing === 'reel' && !preview) || reelPreview) {
+    const [audience, recs] = await Promise.all([readAudience(), getRecords()])
+    const inv = toInvoices(recs)
+    const kinds = [...new Set(inv.map(i => i.kind))]
+    const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
+    return <Reel audience={audience} kinds={kinds} since={since} />
+  }
   if (site.landing === 'kit' || preview) {
     const [audience, recs] = await Promise.all([readAudience(), getRecords()])
     const inv = toInvoices(recs)
