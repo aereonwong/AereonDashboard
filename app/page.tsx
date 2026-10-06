@@ -13,6 +13,7 @@ import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 
 export const dynamic = 'force-dynamic'
 
@@ -145,6 +146,11 @@ export default async function Landing({
                 <div className="l">Views · {span}</div>
               </div>
             ) : null}
+          </div>
+
+          <div className="land-work">
+            <p className="eyebrow" style={{ marginBottom: 10 }}>Find me on</p>
+            <SocialLinks igFollowers={followers || undefined} />
           </div>
 
           {/* Product, car and hotel reviews, events, aerial and travel — not just KLCC. */}
