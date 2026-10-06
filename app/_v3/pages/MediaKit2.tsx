@@ -66,7 +66,6 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
   const reach = fresh ? (view?.totals.reach ?? 0) : 0
   const views = fresh ? (view?.totals.views ?? 0) : 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
-  const adPct = fresh ? (view?.adPct ?? null) : null
   const posts = audience.best.slice(0, 10) // two rows of five
   const updated = view?.capturedAt ?? audience.snap?.captured_at
   const women = view?.genders.find(g => /^f/i.test(g.key))
@@ -99,14 +98,14 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="k3-face" src="/img/aereon.jpg" alt="Aereon Wong" />
             <div>
-              <p className="k3-name">Hi, I&rsquo;m Aereon.</p>
+              <p className="k3-name">Hi, I&rsquo;m Aereon Wong.</p>
               <p className="k3-role">Tech &amp; Travel Content Creator · drone pilot · Kuala Lumpur</p>
             </div>
           </div>
           <h1 className="k3-headline">
-            Tech &amp; travel,
+            Tech and Travel
             <br />
-            shot from <span className="k3-tint">the sky</span>.
+            <span className="k3-tint">Content Creator</span>
           </h1>
           <p className="k3-blurb">
             Creative travel and tech content, and aerial work — launch campaigns, hotels and tourism, from
@@ -147,9 +146,6 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
               </div>
             ) : null}
           </dl>
-          {reach && adPct ? (
-            <p className="k3-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
-          ) : null}
         </section>
 
         {/* ------------------------------------------------ channels */}

@@ -43,7 +43,7 @@ export default function SocialLinks({ igFollowers, total = true }: { igFollowers
         ))}
       </ul>
       <p className="so-fine">
-        {igFollowers ? `Instagram live; other counts as of ${asOf}.` : `Counts as of ${asOf}.`} Someone following on two platforms is counted on both.
+        {igFollowers ? `Instagram live; other counts as of ${asOf}.` : `Counts as of ${asOf}.`}
       </p>
     </div>
   )
