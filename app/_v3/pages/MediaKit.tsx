@@ -3,6 +3,7 @@ import { v3Fonts } from '../fonts'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 import PostGrid from '../PostGrid'
 import Icon from '@/app/_components/Icon'
 import { compact, num } from '../fmt'
@@ -123,6 +124,14 @@ export default function MediaKit({
               </>
             ) : null}
           </p>
+        </section>
+
+        {/* ---------------- Channels ---------------- */}
+        <section className="v3-kit-section" aria-labelledby="k-social">
+          <h2 className="v3-kit-h2" id="k-social">
+            Find me on
+          </h2>
+          <SocialLinks igFollowers={audience.followers} />
         </section>
 
         {/* ---------------- Best work, playable ---------------- */}

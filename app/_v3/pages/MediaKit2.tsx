@@ -8,6 +8,7 @@ import Icon from '@/app/_components/Icon'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 
 // 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
 // door's calm: one KLCC night photo behind everything, Aereon's portrait first,
@@ -149,6 +150,14 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
           {reach && adPct ? (
             <p className="k3-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
           ) : null}
+        </section>
+
+        {/* ------------------------------------------------ channels */}
+        <section className="k3-section" aria-labelledby="k3-social">
+          <h2 className="k3-h2" id="k3-social">
+            Find me on
+          </h2>
+          <SocialLinks igFollowers={audience.followers} />
         </section>
 
         {/* ------------------------------------------------ audience */}

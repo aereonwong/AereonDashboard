@@ -6,6 +6,7 @@ import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ReelFilm, { type ReelData, type ReelPost } from '../ReelFilm'
 import { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 
 // 👉 The motion-reel landing (5 Oct 2026): a third public landing beside the
 // Front door and the media kit. It opens on a 30-second motion-graphics film
@@ -139,6 +140,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
           {reach && adPct ? (
             <p className="rl-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
           ) : null}
+        </section>
+
+        <section aria-labelledby="rl-social">
+          <h2 id="rl-social" className="rl-h2 rl-sec">
+            Find me on
+          </h2>
+          <SocialLinks igFollowers={audience.followers} />
         </section>
 
         {view && (view.countries.length || view.ages.length || women || men) ? (
