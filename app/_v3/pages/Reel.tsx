@@ -7,6 +7,8 @@ import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ReelFilm, { type ReelData, type ReelPost } from '../ReelFilm'
 import { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { socials, combined } from '@/lib/socials'
+import { intro as introFor } from '../intro'
 
 // 👉 The motion-reel landing (5 Oct 2026): a third public landing beside the
 // Front door and the media kit. It opens on a 30-second motion-graphics film
@@ -55,6 +57,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     label: label(p.caption),
     crop: p.crop ? 1 / Math.max(0.3, 1 - p.crop.t - p.crop.b) : undefined,
   }))
+  const intro = introFor(`${Math.floor(combined(socials(audience.followers)) / 1000)}K+`)
   const posts = fromShowcase.length ? fromShowcase : recent
   const workTitle = fromShowcase.length ? 'Work across the board' : undefined
   const brands = KIT_BRANDS.map(b => {
@@ -62,7 +65,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, interactions, posts, workTitle, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers: audience.followers, reach, views, interactions, posts, workTitle, intro, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -98,10 +101,11 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
             <h2 id="rl-hi" className="rl-h2">
               Tech and Travel Content Creator
             </h2>
-            <p className="rl-lede">
-              Hi, I&rsquo;m Aereon Wong. Creative travel and tech content, and aerial work — launch campaigns, hotels and
-              tourism, from KLCC rooftops to island resorts. Creating since {since}.
-            </p>
+            {intro.lede.map((t, i) => (
+              <p className="rl-lede" key={i}>
+                {t}
+              </p>
+            ))}
           </div>
         </section>
 
