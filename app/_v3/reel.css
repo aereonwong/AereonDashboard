@@ -102,11 +102,6 @@
 .rf-stat { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--rl-line); position: relative; }
 .rf-stat b { font-family: var(--f-num); font-weight: 700; font-size: clamp(2.6rem, 6vw, 5rem); line-height: 1; letter-spacing: -0.04em; }
 .rf-stat span { color: var(--rl-ink-2); font-size: 0.9rem; }
-.rf-ringstat { padding-right: clamp(60px, 7vw, 96px); }
-.rf-ringstat svg { position: absolute; right: 0; top: 14px; width: clamp(56px, 6vw, 84px); transform: rotate(-90deg); }
-.rf-ring-bg, .rf-ring { fill: none; stroke-width: 9; }
-.rf-ring-bg { stroke: var(--rl-line); }
-.rf-ring { stroke: var(--rl-accent); stroke-linecap: round; }
 .rf-fine { margin: 26px 0 0; font-size: 0.82rem; color: var(--rl-ink-2); }
 
 /* 4 · work */
@@ -185,7 +180,6 @@
 @keyframes rf-plate { 0% { opacity: 0; } 5% { opacity: 1; } 95% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes rf-push { from { transform: scale(1.28); } to { transform: scale(1.04); } }
 @keyframes rf-drift { from { transform: scale(1.15) translateX(3%); } to { transform: scale(1.15) translateX(-3%); } }
-@keyframes rf-ring { from { stroke-dashoffset: var(--c); } to { stroke-dashoffset: var(--off); } }
 @keyframes rf-deal {
   from { opacity: 0; transform: translateY(70vh) rotate(calc(var(--r) * -3)); }
   to { opacity: 1; transform: rotate(var(--r)); }
@@ -249,8 +243,6 @@
   .rf-logos li { transform-origin: center; }
   .rf-logos .rf-logo { zoom: 0.72; }
   .rf-chapters button { font-size: 0; width: 6px; height: 14px; padding: 0; }
-  .rf-ringstat { padding-right: clamp(60px, 7vw, 96px); }
-.rf-ringstat svg { width: 52px; }
   .rl-intro { grid-template-columns: 1fr; }
   .rl-posts { grid-template-columns: repeat(2, 1fr); }
   .rl-logos { gap: 24px 32px; }
