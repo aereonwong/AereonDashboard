@@ -1,6 +1,6 @@
 import '../reel.css'
 import { v3Fonts } from '../fonts'
-import { publicCountries, type Audience } from '@/lib/v3/audience'
+import { publicCountries, sharePct, type Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
@@ -154,7 +154,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
               {view.countries.length ? (
                 <div className="rl-card">
                   <h3>Where they are</h3>
-                  <Shares items={publicCountries(view.countries)} />
+                  <Shares items={publicCountries(view.countries)} precise />
                 </div>
               ) : null}
               {view.ages.length ? (
@@ -271,7 +271,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   )
 }
 
-function Shares({ items }: { items: { key: string; label: string; pct: number }[] }) {
+function Shares({ items, precise }: { items: { key: string; label: string; pct: number }[]; precise?: boolean }) {
   const top = items.slice(0, 4)
   const peak = Math.max(1, ...top.map(s => s.pct))
   return (
@@ -280,7 +280,7 @@ function Shares({ items }: { items: { key: string; label: string; pct: number }[
         <li key={s.key}>
           <span>{s.label}</span>
           <i aria-hidden="true" style={{ ['--w' as string]: (s.pct / peak).toFixed(3) }} />
-          <b className="num">{Math.round(s.pct)}%</b>
+          <b className="num">{precise ? sharePct(s.pct) : Math.round(s.pct)}%</b>
         </li>
       ))}
     </ul>

@@ -1,7 +1,7 @@
 import '../v3.css'
 import '../kit2.css'
 import { v3Fonts } from '../fonts'
-import { publicCountries, type Audience } from '@/lib/v3/audience'
+import { publicCountries, sharePct, type Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import type { Share } from '@/lib/instagram'
 import Icon from '@/app/_components/Icon'
@@ -39,7 +39,7 @@ const Mail = () => (
   </svg>
 )
 
-function ShareList({ items, max = 4 }: { items: Share[]; max?: number }) {
+function ShareList({ items, max = 4, precise }: { items: Share[]; max?: number; precise?: boolean }) {
   const top = items.slice(0, max)
   const peak = Math.max(1, ...top.map(s => s.pct))
   return (
@@ -50,7 +50,7 @@ function ShareList({ items, max = 4 }: { items: Share[]; max?: number }) {
           <span className="k3-share-bar" aria-hidden="true">
             <i style={{ ['--w' as string]: (s.pct / peak).toFixed(3) }} />
           </span>
-          <b className="num">{Math.round(s.pct)}%</b>
+          <b className="num">{precise ? sharePct(s.pct) : Math.round(s.pct)}%</b>
         </li>
       ))}
     </ul>
@@ -166,7 +166,7 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
               {view.countries.length ? (
                 <div className="k3-card">
                   <h3>Where they are</h3>
-                  <ShareList items={publicCountries(view.countries)} />
+                  <ShareList items={publicCountries(view.countries)} precise />
                 </div>
               ) : null}
               {view.ages.length ? (
