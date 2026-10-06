@@ -1,6 +1,6 @@
 import '../reel.css'
 import { v3Fonts } from '../fonts'
-import type { Audience } from '@/lib/v3/audience'
+import { publicCountries, type Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
@@ -154,7 +154,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
               {view.countries.length ? (
                 <div className="rl-card">
                   <h3>Where they are</h3>
-                  <Shares items={view.countries} />
+                  <Shares items={publicCountries(view.countries)} />
                 </div>
               ) : null}
               {view.ages.length ? (

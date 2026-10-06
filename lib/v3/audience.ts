@@ -77,3 +77,10 @@ export async function readAudience(days = 30): Promise<Audience> {
 /** Instagram's own player for a post, from its permalink. Never expires, needs no key. */
 export const embedUrl = (permalink?: string) =>
   permalink ? `${permalink.replace(/\/?$/, '/')}embed/` : undefined
+
+/** Countries left off the PUBLIC pages (landing reel, media kits) at Aereon's
+ *  request, 6 Oct 2026 — the next country moves up. The Instagram tab still
+ *  shows every country. Percentages are untouched: each is still its share of
+ *  all followers. */
+const PUBLIC_HIDDEN_COUNTRIES = new Set(['IN'])
+export const publicCountries = <T extends { key: string }>(list: T[]) => list.filter(c => !PUBLIC_HIDDEN_COUNTRIES.has(c.key))
