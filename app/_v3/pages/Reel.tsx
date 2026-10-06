@@ -5,6 +5,7 @@ import type { WorkKind } from '@/lib/invoices'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ReelFilm, { type ReelData, type ReelPost } from '../ReelFilm'
+import { showcase } from '@/app/_components/ShowcaseGrid'
 
 // 👉 The motion-reel landing (5 Oct 2026): a third public landing beside the
 // Front door and the media kit. It opens on a 30-second motion-graphics film
@@ -19,7 +20,7 @@ const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
 const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {
-  'Drone / aerial': { title: 'Aerial & drone', line: 'CAAM-licensed aerial film and photography — skylines, resorts, launches and drone shows.' },
+  'Drone / aerial': { title: 'Aerial & drone', line: 'Aerial film and photography — skylines, resorts, launches and drone shows.' },
   'Social campaign': { title: 'Social campaigns', line: 'Reels built to travel past the follower base, posted where Malaysia is watching.' },
   'Event coverage': { title: 'Event coverage', line: 'Launches, activations and light shows, covered live and cut the same night.' },
   'Production / licensing': { title: 'Production & licensing', line: 'Footage produced to brief, and archive aerials licensed for campaigns.' },
@@ -40,8 +41,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   const views = fresh ? (view?.totals.views ?? 0) : 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
   const adPct = fresh ? (view?.adPct ?? null) : null
+  // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
+  // mostly KLCC. The recent best posts are only the fallback.
+  const fromShowcase: ReelPost[] = showcase.items
+    .filter(p => p.reach !== undefined)
+    .map(p => ({ id: p.id, thumb: p.cover, reach: p.reach!, permalink: p.permalink, label: p.label, showReach: p.showReach }))
   const best = audience.best.filter(p => p.thumb && p.permalink && p.reach !== undefined)
-  const posts: ReelPost[] = best.slice(0, 10).map(p => ({
+  const recent: ReelPost[] = best.slice(0, 10).map(p => ({
     id: p.id,
     thumb: p.thumb!,
     reach: p.reach!,
@@ -49,12 +55,14 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     label: label(p.caption),
     crop: p.crop ? 1 / Math.max(0.3, 1 - p.crop.t - p.crop.b) : undefined,
   }))
+  const posts = fromShowcase.length ? fromShowcase : recent
+  const workTitle = fromShowcase.length ? 'Work across the board' : undefined
   const brands = KIT_BRANDS.map(b => {
     // The film's wall is a touch larger than the kit's.
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, newPct, adPct, posts, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers: audience.followers, reach, views, newPct, adPct, posts, workTitle, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -91,7 +99,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
               Tech &amp; travel, shot from the sky.
             </h2>
             <p className="rl-lede">
-              I&rsquo;m Aereon — a Kuala Lumpur tech and travel content creator and CAAM-licensed drone pilot. I film the
+              I&rsquo;m Aereon — a Kuala Lumpur tech and travel content creator and drone pilot. I film the
               moments Malaysia stops to watch: F1 activations at KLCC, 800-drone launches, Merdeka light shows, new phones and
               the hotels worth flying to. Creating since {since}.
             </p>
@@ -127,10 +135,6 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
                 <dt>Of reach · not following yet</dt>
               </div>
             ) : null}
-            <div>
-              <dd>CAAM</dd>
-              <dt>Licensed drone pilot</dt>
-            </div>
           </dl>
           {reach && adPct ? (
             <p className="rl-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
@@ -180,7 +184,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
         {posts.length ? (
           <section aria-labelledby="rl-work">
             <h2 id="rl-work" className="rl-h2 rl-sec">
-              Recent best work
+              {workTitle ?? 'Recent best work'}
             </h2>
             <ul className="rl-posts">
               {posts.map(p => (
@@ -189,7 +193,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.thumb} alt="" loading="lazy" style={p.crop ? { transform: `scale(${p.crop})` } : undefined} />
                     <span>
-                      <b className="num">{compact(p.reach)}</b> reached
+                      {p.showReach === false ? (
+                        p.label
+                      ) : (
+                        <>
+                          <b className="num">{compact(p.reach)}</b> reached · {p.label}
+                        </>
+                      )}
                     </span>
                   </a>
                 </li>

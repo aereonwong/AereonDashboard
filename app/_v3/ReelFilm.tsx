@@ -16,7 +16,16 @@ import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties,
 // motion it rests on the end card and plays only if the visitor presses Play.
 // Every fact in the film is repeated in the page below it.
 
-export type ReelPost = { id: string; thumb: string; reach: number; permalink?: string; label: string; crop?: number }
+export type ReelPost = {
+  id: string
+  thumb: string
+  reach: number
+  permalink?: string
+  label: string
+  crop?: number
+  /** Showcase tiles below the two-year median keep their number to themselves. */
+  showReach?: boolean
+}
 export type ReelBrand = { slug: string; name: string; w: number; h: number }
 export type ReelData = {
   followers: number
@@ -25,6 +34,8 @@ export type ReelData = {
   newPct: number | null
   adPct: number | null
   posts: ReelPost[]
+  /** The Work chapter's line — the showcase spans two years, the fallback only recent posts. */
+  workTitle?: string
   brands: ReelBrand[]
   email: string
   ig: string
@@ -270,7 +281,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
               ))}
             </ul>
             <p className="rf-a rf-line" style={at('rf-rise-soft', 6.4, 0.7)}>
-              Content creator and CAAM-licensed drone pilot. Launches, landmarks, hotels and drone shows — filmed to travel.
+              Content creator and drone pilot. Launches, landmarks, hotels and drone shows — filmed to travel.
             </p>
           </div>
         </Scene>
@@ -322,7 +333,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
         {/* ---------------------------------------------- 4 · work */}
         <Scene i={3} className="rf-work">
           <p className="rf-kicker">
-            <Words text="Recent work that travelled" from={15.2} step={0.07} />
+            <Words text={data.workTitle ?? 'Recent work that travelled'} from={15.2} step={0.07} />
           </p>
           {posts.length ? null : (
             <p className="rf-a rf-line" style={at('rf-rise-soft', 15.6, 0.7)}>
@@ -339,7 +350,11 @@ export default function ReelFilm({ data }: { data: ReelData }) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.thumb} alt="" style={p.crop ? { transform: `scale(${p.crop})` } : undefined} />
                 <figcaption>
-                  <b className="num">{compact(p.reach)}</b> reached
+                  {p.showReach === false ? null : (
+                    <>
+                      <b className="num">{compact(p.reach)}</b> reached
+                    </>
+                  )}
                   <span>{p.label}</span>
                 </figcaption>
               </figure>
