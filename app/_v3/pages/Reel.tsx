@@ -40,7 +40,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
   const reach = fresh ? (view?.totals.reach ?? 0) : 0
   const views = fresh ? (view?.totals.views ?? 0) : 0
-  const newPct = fresh ? (view?.newPeoplePct ?? null) : null
+  const interactions = fresh ? (view?.totals.total_interactions ?? 0) : 0
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
   // mostly KLCC. The recent best posts are only the fallback.
   const fromShowcase: ReelPost[] = showcase.items
@@ -62,7 +62,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, newPct, posts, workTitle, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers: audience.followers, reach, views, interactions, posts, workTitle, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -99,9 +99,8 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
               Tech and Travel Content Creator
             </h2>
             <p className="rl-lede">
-              I&rsquo;m Aereon Wong — based in Kuala Lumpur, and a drone pilot too. I film the
-              moments Malaysia stops to watch: F1 activations at KLCC, 800-drone launches, Merdeka light shows, new phones and
-              the hotels worth flying to. Creating since {since}.
+              Hi, I&rsquo;m Aereon Wong. Creative travel and tech content, and aerial work — launch campaigns, hotels and
+              tourism, from KLCC rooftops to island resorts. Creating since {since}.
             </p>
           </div>
         </section>
@@ -129,10 +128,10 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
                 <dt>Views · 30 days</dt>
               </div>
             ) : null}
-            {newPct !== null ? (
+            {interactions ? (
               <div>
-                <dd className="num">{Math.round(newPct)}%</dd>
-                <dt>Of reach · not following yet</dt>
+                <dd className="num">{compact(interactions)}</dd>
+                <dt>Interactions · 30 days</dt>
               </div>
             ) : null}
           </dl>

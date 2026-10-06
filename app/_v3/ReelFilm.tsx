@@ -31,7 +31,8 @@ export type ReelData = {
   followers: number
   reach: number
   views: number
-  newPct: number | null
+  /** Instagram's 30-day total of likes, comments, saves and shares. */
+  interactions: number
   posts: ReelPost[]
   /** The Work chapter's line — the showcase spans two years, the fallback only recent posts. */
   workTitle?: string
@@ -132,7 +133,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
       const to = Number(c.dataset.count)
       const p = easeOut(clamp((t - Number(c.dataset.from)) / 1.6))
       const v = to * p
-      c.textContent = c.dataset.unit === 'pct' ? `${Math.round(v)}%` : c.dataset.unit === 'm' ? `${Math.round(v)} m` : compact(v)
+      c.textContent = c.dataset.unit === 'pct' ? `${Math.round(v)}%` : compact(v)
     })
     if (clock.current) clock.current.textContent = stamp(t)
     if (scrub.current) {
@@ -206,14 +207,13 @@ export default function ReelFilm({ data }: { data: ReelData }) {
     }
   }, [ready, apply, play, stop])
 
-  const { followers, reach, views, newPct, posts, brands } = data
+  const { followers, reach, views, interactions, posts, brands } = data
   const stats = [
     followers ? { v: followers, l: 'Followers', u: 'n' } : null,
     reach ? { v: reach, l: 'Accounts reached · 30 days', u: 'n' } : null,
     views ? { v: views, l: 'Views · 30 days', u: 'n' } : null,
+    interactions ? { v: interactions, l: 'Interactions · 30 days', u: 'n' } : null,
   ].filter(Boolean) as { v: number; l: string; u: string }[]
-  const R = 52
-  const C = 2 * Math.PI * R
 
   return (
     <div className="rf" ref={root} data-ready={ready || undefined} data-playing={playing || undefined}>
@@ -243,7 +243,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
             <i className="rf-rec" /> REC <span ref={clock}>{stamp(LENGTH)}</span>
           </div>
           <div className="rf-a rf-readout r" style={at('rf-fade', 0.5, 0.5)}>
-            ALT <b data-count={300} data-from={0.4} data-unit="m">300 m</b> · KUL 3.15°N 101.71°E
+            KUALA LUMPUR · 3.15°N 101.71°E
           </div>
         </div>
 
@@ -253,9 +253,9 @@ export default function ReelFilm({ data }: { data: ReelData }) {
             <Words text="Kuala Lumpur · Malaysia" from={0.5} step={0.06} />
           </p>
           <h2 className="rf-huge">
-            <Words text="The view from" from={0.9} />
+            <Words text="I film what" from={0.9} />
             <br />
-            <Words text="300 metres up." from={1.25} className="rf-tint" />
+            <Words text="Malaysia stops to watch." from={1.25} className="rf-tint" />
           </h2>
         </Scene>
 
@@ -299,32 +299,10 @@ export default function ReelFilm({ data }: { data: ReelData }) {
                 <span>{s.l}</span>
               </div>
             ))}
-            {newPct !== null && reach ? (
-              <div className="rf-a rf-stat rf-ringstat" style={at('rf-rise-soft', 11.4, 0.6)}>
-                <svg viewBox="0 0 120 120" aria-hidden="true">
-                  <circle cx="60" cy="60" r={R} className="rf-ring-bg" />
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r={R}
-                    className="rf-a rf-ring"
-                    style={at('rf-ring', 11.5, 1.8, {
-                      strokeDasharray: C,
-                      ['--c' as string]: C,
-                      ['--off' as string]: C * (1 - newPct / 100),
-                    })}
-                  />
-                </svg>
-                <b className="num" data-count={newPct} data-from={11.5} data-unit="pct">
-                  {Math.round(newPct)}%
-                </b>
-                <span>of that reach didn&rsquo;t follow me yet</span>
-              </div>
-            ) : null}
           </div>
-          {reach ? (
+          {reach || views || interactions ? (
             <p className="rf-a rf-fine" style={at('rf-fade', 12.6, 0.6)}>
-              Reach and views are Instagram&rsquo;s own 30-day account figures.
+              Reach, views and interactions are Instagram&rsquo;s own 30-day account figures.
             </p>
           ) : null}
         </Scene>
