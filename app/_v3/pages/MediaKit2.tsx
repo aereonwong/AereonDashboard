@@ -1,7 +1,7 @@
 import '../v3.css'
 import '../kit2.css'
 import { v3Fonts } from '../fonts'
-import type { Audience } from '@/lib/v3/audience'
+import { publicCountries, type Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import type { Share } from '@/lib/instagram'
 import Icon from '@/app/_components/Icon'
@@ -166,7 +166,7 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
               {view.countries.length ? (
                 <div className="k3-card">
                   <h3>Where they are</h3>
-                  <ShareList items={view.countries} />
+                  <ShareList items={publicCountries(view.countries)} />
                 </div>
               ) : null}
               {view.ages.length ? (
