@@ -92,6 +92,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
       <h1 className="rl-sr">Aereon Wong — Tech &amp; Travel Content Creator and drone pilot, Kuala Lumpur</h1>
       <ReelFilm data={data} />
 
+      {/* The film's last photograph carries on, softened, behind the kit — a
+          sticky layer rather than background-attachment: fixed, which iOS ignores. */}
+      <div className="rl-after">
+        <div className="rl-backdrop" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/klcc-balloon.jpg" alt="" loading="lazy" />
+        </div>
       <main className="rl-kit" id="kit">
         <section className="rl-intro" aria-labelledby="rl-hi">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -270,6 +277,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
         <span>Aerial · Travel · Tech · Hotels · Events</span>
         <span>{updated ? `Instagram figures as of ${longDate(updated.slice(0, 10))}` : 'Photos: Aereon Wong · Kuala Lumpur'}</span>
       </footer>
+      </div>
     </div>
   )
 }
