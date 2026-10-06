@@ -41,7 +41,6 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   const reach = fresh ? (view?.totals.reach ?? 0) : 0
   const views = fresh ? (view?.totals.views ?? 0) : 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
-  const adPct = fresh ? (view?.adPct ?? null) : null
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
   // mostly KLCC. The recent best posts are only the fallback.
   const fromShowcase: ReelPost[] = showcase.items
@@ -63,7 +62,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, newPct, adPct, posts, workTitle, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers: audience.followers, reach, views, newPct, posts, workTitle, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -97,10 +96,10 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
           <div>
             <p className="rl-eyebrow">Media kit · {updated ? longDate(updated.slice(0, 10)) : 'Kuala Lumpur'}</p>
             <h2 id="rl-hi" className="rl-h2">
-              Tech &amp; travel, shot from the sky.
+              Tech and Travel Content Creator
             </h2>
             <p className="rl-lede">
-              I&rsquo;m Aereon — a Kuala Lumpur tech and travel content creator and drone pilot. I film the
+              I&rsquo;m Aereon Wong — based in Kuala Lumpur, and a drone pilot too. I film the
               moments Malaysia stops to watch: F1 activations at KLCC, 800-drone launches, Merdeka light shows, new phones and
               the hotels worth flying to. Creating since {since}.
             </p>
@@ -137,9 +136,6 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
               </div>
             ) : null}
           </dl>
-          {reach && adPct ? (
-            <p className="rl-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
-          ) : null}
         </section>
 
         <section aria-labelledby="rl-social">

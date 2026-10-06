@@ -32,7 +32,6 @@ export type ReelData = {
   reach: number
   views: number
   newPct: number | null
-  adPct: number | null
   posts: ReelPost[]
   /** The Work chapter's line — the showcase spans two years, the fallback only recent posts. */
   workTitle?: string
@@ -207,7 +206,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
     }
   }, [ready, apply, play, stop])
 
-  const { followers, reach, views, newPct, adPct, posts, brands } = data
+  const { followers, reach, views, newPct, posts, brands } = data
   const stats = [
     followers ? { v: followers, l: 'Followers', u: 'n' } : null,
     reach ? { v: reach, l: 'Accounts reached · 30 days', u: 'n' } : null,
@@ -281,7 +280,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
               ))}
             </ul>
             <p className="rf-a rf-line" style={at('rf-rise-soft', 6.4, 0.7)}>
-              Content creator and drone pilot. Launches, landmarks, hotels and drone shows — filmed to travel.
+              Tech and Travel Content Creator. Launches, landmarks, hotels and drone shows — filmed to travel.
             </p>
           </div>
         </Scene>
@@ -323,9 +322,9 @@ export default function ReelFilm({ data }: { data: ReelData }) {
               </div>
             ) : null}
           </div>
-          {reach && adPct ? (
+          {reach ? (
             <p className="rf-a rf-fine" style={at('rf-fade', 12.6, 0.6)}>
-              Reach and views are Instagram&rsquo;s own 30-day account figures; about {Math.round(adPct)}% of reach came from boosted posts.
+              Reach and views are Instagram&rsquo;s own 30-day account figures.
             </p>
           ) : null}
         </Scene>

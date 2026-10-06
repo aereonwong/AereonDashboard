@@ -72,9 +72,9 @@ export default function MediaKit({
             <div className="v3-kit-split">
               <div>
                 <h1 className="v3-kit-headline">
-                  Tech &amp; travel,
+                  Tech and Travel
                   <br />
-                  shot from the sky.
+                  Content Creator
                 </h1>
                 <p className="v3-kit-blurb">
                   Creative visual travel content creator and professional drone pilot in Kuala Lumpur. Aerial films, launch

@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await readSite()
   return site.landing === 'kit' || site.landing === 'reel'
     ? {
-        title: 'Aereon Wong — tech & travel, shot from the sky',
+        title: 'Aereon Wong — Tech and Travel Content Creator',
         description:
           'Kuala Lumpur travel and tech content creator and drone pilot. Aerial films, launch campaigns, hotels and tourism.',
       }
@@ -112,14 +112,14 @@ export default async function Landing({
           <div className="land-person">
             <img className="land-face" src="/img/aereon.jpg" alt="Aereon Wong" />
             <div>
-              <p className="lp-name">Hi, I'm Aereon.</p>
+              <p className="lp-name">Hi, I'm Aereon Wong.</p>
               <p className="lp-role">Tech &amp; Travel Content Creator · drone pilot · KL</p>
             </div>
           </div>
           <p className="eyebrow">Kuala Lumpur · Malaysia</p>
           <h1>
-            Tech &amp; travel,<br />
-            shot from <span className="tint">the sky</span>.
+            Tech and Travel<br />
+            <span className="tint">Content Creator</span>
           </h1>
           <p className="blurb">
             Creative visual travel content creator and professional drone pilot. Aerial films, launch
