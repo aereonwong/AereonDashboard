@@ -35,6 +35,7 @@ export type ReelData = {
   posts: ReelPost[]
   /** The Work chapter's line — the showcase spans two years, the fallback only recent posts. */
   workTitle?: string
+  intro?: { chips: string[]; line: string }
   brands: ReelBrand[]
   email: string
   ig: string
@@ -273,14 +274,14 @@ export default function ReelFilm({ data }: { data: ReelData }) {
               <Words text="Aereon Wong" from={4.7} step={0.12} />
             </h2>
             <ul className="rf-chips">
-              {['Tech', 'Travel', 'Aerial', 'Events'].map((c, i) => (
+              {(data.intro?.chips ?? ['Tech', 'Travel', 'Aerial', 'Events']).map((c, i) => (
                 <li key={c} className="rf-a" style={at('rf-pop', 5.5 + i * 0.16, 0.5)}>
                   {c}
                 </li>
               ))}
             </ul>
             <p className="rf-a rf-line" style={at('rf-rise-soft', 6.4, 0.7)}>
-              Tech and Travel Content Creator. Launches, landmarks, hotels and drone shows — filmed to travel.
+              {data.intro?.line ?? 'Tech and Travel Content Creator. Launches, landmarks, hotels and drone shows — filmed to travel.'}
             </p>
           </div>
         </Scene>
