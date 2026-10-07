@@ -61,6 +61,11 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   `ig_account_snapshots`, `ig_account_daily`. Fetching lives in `lib/ig-fetch.ts` — no runtime
   imports, so `scripts/ig-refresh.mjs` loads the same file. Insight metrics differ per format
   (Reels: watch time; posts: follows, profile visits) — asking for an unsupported one fails the call.
+  **Archive (7 Oct 2026, `supabase/instagram-archive.sql`, `npm run ig:backfill`):** every post ever
+  (`ig_posts`) with insights in `ig_post_metrics`, account totals per 30-day window back to Oct 2024
+  (`ig_account_periods`) and daily reach back as far (`ig_account_daily`). For analytics, read these
+  tables first; only ask Instagram again when a refresh is actually needed. Reach and accounts_engaged
+  are unique per window — never add windows' reach together.
   "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
