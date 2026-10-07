@@ -108,11 +108,11 @@ export const CURATED: { code: string; label: string }[] = [
   { code: 'Dd6vuswzQyT', label: 'Event · PETRONAS F1 activation' },
   { code: 'DCyHLn_JUkC', label: 'Attraction · Malaysia' },
   { code: 'Db-LZ3_E6ai', label: 'Car review' },
-  { code: 'DLUhDuPRj-8', label: 'Travel · Dubai' },
+  { code: 'DN-RN5ik1cq', label: 'Travel · Dubai' },
   { code: 'DeHa08gzD5n', label: 'Event · Nights of Fright' },
   { code: 'DUSV9BHkwXD', label: 'Tech review · Malaysia' },
   { code: 'DZeRAwVk3Ca', label: 'Travel · Brunei' },
-  { code: 'DNdQt7TJ40D', label: 'Travel · China' },
+  { code: 'DPYJt-bE9kZ', label: 'Travel · China' },
   { code: 'DEFUBR9J8HP', label: 'Travel · Singapore' },
   { code: 'DaNZnwATq7t', label: 'Travel · Bali' },
 ]
