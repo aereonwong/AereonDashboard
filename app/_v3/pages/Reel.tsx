@@ -51,12 +51,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   // mostly KLCC. The recent best posts are only the fallback.
   const fromShowcase: ReelPost[] = showcase.items
     .filter(p => p.reach !== undefined)
-    .map(p => ({ id: p.id, thumb: p.cover, reach: p.reach!, permalink: p.permalink, label: p.label, showReach: p.showReach }))
+    .map(p => ({ id: p.id, thumb: p.cover, reach: p.reach!, views: p.views, permalink: p.permalink, label: p.label, showReach: p.showReach }))
   const best = audience.best.filter(p => p.thumb && p.permalink && p.reach !== undefined)
   const recent: ReelPost[] = best.slice(0, 10).map(p => ({
     id: p.id,
     thumb: p.thumb!,
     reach: p.reach!,
+    views: p.views,
     permalink: p.permalink,
     label: label(p.caption),
     crop: p.crop ? 1 / Math.max(0.3, 1 - p.crop.t - p.crop.b) : undefined,
@@ -215,7 +216,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
                         p.label
                       ) : (
                         <>
-                          <b className="num">{compact(p.reach)}</b> reached · {p.label}
+                          <b className="num">{compact(p.views ?? p.reach)}</b> {p.views ? 'views' : 'reached'} · {p.label}
                         </>
                       )}
                     </span>

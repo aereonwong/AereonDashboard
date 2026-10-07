@@ -221,9 +221,9 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.thumb} alt="" loading="lazy" />
                     ) : null}
-                    {p.reach !== undefined ? (
+                    {(p.views ?? p.reach) !== undefined ? (
                       <span className="k3-post-reach">
-                        <b className="num">{compact(p.reach)}</b> reached
+                        <b className="num">{compact((p.views ?? p.reach)!)}</b> {p.views !== undefined ? 'views' : 'reached'}
                       </span>
                     ) : null}
                   </a>
