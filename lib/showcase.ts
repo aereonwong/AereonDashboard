@@ -99,6 +99,24 @@ const SLOTS: Slot[] = [
   { label: 'Travel · Abroad', match: (k, p) => k === 'travel' && p === 'Abroad' },
 ]
 
+/** The showcase as Aereon arranged it (7 Oct 2026): these posts, in this order,
+ *  matched by the shortcode in the permalink. Five tiles a row, so 1 and 6 sit on
+ *  the left — Malaysia leads both rows. While this list is set, ig-archive keeps
+ *  it as is (refreshing reach and covers) instead of picking by reach; empty it to
+ *  go back to the automatic pick below. */
+export const CURATED: { code: string; label: string }[] = [
+  { code: 'Dd_XZOazuM7', label: 'Event · PETRONAS F1 activation' },
+  { code: 'Db-LZ3_E6ai', label: 'Car review' },
+  { code: 'DCyHLn_JUkC', label: 'Attraction · Malaysia' },
+  { code: 'DLUhDuPRj-8', label: 'Travel · Dubai' },
+  { code: 'DeHa08gzD5n', label: 'Event · Nights of Fright' },
+  { code: 'DUSV9BHkwXD', label: 'Tech review · Malaysia' },
+  { code: 'DZeRAwVk3Ca', label: 'Travel · Brunei' },
+  { code: 'DNdQt7TJ40D', label: 'Travel · China' },
+  { code: 'DEFUBR9J8HP', label: 'Travel · Singapore' },
+  { code: 'DaNZnwATq7t', label: 'Travel · Bali' },
+]
+
 export const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b)
   if (!s.length) return 0
@@ -116,6 +134,14 @@ export const median = (xs: number[]) => {
 export function pickShowcase(posts: ArchivePost[], limit = 10): Omit<ShowcaseItem, 'cover'>[] {
   const reached = posts.filter(p => p.reach !== undefined && p.permalink)
   const mid = median(reached.map(p => p.reach!))
+  if (CURATED.length) {
+    return CURATED.flatMap(c => {
+      const hit = reached.find(p => p.permalink!.includes(c.code))
+      return hit
+        ? [{ id: hit.id, permalink: hit.permalink!, date: hit.timestamp.slice(0, 10), type: hit.type, label: c.label, caption: hit.caption.slice(0, 140), reach: hit.reach, showReach: hit.reach! >= mid }]
+        : []
+    })
+  }
   const byReach = [...reached].sort((a, b) => b.reach! - a.reach!)
   const used = new Set<string>()
   let klcc = 0

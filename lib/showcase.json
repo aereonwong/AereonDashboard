@@ -5,15 +5,15 @@
   "median_reach": 7575,
   "items": [
     {
-      "id": "17889470430339761",
-      "permalink": "https://www.instagram.com/p/DN91zikk8_d/",
-      "date": "2025-08-30",
+      "id": "18163868965491777",
+      "permalink": "https://www.instagram.com/p/Dd_XZOazuM7/",
+      "date": "2026-10-02",
       "type": "FEED",
-      "label": "Event coverage",
-      "caption": "Counting down to the Merdeka celebrations tonight! 🎆 Where will you be spending Merdeka Eve? At KLCC, the best spot to enjoy the fireworks ",
-      "reach": 1816068,
+      "label": "Event · PETRONAS F1 activation",
+      "caption": "PETRONAS Twin Towers in Teal Color 🩵 Standing tall for 28 years and the Twin Towers is still Malaysia icon and finally it lights up in PETR",
+      "reach": 21338,
       "showReach": true,
-      "cover": "/img/work/17889470430339761.jpg"
+      "cover": "/img/work/18163868965491777.jpg"
     },
     {
       "id": "18111505511047263",
@@ -31,33 +31,44 @@
       "permalink": "https://www.instagram.com/reel/DCyHLn_JUkC/",
       "date": "2024-11-25",
       "type": "REELS",
-      "label": "Travel · Malaysia",
+      "label": "Attraction · Malaysia",
       "caption": "Asia’s Largest GoKart Circuit is now available in Malaysia! 🏁 This is very fun experience that you can ride single kart or double kart! Per",
       "reach": 1017844,
       "showReach": true,
       "cover": "/img/work/18257763763256498.jpg"
     },
     {
-      "id": "18033526052674406",
-      "permalink": "https://www.instagram.com/reel/DLICodSJsRE/",
-      "date": "2025-06-20",
+      "id": "18468517246076692",
+      "permalink": "https://www.instagram.com/reel/DLUhDuPRj-8/",
+      "date": "2025-06-25",
       "type": "REELS",
-      "label": "Hotel review",
-      "caption": "One of the best viewpoint at Dubai from Shangri-La Dubai 🌃✨ Hotel guest can access this iconic rooftop at Level 42 with the view of Burj Kh",
-      "reach": 20028,
-      "showReach": true,
-      "cover": "/img/work/18033526052674406.jpg"
+      "caption": "Javelin Shot from my Dubai trip with Insta360 X5 🇦🇪🌟 It’s my time exploring Middle East and finally got the chance to see the tallest bui",
+      "reach": 44246,
+      "cover": "/img/work/18468517246076692.jpg",
+      "label": "Travel · Dubai",
+      "showReach": true
     },
     {
-      "id": "18119417329502261",
-      "permalink": "https://www.instagram.com/reel/DOshvwIk4e5/",
-      "date": "2025-09-17",
+      "id": "18150401911534797",
+      "permalink": "https://www.instagram.com/reel/DeHa08gzD5n/",
+      "date": "2026-10-05",
       "type": "REELS",
-      "label": "Aerial",
-      "caption": "Hello Kuala Lumpur City from Above 🌃✨ I always choose Window Seat and was mesmerised to see our beloved home during my flight ✈️ 📸 @aereon",
-      "reach": 135396,
+      "label": "Event · Nights of Fright",
+      "caption": "👻 Are you ready for Nights of Fright 12? 🎃 The scares are back at Sunway Lagoon every weekend! 🔥 And yes, you can get 15% OFF your NOF12 ",
+      "reach": 2222,
+      "showReach": false,
+      "cover": "/img/work/18150401911534797.jpg"
+    },
+    {
+      "id": "18094533922765589",
+      "permalink": "https://www.instagram.com/p/DUSV9BHkwXD/",
+      "date": "2026-02-03",
+      "type": "FEED",
+      "label": "Tech review · Malaysia",
+      "caption": "Places to explore in Kuala Lumpur with HONOR Magic8 Pro 🇲🇾✨ As part of Visit Malaysia 2026, here are some spots worth exploring around Kua",
+      "reach": 47726,
       "showReach": true,
-      "cover": "/img/work/18119417329502261.jpg"
+      "cover": "/img/work/18094533922765589.jpg"
     },
     {
       "id": "18105243743069429",
@@ -75,7 +86,7 @@
       "permalink": "https://www.instagram.com/p/DNdQt7TJ40D/",
       "date": "2025-08-17",
       "type": "FEED",
-      "label": "Travel · Abroad",
+      "label": "Travel · China",
       "caption": "When night falls, Qingdao transforms into a Cyberpunk city 🌃 Best spot to see this is from Qingdao’s Third Sea Bathing Place’s Beach. This ",
       "reach": 119819,
       "showReach": true,
@@ -102,17 +113,6 @@
       "reach": 70626,
       "showReach": true,
       "cover": "/img/work/18174922414418656.jpg"
-    },
-    {
-      "id": "18094533922765589",
-      "permalink": "https://www.instagram.com/p/DUSV9BHkwXD/",
-      "date": "2026-02-03",
-      "type": "FEED",
-      "label": "Product review",
-      "caption": "Places to explore in Kuala Lumpur with HONOR Magic8 Pro 🇲🇾✨ As part of Visit Malaysia 2026, here are some spots worth exploring around Kua",
-      "reach": 47726,
-      "showReach": true,
-      "cover": "/img/work/18094533922765589.jpg"
     }
   ]
 }

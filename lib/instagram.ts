@@ -203,14 +203,14 @@ export type DailyPoint = { day: string; reach?: number; new_followers?: number }
 
 export async function latestAccount(): Promise<IgAccount | null> {
   if (!supabaseConfigured) return null
-  const { data, error } = await supabase
-    .from('ig_account_snapshots')
-    .select('captured_at, window_days, totals, follow_type, formats, demographics')
-    .order('captured_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const read = (cols: string) =>
+    supabase.from('ig_account_snapshots').select(cols).order('captured_at', { ascending: false }).limit(1).maybeSingle()
+  const base = 'captured_at, window_days, totals, follow_type, formats, demographics'
+  // `windows` arrives with supabase/instagram-90d.sql; before that, read without it.
+  let { data, error } = await read(`${base}, windows`)
+  if (error) ({ data, error } = await read(base))
   if (error || !data) return null
-  return { ...(data as Omit<IgAccount, 'daily'>), daily: [] }
+  return { ...(data as unknown as Omit<IgAccount, 'daily'>), daily: [] }
 }
 
 /** Daily reach and follows gained, oldest first. Grows by a day with every refresh. */
@@ -232,6 +232,48 @@ export async function accountDaily(days = 400): Promise<DailyPoint[]> {
 
 export type Share = { key: string; label: string; value: number; pct: number }
 
+/** The last 90 days, from three back-to-back 30-day windows (newest first).
+ *  Views and interactions are counts, so they add up; reach is unique people per
+ *  window, so it is never added — the best window is shown instead. */
+export type Ninety = {
+  views: number | null
+  interactions: number | null
+  likes: number | null
+  shares: number | null
+  saves: number | null
+  comments: number | null
+  profileViews: number | null
+  /** The highest 30-day reach of the three windows. */
+  peakReach: number | null
+  windows: { since: string; until: string; reach: number | null; views: number | null; interactions: number | null }[]
+}
+
+/** null unless all three windows came back. A metric missing from any window is null, never a partial sum. */
+export function ninety(acc: IgAccount): Ninety | null {
+  const w = acc.windows ?? []
+  if (w.length < 3) return null
+  const three = w.slice(0, 3)
+  const sum = (k: string) => (three.every(x => typeof x.totals[k] === 'number') ? three.reduce((t, x) => t + x.totals[k], 0) : null)
+  const reaches = three.map(x => x.totals.reach).filter((v): v is number => typeof v === 'number')
+  return {
+    views: sum('views'),
+    interactions: sum('total_interactions'),
+    likes: sum('likes'),
+    shares: sum('shares'),
+    saves: sum('saves'),
+    comments: sum('comments'),
+    profileViews: sum('profile_views'),
+    peakReach: reaches.length === 3 ? Math.max(...reaches) : null,
+    windows: three.map(x => ({
+      since: x.since,
+      until: x.until,
+      reach: x.totals.reach ?? null,
+      views: x.totals.views ?? null,
+      interactions: x.totals.total_interactions ?? null,
+    })),
+  }
+}
+
 export type AudienceView = {
   capturedAt: string
   totals: Record<string, number>
@@ -251,6 +293,8 @@ export type AudienceView = {
   topAge: Share | null
   coreAgePct: number | null
   homePct: number | null // % of followers in Malaysia
+  /** The last 90 days, or null until a refresh has stored all three windows. */
+  d90: Ninety | null
 }
 
 const REGION = (() => {
@@ -302,5 +346,6 @@ export function readAudienceView(acc: IgAccount, followers: number): AudienceVie
     topAge: [...ages].sort((a, b) => b.value - a.value)[0] ?? null,
     coreAgePct: core.length ? core.reduce((t, a) => t + a.pct, 0) : null,
     homePct: countries.find(c => c.key === 'MY')?.pct ?? null,
+    d90: ninety(acc),
   }
 }

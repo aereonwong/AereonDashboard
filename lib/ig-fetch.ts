@@ -73,7 +73,16 @@ export type IgAccount = {
   }
   /** One point per day. `new_followers` is follows gained that day (Instagram's follower_count). */
   daily: { day: string; reach?: number; new_followers?: number }[]
+  /** The last 90 days as three back-to-back 30-day windows, newest first (Instagram
+   *  allows at most 30 days per question). Counts such as views add up across them;
+   *  reach and accounts_engaged are unique people per window and must NOT be added. */
+  windows?: AccountWindow[]
 }
+
+export type AccountWindow = { since: string; until: string; totals: Record<string, number> }
+
+/** Account totals asked for in each 30-day window of the 90-day view. */
+const WINDOW_TOTALS = ['reach', 'views', 'accounts_engaged', 'total_interactions', 'likes', 'comments', 'shares', 'saves', 'profile_views']
 
 export type Exec = (slug: string, args: Record<string, unknown>) => Promise<any>
 /** The slice of a Supabase client this file needs. */
@@ -322,6 +331,8 @@ export async function buildAccount(rawExec: Exec, igUserId?: string): Promise<Ig
     () => ask({ metric: ['follows_and_unfollows'], ...window, breakdown: 'follow_type' }),
     () => ask({ metric: ['reach', 'views'], ...window, breakdown: 'media_product_type' }),
     ...['age', 'gender', 'country', 'city'].map(b => () => demo('follower_demographics', b)),
+    // The two earlier 30-day windows of the 90-day view (the newest is `totals` above).
+    ...[1, 2].map(k => () => ask({ metric: WINDOW_TOTALS, ...window, since: since - k * 30 * 86_400, until: until - k * 30 * 86_400 })),
   ]
   const results: any[] = new Array(jobs.length)
   await pool(
@@ -331,7 +342,16 @@ export async function buildAccount(rawExec: Exec, igUserId?: string): Promise<Ig
       results[i] = await job()
     },
   )
-  const [series, totals, follow, follows, formats, ...demos] = results as [any[], any[], any[], any[], any[], ...(Slice[] | undefined)[]]
+  const [series, totals, follow, follows, formats, ...rest] = results as [any[], any[], any[], any[], any[], ...any[]]
+  const demos = rest.slice(0, 4) as (Slice[] | undefined)[]
+  const earlier = rest.slice(4) as any[][]
+  const totalsOf = (rs: any[]) =>
+    Object.fromEntries(rs.map(r => [r?.name, num(r?.total_value?.value)]).filter(([, v]) => v !== undefined)) as Record<string, number>
+  const iso = (t: number) => new Date(t * 1000).toISOString()
+  const windows: AccountWindow[] = [
+    { since: iso(since), until: iso(until), totals: totalsOf(totals) },
+    ...earlier.map((rs, i) => ({ since: iso(since - (i + 1) * 30 * 86_400), until: iso(until - (i + 1) * 30 * 86_400), totals: totalsOf(rs) })),
+  ]
 
   // A day's value carries an end_time of the NEXT day's start (Pacific time),
   // so the day it describes is the one before.
@@ -360,9 +380,7 @@ export async function buildAccount(rawExec: Exec, igUserId?: string): Promise<Ig
   return {
     captured_at: new Date().toISOString(),
     window_days: 30,
-    totals: Object.fromEntries(
-      totals.map(r => [r?.name, num(r?.total_value?.value)]).filter(([, v]) => v !== undefined),
-    ),
+    totals: totalsOf(totals),
     follow_type: clean({
       reach: slices(named(follow, 'reach')),
       views: slices(named(follow, 'views')),
@@ -373,6 +391,9 @@ export async function buildAccount(rawExec: Exec, igUserId?: string): Promise<Ig
       followers: clean({ age: fAge, gender: fGender, country: fCountry, city: fCity }),
     }),
     daily: settle([...byDay.values()].sort((a, b) => a.day.localeCompare(b.day))),
+    // A window Instagram answered with nothing is left out, so a 90-day figure is
+    // only ever drawn from three real windows.
+    windows: windows.filter(w => Object.keys(w.totals).length),
   }
 }
 
@@ -421,7 +442,14 @@ export async function persist(db: Db, snap: IgSnapshot, account?: IgAccount | nu
   note('ig_post_metrics', (await db.from('ig_post_metrics').insert(postRows(snap))).error)
   if (account) {
     const { daily, ...rest } = account
-    note('ig_account_snapshots', (await db.from('ig_account_snapshots').insert(rest)).error)
+    // `windows` needs supabase/instagram-90d.sql; until it is run, save the row without it.
+    let { error: e } = await db.from('ig_account_snapshots').insert(rest)
+    if (e && /windows/.test(e.message ?? '')) {
+      const { windows: _w, ...older } = rest
+      e = (await db.from('ig_account_snapshots').insert(older)).error
+      warnings.push('ig_account_snapshots: 90-day windows not saved — run supabase/instagram-90d.sql')
+    }
+    note('ig_account_snapshots', e)
     if (daily.length) {
       const stamped = daily.map(d => ({ ...d, updated_at: account.captured_at }))
       note('ig_account_daily', (await db.from('ig_account_daily').upsert(stamped, { onConflict: 'day' })).error)
