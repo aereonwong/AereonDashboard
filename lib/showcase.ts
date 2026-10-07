@@ -28,6 +28,8 @@ export type ShowcaseItem = {
   label: string // what the tile says: "Car review", "Travel · Singapore"
   caption: string
   reach?: number
+  /** Plays/views — what the tile prints (higher than reach, and a count, so honest as is). */
+  views?: number
   /** Reach is printed only when the post did at least as well as a typical
    *  (median) post of the same two years — weaker tiles show their label alone. */
   showReach: boolean
@@ -138,7 +140,7 @@ export function pickShowcase(posts: ArchivePost[], limit = 10): Omit<ShowcaseIte
     return CURATED.flatMap(c => {
       const hit = reached.find(p => p.permalink!.includes(c.code))
       return hit
-        ? [{ id: hit.id, permalink: hit.permalink!, date: hit.timestamp.slice(0, 10), type: hit.type, label: c.label, caption: hit.caption.slice(0, 140), reach: hit.reach, showReach: hit.reach! >= mid }]
+        ? [{ id: hit.id, permalink: hit.permalink!, date: hit.timestamp.slice(0, 10), type: hit.type, label: c.label, caption: hit.caption.slice(0, 140), reach: hit.reach, views: hit.views, showReach: hit.reach! >= mid }]
         : []
     })
   }
@@ -163,6 +165,7 @@ export function pickShowcase(posts: ArchivePost[], limit = 10): Omit<ShowcaseIte
       label: slot.label,
       caption: hit.caption.slice(0, 140),
       reach: hit.reach,
+      views: hit.views,
       showReach: hit.reach! >= mid,
     })
   }

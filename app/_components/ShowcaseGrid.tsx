@@ -22,9 +22,9 @@ export default function ShowcaseGrid({ items = showcase.items, limit = 10 }: { i
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.cover} alt="" loading="lazy" />
             <span className="sc-label">{p.label}</span>
-            {p.showReach && p.reach ? (
+            {p.showReach && (p.views ?? p.reach) ? (
               <span className="sc-reach">
-                <b>{compact(p.reach)}</b> reached
+                <b>{compact((p.views ?? p.reach)!)}</b> {p.views ? 'views' : 'reached'}
               </span>
             ) : null}
           </a>

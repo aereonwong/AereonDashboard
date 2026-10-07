@@ -20,6 +20,8 @@ export type ReelPost = {
   id: string
   thumb: string
   reach: number
+  /** Views/plays when known — printed instead of reach (the bigger, still honest count). */
+  views?: number
   permalink?: string
   label: string
   crop?: number
@@ -334,7 +336,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
                 <figcaption>
                   {p.showReach === false ? null : (
                     <>
-                      <b className="num">{compact(p.reach)}</b> reached
+                      <b className="num">{compact(p.views ?? p.reach)}</b> {p.views ? 'views' : 'reached'}
                     </>
                   )}
                   <span>{p.label}</span>
