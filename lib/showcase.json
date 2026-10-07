@@ -5,26 +5,15 @@
   "median_reach": 7575,
   "items": [
     {
-      "id": "18163868965491777",
-      "permalink": "https://www.instagram.com/p/Dd_XZOazuM7/",
-      "date": "2026-10-02",
-      "type": "FEED",
+      "id": "18106354505335681",
+      "permalink": "https://www.instagram.com/reel/Dd6vuswzQyT/",
+      "date": "2026-09-30",
+      "type": "REELS",
       "label": "Event · PETRONAS F1 activation",
-      "caption": "PETRONAS Twin Towers in Teal Color 🩵 Standing tall for 28 years and the Twin Towers is still Malaysia icon and finally it lights up in PETR",
-      "reach": 21338,
+      "caption": "PETRONAS Twin Towers in their Signature Teal Color 🩵 Stay tune for more contents updates from today’s events 👌 📸 @aereonwong 📍 PETRONAS",
+      "reach": 181845,
       "showReach": true,
-      "cover": "/img/work/18163868965491777.jpg"
-    },
-    {
-      "id": "18111505511047263",
-      "permalink": "https://www.instagram.com/p/Db-LZ3_E6ai/",
-      "date": "2026-08-13",
-      "type": "FEED",
-      "label": "Car review",
-      "caption": "BYD One Charge Challenge Series captured with the Leica Q3 🏎️⚡️🏁📸✨ We took on the challenge of driving from KL to Kuantan on a single ful",
-      "reach": 8314,
-      "showReach": true,
-      "cover": "/img/work/18111505511047263.jpg"
+      "cover": "/img/work/18106354505335681.jpg"
     },
     {
       "id": "18257763763256498",
@@ -36,6 +25,17 @@
       "reach": 1017844,
       "showReach": true,
       "cover": "/img/work/18257763763256498.jpg"
+    },
+    {
+      "id": "18111505511047263",
+      "permalink": "https://www.instagram.com/p/Db-LZ3_E6ai/",
+      "date": "2026-08-13",
+      "type": "FEED",
+      "label": "Car review",
+      "caption": "BYD One Charge Challenge Series captured with the Leica Q3 🏎️⚡️🏁📸✨ We took on the challenge of driving from KL to Kuantan on a single ful",
+      "reach": 8314,
+      "showReach": true,
+      "cover": "/img/work/18111505511047263.jpg"
     },
     {
       "id": "18468517246076692",
