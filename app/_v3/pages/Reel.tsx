@@ -40,9 +40,13 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   const { view } = audience
   // Instagram's own 30-day account figures — only while fresh (same rule as kit v2).
   const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
-  const reach = fresh ? (view?.totals.reach ?? 0) : 0
-  const views = fresh ? (view?.totals.views ?? 0) : 0
-  const interactions = fresh ? (view?.totals.total_interactions ?? 0) : 0
+  // 90 days when all three 30-day windows are stored (views and interactions add
+  // up; reach is the best single window, never a sum). Otherwise the last 30 days.
+  const d90 = fresh ? (view?.d90 ?? null) : null
+  const period: 30 | 90 = d90 && d90.views !== null && d90.peakReach !== null ? 90 : 30
+  const reach = period === 90 ? d90!.peakReach! : fresh ? (view?.totals.reach ?? 0) : 0
+  const views = period === 90 ? d90!.views! : fresh ? (view?.totals.views ?? 0) : 0
+  const interactions = period === 90 ? (d90!.interactions ?? 0) : fresh ? (view?.totals.total_interactions ?? 0) : 0
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
   // mostly KLCC. The recent best posts are only the fallback.
   const fromShowcase: ReelPost[] = showcase.items
@@ -65,7 +69,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, interactions, posts, workTitle, intro, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers: audience.followers, reach, views, interactions, period, posts, workTitle, intro, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -130,19 +134,19 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
             {reach ? (
               <div>
                 <dd className="num">{compact(reach)}</dd>
-                <dt>Reached · 30 days</dt>
+                <dt>{period === 90 ? 'Reached · best 30 days' : 'Reached · 30 days'}</dt>
               </div>
             ) : null}
             {views ? (
               <div>
                 <dd className="num">{compact(views)}</dd>
-                <dt>Views · 30 days</dt>
+                <dt>Views · {period} days</dt>
               </div>
             ) : null}
             {interactions ? (
               <div>
                 <dd className="num">{compact(interactions)}</dd>
-                <dt>Interactions · 30 days</dt>
+                <dt>Interactions · {period} days</dt>
               </div>
             ) : null}
           </dl>

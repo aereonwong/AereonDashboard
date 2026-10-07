@@ -9,7 +9,7 @@ import AudienceBreakdown from '../AudienceBreakdown'
 import Refresh from '../Refresh'
 import { followFlow, timeGrid, themes, reachVsFollowers, shelfLife, collabs } from '@/lib/v3/ig-insights'
 import type { IgExtras } from '@/lib/v3/ig-extras'
-import { compact, num, longDate } from '../fmt'
+import { compact, num, longDate, shortDate } from '../fmt'
 import { KpiCard } from '../summary/Panels'
 
 // 👉 v3 Instagram: is my audience growing, and what earns it.
@@ -66,6 +66,7 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
   const firstRead = extras.metrics.length ? extras.metrics.reduce((m, r) => (r.captured_at < m ? r.captured_at : m), extras.metrics[0].captured_at) : null
 
   const t = view?.totals ?? {}
+  const d90 = view?.d90 ?? null
   const net = view?.follows != null && view?.unfollows != null ? view.follows - view.unfollows : null
   const engagedPct = t.reach && t.accounts_engaged ? (t.accounts_engaged / t.reach) * 100 : null
 
@@ -131,6 +132,54 @@ export default function Instagram({ audience, sp, extras }: { audience: Audience
             note={engagedPct !== null ? `${compact(t.accounts_engaged!)} accounts interacted` : 'per combined post reach, last 30 days'}
           />
         </section>
+
+        {d90 ? (
+          <>
+            <section className="v3-panel v3-span-12 v3-sum-band" aria-label="The account, last 90 days">
+              <KpiCard label="Views · 90 days" value={d90.views !== null ? compact(d90.views) : '—'} note="three 30-day windows added up" />
+              <KpiCard
+                label="Best 30-day reach"
+                value={d90.peakReach !== null ? compact(d90.peakReach) : '—'}
+                note="unique accounts in one window · reach is never added across windows"
+              />
+              <KpiCard label="Interactions · 90 days" value={d90.interactions !== null ? compact(d90.interactions) : '—'} note={d90.likes !== null ? `${compact(d90.likes)} likes` : 'likes, comments, saves, shares'} />
+              <KpiCard label="Shares · 90 days" value={d90.shares !== null ? compact(d90.shares) : '—'} note={d90.saves !== null ? `${compact(d90.saves)} saves` : ''} />
+              <KpiCard label="Profile visits · 90 days" value={d90.profileViews !== null ? compact(d90.profileViews) : '—'} note={d90.comments !== null ? `${compact(d90.comments)} comments` : ''} />
+            </section>
+            <section className="v3-panel v3-span-12" aria-labelledby="t-90">
+              <div className="v3-panel-head">
+                <h2 className="v3-panel-title" id="t-90">
+                  The last 90 days, 30 days at a time
+                </h2>
+                <p className="v3-panel-note">Instagram&rsquo;s own account figures · each window counts unique accounts once</p>
+              </div>
+              <div className="v3-table-wrap">
+                <table className="v3-table">
+                  <thead>
+                    <tr>
+                      <th>Window</th>
+                      <th className="num">Accounts reached</th>
+                      <th className="num">Views</th>
+                      <th className="num">Interactions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d90.windows.map(w => (
+                      <tr key={w.since}>
+                        <td>
+                          {shortDate(w.since)} – {shortDate(w.until)}
+                        </td>
+                        <td className="num">{w.reach !== null ? num(w.reach) : '—'}</td>
+                        <td className="num">{w.views !== null ? num(w.views) : '—'}</td>
+                        <td className="num">{w.interactions !== null ? num(w.interactions) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        ) : null}
 
         {daily.length >= 3 ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-daily">
