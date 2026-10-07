@@ -99,15 +99,15 @@ const SLOTS: Slot[] = [
   { label: 'Travel · Abroad', match: (k, p) => k === 'travel' && p === 'Abroad' },
 ]
 
-/** The showcase as Aereon arranged it (7 Oct 2026): these posts, in this order,
+/** The showcase as Aereon arranged it (7 Oct 2026, F1 tile swapped 7 Oct): these posts, in this order,
  *  matched by the shortcode in the permalink. Five tiles a row, so 1 and 6 sit on
  *  the left — Malaysia leads both rows. While this list is set, ig-archive keeps
  *  it as is (refreshing reach and covers) instead of picking by reach; empty it to
  *  go back to the automatic pick below. */
 export const CURATED: { code: string; label: string }[] = [
-  { code: 'Dd_XZOazuM7', label: 'Event · PETRONAS F1 activation' },
-  { code: 'Db-LZ3_E6ai', label: 'Car review' },
+  { code: 'Dd6vuswzQyT', label: 'Event · PETRONAS F1 activation' },
   { code: 'DCyHLn_JUkC', label: 'Attraction · Malaysia' },
+  { code: 'Db-LZ3_E6ai', label: 'Car review' },
   { code: 'DLUhDuPRj-8', label: 'Travel · Dubai' },
   { code: 'DeHa08gzD5n', label: 'Event · Nights of Fright' },
   { code: 'DUSV9BHkwXD', label: 'Tech review · Malaysia' },

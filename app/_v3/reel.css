@@ -246,8 +246,11 @@
   .rf-who > .rf-fill > .rf-fill { flex-direction: column; align-items: flex-start; justify-content: center; }
   .rf-face { width: 128px; }
   .rf-readout.r { display: none; }
-  .rf-card { width: 34vw; margin: 0 -7vw; }
-  .rf-card:nth-child(n + 4) { display: none; }
+  /* Phones: the first two tiles side by side, both fully in view. */
+  .rf-card { width: 42vw; margin: 0 -1.5vw; }
+  .rf-card:nth-child(1) { --r: -4deg !important; }
+  .rf-card:nth-child(2) { --r: 4deg !important; z-index: 6; }
+  .rf-card:nth-child(n + 3) { display: none; }
   .rf-card figcaption span { display: none; }
   .rf-logos { gap: 18px 26px; }
   .rf-logos li { transform-origin: center; }
