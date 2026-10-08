@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { MARKDOWN_PATHS, isKnownPrivatePath, isPublicPath, markdownFor, notFoundHtml, notFoundMarkdown, wantsMarkdown } from '@/lib/agent-site'
 import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
@@ -11,7 +12,39 @@ import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
 // nothing), we bounce them to /login. If neither is set, we DON'T gate anything —
 // the app shows a calm setup banner instead, so a half-configured clone never
 // locks you out of your own HQ.
+const MD_HEADERS = {
+  'Content-Type': 'text/markdown; charset=utf-8',
+  Vary: 'Accept',
+  'X-Content-Type-Options': 'nosniff',
+  'Cache-Control': 'public, max-age=0, must-revalidate',
+}
+
+// Unknown paths get a REAL 404 (Markdown for agents that ask for it, small HTML otherwise).
+// Without this the gate bounced every unknown path to /login, which answers 200 — so a
+// scanner or agent concluded that every URL on the site exists.
+function notFound(req: NextRequest) {
+  const path = req.nextUrl.pathname
+  if (wantsMarkdown(req.headers.get('accept'))) {
+    return new Response(notFoundMarkdown(path), { status: 404, headers: MD_HEADERS })
+  }
+  return new Response(notFoundHtml(), {
+    status: 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', Vary: 'Accept' },
+  })
+}
+
 export function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname
+
+  // Public pages answer Accept: text/markdown with a Markdown twin; HTML stays HTML.
+  if (MARKDOWN_PATHS.includes(path)) {
+    const md = wantsMarkdown(req.headers.get('accept')) ? markdownFor(path) : null
+    if (md) return new Response(md, { status: 200, headers: MD_HEADERS })
+    return NextResponse.next()   // (Next sets its own Vary on HTML pages; the pages are not CDN-cached)
+  }
+  if (isPublicPath(path)) return NextResponse.next()
+  if (!isKnownPrivatePath(path)) return notFound(req)    // nothing lives here → honest 404
+
   const secret = sessionSecret()
   if (!secret) return NextResponse.next()            // no lock installed → open door
 
@@ -23,8 +56,10 @@ export function proxy(req: NextRequest) {
   return NextResponse.redirect(url)
 }
 
-// The matcher protects every page EXCEPT the ones below, which must stay reachable
-// without the cookie:
+// The proxy now sees every path except static assets, and decides in code (lib/agent-site.ts:
+// isPublicPath / isKnownPrivatePath — checked by tests/agent-site.test.mjs). These must stay
+// reachable without the cookie:
+//   • /about, /contact, /privacy, /robots.txt, /sitemap.xml, /llms.txt — public, for people and agents
 //   • /                       — the public landing page (no private data on it)
 //   • /login, /api/login, /api/auth/google/*, /api/logout — you can't log in through a locked
 //     login page (Google sign-in start + callback). Only that subfolder is public; any
@@ -39,7 +74,5 @@ export function proxy(req: NextRequest) {
 // A single missed exclusion here = a locked webhook on class day, so this list is tested.
 // Each name is anchored (`(?:/|$)`) so `/login-admin` or `/imgs-private` stay private.
 export const config = {
-  matcher: [
-    '/((?!$|(?:login|api/login|api/auth/google|api/logout|api/telegram|api/cron-daily|api/cron-news|api/cron-instagram|manifest\\.webmanifest|manifest\\.json|icons|img|_next|favicon\\.ico)(?:/|$)).*)',
-  ],
+  matcher: ['/((?!(?:_next|favicon\\.ico|icons|img)(?:/|$)).*)'],
 }

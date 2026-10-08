@@ -1208,6 +1208,15 @@ body { font-family: var(--font-body); }
   }
 }
 
+/* Public trust pages (about / contact / privacy) — share the landing's photo + scrim. */
+.pub-nav { display: flex; gap: 6px; }
+.pub-nav a { padding: 8px 14px; border-radius: var(--r-pill); color: rgba(255,255,255,.8); text-decoration: none; font-size: 13px; letter-spacing: .06em; text-transform: capitalize; }
+.pub-nav a:hover, .pub-nav a[aria-current] { background: rgba(255,255,255,.14); color: #fff; }
+.pub-body { margin: auto 0; padding: 48px 0 20px; max-width: 64ch; }
+.pub-body h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.1; margin: 0 0 22px; }
+.pub-body h2 { font-size: 13px; letter-spacing: .26em; text-transform: uppercase; color: rgba(255,255,255,.72); margin: 30px 0 8px; font-weight: 600; }
+.pub-body p { line-height: 1.7; color: rgba(255,255,255,.88); margin: 0 0 12px; }
+.pub-body a:not(.land-btn) { color: #fff; }
 /* ---------- Showcase: work across every kind (app/_components/ShowcaseGrid.tsx) ----------
    Drawn over dark photography on the landing page and both kits, so its colours
    are fixed white-on-image rather than theme tokens. */

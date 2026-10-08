@@ -12,6 +12,7 @@ import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
+import { jsonLd } from '@/lib/agent-site'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
 
@@ -33,14 +34,35 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await readSite()
   return site.landing === 'kit' || site.landing === 'reel'
     ? {
+        alternates: { canonical: '/' },
         title: 'Aereon Wong — Tech and Travel Content Creator',
         description:
           'Kuala Lumpur travel and tech content creator and drone pilot. Aerial films, launch campaigns, hotels and tourism.',
       }
-    : {}
+    : { alternates: { canonical: '/' } }
 }
 
-export default async function Landing({
+// JSON-LD (Person + Organization + WebSite) so machines can read who this is. The `<`
+// escape keeps the JSON from ever closing the script tag.
+function JsonLd() {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()).replace(/</g, '\\u003c') }}
+    />
+  )
+}
+
+export default function Landing(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  return (
+    <>
+      <JsonLd />
+      <LandingBody {...props} />
+    </>
+  )
+}
+
+async function LandingBody({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>

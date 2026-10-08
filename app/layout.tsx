@@ -1,15 +1,23 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
+import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/agent-site'
 
 // The ROOT layout: html, body, fonts and the photo background only. The dashboard
 // chrome (sidebar + bottom bar) lives in app/(app)/layout.tsx, so the public
 // landing page at / and the login screen render full-bleed without it.
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Aereon Dashboard',
   description:
     'Aereon Wong — tech & travel creator, Kuala Lumpur. Invoices, clients, Instagram and AI agents in one place.',
   manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    images: [{ url: OG_IMAGE.path, width: OG_IMAGE.width, height: OG_IMAGE.height }],
+  },
+  twitter: { card: 'summary_large_image', images: [OG_IMAGE.path] },
   appleWebApp: { capable: true, title: 'Aereon', statusBarStyle: 'black-translucent' },
 }
 
