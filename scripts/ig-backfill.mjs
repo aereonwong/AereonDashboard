@@ -5,6 +5,7 @@
 //   npm run ig:backfill              posts + insights + account history
 //   npm run ig:backfill -- --posts   only the post list and post insights
 //   npm run ig:backfill -- --account only account windows and daily reach
+//   npm run ig:backfill -- --pace=900 calls per hour (default 600)
 //
 // Resumable: posts that already have a metrics row are skipped, so a run cut
 // short by Instagram's rate limit just carries on next time. The post list is
@@ -18,7 +19,19 @@ import { insightsFor, postRows } from '../lib/ig-fetch.ts'
 
 const run = promisify(execFile)
 const CLI = `${process.env.HOME}/.local/bin/composio`
+// Pacing. Instagram's limit is per 24 h and depends on the account's activity
+// (Meta's Business Use Case limit); its exact size isn't published per account.
+// Every call is counted and the run is held to --pace calls per hour (default 600),
+// well under anything this account has hit before, so a full back-fill never trips it.
+const PACE = Number(process.argv.find(a => a.startsWith('--pace='))?.split('=')[1]) || 600
+let calls = 0
+const started = Date.now()
+const breathe = async () => {
+  const ahead = (calls / PACE) * 3_600_000 - (Date.now() - started)
+  if (ahead > 0) await new Promise(r => setTimeout(r, ahead))
+}
 const exec = async (slug, args) => {
+  calls++
   for (let attempt = 0; ; attempt++) {
     try {
       const { stdout } = await run(CLI, ['execute', slug, '-d', JSON.stringify(args)], { maxBuffer: 1 << 26, env: { ...process.env, NO_COLOR: '1' } })
@@ -67,6 +80,7 @@ if (doPosts) {
       })
       const items = res?.data?.data ?? []
       for (const m of items) posts.push(m)
+      await breathe()
       after = res?.data?.paging?.cursors?.after
       process.stdout.write(`\rListed ${posts.length} posts…`)
       if (!items.length || !after) break
@@ -116,6 +130,7 @@ if (doPosts) {
   let saved = 0
   for (let i = 0; i < todo.length; i += 25) {
     const chunk = todo.slice(i, i + 25)
+    await breathe()
     await insightsFor(exec, chunk)
     const got = chunk.filter(p => p.reach !== undefined || p.views !== undefined)
     // Nothing back for a whole chunk means Instagram is throttling: stop and resume later.
