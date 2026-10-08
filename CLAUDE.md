@@ -61,6 +61,11 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   `ig_account_snapshots`, `ig_account_daily`. Fetching lives in `lib/ig-fetch.ts` — no runtime
   imports, so `scripts/ig-refresh.mjs` loads the same file. Insight metrics differ per format
   (Reels: watch time; posts: follows, profile visits) — asking for an unsupported one fails the call.
+  **Archive (7 Oct 2026, `supabase/instagram-archive.sql`, `npm run ig:backfill`):** every post ever
+  (`ig_posts`) with insights in `ig_post_metrics`, account totals per 30-day window back to Oct 2024
+  (`ig_account_periods`) and daily reach back as far (`ig_account_daily`). For analytics, read these
+  tables first; only ask Instagram again when a refresh is actually needed. Reach and accounts_engaged
+  are unique per window — never add windows' reach together.
   "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
@@ -98,6 +103,17 @@ Summary, Invoice Details, Instagram and Clients together.
 **Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
+
+## Showcase — work across the board (added 5 Oct 2026)
+
+The landing page and both media kits show a spread of Aereon's work, not just the recent feed (lately
+mostly KLCC). `npm run ig:archive` (Composio CLI, like `ig:refresh`) lists two years of posts, gets each
+one's reach, and `lib/showcase.ts` picks one tile per kind: product review, event, car review, hotel
+review, aerial (drone flying or from above; a drone show stays an event), travel in Singapore / Bali / Brunei / Malaysia / abroad — KLCC at most once.
+Tiles are **blended** (strongest, weakest, next strongest…) and reach is printed only on tiles at or
+above the two-year median; weaker ones show their label alone. Output: `lib/showcase.json` + covers in
+`public/img/work/` (saved locally — Instagram image URLs expire). Not refreshed by the cron; re-run the
+script when new work should be able to make it. Classifier rules are order-sensitive; comments say why.
 
 ## Property section (own sidebar group since 4 Oct 2026)
 

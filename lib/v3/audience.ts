@@ -77,3 +77,26 @@ export async function readAudience(days = 30): Promise<Audience> {
 /** Instagram's own player for a post, from its permalink. Never expires, needs no key. */
 export const embedUrl = (permalink?: string) =>
   permalink ? `${permalink.replace(/\/?$/, '/')}embed/` : undefined
+
+/** Countries left off the PUBLIC pages (landing reel, media kits) at Aereon's
+ *  request, 6 Oct 2026 — the next country moves up. The Instagram tab still
+ *  shows every country. */
+const PUBLIC_HIDDEN_COUNTRIES = new Set(['IN'])
+
+/**
+ * The public country list. Each % is the country's share of the followers
+ * Instagram places in a country — the sum of the (top 45) countries it reports,
+ * about 91% of all followers on 6 Oct 2026 — not of every follower; the
+ * Instagram tab keeps the all-followers figure. Aereon chose this base, without
+ * a note on the public page (6 Oct 2026). The total is taken BEFORE hiding a
+ * country, so hiding one never inflates the others.
+ */
+export function publicCountries<T extends { key: string; value: number; pct: number }>(list: T[]): T[] {
+  const placed = list.reduce((t, c) => t + c.value, 0)
+  return list
+    .filter(c => !PUBLIC_HIDDEN_COUNTRIES.has(c.key))
+    .map(c => ({ ...c, pct: placed ? (c.value / placed) * 100 : c.pct }))
+}
+
+/** A public share: one decimal below 10% (2.6%), whole numbers above (61%). */
+export const sharePct = (pct: number) => (pct < 10 ? pct.toFixed(1) : String(Math.round(pct)))

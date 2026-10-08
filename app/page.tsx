@@ -10,8 +10,11 @@ import { readSite } from '@/lib/v3/site'
 import { readAudience } from '@/lib/v3/audience'
 import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
+import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
 import { jsonLd } from '@/lib/agent-site'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,12 +32,12 @@ const BRAND_WORDS = [
 // When the media kit is on, links shared with brands preview as a creator page.
 export async function generateMetadata(): Promise<Metadata> {
   const site = await readSite()
-  return site.landing === 'kit'
+  return site.landing === 'kit' || site.landing === 'reel'
     ? {
         alternates: { canonical: '/' },
-        title: 'Aereon Wong — tech & travel, shot from the sky',
+        title: 'Aereon Wong — Tech and Travel Content Creator',
         description:
-          'Kuala Lumpur travel and tech content creator and CAAM-licensed drone pilot. Aerial films, launch campaigns, hotels and tourism.',
+          'Kuala Lumpur travel and tech content creator and drone pilot. Aerial films, launch campaigns, hotels and tourism.',
       }
     : { alternates: { canonical: '/' } }
 }
@@ -68,6 +71,15 @@ async function LandingBody({
   // A private preview, so the kit can be checked before it goes public. Only
   // honoured for someone signed in; everyone else sees the saved setting.
   const preview = signedIn && sp.preview === 'kit'
+  const reelPreview = signedIn && sp.preview === 'reel'
+  // The motion reel wins only when chosen, or when previewed explicitly.
+  if ((site.landing === 'reel' && !preview) || reelPreview) {
+    const [audience, recs] = await Promise.all([readAudience(), getRecords()])
+    const inv = toInvoices(recs)
+    const kinds = [...new Set(inv.map(i => i.kind))]
+    const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
+    return <Reel audience={audience} kinds={kinds} since={since} />
+  }
   if (site.landing === 'kit' || preview) {
     const [audience, recs] = await Promise.all([readAudience(), getRecords()])
     const inv = toInvoices(recs)
@@ -122,14 +134,14 @@ async function LandingBody({
           <div className="land-person">
             <img className="land-face" src="/img/aereon.jpg" alt="Aereon Wong" />
             <div>
-              <p className="lp-name">Hi, I'm Aereon.</p>
+              <p className="lp-name">Hi, I'm Aereon Wong.</p>
               <p className="lp-role">Tech &amp; Travel Content Creator · drone pilot · KL</p>
             </div>
           </div>
           <p className="eyebrow">Kuala Lumpur · Malaysia</p>
           <h1>
-            Tech &amp; travel,<br />
-            shot from <span className="tint">the sky</span>.
+            Tech and Travel<br />
+            <span className="tint">Content Creator</span>
           </h1>
           <p className="blurb">
             Creative visual travel content creator and professional drone pilot. Aerial films, launch
@@ -156,15 +168,24 @@ async function LandingBody({
                 <div className="l">Views · {span}</div>
               </div>
             ) : null}
-            <div className="land-stat">
-              <div className="v">CAAM</div>
-              <div className="l">Licensed drone pilot</div>
-            </div>
           </div>
+
+          <div className="land-work">
+            <p className="eyebrow" style={{ marginBottom: 10 }}>Find me on</p>
+            <SocialLinks igFollowers={followers || undefined} />
+          </div>
+
+          {/* Product, car and hotel reviews, events, aerial and travel — not just KLCC. */}
+          {showcase.items.length ? (
+            <div className="land-work">
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Work across the board</p>
+              <ShowcaseGrid limit={5} />
+            </div>
+          ) : null}
 
           {brands.length > 0 ? (
             <>
-              <p className="eyebrow" style={{ marginBottom: 10 }}>Selected work</p>
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Brands I&apos;ve worked with</p>
               <div className="land-tags">
                 {brands.map(b => (
                   <span className="land-tag" key={b}>{b}</span>

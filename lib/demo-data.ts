@@ -159,7 +159,7 @@ export function demoRecords(): Rec[] {
   for (const [title, dueIn, owner] of [
     ['Deliver Lumipix final cut', 1, 'me'],
     ['Send Bayu Tourism invoice reminder', 0, 'me'],
-    ['Book CAAM permit for mall shoot', 4, 'me'],
+    ['Book flight permit for mall shoot', 4, 'me'],
     ['Back up September footage', -2, 'me'],
   ] as [string, number, string][]) {
     out.push(
@@ -251,7 +251,7 @@ export function demoSubmeter(): { readings: Reading[]; bills: Bill[] } {
     ['Main unit', '2026-05-12', 1000, null, true], ['Main unit', '2026-06-12', 1380, 0.52, true], ['Main unit', '2026-07-12', 1770, 0.5, false], ['Main unit', '2026-08-12', 2150, 0.5, false],
     ['Studio', '2026-05-12', 400, null, true], ['Studio', '2026-06-12', 520, 0.35, true], ['Studio', '2026-07-12', 650, 0.5, false], ['Studio', '2026-08-12', 790, 0.5, false],
   ]
-  const readings = rows.map(([unit, read_on, reading, rate, legacy], i) => ({ id: i + 1, property_id: id, unit, read_on, reading, rate, legacy, note: null, tenant_name: unit === 'Studio' ? 'Demo Studio Tenant' : 'Demo Tenant' }))
+  const readings = rows.map(([unit, read_on, reading, rate, legacy], i) => ({ id: i + 1, property_id: id, unit, read_on, reading, rate, legacy, note: null, tenant_name: unit === 'Studio' ? 'Demo Studio Tenant' : 'Demo Tenant', paid_on: read_on < '2026-08-01' ? read_on : null }))
   const bills: Bill[] = [
     { id: 1, property_id: id, bill_date: '2026-06-12', amount: 205, kwh: 500, kw: 4, kvarh: 150, note: null },
     { id: 2, property_id: id, bill_date: '2026-07-12', amount: 215, kwh: 520, kw: 4, kvarh: 160, note: null },

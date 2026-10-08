@@ -11,6 +11,11 @@
 //   buffer    = charged − cost. The flat rate is meant to stay clearly above cost. It is worked out
 //               separately: electricity is collected from the tenants, never a cost of the property.
 //   tenant    = who a segment is billed to: the tenant named on the reading that closes it.
+//   kind      = what a reading marks. 'reading' bills the usage since the last one; 'move_out' is a tenant's
+//               final reading (billed as usual); 'move_in' is a new tenant's starting number — never a charge.
+//               The usage that ends at a move-in reading happened between tenants (cleaning, viewings):
+//               the owner's own electricity, billed to the owner with no charge. A same-day handover needs only the move-out:
+//               the new tenant's first bill starts from it. A unit's very first reading is a starting point too.
 
 /** What tenants pay per kWh from the 4 Oct 2026 decision on: one flat rate for every unit. */
 export const FLAT_RATE = 0.5
@@ -31,7 +36,13 @@ export type Reading = {
   legacy: boolean // recorded before the flat rate
   note: string | null
   tenant_name: string | null // who the usage since the previous reading is billed to
+  paid_on: string | null // when the tenant paid this reading's charge; null = still to collect
+  kind?: ReadingKind // missing on rows from before the column = 'reading'
 }
+
+export type ReadingKind = 'reading' | 'move_in' | 'move_out'
+export const KIND_LABEL: Record<ReadingKind, string> = { reading: 'Regular reading', move_out: 'Move-out (final reading)', move_in: 'Move-in (starting reading)' }
+const kindOf = (r: Reading): ReadingKind => r.kind ?? 'reading'
 
 export type Bill = {
   id: number
@@ -48,6 +59,10 @@ export type Segment = {
   id: number // the reading that closes the segment
   unit: string
   tenant: string | null
+  paidOn: string | null
+  kind: ReadingKind // of the reading that closes the segment
+  vacant: boolean // the owner's use, no charge: ends at a move-in reading, or has no tenant
+  startReading: number // the meter at `from`
   from: string
   to: string
   days: number
@@ -75,6 +90,7 @@ export type Cycle = {
   high: boolean // a month above 600 kWh
 }
 
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 const r2 = (n: number) => Math.round(n * 100) / 100
 const r4 = (n: number) => Math.round(n * 10_000) / 10_000
 const dayNum = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86_400_000
@@ -115,7 +131,8 @@ export function meterAt(rows: Reading[], date: string): number | null {
   return null
 }
 
-export const unitsOf = (readings: Reading[]) => [...new Set(readings.map(r => r.unit))]
+/** Units in a fixed order (by name), so colours and columns don't swap when a new reading arrives. */
+export const unitsOf = (readings: Reading[]) => [...new Set(readings.map(r => r.unit))].sort()
 
 /** TNB cycles, oldest first, with each unit's usage worked out from the readings. */
 export function cycles(bills: Bill[], readings: Reading[]): Cycle[] {
@@ -187,8 +204,14 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       const cp = costPerKwh(cs, a.read_on, b.read_on)
       const cpk = cp?.value ?? null
       const flags: string[] = []
+      // Owner's own use, no charge: up to a move-in, or any reading saved with no tenant (an empty unit).
+      const vacant = kindOf(b) === 'move_in' || !b.tenant_name
       if (kwh < 0) flags.push('Meter went backwards')
-      if (days > LONG_GAP_DAYS) flags.push(`${days} days since the last reading`)
+      if (days > LONG_GAP_DAYS && !vacant) flags.push(`${days} days since the last reading`)
+      if (vacant) {
+        out.push({ id: b.id, unit, tenant: null, paidOn: null, kind: kindOf(b), vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: null, charged: null, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost: cpk != null ? r2(kwh * cpk) : null, buffer: null, flags })
+        continue
+      }
       if (seen.length >= 3) {
         const m = median(seen)
         if (m > 0 && Math.abs(perDay - m) / m > 0.4) flags.push(`${perDay > m ? 'Usage up' : 'Usage down'} ${Math.round((Math.abs(perDay - m) / m) * 100)}% on this unit's usual — check the reading`)
@@ -196,7 +219,7 @@ export function segments(readings: Reading[], cs: Cycle[]): Segment[] {
       if (kwh >= 0) seen.push(perDay)
       const charged = b.rate != null ? r2(kwh * b.rate) : null
       const cost = cpk != null ? r2(kwh * cpk) : null
-      out.push({ id: b.id, unit, tenant: b.tenant_name ?? null, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
+      out.push({ id: b.id, unit, tenant: b.tenant_name ?? null, paidOn: b.paid_on ?? null, kind: kindOf(b), vacant, startReading: a.reading, from: a.read_on, to: b.read_on, days, kwh, perDay, rate: b.rate, charged, legacy: b.legacy, costPerKwh: cpk, costEstimated: cp?.estimated ?? false, cost, buffer: charged != null && cost != null ? r2(charged - cost) : null, flags })
     }
   }
   return out.sort((x, y) => y.to.localeCompare(x.to) || x.unit.localeCompare(y.unit))
@@ -244,14 +267,22 @@ export type TenantBilling = {
   billed12: number // charges for the days in the last 12 months (a segment straddling the cut-off counts only its days inside)
   perDay: number | null // kWh a day over the last 12 months of readings
   unrated: number // segments with no rate: their kWh are not in `billed`
+  owed: number // charges not marked paid yet
+  owedCount: number
+  start: { date: string; reading: number } // where this tenant's billing starts: their move-in, or the reading before their first bill
+  movedOut: { date: string; reading: number } | null // their final reading, when one is marked
 }
 
 /** The part of a segment that falls on or after `since`, as a fraction of its days. */
 const inside = (s: Segment, since: string) => (s.days <= 0 || s.to <= since ? 0 : s.from >= since ? 1 : daysBetween(since, s.to) / s.days)
 
 /** What each tenant of each unit has been billed: one row per unit + tenant, the current tenant of each unit first. */
-export function billing(segs: Segment[], today: string): TenantBilling[] {
+export function billing(all: Segment[], today: string): TenantBilling[] {
   const since = yearBefore(today)
+  const segs = all.filter(s => !s.vacant)
+  // A unit's tenant now: whoever its latest reading is billed to — nobody after a move-out, the newcomer after a move-in.
+  const last = new Map<string, Segment>()
+  for (const s of all) if (!last.has(s.unit) || s.to > last.get(s.unit)!.to) last.set(s.unit, s)
   const groups = new Map<string, Segment[]>()
   for (const s of segs) {
     const key = `${s.unit}\u0000${s.tenant ?? ''}`
@@ -269,7 +300,7 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
       return {
         unit: sorted[0].unit,
         tenant: sorted[0].tenant,
-        current: latest.get(sorted[0].unit)?.tenant === sorted[0].tenant,
+        current: latest.get(sorted[0].unit)?.tenant === sorted[0].tenant && last.get(sorted[0].unit) === latest.get(sorted[0].unit) && sorted[0].kind !== 'move_out',
         segments: sorted,
         from: sorted[sorted.length - 1].from,
         to: sorted[0].to,
@@ -278,6 +309,10 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
         billed12: r2(recent.reduce((t, s) => t + (s.charged ?? 0) * inside(s, since), 0)),
         perDay: days > 0 ? recent.reduce((t, s) => t + s.kwh * inside(s, since), 0) / days : null,
         unrated: ok.filter(s => s.charged == null).length,
+        owed: r2(ok.reduce((t, s) => t + (s.paidOn ? 0 : (s.charged ?? 0)), 0)),
+        owedCount: ok.filter(s => !s.paidOn && s.charged != null && s.charged > 0).length,
+        start: { date: sorted[sorted.length - 1].from, reading: sorted[sorted.length - 1].startReading },
+        movedOut: sorted[0].kind === 'move_out' ? { date: sorted[0].to, reading: sorted[0].startReading + sorted[0].kwh } : null,
       }
     })
     .sort((a, b) => units.indexOf(a.unit) - units.indexOf(b.unit) || Number(b.current) - Number(a.current) || b.to.localeCompare(a.to))
@@ -286,11 +321,81 @@ export function billing(segs: Segment[], today: string): TenantBilling[] {
 /** Each unit's share of the electricity over the last 12 months of readings (kWh a day, so uneven gaps don't skew it). */
 export function usageShare(segs: Segment[], today: string): { unit: string; perDay: number; share: number }[] {
   const since = yearBefore(today)
-  const per = [...new Set(segs.map(s => s.unit))].map(unit => {
+  const per = [...new Set(segs.map(s => s.unit))].sort().map(unit => {
     const rows = segs.filter(s => s.unit === unit && s.kwh >= 0 && inside(s, since) > 0)
     const days = rows.reduce((t, s) => t + s.days * inside(s, since), 0)
     return { unit, perDay: days > 0 ? rows.reduce((t, s) => t + s.kwh * inside(s, since), 0) / days : 0 }
   })
   const total = per.reduce((t, u) => t + u.perDay, 0)
   return per.map(u => ({ ...u, share: total > 0 ? u.perDay / total : 0 }))
+}
+
+/** Per unit, how its latest reading leaves it: a tenant who moved in and has no bill yet, or empty after a move-out. */
+export function unitState(readings: Reading[]): Map<string, { kind: ReadingKind; tenant: string | null; date: string; reading: number }> {
+  const out = new Map<string, { kind: ReadingKind; tenant: string | null; date: string; reading: number }>()
+  for (const r of [...readings].sort(byDate)) out.set(r.unit, { kind: kindOf(r), tenant: r.tenant_name, date: r.read_on, reading: r.reading })
+  return out
+}
+
+export type TnbVsTenants = {
+  bill: Bill
+  start: string
+  covered: boolean // the billed figure is complete: readings span the period, and no charge in it lacks a rate or runs backwards
+  why: string | null // why it isn't complete
+  tnb: number // what the owner paid TNB
+  billed: number // tenant charges for the same days (each charge split across bill periods by days)
+  collected: number // the part of `billed` whose charge is marked paid
+  ownerKwh: number // the owner's own use in the period (empty unit / before a move-in), no charge
+  diff: number // billed − tnb: the profit (or loss) on the electricity
+}
+
+/** Days two date ranges share (a range is (from, to]: a segment's usage runs after its first reading up to its second). */
+const overlap = (aFrom: string, aTo: string, bFrom: string, bTo: string) => Math.max(0, daysBetween(aFrom < bFrom ? bFrom : aFrom, aTo < bTo ? aTo : bTo))
+
+/** Per TNB bill: what the owner paid against what the tenants were billed for the same days, and how much is collected.
+ *  Totals only count bill periods the readings fully cover, so a half-read month never looks like a loss. */
+export function tnbVsTenants(cs: Cycle[], segs: Segment[]) {
+  const rows: TnbVsTenants[] = cs.map(c => {
+    let billed = 0
+    let collected = 0
+    let ownerKwh = 0
+    let unrated = 0
+    let backwards = 0
+    for (const s of segs) {
+      const o = overlap(s.from, s.to, c.start, c.bill.bill_date)
+      if (!o || s.days <= 0) continue
+      if (s.kwh < 0) {
+        backwards++
+        continue
+      }
+      if (!s.vacant && s.charged == null) unrated++
+      const part = o / s.days
+      if (s.vacant) ownerKwh += s.kwh * part
+      else if (s.charged != null) {
+        billed += s.charged * part
+        if (s.paidOn) collected += s.charged * part
+      }
+    }
+    const why = c.sub == null ? 'readings don’t cover it yet' : unrated ? `${plural(unrated, 'charge')} with no rate` : backwards ? 'a meter went backwards' : null
+    return { bill: c.bill, start: c.start, covered: why == null, why, tnb: c.bill.amount, billed: r2(billed), collected: r2(collected), ownerKwh: r2(ownerKwh), diff: r2(billed - c.bill.amount) }
+  })
+  const done = rows.filter(r => r.covered)
+  const sum = (k: 'tnb' | 'billed' | 'collected' | 'diff') => r2(done.reduce((t, r) => t + r[k], 0))
+  const tnb = sum('tnb')
+  // Bills more than 35 days apart leave days that belong to no bill period: their charges are not in the totals.
+  const sorted = [...cs].sort((a, b) => a.bill.bill_date.localeCompare(b.bill.bill_date))
+  const gapDays = sorted.slice(1).reduce((t, c, i) => t + Math.max(0, daysBetween(sorted[i].bill.bill_date, c.start)), 0)
+  return {
+    rows,
+    gapDays,
+    skipped: rows.length - done.length,
+    n: done.length,
+    from: done[0]?.start ?? null,
+    to: done[done.length - 1]?.bill.bill_date ?? null,
+    tnb,
+    billed: sum('billed'),
+    collected: sum('collected'),
+    diff: sum('diff'),
+    pct: tnb > 0 ? sum('diff') / tnb : null,
+  }
 }

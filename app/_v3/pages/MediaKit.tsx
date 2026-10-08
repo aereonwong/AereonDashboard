@@ -2,6 +2,8 @@ import '../v3.css'
 import { v3Fonts } from '../fonts'
 import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 import PostGrid from '../PostGrid'
 import Icon from '@/app/_components/Icon'
 import { compact, num } from '../fmt'
@@ -70,15 +72,14 @@ export default function MediaKit({
             <div className="v3-kit-split">
               <div>
                 <h1 className="v3-kit-headline">
-                  Tech &amp; travel,
+                  Tech and Travel
                   <br />
-                  shot from the sky.
+                  Content Creator
                 </h1>
                 <p className="v3-kit-blurb">
                   Creative visual travel content creator and professional drone pilot in Kuala Lumpur. Aerial films, launch
                   campaigns, hotels and tourism — from KLCC rooftops to island resorts.
                 </p>
-                <span className="v3-kit-credential">CAAM-licensed drone pilot</span>
                 <div className="v3-kit-ctas">
                   <a className="v3-btn v3-btn-primary" href={`mailto:${EMAIL}?subject=Collaboration`}>
                     Book a collaboration
@@ -125,8 +126,23 @@ export default function MediaKit({
           </p>
         </section>
 
+        {/* ---------------- Channels ---------------- */}
+        <section className="v3-kit-section" aria-labelledby="k-social">
+          <h2 className="v3-kit-h2" id="k-social">
+            Find me on
+          </h2>
+          <SocialLinks igFollowers={audience.followers} />
+        </section>
+
         {/* ---------------- Best work, playable ---------------- */}
-        {audience.best.length ? (
+        {showcase.items.length ? (
+          <section className="v3-kit-section" aria-labelledby="k-work">
+            <h2 className="v3-kit-h2" id="k-work">
+              Work across the board
+            </h2>
+            <ShowcaseGrid />
+          </section>
+        ) : audience.best.length ? (
           <section className="v3-kit-section" aria-labelledby="k-work">
             <h2 className="v3-kit-h2" id="k-work">
               Best work, last 3 months

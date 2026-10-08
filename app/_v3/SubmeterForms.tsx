@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading, setReadingTenant } from '@/lib/submeter-actions'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { addSubmeterBill, addSubmeterReadings, deleteSubmeterBill, deleteSubmeterReading, setReadingPaid, setReadingTenant } from '@/lib/submeter-actions'
 import Icon from '@/app/_components/Icon'
-import { today } from './pages/property/shared'
+import { dmy, today } from './pages/property/shared'
 
 // Add forms and delete buttons for the Sub-meter page. Typing a reading or bill that already exists
 // for the same unit and date (or bill date) replaces it, so that is how a mistake is corrected.
@@ -11,7 +11,7 @@ import { today } from './pages/property/shared'
 type Msg = { ok: boolean; text: string } | null
 
 /** One meter per unit, each billed to a tenant (preset to whoever the unit's last reading was billed to). */
-export function ReadingForm({ propertyId, units, tenants, rate, tagging }: { propertyId: string; units: { unit: string; tenant: string | null }[]; tenants: string[]; rate: number; tagging: boolean }) {
+export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }: { propertyId: string; units: { unit: string; tenant: string | null; empty: boolean }[]; tenants: string[]; rate: number; tagging: boolean; kinds: boolean }) {
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `reading-${propertyId}`
@@ -33,30 +33,8 @@ export function ReadingForm({ propertyId, units, tenants, rate, tagging }: { pro
         <span>Date you read the meters</span>
         <input className="v3-select" type="date" name="read_on" defaultValue={today()} required />
       </label>
-      {units.map(({ unit, tenant }) => (
-        <fieldset key={unit} className="v3-sub-meter">
-          <legend>{unit}</legend>
-          <input type="hidden" name="unit" value={unit} />
-          <label>
-            <span>Meter reading</span>
-            <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
-          </label>
-          {tagging ? (
-            <label>
-              <span>Billed to</span>
-              <select className="v3-select" name="tenant" defaultValue={tenant ?? ''}>
-                <option value="">No tenant (empty unit)</option>
-                {tenants.map(t => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <input type="hidden" name="tenant" value="" />
-          )}
-        </fieldset>
+      {units.map(u => (
+        <UnitMeter key={u.unit} {...u} tenants={tenants} tagging={tagging} kinds={kinds} />
       ))}
       <details>
         <summary>Rate and note</summary>
@@ -160,6 +138,51 @@ export function DeleteRow({ id, kind }: { id: number; kind: 'reading' | 'bill' }
   )
 }
 
+/** One unit's meter in the reading form: the number, what kind of reading it is, and who it is billed to.
+ *  After a move-out the unit is empty, so the next reading starts as a move-in. */
+function UnitMeter({ unit, tenant, empty, tenants, tagging, kinds }: { unit: string; tenant: string | null; empty: boolean; tenants: string[]; tagging: boolean; kinds: boolean }) {
+  const [kind, setKind] = useState(empty && kinds ? 'move_in' : 'reading')
+  return (
+    <fieldset className="v3-sub-meter">
+      <legend>{unit}</legend>
+      <input type="hidden" name="unit" value={unit} />
+      <label>
+        <span>Meter reading</span>
+        <input className="v3-select num" name="reading" inputMode="decimal" autoComplete="off" placeholder="as shown on the meter" />
+      </label>
+      {kinds ? (
+        <label>
+          <span>Type</span>
+          <select className="v3-select" name="kind" value={kind} onChange={e => setKind(e.currentTarget.value)}>
+            <option value="reading">Regular reading</option>
+            <option value="move_out">Move-out: tenant&rsquo;s final reading</option>
+            <option value="move_in">Move-in: new tenant&rsquo;s starting reading</option>
+          </select>
+        </label>
+      ) : (
+        <input type="hidden" name="kind" value="reading" />
+      )}
+      {tagging ? (
+        <label>
+          <span>{kind === 'move_in' ? 'Tenant moving in' : kind === 'move_out' ? 'Tenant moving out' : 'Billed to'}</span>
+          <select className="v3-select" name="tenant" defaultValue={empty ? '' : (tenant ?? '')} required={kind !== 'reading'}>
+            <option value="">{kind === 'move_in' ? 'Pick the new tenant' : kind === 'move_out' ? 'Pick the tenant' : 'No tenant: empty unit, my own use'}</option>
+            {tenants.map(t => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <input type="hidden" name="tenant" value="" />
+      )}
+      {kind === 'move_in' ? <p className="v3-sub-hint">Their starting number — not a charge. Use since the last reading is billed to you (owner) with no charge.</p> : null}
+      {kind === 'move_out' ? <p className="v3-sub-hint">Billed to them up to today. Moving in the same day? This is enough — the new tenant&rsquo;s first bill starts here.</p> : null}
+    </fieldset>
+  )
+}
+
 /** Who a reading's usage is billed to, changed in place from the charges table. */
 export function TenantTag({ id, tenant, tenants }: { id: number; tenant: string | null; tenants: string[] }) {
   const [pending, start] = useTransition()
@@ -191,5 +214,100 @@ export function TenantTag({ id, tenant, tenants }: { id: number; tenant: string 
       </select>
       {err ? <span className="v3-prop-msg">{err}</span> : null}
     </span>
+  )
+}
+
+/** Paid or not, per charge. Clicking opens a popup to record the date the tenant paid — today by default, or any
+ *  earlier day when it is recorded late — or to clear it. An in-page dialog: some browsers block native pop-ups. */
+export function PaidCell({ id, paidOn, readOn, what, earlier, tenant }: { id: number; paidOn: string | null; readOn: string; what: string; earlier: number; tenant: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      {paidOn ? (
+        <button type="button" className="v3-tag v3-sub-paid" data-paid="true" onClick={() => setOpen(true)} title="Change or clear the payment date">
+          Paid {dmy(paidOn)}
+        </button>
+      ) : (
+        <button type="button" className="v3-tag v3-sub-paid" onClick={() => setOpen(true)}>
+          Mark paid
+        </button>
+      )}
+      {open ? <PaidDialog id={id} paidOn={paidOn} readOn={readOn} what={what} earlier={earlier} tenant={tenant} onClose={() => setOpen(false)} /> : null}
+    </>
+  )
+}
+
+function PaidDialog({ id, paidOn, readOn, what, earlier, tenant, onClose }: { id: number; paidOn: string | null; readOn: string; what: string; earlier: number; tenant: string; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const [date, setDate] = useState(paidOn ?? today())
+  const [alsoEarlier, setAlsoEarlier] = useState(false)
+  const [pending, start] = useTransition()
+  const [err, setErr] = useState<string | null>(null)
+  useEffect(() => {
+    ref.current?.showModal()
+  }, [])
+  const save = (value: string | null) => {
+    setErr(null)
+    start(async () => {
+      const r = await setReadingPaid(id, value, alsoEarlier)
+      if (r.ok) onClose()
+      else setErr(r.error)
+    })
+  }
+  return (
+    <dialog
+      ref={ref}
+      className="v3-sub-dialog"
+      aria-labelledby={`paid-${id}`}
+      onCancel={e => {
+        e.preventDefault()
+        onClose()
+      }}
+      onClick={e => e.target === e.currentTarget && onClose()} // a click on the backdrop closes it
+    >
+      <form
+        className="v3-prop-form"
+        onSubmit={e => {
+          e.preventDefault()
+          save(date)
+        }}
+      >
+        <h2 className="v3-panel-title" id={`paid-${id}`}>
+          {paidOn ? 'Payment received' : 'Record a payment'}
+        </h2>
+        <p className="v3-panel-note" style={{ margin: 0 }}>
+          {what}
+        </p>
+        <label>
+          <span>Date {tenant} paid</span>
+          <input className="v3-select" type="date" value={date} min={readOn} max={today()} onChange={e => setDate(e.currentTarget.value)} required autoFocus />
+        </label>
+        {earlier > 0 ? (
+          <label className="v3-sub-check">
+            <input type="checkbox" checked={alsoEarlier} onChange={e => setAlsoEarlier(e.currentTarget.checked)} />
+            <span>
+              Also mark {tenant}&rsquo;s {earlier === 1 ? 'earlier unpaid charge' : `${earlier} earlier unpaid charges`} on this unit as paid on this same date
+            </span>
+          </label>
+        ) : null}
+        <p className="v3-prop-msg" role="status">
+          {err}
+        </p>
+        <div className="v3-sub-dialog-foot">
+          {paidOn ? (
+            <button type="button" className="v3-btn" disabled={pending} onClick={() => save(null)}>
+              Not paid yet
+            </button>
+          ) : null}
+          <span style={{ flex: 1 }} />
+          <button type="button" className="v3-btn" onClick={onClose} disabled={pending}>
+            Cancel
+          </button>
+          <button type="submit" className="v3-btn v3-btn-primary" disabled={pending || !date}>
+            {pending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </form>
+    </dialog>
   )
 }

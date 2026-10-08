@@ -1,12 +1,14 @@
 import '../v3.css'
 import '../kit2.css'
 import { v3Fonts } from '../fonts'
-import type { Audience } from '@/lib/v3/audience'
+import { publicCountries, sharePct, type Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import type { Share } from '@/lib/instagram'
 import Icon from '@/app/_components/Icon'
 import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
+import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
+import SocialLinks from '@/app/_components/SocialLinks'
 
 // 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
 // door's calm: one KLCC night photo behind everything, Aereon's portrait first,
@@ -37,7 +39,7 @@ const Mail = () => (
   </svg>
 )
 
-function ShareList({ items, max = 4 }: { items: Share[]; max?: number }) {
+function ShareList({ items, max = 4, precise }: { items: Share[]; max?: number; precise?: boolean }) {
   const top = items.slice(0, max)
   const peak = Math.max(1, ...top.map(s => s.pct))
   return (
@@ -48,7 +50,7 @@ function ShareList({ items, max = 4 }: { items: Share[]; max?: number }) {
           <span className="k3-share-bar" aria-hidden="true">
             <i style={{ ['--w' as string]: (s.pct / peak).toFixed(3) }} />
           </span>
-          <b className="num">{Math.round(s.pct)}%</b>
+          <b className="num">{precise ? sharePct(s.pct) : Math.round(s.pct)}%</b>
         </li>
       ))}
     </ul>
@@ -64,7 +66,6 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
   const reach = fresh ? (view?.totals.reach ?? 0) : 0
   const views = fresh ? (view?.totals.views ?? 0) : 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
-  const adPct = fresh ? (view?.adPct ?? null) : null
   const posts = audience.best.slice(0, 10) // two rows of five
   const updated = view?.capturedAt ?? audience.snap?.captured_at
   const women = view?.genders.find(g => /^f/i.test(g.key))
@@ -97,17 +98,17 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="k3-face" src="/img/aereon.jpg" alt="Aereon Wong" />
             <div>
-              <p className="k3-name">Hi, I&rsquo;m Aereon.</p>
+              <p className="k3-name">Hi, I&rsquo;m Aereon Wong.</p>
               <p className="k3-role">Tech &amp; Travel Content Creator · drone pilot · Kuala Lumpur</p>
             </div>
           </div>
           <h1 className="k3-headline">
-            Tech &amp; travel,
+            Tech and Travel
             <br />
-            shot from <span className="k3-tint">the sky</span>.
+            <span className="k3-tint">Content Creator</span>
           </h1>
           <p className="k3-blurb">
-            Creative travel and tech content, and CAAM-licensed aerial work — launch campaigns, hotels and tourism, from
+            Creative travel and tech content, and aerial work — launch campaigns, hotels and tourism, from
             KLCC rooftops to island resorts. Creating since {since}.
           </p>
           <div className="k3-cta">
@@ -144,14 +145,15 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
                 <dt>Of reach · not following yet</dt>
               </div>
             ) : null}
-            <div className="k3-stat">
-              <dd>CAAM</dd>
-              <dt>Licensed drone pilot</dt>
-            </div>
           </dl>
-          {reach && adPct ? (
-            <p className="k3-fine">Instagram&rsquo;s 30-day reach includes about {Math.round(adPct)}% from boosted posts.</p>
-          ) : null}
+        </section>
+
+        {/* ------------------------------------------------ channels */}
+        <section className="k3-section" aria-labelledby="k3-social">
+          <h2 className="k3-h2" id="k3-social">
+            Find me on
+          </h2>
+          <SocialLinks igFollowers={audience.followers} />
         </section>
 
         {/* ------------------------------------------------ audience */}
@@ -164,7 +166,7 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
               {view.countries.length ? (
                 <div className="k3-card">
                   <h3>Where they are</h3>
-                  <ShareList items={view.countries} />
+                  <ShareList items={publicCountries(view.countries)} precise />
                 </div>
               ) : null}
               {view.ages.length ? (
@@ -195,8 +197,17 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
           </section>
         ) : null}
 
-        {/* ------------------------------------------------ best work */}
-        {posts.length ? (
+        {/* ------------------------------------------------ work */}
+        {/* Two years of work, one tile per kind (lib/showcase.ts); the recent
+            feed is only the fallback, since lately it is mostly KLCC. */}
+        {showcase.items.length ? (
+          <section className="k3-section" aria-labelledby="k3-work">
+            <h2 className="k3-h2" id="k3-work">
+              Work across the board
+            </h2>
+            <ShowcaseGrid />
+          </section>
+        ) : posts.length ? (
           <section className="k3-section" aria-labelledby="k3-work">
             <h2 className="k3-h2" id="k3-work">
               Recent best work
@@ -210,9 +221,9 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.thumb} alt="" loading="lazy" />
                     ) : null}
-                    {p.reach !== undefined ? (
+                    {(p.views ?? p.reach) !== undefined ? (
                       <span className="k3-post-reach">
-                        <b className="num">{compact(p.reach)}</b> reached
+                        <b className="num">{compact((p.views ?? p.reach)!)}</b> {p.views !== undefined ? 'views' : 'reached'}
                       </span>
                     ) : null}
                   </a>

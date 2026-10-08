@@ -37,6 +37,15 @@ create table if not exists submeter_bill (
 -- collected from the tenant, never counted as a property cost.
 alter table submeter_reading add column if not exists tenant_name text;
 
+-- When the tenant paid the charge on this reading (added 4 Oct 2026). Blank = still to collect. Typed when the
+-- money arrives, or later: it is the real payment date, not the day it was recorded.
+alter table submeter_reading add column if not exists paid_on date;
+
+-- What a reading marks (added 5 Oct 2026): 'reading' bills the usage since the previous one; 'move_out' is a
+-- tenant's final reading (billed as usual); 'move_in' is a new tenant's starting number, never a charge. Usage that
+-- ends at a move-in reading happened between tenants: billed to the owner, no charge.
+alter table submeter_reading add column if not exists kind text not null default 'reading' check (kind in ('reading', 'move_in', 'move_out'));
+
 -- Server-side only, like every other table here: RLS on, no policies.
 alter table submeter_reading enable row level security;
 alter table submeter_bill    enable row level security;
