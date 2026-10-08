@@ -18,10 +18,15 @@ export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from
  *  built from whichever field carries the design id. Same fields `hasDesign`
  *  below already checks; this just turns them into an openable URL too. */
 function canvaUrlOf(m: Rec['meta']): string | null {
+  // Open the EDITOR, not the share/preview page: /design/<id>/edit sends the
+  // signed-in owner straight into Canva's editor. Short `/d/<token>` share
+  // links carry no design id, so those stay as stored.
+  const id = m?.canva_design ?? m?.render?.design_id
+    ?? String(m?.canva_url ?? m?.render?.view_url ?? '').match(/\/design\/(D[A-Za-z0-9_-]{10})\b/)?.[1]
+  if (id) return `https://www.canva.com/design/${id}/edit`
   if (m?.canva_url) return String(m.canva_url)
   if (m?.render?.view_url) return String(m.render.view_url)
-  const id = m?.canva_design ?? m?.render?.design_id
-  return id ? `https://www.canva.com/design/${id}/view` : null
+  return null
 }
 
 export function paymentOf(r: Pick<Rec, 'status' | 'due_date' | 'meta'>, today = new Date().toISOString().slice(0, 10)): Payment {
