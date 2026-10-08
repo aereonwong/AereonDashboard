@@ -125,7 +125,7 @@ export const PAGES: PublicPage[] = [
       {
         heading: 'What this website collects',
         body: [
-          'The public pages of aereonwong.com (home, about, contact and privacy) do not ask visitors for any personal information, do not set tracking or advertising cookies, and do not run third-party analytics or advertising scripts. Pages load fonts from Google Fonts, and the site is hosted on Vercel, which keeps standard server logs such as IP address and user agent for security and operations.',
+          'The public pages of aereonwong.com (home, about, contact and privacy) do not ask visitors for any personal information, do not set tracking or advertising cookies, and do not run advertising scripts. Each page view is counted anonymously (page, country and city, device and browser type, and the site the visitor came from) using Vercel Web Analytics and a log kept in the website’s own database. No IP address is stored, visitors are told apart only by a hash that changes every day, and the website’s own log does not count browsers that send Do Not Track or Global Privacy Control. Pages load fonts from Google Fonts, and the site is hosted on Vercel, which keeps standard server logs such as IP address and user agent for security and operations.',
         ],
       },
       {
@@ -157,7 +157,7 @@ export const PUBLIC_EXACT = [
 ]
 export const PUBLIC_PREFIX = [
   '/login', '/api/login', '/api/auth/google', '/api/logout', '/api/telegram',
-  '/api/cron-daily', '/api/cron-news', '/api/cron-instagram', '/icons', '/img', '/_next',
+  '/api/cron-daily', '/api/cron-news', '/api/cron-instagram', '/api/track', '/icons', '/img', '/_next',
 ]
 /** Top-level folders under app/(app). A new one must be added here; tests/agent-site.test.mjs checks. */
 export const PRIVATE_SEGMENTS = [
@@ -166,7 +166,7 @@ export const PRIVATE_SEGMENTS = [
 ]
 /** Folders under app/api that exist (public ones above are listed too). */
 export const API_SEGMENTS = [
-  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'instagram', 'invoices', 'login', 'logout', 'telegram',
+  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'instagram', 'invoices', 'login', 'logout', 'telegram', 'track',
 ]
 
 const under = (path: string, base: string) => path === base || path.startsWith(base + '/')
