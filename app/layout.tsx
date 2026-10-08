@@ -1,4 +1,5 @@
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { SITE_URL, SITE_NAME, OG_IMAGE } from '@/lib/agent-site'
 
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="bg-photo" aria-hidden="true" />
         <div className="bg-veil" aria-hidden="true" />
         {children}
+        <Analytics />
       </body>
     </html>
   )
