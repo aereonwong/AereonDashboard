@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/*.test.mjs\"",
     "webhook:set": "node --env-file-if-exists=.env scripts/set-webhook.mjs",
     "webhook:info": "node --env-file-if-exists=.env scripts/webhook-info.mjs",
     "import": "node --env-file-if-exists=.env scripts/import.mjs",
