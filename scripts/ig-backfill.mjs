@@ -63,33 +63,7 @@ if (!id) throw new Error('Instagram account id missing')
 // ------------------------------------------------------------------ posts
 if (doPosts) {
   const CACHE = fileURLToPath(new URL('../.ig-backfill.json', import.meta.url))
-  // The cached list is reused for a day (resuming a throttled run); --refresh or an
-  // older cache lists again, so new posts and current likes are picked up.
-  const fresh = existsSync(CACHE) && !args.includes('--refresh') && Date.now() - statSync(CACHE).mtimeMs < 86_400_000
-  let posts = fresh ? JSON.parse(readFileSync(CACHE, 'utf8')) : null
-  if (!posts) {
-    posts = []
-    let after
-    // 12 a page: bigger pages with captions come back empty.
-    for (let page = 0; page < 1000; page++) {
-      const res = await exec('INSTAGRAM_GET_IG_USER_MEDIA', {
-        ig_user_id: id,
-        limit: 12,
-        fields: 'id,caption,media_type,media_product_type,permalink,shortcode,timestamp,like_count,comments_count',
-        ...(after ? { after } : {}),
-      })
-      const items = res?.data?.data ?? []
-      for (const m of items) posts.push(m)
-      await breathe()
-      after = res?.data?.paging?.cursors?.after
-      process.stdout.write(`\rListed ${posts.length} posts…`)
-      if (!items.length || !after) break
-    }
-    writeFileSync(CACHE, JSON.stringify(posts))
-  }
-  console.log(`\rListed ${posts.length} posts.`)
-
-  const rows = posts.map(m => ({
+  const toRow = m => ({
     media_id: String(m.id),
     shortcode: m.shortcode ?? m.permalink?.match(/\/(?:p|reel|tv)\/([^/]+)/)?.[1] ?? null,
     posted_at: m.timestamp ?? null,
@@ -100,12 +74,41 @@ if (doPosts) {
     likes: typeof m.like_count === 'number' ? m.like_count : null,
     comments: typeof m.comments_count === 'number' ? m.comments_count : null,
     updated_at: new Date().toISOString(),
-  }))
-  for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db.from('ig_posts').upsert(rows.slice(i, i + 500), { onConflict: 'media_id' })
-    if (error) throw new Error(`ig_posts: ${error.message}`)
+  })
+  // The list is saved page by page ({ posts, after, done }), so a run stopped
+  // mid-listing resumes from the last cursor. A finished list is reused for a day;
+  // --refresh or an older one lists again, picking up new posts and current likes.
+  let cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, 'utf8')) : null
+  if (Array.isArray(cache)) cache = { posts: cache, after: null, done: true } // older format
+  const stale = cache?.done && (args.includes('--refresh') || Date.now() - statSync(CACHE).mtimeMs >= 86_400_000)
+  if (!cache || stale) cache = { posts: [], after: null, done: false }
+  const posts = cache.posts
+  if (!cache.done) {
+    if (posts.length) console.log(`Resuming the list after ${posts.length} posts.`)
+    // 12 a page: bigger pages with captions come back empty.
+    for (let page = 0; page < 1000; page++) {
+      const res = await exec('INSTAGRAM_GET_IG_USER_MEDIA', {
+        ig_user_id: id,
+        limit: 12,
+        fields: 'id,caption,media_type,media_product_type,permalink,shortcode,timestamp,like_count,comments_count',
+        ...(cache.after ? { after: cache.after } : {}),
+      })
+      const items = res?.data?.data ?? []
+      for (const m of items) posts.push(m)
+      if (items.length) {
+        const { error } = await db.from('ig_posts').upsert(items.map(toRow), { onConflict: 'media_id' })
+        if (error) throw new Error(`ig_posts: ${error.message}`)
+      }
+      cache.after = res?.data?.paging?.cursors?.after ?? null
+      cache.done = !items.length || !cache.after
+      writeFileSync(CACHE, JSON.stringify(cache))
+      process.stdout.write(`\rListed ${posts.length} posts…`)
+      if (cache.done) break
+      await breathe()
+    }
   }
-  console.log(`✅ ig_posts: ${rows.length} posts saved.`)
+  console.log(`\rListed ${posts.length} posts.`)
+  console.log(`✅ ig_posts: ${posts.length} posts saved.`)
 
   // Insights only for posts that have none stored yet.
   const have = new Set()
