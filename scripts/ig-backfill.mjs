@@ -6,6 +6,7 @@
 //   npm run ig:backfill -- --posts   only the post list and post insights
 //   npm run ig:backfill -- --account only account windows and daily reach
 //   npm run ig:backfill -- --pace=900 calls per hour (default 600)
+//   npm run ig:backfill -- --since=2020-01-01  insights only for posts from that date
 //
 // Resumable: posts that already have a metrics row are skipped, so a run cut
 // short by Instagram's rate limit just carries on next time. The post list is
@@ -118,8 +119,10 @@ if (doPosts) {
     for (const r of data) have.add(r.media_id)
     if (data.length < 1000) break
   }
+  // --since=YYYY-MM-DD: older posts are listed but their insights are not fetched.
+  const since = args.find(a => a.startsWith('--since='))?.split('=')[1] ?? ''
   const todo = posts
-    .filter(m => !have.has(String(m.id)))
+    .filter(m => !have.has(String(m.id)) && (!since || String(m.timestamp ?? '') >= since))
     .map(m => ({
       id: String(m.id),
       timestamp: m.timestamp ?? '',
