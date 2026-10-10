@@ -9,6 +9,7 @@ import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { EMAIL } from '@/lib/agent-site'
 
 // 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
 // door's calm: one KLCC night photo behind everything, Aereon's portrait first,
@@ -26,7 +27,6 @@ const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {
   Other: null,
 }
 
-const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
 // The logo wall always fills whole rows: 15 → 5·5·5, 12 → 6·6, 10 → 5·5, 9 → 3·3·3.
