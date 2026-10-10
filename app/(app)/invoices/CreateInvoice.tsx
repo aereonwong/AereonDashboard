@@ -54,6 +54,7 @@ export default function CreateInvoice({
   onSaved,
   edit,
   fromQuote,
+  kind = 'invoice',
   onClose,
 }: {
   options: FormOptions
@@ -64,6 +65,9 @@ export default function CreateInvoice({
   edit?: EditTarget
   /** Open straight away, filled in from this quote, and file a NEW invoice linked to it. */
   fromQuote?: QuoteSource
+  /** 'quotation': the same form files a quote — own number series, no payment
+   *  status or due date, a validity period instead. Never income. */
+  kind?: 'invoice' | 'quotation'
   onClose?: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -93,6 +97,7 @@ export default function CreateInvoice({
     dueDate: '',
     dueTouched: false,
     status: 'waiting' as InvoiceForm['status'],
+    validity: '14',
   })
   // Editing keeps the due date as filed rather than recomputing it from the terms.
   const [f, setF] = useState(() =>
@@ -100,7 +105,10 @@ export default function CreateInvoice({
   )
   const wasPaid = edit?.values.status === 'paid'
   // Field ids differ per dialog: Create and Edit can both be on the page at once.
-  const px = edit ? `ce${edit.id}` : fromQuote ? `cq${fromQuote.id}` : 'ci'
+  const isQuote = kind === 'quotation' && !edit && !fromQuote
+  const doc = isQuote ? 'quotation' : 'invoice'
+  const Doc = isQuote ? 'Quotation' : 'Invoice'
+  const px = edit ? `ce${edit.id}` : fromQuote ? `cq${fromQuote.id}` : isQuote ? 'nq' : 'ci'
 
   useEffect(() => {
     if (edit || fromQuote) dialog.current?.showModal()
@@ -132,6 +140,8 @@ export default function CreateInvoice({
   const known = clientByName.get(f.client.trim().toLowerCase())
 
   const toForm = (): InvoiceForm => ({
+    kind: isQuote ? 'quotation' : 'invoice',
+    validityDays: isQuote ? Number(f.validity) : undefined,
     client: { name: f.client.trim(), contact: f.contact, address: f.address.replace(/\s*\n\s*/g, ', '), reg: f.reg },
     job: f.job,
     venue: f.venue,
@@ -148,7 +158,7 @@ export default function CreateInvoice({
     // The firm link only holds while the reference still names that quote.
     quotationId: fromQuote && f.quotation.trim() === fromQuote.no ? fromQuote.id : undefined,
     date: f.date,
-    dueDate: f.dueDate || undefined,
+    dueDate: isQuote ? undefined : f.dueDate || undefined,
     status: f.status,
   })
 
@@ -224,7 +234,7 @@ export default function CreateInvoice({
     <>
       {edit || fromQuote ? null : (
         <button type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
-          <Icon name="plus" /> Create invoice
+          <Icon name="plus" /> Create {doc}
         </button>
       )}
 
@@ -238,7 +248,7 @@ export default function CreateInvoice({
         }}
       >
         <div className="idt-dialog-head">
-          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : edit ? `Edit ${edit.no}` : fromQuote ? `Invoice from ${fromQuote.no}` : 'Create invoice'}</h2>
+          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : edit ? `Edit ${edit.no}` : fromQuote ? `Invoice from ${fromQuote.no}` : `Create ${doc}`}</h2>
           <button type="button" className="idt-act" onClick={close} aria-label="Close" disabled={busy}>
             <Icon name="close" />
           </button>
@@ -249,7 +259,7 @@ export default function CreateInvoice({
             <div className="idt-wait" role="status">
               <Icon name="refresh" />
               <div>
-                <b>{edit ? 'Redrawing the invoice in Canva…' : 'Drawing the invoice in Canva…'}</b>
+                <b>{edit ? 'Redrawing the invoice in Canva…' : `Drawing the ${doc} in Canva…`}</b>
                 <br />
                 Copying the template and filling it in. About 15 seconds.
               </div>
@@ -267,7 +277,7 @@ export default function CreateInvoice({
                 <div className="idt-preview-img">
                   {preview?.preview.previewUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={preview.preview.previewUrl} alt={`Preview of invoice ${preview.no}`} />
+                    <img src={preview.preview.previewUrl} alt={`Preview of ${doc} ${preview.no}`} />
                   ) : (
                     <div className="idt-wait">Canva sent no preview image.</div>
                   )}
@@ -287,16 +297,31 @@ export default function CreateInvoice({
                     </dd>
                     <dt>Dated</dt>
                     <dd>{f.date}</dd>
-                    <dt>Due</dt>
-                    <dd>{f.dueDate || '—'}</dd>
-                    <dt>Payment</dt>
-                    <dd>{f.status === 'paid' ? 'Already paid' : f.status === 'waiting' ? 'Awaiting payment' : 'Not tracked'}</dd>
+                    {isQuote ? (
+                      <>
+                        <dt>Valid for</dt>
+                        <dd>{f.validity} days</dd>
+                      </>
+                    ) : (
+                      <>
+                        <dt>Due</dt>
+                        <dd>{f.dueDate || '—'}</dd>
+                        <dt>Payment</dt>
+                        <dd>{f.status === 'paid' ? 'Already paid' : f.status === 'waiting' ? 'Awaiting payment' : 'Not tracked'}</dd>
+                      </>
+                    )}
                   </dl>
                   {edit ? (
                     <p className="note">
                       Nothing is changed yet. <b>Save changes</b> asks you to confirm, then replaces the invoice&apos;s
                       Canva design, moves its old Drive PDF to trash and updates your records. Same number:{' '}
                       <b>{edit.no}</b>.
+                    </p>
+                  ) : isQuote ? (
+                    <p className="note">
+                      Nothing is saved yet. <b>Save quotation</b> keeps this Canva design, files it in Canva&apos;s
+                      Quotation folder and adds it to Quotations. A quotation is never counted as income — it becomes
+                      one when you Convert it to an invoice.
                     </p>
                   ) : (
                   <p className="note">
@@ -316,7 +341,7 @@ export default function CreateInvoice({
                 Discard
               </button>
               <button type="button" className="idt-btn primary" onClick={askThenSave} disabled={busy}>
-                <Icon name="check" /> {phase === 'saving' ? 'Saving…' : edit ? 'Save changes' : 'Save invoice'}
+                <Icon name="check" /> {phase === 'saving' ? 'Saving…' : edit ? 'Save changes' : `Save ${doc}`}
               </button>
             </div>
           </>
@@ -474,7 +499,7 @@ export default function CreateInvoice({
                   />
                 </div>
                 <p className="idt-total">
-                  Invoice total <b>{fmt(net, f.currency)}</b>
+                  {Doc} total <b>{fmt(net, f.currency)}</b>
                   {f.currency !== 'MYR' ? ' — kept out of ringgit totals' : ''}
                 </p>
                 <div className="idt-field">
@@ -494,6 +519,27 @@ export default function CreateInvoice({
                     ))}
                   </select>
                 </div>
+                {isQuote ? (
+                  <div className="idt-field">
+                    <label htmlFor={`${px}-valid`}>Valid for (days)</label>
+                    <input
+                      id={`${px}-valid`}
+                      type="number"
+                      inputMode="numeric"
+                      list={`${px}-valids`}
+                      min="1"
+                      max="365"
+                      step="1"
+                      required
+                      value={f.validity}
+                      onChange={e => set('validity', e.target.value)}
+                    />
+                    <datalist id={`${px}-valids`}>
+                      <option value="14" />
+                      <option value="30" />
+                    </datalist>
+                  </div>
+                ) : (
                 <div className="idt-field">
                   <label htmlFor={`${px}-status`}>Payment status</label>
                   <select id={`${px}-status`} value={f.status} onChange={e => set('status', e.target.value as InvoiceForm['status'])}>
@@ -502,6 +548,7 @@ export default function CreateInvoice({
                     <option value="issued">Don&apos;t track payment</option>
                   </select>
                 </div>
+                )}
                 {f.termsKey === 'custom' ? (
                   <div className="idt-field s6">
                     <label htmlFor={`${px}-tterms`}>Terms as printed</label>
@@ -509,11 +556,13 @@ export default function CreateInvoice({
                   </div>
                 ) : null}
 
-                <div className="idt-section">Dates &amp; reference</div>
+                <div className="idt-section">{isQuote ? 'Date' : <>Dates &amp; reference</>}</div>
                 <div className="idt-field s2">
-                  <label htmlFor={`${px}-date`}>Invoice date</label>
+                  <label htmlFor={`${px}-date`}>{Doc} date</label>
                   <input id={`${px}-date`} type="date" required value={f.date} onChange={e => set('date', e.target.value)} />
                 </div>
+                {isQuote ? null : (
+                <>
                 <div className="idt-field s2">
                   <label htmlFor={`${px}-due`}>
                     Due date <span className="opt">(optional)</span>
@@ -539,6 +588,8 @@ export default function CreateInvoice({
                     ))}
                   </datalist>
                 </div>
+                </>
+                )}
               </div>
             </div>
             <div className="idt-dialog-foot">

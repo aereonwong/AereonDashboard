@@ -6,6 +6,7 @@ import { supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
 import { invoiceRow, nextInvoiceNo, fileInvoice, TERMS, type Draft, type Currency } from '@/lib/invoice-intake'
 import { startRender, commitRender, discardRender, type RenderPreview } from '@/lib/invoice-canva'
+import type { DocKind } from '@/lib/invoice-render'
 import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
 import { loadEditable, withRowDates, applyEdit, undoLastEdit } from '@/lib/invoice-edit'
@@ -20,6 +21,8 @@ import { loadEditable, withRowDates, applyEdit, undoLastEdit } from '@/lib/invoi
 //   Undo edit:       undoEdit — puts the row, Canva design and Drive PDF back.
 
 export type InvoiceForm = {
+  /** Invoice (default) or quotation — same form, own number series, template and Canva folder. */
+  kind?: DocKind
   client: { name: string; contact?: string; address?: string; reg?: string }
   job: string
   venue?: string
@@ -38,6 +41,8 @@ export type InvoiceForm = {
   date: string
   dueDate?: string
   status: 'waiting' | 'paid' | 'issued'
+  /** Quotations only: days the quote stays valid (printed on it). */
+  validityDays?: number
 }
 
 type Fail = { ok: false; error: string }
@@ -57,13 +62,18 @@ async function guard(): Promise<Fail | null> {
 }
 
 /** Everything the form must have, checked on the server as well as in the browser. */
+const kindOf = (f: InvoiceForm): DocKind => (f.kind === 'quotation' ? 'quotation' : 'invoice')
+const noun = (f: InvoiceForm) => kindOf(f)
+
 function validate(f: InvoiceForm): string | null {
   if (!f.client?.name?.trim()) return 'Pick or enter a client'
   if (!f.job?.trim()) return 'Enter the job name'
   if (!(f.amount > 0)) return 'Enter an amount above zero'
   if (f.discount && (f.discount < 0 || f.discount >= f.amount)) return 'The discount must be less than the amount'
   if (!CURRENCIES.includes(f.currency)) return 'Pick a currency'
-  if (!ISO.test(f.date)) return 'Pick the invoice date'
+  if (!ISO.test(f.date)) return `Pick the ${noun(f)} date`
+  if (kindOf(f) === 'quotation' && !(Number.isInteger(f.validityDays) && f.validityDays! >= 1 && f.validityDays! <= 365))
+    return 'Enter how many days the quotation stays valid (1–365)'
   if (f.eventDate && !ISO.test(f.eventDate)) return 'The job date is not a valid date'
   if (f.dueDate && !ISO.test(f.dueDate)) return 'The due date is not a valid date'
   if (f.dueDate && f.dueDate < f.date) return 'The due date is before the invoice date'
@@ -74,8 +84,9 @@ function validate(f: InvoiceForm): string | null {
 
 function toDraft(f: InvoiceForm): Draft {
   const clean = (s?: string) => (s && s.trim() && s.trim() !== '-' ? s.trim() : undefined)
+  const isQuote = kindOf(f) === 'quotation'
   return {
-    kind: 'invoice',
+    kind: kindOf(f),
     step: 'confirm',
     client: {
       name: f.client.name.trim(),
@@ -93,8 +104,10 @@ function toDraft(f: InvoiceForm): Draft {
     currency: f.currency,
     discount: f.discount || undefined,
     terms: f.terms.trim(),
-    quotation: clean(f.quotation),
-    quotationId: f.quotationId && clean(f.quotation) ? f.quotationId : undefined,
+    // A quotation has no quotation reference; an invoice has no validity period.
+    quotation: isQuote ? undefined : clean(f.quotation),
+    quotationId: !isQuote && f.quotationId && clean(f.quotation) ? f.quotationId : undefined,
+    validityDays: isQuote ? f.validityDays : undefined,
     date: f.date,
   }
 }
@@ -112,12 +125,12 @@ export async function previewInvoice(form: InvoiceForm): Promise<PreviewResult> 
   if (!composioReady()) return fail('Canva is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
 
   try {
-    const no = await nextInvoiceNo(form.date, 'invoice')
+    const no = await nextInvoiceNo(form.date, kindOf(form))
     const row = invoiceRow(toDraft(form), no)
-    const preview = await startRender({ ...row, id: 0 } as unknown as Rec, 'invoice')
+    const preview = await startRender({ ...row, id: 0 } as unknown as Rec, kindOf(form))
     return { ok: true, no, preview }
   } catch (e) {
-    return fail(`Canva could not draw the invoice: ${msg(e)}`)
+    return fail(`Canva could not draw the ${noun(form)}: ${msg(e)}`)
   }
 }
 
@@ -133,33 +146,34 @@ export async function saveInvoice(form: InvoiceForm, no: string, preview: Render
   if (invalid) return fail(invalid)
 
   // The number is printed on the design, so it must still be the next free one.
-  const expected = await nextInvoiceNo(form.date, 'invoice')
+  const expected = await nextInvoiceNo(form.date, kindOf(form))
   if (expected !== no) {
     await discardRender(preview).catch(() => {})
-    return fail(`${no} was taken by another invoice while you were reviewing. Generate the preview again to get ${expected}.`)
+    return fail(`${no} was taken by another ${noun(form)} while you were reviewing. Generate the preview again to get ${expected}.`)
   }
 
   try {
-    await commitRender({ designId: preview.designId, transactionId: preview.transactionId, invoiceDate: form.date })
+    await commitRender({ designId: preview.designId, transactionId: preview.transactionId, invoiceDate: form.date, kind: kindOf(form) })
   } catch (e) {
     return fail(`Canva could not save the design: ${msg(e)}. Generate the preview again.`)
   }
 
   const now = new Date().toISOString()
+  const isQuote = kindOf(form) === 'quotation'
+  // A quotation keeps the row fileInvoice gives it (doc / 'quotation', never
+  // income): no payment status, no due date.
   const filed = await fileInvoice(toDraft(form), {
     no,
-    status: form.status,
-    dueDate: form.dueDate || null,
+    ...(isQuote ? {} : { status: form.status, dueDate: form.dueDate || null }),
     meta: {
       source: 'dashboard',
-      payment_tracked: form.status !== 'issued',
-      paid_at: form.status === 'paid' ? now : undefined,
+      ...(isQuote ? {} : { payment_tracked: form.status !== 'issued', paid_at: form.status === 'paid' ? now : undefined }),
       canva_design: preview.designId,
       canva_url: preview.viewUrl ?? `https://www.canva.com/design/${preview.designId}/view`,
       render: { status: 'done', design_id: preview.designId, rendered_at: now, source: 'dashboard' },
     },
   })
-  if (!filed) return fail(`The Canva design was saved (${preview.designId}) but the invoice row was not.`)
+  if (!filed) return fail(`The Canva design was saved (${preview.designId}) but the ${noun(form)} row was not.`)
   refresh()
   return { ok: true, id: filed.id, no }
 }
@@ -198,6 +212,7 @@ export async function reuploadToDrive(id: number) {
  *  under the SAME number. Nothing changes until saveEdit. */
 export async function previewEdit(id: number, form: InvoiceForm): Promise<PreviewResult> {
   await requireSession()
+  if (kindOf(form) !== 'invoice') return fail('Only invoices can be edited here.')
   const blocked = await guard()
   if (blocked) return blocked
   const invalid = validate(form)
