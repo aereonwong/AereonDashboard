@@ -236,6 +236,10 @@ export async function previewEdit(id: number, form: InvoiceForm): Promise<Previe
  *  snapshot so the edit can be undone. */
 export async function saveEdit(id: number, form: InvoiceForm, preview: RenderPreview, expectDesign: string) {
   await requireSession()
+  if (kindOf(form) !== 'invoice') {
+    await discardRender(preview).catch(() => {})
+    return fail('Only invoices can be edited here.')
+  }
   const blocked = await guard()
   if (blocked) {
     await discardRender(preview).catch(() => {})
