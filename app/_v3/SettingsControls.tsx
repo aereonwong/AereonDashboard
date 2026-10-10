@@ -205,3 +205,38 @@ export function AccentPicker() {
     </div>
   )
 }
+
+// The Instagram page's view — per device, like the app version.
+export function IgViewPicker({ view }: { view: 'studio' | 'lab' }) {
+  const router = useRouter()
+  const [v, setV] = useState(view)
+  const [pending, start] = useTransition()
+  return (
+    <div className="v3-choice-grid" role="radiogroup" aria-label="Instagram page">
+      {(
+        [
+          ['studio', 'Studio', 'The account and its growth: followers, 30- and 90-day account figures, the latest 40 posts, audience and timing.'],
+          ['lab', 'Content Lab', 'What to post next: every post this year, with one filter bar for timeline, format, angle and hook — which hooks travel, where the brand goes, when to post.'],
+        ] as const
+      ).map(([id, name, note]) => (
+        <button
+          key={id}
+          type="button"
+          className="v3-choice"
+          role="radio"
+          aria-checked={v === id}
+          aria-pressed={v === id}
+          disabled={pending}
+          onClick={() => {
+            setV(id)
+            setCookie('cfo-ig', id)
+            start(() => router.refresh())
+          }}
+        >
+          <span className="v3-choice-name">{name}</span>
+          <span className="v3-choice-note">{note}</span>
+        </button>
+      ))}
+    </div>
+  )
+}

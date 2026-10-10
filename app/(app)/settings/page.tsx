@@ -4,14 +4,14 @@ import { demoMode } from '@/lib/records'
 import Appearance from '@/app/_components/Appearance'
 import DemoToggle from '@/app/_components/DemoToggle'
 import V3Settings from '@/app/_v3/pages/Settings'
-import { readVersion } from '@/lib/v3/version'
+import { readVersion, readIgView } from '@/lib/v3/version'
 import { readSite } from '@/lib/v3/site'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Settings() {
-  const [demo, { version }, site] = await Promise.all([demoMode(), readVersion(), readSite()])
-  if (version === 'v3') return <V3Settings version={version} site={site} demo={demo} />
+  const [demo, { version }, site, igView] = await Promise.all([demoMode(), readVersion(), readSite(), readIgView()])
+  if (version === 'v3') return <V3Settings version={version} site={site} demo={demo} igView={igView} />
   return (
     <>
       <h1 className="ph">Settings ⚙️</h1>

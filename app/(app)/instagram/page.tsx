@@ -10,7 +10,9 @@ import Icon from '@/app/_components/Icon'
 import RefreshButton from '@/app/_components/RefreshButton'
 
 import V3Instagram from '@/app/_v3/pages/Instagram'
-import { readVersion } from '@/lib/v3/version'
+import { readVersion, readIgView } from '@/lib/v3/version'
+import ContentLab from '@/app/_v3/pages/ContentLab'
+import { readLab } from '@/lib/v3/content-lab'
 import { readAudience } from '@/lib/v3/audience'
 import { readIgExtras } from '@/lib/v3/ig-extras'
 
@@ -30,6 +32,10 @@ export default async function Instagram({
 }) {
   const { version } = await readVersion()
   if (version === 'v3') {
+    if ((await readIgView()) === 'lab') {
+      const [lab, audience] = await Promise.all([readLab(), readAudience()])
+      return <ContentLab lab={lab} username={audience.snap?.username || 'aereonwong'} />
+    }
     const [audience, sp, extras] = await Promise.all([readAudience(), searchParams, readIgExtras()])
     return <V3Instagram audience={audience} sp={sp} extras={extras} />
   }

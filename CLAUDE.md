@@ -100,6 +100,14 @@ Contact Sheet and Flight HUD were removed at Aereon's request. **Only v3 is deve
 stay as they are (they must still build). Analytics or design changes cover Dashboard, Invoice
 Summary, Invoice Details, Instagram and Clients together.
 
+**Instagram Content Lab** (10 Oct 2026, `app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
+read in `lib/v3/content-lab.ts`): the second view of the v3 Instagram page, chosen per device in Settings
+(cookie `cfo-ig=lab`; default `studio`). Reads THIS YEAR's posts only (from 1 Jan, Malaysia time — Aereon's
+call) with each post's latest `ig_post_metrics` reading, and filters them in the browser: one sticky bar for
+timeline (year / 90 / 30 days / a month, or click a bar), format, angle, hook. Hook = the caption's first line,
+classified by `HOOKS` (first match wins); angle by `angleOf`; brand placement by `brandOf`. Each panel names the
+filters it ignores. Typical = median; hit = 2× the slice's typical. Empty in demo mode.
+
 **Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
