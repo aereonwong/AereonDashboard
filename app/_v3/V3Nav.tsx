@@ -13,6 +13,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
       { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
       { href: '/invoices', label: 'Invoice Summary', icon: 'invoice' },
       { href: '/invoices/details', label: 'Invoice Details', icon: 'tasks' },
+      { href: '/invoices/quotes', label: 'Quotations', icon: 'design' },
       { href: '/clients', label: 'Clients', icon: 'clients' },
     ],
   },

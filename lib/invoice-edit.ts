@@ -5,7 +5,7 @@ import { composioExec } from './composio-exec'
 import { commitRender, discardRender, fileDesign, parkForDeletion, designIdOf, type RenderPreview } from './invoice-canva'
 import { driveOf, driveStatus, type DriveMeta } from './invoice-drive'
 import { editBlockOf } from './invoice-details'
-import { invoiceRow, rememberClient, type Draft } from './invoice-intake'
+import { invoiceRow, quoteIdFor, rememberClient, type Draft } from './invoice-intake'
 
 // 👉 Edit an invoice already filed, and undo that edit. Same idea as Create
 // Invoice: the template is copied and filled in fresh (a preview Aereon
@@ -118,7 +118,11 @@ export async function applyEdit(
     old_design_id: oldDesign,
     trashed_drive_file: trashed,
   }
-  const next = invoiceRow(draft, no)
+  // Keep the quote link while the printed reference is unchanged; a new reference
+  // is looked up again (lib/quotes.ts reads quotation_id first).
+  const quotationId =
+    (draft.quotation ?? '') === String(prevMeta.quotation_no ?? '') ? prevMeta.quotation_id : await quoteIdFor(draft.quotation)
+  const next = invoiceRow({ ...draft, quotationId }, no)
   const update = {
     title: next.title,
     notes: next.notes,

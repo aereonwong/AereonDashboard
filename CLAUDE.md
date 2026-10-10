@@ -186,6 +186,20 @@ until then the login page is the old passcode form. A verified Google account mu
   Google Cloud. `/api/logout` (POST) clears the cookie; Sign out is in the v3 rail, the classic sidebar and Settings → Account.
   The login page (`app/login/`) is Studio Standard: KLCC photo beside the form, passcode folded under the Google button.
 
+## Quotations (added 10 Oct 2026)
+
+`/invoices/quotes` (v3 + classic sidebar, beside Invoice Details): every quote with its outcome — won / open /
+no invoice / lost — and a **Convert** button that opens Create Invoice filled in from the quote. Logic in
+`lib/quotes.ts`, page in `app/(app)/invoices/quotes/`. A quote is a `doc` row, status `quotation` — never income.
+- **The quote → invoice link lives on the INVOICE only**: `meta.quotation_id` (firm; written by Convert, by
+  `fileInvoice` when a typed reference names exactly one quote, and by the import) and `meta.quotation_no` (the
+  `QUOTATION No.` it prints). Outcome is derived each render, never stored on the quote (except `quote_outcome:
+  'lost'`). One quote can win several invoices (deposit + balance, add-ons).
+- **Old Canva quotes are record-only** (Aereon's call): 65 imported by `npm run quote:import` from git-ignored
+  `.quote-data/`, numbers kept exactly as printed (odd formats and repeats included), designs untouched.
+  `docs/QUOTE-AUDIT.md` has the formats; the client-level findings are in git-ignored `.quote-data/QUOTE-AUDIT.md`.
+- Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
+
 ## Raising an invoice or a quotation
 
 `/invoice` and `/quote` in Telegram — the interview flow, numbering rules, Canva template editing,

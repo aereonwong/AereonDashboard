@@ -15,6 +15,7 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
   { label: 'Invoice', tabs: [
     { href: '/invoices', label: 'Invoice Summary', icon: 'invoice' },
     { href: '/invoices/details', label: 'Invoice Details', icon: 'tasks' },
+    { href: '/invoices/quotes', label: 'Quotations', icon: 'design' },
     { href: '/clients', label: 'Clients', icon: 'clients' },
   ] },
   { label: 'Social', tabs: [

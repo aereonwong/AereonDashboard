@@ -49,6 +49,8 @@ export type DetailRow = {
   undo: { at: string } | null
   /** Instagram posts linked to this invoice (optional), with their latest stored reach. */
   igPosts: ShownPost[]
+  /** The quotation this invoice came from (lib/quotes.ts), or what it prints when that quote isn't on file. */
+  quote: { id: number | null; no: string } | null
 }
 
 /** An invoice's details as the Create / Edit Invoice form holds them (all strings,
