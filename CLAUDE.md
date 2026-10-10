@@ -104,7 +104,7 @@ Summary, Invoice Details, Instagram and Clients together.
 read in `lib/v3/content-lab.ts`): the second view of the v3 Instagram page, chosen per device in Settings
 (cookie `cfo-ig=lab`; default `studio`). Reads THIS YEAR's posts only (from 1 Jan, Malaysia time — Aereon's
 call) with each post's latest `ig_post_metrics` reading, and filters them in the browser: one sticky bar for
-timeline (year / 90 / 30 days / a month, or click a bar), format, angle, hook. Hook = the caption's first line,
+timeline (opens on the last 90 days — or the year so far when that is shorter; also year / 30 days / a month, or click a bar), format, angle, hook. Only "Reach over time" keeps the whole year, as context, with the slice highlighted. Hook = the caption's first line,
 classified by `HOOKS` (first match wins); angle by `angleOf`; brand placement by `brandOf`. Each panel names the
 filters it ignores. Typical = median; hit = 2× the slice's typical. Empty in demo mode.
 

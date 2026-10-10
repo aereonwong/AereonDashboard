@@ -49,6 +49,8 @@ const FORMATS: { key: Format; label: string }[] = [
 const fmtLabel = (f: Format) => FORMATS.find(x => x.key === f)!.label.replace(/s$/, '')
 const hookMeta = (k: HookKey) => HOOKS.find(h => h.key === k)!
 const angleLabel = (k: AngleKey) => ANGLES.find(a => a.key === k)!.label
+/** Month entries in the timeline list are keyed YYYY-MM; the presets are words. */
+const isMonth = (key: string) => /^\d{4}-\d{2}$/.test(key)
 const times = (x: number) => (x >= 10 ? `${x.toFixed(0)}×` : `${x.toFixed(1)}×`)
 const pc = (x: number) => `${Math.round(x * 100)}%`
 /** SVG coordinates to 0.1 unit: Math.log10 can differ in the last digit between server and browser, which breaks hydration. */
@@ -208,7 +210,9 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
   const today = lab.today || (lab.newest ? mytDay(lab.newest) : '')
   const since = lab.since || today.slice(0, 4) + '-01-01'
   const ranges = useMemo(() => [...presets(today, since), ...months(today, since)], [today, since])
-  const [preset, setPreset] = useState('ytd')
+  // Opens on the last 90 days (or the year so far, when that is shorter) — Aereon's default.
+  const DEFAULT = '90'
+  const [preset, setPreset] = useState(DEFAULT)
   const [zoom, setZoom] = useState<{ range: Range; label: string } | null>(null)
   const [format, setFormat] = useState<Format | ''>('')
   const [angle, setAngle] = useState<AngleKey | ''>('')
@@ -229,7 +233,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
   // Before 1 January there is no data in the Lab, so a comparison there would read as a fall to zero.
   const prev = prevRange.from >= since ? pulse(slice(lab.posts, { ...f, range: prevRange })) : null
   const v = verdict(posts)
-  const any = format || angle || hook || zoom || preset !== 'ytd'
+  const any = format || angle || hook || zoom || preset !== DEFAULT
 
   if (!lab.posts.length) {
     return (
@@ -264,7 +268,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
         <div className="lab-fgroup">
           <span className="lab-flabel">Timeline</span>
           <div className="v3-seg">
-            {ranges.slice(0, 3).map(r => (
+            {ranges.filter(r => !isMonth(r.key)).map(r => (
               <button
                 key={r.key}
                 type="button"
@@ -281,7 +285,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
           <select
             className="lab-select"
             aria-label="One month"
-            value={!zoom && ranges.findIndex(r => r.key === preset) >= 3 ? preset : ''}
+            value={!zoom && isMonth(preset) ? preset : ''}
             onChange={e => {
               if (!e.target.value) return
               setPreset(e.target.value)
@@ -289,7 +293,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
             }}
           >
             <option value="">Pick a month…</option>
-            {ranges.slice(3).map(r => (
+            {ranges.filter(r => isMonth(r.key)).map(r => (
               <option key={r.key} value={r.key}>
                 {r.label}
               </option>
@@ -345,7 +349,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
               type="button"
               className="lab-reset"
               onClick={() => {
-                setPreset('ytd')
+                setPreset(DEFAULT)
                 setZoom(null)
                 setFormat('')
                 setAngle('')
@@ -374,8 +378,22 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
           <h2 className="v3-chapter-title">Reach</h2>
           <p className="v3-chapter-note">How far the slice travelled, and who saw it. Click a bar to zoom the whole page into it.</p>
         </div>
-        <Panel id="time" span={8} title="Reach over time" note={`One bar per ${(Date.parse(range.to) - Date.parse(range.from)) / 86_400_000 <= 70 ? 'week' : 'month'} · switch what the bars measure`} scope="All filters">
-          <TimelineChart posts={posts} range={range} tips={tips} onZoom={(r, label) => setZoom({ range: r, label })} />
+        <Panel
+          id="time"
+          span={8}
+          title="Reach over time"
+          note={zoom ? 'One bar per week of the month you picked' : `${today.slice(0, 4)} month by month, for the pattern · ${rangeLabel.toLowerCase()} highlighted`}
+          scope={zoom ? 'All filters' : 'Whole year · other filters apply'}
+        >
+          {/* The one panel where a longer view is the point: a trend needs its year around it. Zoomed
+              into a month it shows that month's weeks only. */}
+          <TimelineChart
+            posts={zoom ? posts : slice(lab.posts, { ...f, range: { from: since, to: today } })}
+            range={zoom ? range : { from: since, to: today }}
+            focus={zoom ? null : range}
+            tips={tips}
+            onZoom={(r, label) => setZoom({ range: r, label })}
+          />
         </Panel>
         <Panel id="who" span={4} title="Who saw it" note="Unique accounts per 30-day window, from Instagram" scope="Timeline only · account-wide">
           <WhoSaw windows={lab.windows} range={range} tips={tips} />
@@ -459,10 +477,11 @@ type Tips = ReturnType<typeof useTip>
 
 // ------------------------------------------------------------------ reach over time
 
-function TimelineChart({ posts, range, tips, onZoom }: { posts: LabPost[]; range: Range; tips: Tips; onZoom: (r: Range, label: string) => void }) {
+function TimelineChart({ posts, range, focus, tips, onZoom }: { posts: LabPost[]; range: Range; focus: Range | null; tips: Tips; onZoom: (r: Range, label: string) => void }) {
   const [metric, setMetric] = useState<'reach' | 'median' | 'n'>('reach')
   const buckets = timeline(posts, range)
-  const typical = median(posts.map(p => p.reach))
+  // The typical line is the highlighted slice's, so it matches the numbers above.
+  const typical = median((focus ? posts.filter(p => mytDay(p.at) >= focus.from && mytDay(p.at) <= focus.to) : posts).map(p => p.reach))
   const val = (b: (typeof buckets)[number]) => (metric === 'reach' ? b.reach : metric === 'median' ? b.median : b.n)
   const max = Math.max(1, ...buckets.map(val))
   const W = 720
@@ -517,6 +536,7 @@ function TimelineChart({ posts, range, tips, onZoom }: { posts: LabPost[]; range
                 </span>
               </div>
               {b.best ? <div className="lab-tip-meta">Best: {b.best.hook || '(no caption)'} · {compact(b.best.reach)}</div> : null}
+              {focus && b.from < focus.from && b.to >= focus.from ? <div className="lab-tip-meta">This bar is the whole {weekly ? 'week' : 'month'}; the highlight starts {shortDate(focus.from)}.</div> : null}
               {b.n ? <div className="lab-tip-cta">Click to zoom in</div> : null}
             </div>
           )
@@ -541,6 +561,7 @@ function TimelineChart({ posts, range, tips, onZoom }: { posts: LabPost[]; range
                 width={Math.max(1, bw - Math.min(4, bw * 0.2))}
                 height={Math.max(h, b.n ? 2 : 0)}
                 rx={Math.min(4, bw / 4)}
+                data-out={(focus && (b.to < focus.from || b.from > focus.to)) || undefined}
                 style={{ ['--i' as string]: i }}
               />
               {i % every === 0 ? (

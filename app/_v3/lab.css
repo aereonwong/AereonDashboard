@@ -108,6 +108,7 @@ html[data-theme="dark"] .lab {
 .lab-grid line { stroke: var(--line); stroke-width: 1; }
 .lab-grid text, .lab-axis, .lab-ref text, .lab-mark text { fill: var(--ink-3); font: 11px var(--f-num); }
 .lab-bar { fill: var(--accent); transform-box: fill-box; transform-origin: bottom; animation: lab-grow-y 640ms var(--ease) both; animation-delay: calc(var(--i) * 22ms); transition: opacity 160ms var(--ease); }
+.lab-bar[data-out] { fill: color-mix(in srgb, var(--accent) 28%, transparent); }
 .lab-hit { cursor: pointer; outline: none; }
 .lab-hit:hover .lab-bar, .lab-hit:focus-visible .lab-bar { opacity: 0.72; }
 .lab-hit:focus-visible rect:first-child { stroke: var(--accent); stroke-width: 1.5; }
