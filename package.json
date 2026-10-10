@@ -14,7 +14,8 @@
     "ig:backfill": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/ig-backfill.mjs",
     "ig:archive": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/ig-archive.mjs",
     "drive:reconcile": "node --env-file-if-exists=.env scripts/drive-reconcile.mjs",
-    "property:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/property-import.mjs"
+    "property:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/property-import.mjs",
+    "quote:import": "node --env-file-if-exists=.env scripts/quote-import.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -31,9 +31,10 @@ inherits the formatting of the character immediately before it, so writing at th
 silently adopts the previous run's weight — which is why the client address kept coming out bold.
 The two-step `{{TOKEN}}` pattern in that file exists solely to avoid this. Its header explains it.
 
-⚠️ Existing quotations live only in Canva, not in the database, so `SYCP-Q-` numbering currently
-counts from zero for any month with no filed quote. Importing the quotation history would close that
-gap and give quote→win-rate analysis.
+The quotation history is in the database too (10 Oct 2026, `npm run quote:import`, record only — numbers
+kept as printed; see `docs/QUOTE-AUDIT.md`), so `SYCP-Q-` numbering counts past every old quote. An invoice
+that names a quote (`/invoice`'s quotation step, or the dashboard's Convert button on `/invoices/quotes`)
+gets `meta.quotation_id` as well as `quotation_no`; that link is what marks the quote won.
 
 **Finished documents are filed by type** — `FOLDERS` in `lib/invoice-render.ts`: quotations into
 Canva's "Quotation" folder. Never put a quotation in Invoices; that mixing is exactly what made the

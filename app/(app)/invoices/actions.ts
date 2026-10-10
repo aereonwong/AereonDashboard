@@ -33,6 +33,8 @@ export type InvoiceForm = {
   termsKey: keyof typeof TERMS | 'custom'
   terms: string
   quotation?: string
+  /** Set when the form was opened from a quote's Convert button. */
+  quotationId?: number
   date: string
   dueDate?: string
   status: 'waiting' | 'paid' | 'issued'
@@ -45,7 +47,7 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/
 const CURRENCIES: Currency[] = ['MYR', 'USD', 'SGD', 'EUR', 'RMB']
 
 function refresh() {
-  for (const p of ['/invoices', '/invoices/details', '/dashboard', '/cash-in', '/clients']) revalidatePath(p)
+  for (const p of ['/invoices', '/invoices/details', '/invoices/quotes', '/dashboard', '/cash-in', '/clients']) revalidatePath(p)
 }
 
 async function guard(): Promise<Fail | null> {
@@ -92,6 +94,7 @@ function toDraft(f: InvoiceForm): Draft {
     discount: f.discount || undefined,
     terms: f.terms.trim(),
     quotation: clean(f.quotation),
+    quotationId: f.quotationId && clean(f.quotation) ? f.quotationId : undefined,
     date: f.date,
   }
 }

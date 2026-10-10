@@ -2,6 +2,7 @@ import { isIssued, isPaid, type Rec } from './records'
 import type { LinkedPost } from './ig-link-types'
 import { toInvoices } from './invoices'
 import { driveOf, driveStatus } from './invoice-drive'
+import { quoteLinks, isQuote } from './quotes'
 import { TERMS, type Payment, type DetailRow, type KnownClient, type FormOptions, type EditValues } from './invoice-figures'
 
 export { statusFigures } from './invoice-figures'
@@ -91,6 +92,7 @@ export const linkedPostsOf = (r: Pick<Rec, 'meta'>): LinkedPost[] =>
 
 export function toDetailRows(rows: Rec[], today?: string, reach: Record<string, { reach: number; at: string }> = {}): DetailRow[] {
   const byId = new Map(rows.map(r => [r.id, r]))
+  const links = quoteLinks(rows)
   return toInvoices(rows).map(i => {
     const r = byId.get(i.id)!
     const d = driveOf(r)
@@ -124,8 +126,17 @@ export function toDetailRows(rows: Rec[], today?: string, reach: Record<string, 
         reachAt: reach[p.id] ? postDay(reach[p.id].at) : undefined,
         day: postDay(p.timestamp),
       })),
+      quote: quoteOf(m, links.get(r.id), byId),
     }
   })
+}
+
+/** The quote an invoice came from: the linked quote's own number, or — for an
+ *  invoice whose reference names a quote that isn't on file — what it prints. */
+function quoteOf(m: Rec['meta'], quoteId: number | undefined, byId: Map<number, Rec>): DetailRow['quote'] {
+  const q = quoteId ? byId.get(quoteId) : undefined
+  if (q && isQuote(q)) return { id: q.id, no: String(q.meta?.invoice_no ?? q.title) }
+  return m?.quotation_no ? { id: null, no: String(m.quotation_no) } : null
 }
 
 // ------------------------------------------------------- Create Invoice options
@@ -159,6 +170,8 @@ export function formOptions(rows: Rec[], today = new Date().toISOString().slice(
   const quotations = rows
     .filter(r => r.category === 'doc' && r.status === 'quotation' && r.meta?.invoice_no)
     .map(r => ({ no: String(r.meta.invoice_no), client: String(r.meta.customer ?? '') }))
+    // Old quotes repeat numbers (kept as printed); the picker lists each once.
+    .filter((q, i, all) => all.findIndex(x => x.no === q.no) === i)
     .sort((a, b) => b.no.localeCompare(a.no))
   return { clients: knownClients(rows), venues: [...venues].sort(), quotations, today }
 }

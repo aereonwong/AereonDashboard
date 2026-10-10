@@ -38,6 +38,8 @@ export type Draft = {
   discount?: number
   terms?: string
   quotation?: string
+  /** The quote's row id when the invoice was converted from one (Quotations page). */
+  quotationId?: number
   validityDays?: number
   date?: string // YYYY-MM-DD
   /** The Canva document drawn for this draft but not yet saved (step 'preview'). */
@@ -372,7 +374,8 @@ export async function fileInvoice(
   if (!supabaseConfigured) return null
   const date = draft.date ?? new Date().toISOString().slice(0, 10)
   const no = opts.no ?? (await nextInvoiceNo(date, draft.kind))
-  const row = invoiceRow(draft, no)
+  const quotationId = draft.kind === 'invoice' ? draft.quotationId ?? (await quoteIdFor(draft.quotation)) : undefined
+  const row = invoiceRow({ ...draft, quotationId }, no)
 
   const { data, error } = await supabase
     .from('records')
@@ -388,6 +391,21 @@ export async function fileInvoice(
   if (error || !data) return null
   if (draft.client?.name) await rememberClient(draft.client).catch(() => {})
   return { no, id: data.id }
+}
+
+/** The row id of the quote with this printed number, when exactly one has it.
+ *  Typed or picked references (bot or form) get the same firm link a Convert
+ *  button gives; a repeated old number is left to lib/quotes.ts to resolve. */
+export async function quoteIdFor(no?: string): Promise<number | undefined> {
+  if (!no?.trim() || !supabaseConfigured) return undefined
+  const { data } = await supabase
+    .from('records')
+    .select('id')
+    .eq('category', 'doc')
+    .eq('status', 'quotation')
+    .eq('meta->>invoice_no', no.trim())
+    .limit(2)
+  return data?.length === 1 ? data[0].id : undefined
 }
 
 /**
@@ -436,6 +454,9 @@ export function invoiceRow(draft: Draft, no: string) {
       event_time: draft.eventTime,
       terms: draft.terms,
       quotation_no: draft.quotation || undefined,
+      // The link the Quotations page reads (lib/quotes.ts). A number alone can be
+      // ambiguous in the old back catalogue; the id never is.
+      quotation_id: draft.quotationId || undefined,
       validity_days: draft.validityDays || undefined,
       source: 'telegram' as string,
       payment_tracked: false,

@@ -44,6 +44,8 @@ const fmt = (n: number, cur: string) => `${cur} ${n.toLocaleString('en-MY', { mi
 type Phase = 'form' | 'rendering' | 'preview' | 'saving'
 
 export type EditTarget = { id: number; no: string; designId: string; values: EditValues; driveUploaded: boolean }
+/** A quote being turned into an invoice: the form opens filled in from it. */
+export type QuoteSource = { id: number; no: string; values: Partial<EditValues> }
 
 export default function CreateInvoice({
   options,
@@ -51,6 +53,7 @@ export default function CreateInvoice({
   disabledReason,
   onSaved,
   edit,
+  fromQuote,
   onClose,
 }: {
   options: FormOptions
@@ -59,6 +62,8 @@ export default function CreateInvoice({
   onSaved: (no: string, warning?: string) => void
   /** Open straight away, filled in with this invoice, and save over it. */
   edit?: EditTarget
+  /** Open straight away, filled in from this quote, and file a NEW invoice linked to it. */
+  fromQuote?: QuoteSource
   onClose?: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -90,14 +95,16 @@ export default function CreateInvoice({
     status: 'waiting' as InvoiceForm['status'],
   })
   // Editing keeps the due date as filed rather than recomputing it from the terms.
-  const [f, setF] = useState(() => (edit ? { ...blank(), ...edit.values, dueTouched: true } : blank()))
+  const [f, setF] = useState(() =>
+    edit ? { ...blank(), ...edit.values, dueTouched: true } : fromQuote ? { ...blank(), ...fromQuote.values } : blank(),
+  )
   const wasPaid = edit?.values.status === 'paid'
   // Field ids differ per dialog: Create and Edit can both be on the page at once.
-  const px = edit ? `ce${edit.id}` : 'ci'
+  const px = edit ? `ce${edit.id}` : fromQuote ? `cq${fromQuote.id}` : 'ci'
 
   useEffect(() => {
-    if (edit) dialog.current?.showModal()
-  }, [edit])
+    if (edit || fromQuote) dialog.current?.showModal()
+  }, [edit, fromQuote])
   const set = <K extends keyof ReturnType<typeof blank>>(k: K, v: ReturnType<typeof blank>[K]) => setF(s => ({ ...s, [k]: v }))
 
   const clientByName = useMemo(() => new Map(options.clients.map(c => [c.name.toLowerCase(), c])), [options.clients])
@@ -138,6 +145,8 @@ export default function CreateInvoice({
     termsKey: f.termsKey,
     terms: f.terms,
     quotation: f.quotation || undefined,
+    // The firm link only holds while the reference still names that quote.
+    quotationId: fromQuote && f.quotation.trim() === fromQuote.no ? fromQuote.id : undefined,
     date: f.date,
     dueDate: f.dueDate || undefined,
     status: f.status,
@@ -213,7 +222,7 @@ export default function CreateInvoice({
 
   return (
     <>
-      {edit ? null : (
+      {edit || fromQuote ? null : (
         <button type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
           <Icon name="plus" /> Create invoice
         </button>
@@ -229,7 +238,7 @@ export default function CreateInvoice({
         }}
       >
         <div className="idt-dialog-head">
-          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : edit ? `Edit ${edit.no}` : 'Create invoice'}</h2>
+          <h2 id="idt-dialog-title">{phase === 'preview' || phase === 'saving' ? `Check ${preview?.no}` : edit ? `Edit ${edit.no}` : fromQuote ? `Invoice from ${fromQuote.no}` : 'Create invoice'}</h2>
           <button type="button" className="idt-act" onClick={close} aria-label="Close" disabled={busy}>
             <Icon name="close" />
           </button>
@@ -323,6 +332,16 @@ export default function CreateInvoice({
                 <p className="idt-error idt-warn" role="note">
                   <Icon name="alert" /> {edit?.no} is marked paid. Edit only to correct it — the amount should still match
                   what was received.
+                </p>
+              ) : null}
+              {fromQuote ? (
+                <p className="idt-error idt-note" role="note">
+                  <Icon name="invoice" />
+                  <span>
+                    Filled in from <b>{fromQuote.no}</b>. Check the amount and scope — change them if the job was confirmed
+                    differently, or bill part of it (a deposit or an add-on). The invoice prints{' '}
+                    <b>QUOTATION No. {fromQuote.no}</b> and the quote is marked won once it&apos;s saved.
+                  </span>
                 </p>
               ) : null}
               <div className="idt-form">

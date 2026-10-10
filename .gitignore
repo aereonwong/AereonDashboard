@@ -39,3 +39,7 @@ graphify-out/cost.json
 /.property-data/
 .ig-archive.json
 .ig-backfill.json
+
+# Old quotation records read from Canva (client names, amounts) — never commit
+.quote-data/
+scripts/tmp/

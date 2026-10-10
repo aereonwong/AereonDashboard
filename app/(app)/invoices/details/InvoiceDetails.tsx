@@ -111,7 +111,7 @@ export default function InvoiceDetails({
         (!f.client || r.client === f.client) &&
         (!f.payment || (f.payment === 'owed' ? r.payment === 'outstanding' || r.payment === 'overdue' : r.payment === f.payment)) &&
         (!f.drive || (f.drive === 'pending' ? r.drive !== 'uploaded' : r.drive === f.drive)) &&
-        (!needle || `${r.no} ${r.client} ${r.project}`.toLowerCase().includes(needle)),
+        (!needle || `${r.no} ${r.client} ${r.project} ${r.quote?.no ?? ''}`.toLowerCase().includes(needle)),
     )
     const dir = sort.desc ? -1 : 1
     const val = (r: DetailRow) =>
@@ -376,6 +376,17 @@ export default function InvoiceDetails({
                     <div className="idt-proj" title={r.project}>
                       {r.project || '—'}
                     </div>
+                    {r.quote ? (
+                      r.quote.id ? (
+                        <a className="idt-quote" href={`/invoices/quotes?q=${encodeURIComponent(r.quote.no)}`} title="Open the quotation this invoice came from">
+                          from {r.quote.no}
+                        </a>
+                      ) : (
+                        <span className="idt-quote" title="Printed on the invoice; that quotation isn't on file">
+                          ref {r.quote.no}
+                        </span>
+                      )
+                    ) : null}
                     {r.igPosts.length ? (
                       <ul className="idt-linked" aria-label={`Instagram posts linked to ${r.no}`}>
                         {r.igPosts.map(p => (
