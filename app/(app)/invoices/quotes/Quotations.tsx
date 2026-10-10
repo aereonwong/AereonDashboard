@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Icon from '@/app/_components/Icon'
 import { quoteFigures, type QuoteRow, type QuoteStatus } from '@/lib/quotes'
 import type { FormOptions } from '@/lib/invoice-figures'
-import CreateInvoice, { type QuoteSource } from '../CreateInvoice'
+import CreateInvoice, { type QuoteSource, type EditTarget } from '../CreateInvoice'
+import { undoEdit } from '../actions'
 import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
 import { setQuoteLost, linkInvoice, unlinkInvoice } from './actions'
 import '../invoices.css'
@@ -45,6 +46,7 @@ export default function Quotations({
   const [, startTransition] = useTransition()
   const [f, setF] = useState<Filters>({ year: initial.year ?? '', status: initial.status ?? '', client: initial.client ?? '', q: initial.q ?? '' })
   const [converting, setConverting] = useState<QuoteSource | null>(null)
+  const [editing, setEditing] = useState<EditTarget | null>(null)
   const [linking, setLinking] = useState<QuoteRow | null>(null)
   const [ask, setAsk] = useState<ConfirmAsk | null>(null)
   const [busy, setBusy] = useState<Set<number>>(new Set())
@@ -124,6 +126,19 @@ export default function Quotations({
           onClose={() => setConverting(null)}
           onSaved={no => {
             setToast({ text: `${no} saved and linked to ${converting.no}. Upload it to Google Drive from Invoice Details.` })
+            router.refresh()
+          }}
+        />
+      ) : null}
+      {editing ? (
+        <CreateInvoice
+          key={editing.id}
+          kind="quotation"
+          options={options}
+          edit={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(no, warning) => {
+            setToast(warning ? { text: warning, bad: true } : { text: `${no} updated in Canva and on this page.` })
             router.refresh()
           }}
         />
@@ -237,7 +252,9 @@ export default function Quotations({
                         repeat no.
                       </span>
                     ) : null}
-                    <span className="idt-sub">{r.source === 'canva' ? 'Canva, before the dashboard' : r.source === 'telegram' ? 'Telegram' : 'Dashboard'}</span>
+                    <span className="idt-sub" title={r.source === 'canva' ? r.editBlock ?? undefined : undefined}>
+                      {r.source === 'canva' ? 'Old format · not editable' : r.source === 'telegram' ? 'Telegram' : 'Dashboard'}
+                    </span>
                   </td>
                   <td className="idt-num">{r.date}</td>
                   <td className="idt-who">
@@ -347,7 +364,7 @@ export default function Quotations({
                           aria-label={`Unlink invoices from ${r.no}`}
                           title={locked ?? 'Unlink the invoices from this quote'}
                         >
-                          <Icon name="undo" />
+                          <Icon name="close" />
                         </button>
                       ) : (
                         <button
@@ -364,6 +381,44 @@ export default function Quotations({
                           <Icon name="close" />
                         </button>
                       )}
+
+                      <button
+                        type="button"
+                        className="idt-act"
+                        disabled={isBusy || !!locked || !ready || !r.edit || !r.designId}
+                        onClick={() =>
+                          r.edit && r.designId && setEditing({ id: r.id, no: r.no, designId: r.designId, values: r.edit, driveUploaded: false })
+                        }
+                        aria-label={`Edit ${r.no}`}
+                        title={locked ?? offline ?? r.editBlock ?? 'Edit quotation — redrawn in Canva, same number'}
+                      >
+                        <Icon name="edit" />
+                      </button>
+                      {r.undo ? (
+                        <button
+                          type="button"
+                          className={`idt-act${isBusy ? ' busy' : ''}`}
+                          disabled={isBusy || !!locked || !ready}
+                          onClick={() =>
+                            setAsk({
+                              title: `Undo the last edit of ${r.no}?`,
+                              lines: [
+                                `Edited ${r.undo!.at.slice(0, 16).replace('T', ' ')}. The quotation goes back exactly as it was before.`,
+                                'Canva: the old design returns to the Quotation folder; the edited one moves to "TODO: Delete".',
+                              ],
+                              confirmLabel: 'Undo edit',
+                              onConfirm: () => {
+                                setAsk(null)
+                                run(r.id, () => undoEdit(r.id), `${r.no} restored to before the edit`)
+                              },
+                            })
+                          }
+                          aria-label={`Undo last edit of ${r.no}`}
+                          title={locked ?? offline ?? 'Undo last edit'}
+                        >
+                          <Icon name={isBusy ? 'refresh' : 'undo'} />
+                        </button>
+                      ) : null}
 
                       <span className="idt-acts-rule" aria-hidden="true" />
                       {r.canvaUrl ? (

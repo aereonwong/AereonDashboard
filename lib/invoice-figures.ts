@@ -75,6 +75,8 @@ export type EditValues = {
   date: string
   dueDate: string
   status: 'waiting' | 'paid' | 'issued'
+  /** Quotations: days valid, as typed. */
+  validity?: string
 }
 
 export type StatusFigures = {

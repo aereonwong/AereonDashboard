@@ -49,6 +49,12 @@ export type QuoteRow = {
   sharedNo: boolean
   /** The Create Invoice form, filled in from this quote. */
   prefill: Partial<EditValues>
+  /** Edit: the form values, or null with the reason in editBlock (filled in on the
+   *  server by the page — lib/invoice-details editBlockOf / editValuesOf). */
+  edit: EditValues | null
+  editBlock: string | null
+  designId: string | null
+  undo: { at: string } | null
 }
 
 export type QuoteFigures = {
@@ -210,6 +216,10 @@ export function toQuoteRows(rows: Rec[], today = new Date().toISOString().slice(
         note: m.quote_note ? String(m.quote_note) : null,
         sharedNo: (noCount.get(no) ?? 0) > 1,
         prefill: prefillOf(q, today),
+        edit: null,
+        editBlock: null,
+        designId: m.render?.design_id ?? m.canva_design ?? null,
+        undo: Array.isArray(m.edits) && m.edits.length ? { at: String(m.edits[m.edits.length - 1].at) } : null,
       } satisfies QuoteRow
     })
     .sort((a, b) => b.date.localeCompare(a.date) || b.no.localeCompare(a.no))

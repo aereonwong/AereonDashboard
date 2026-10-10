@@ -42,10 +42,14 @@ export function paymentOf(r: Pick<Rec, 'status' | 'due_date' | 'meta'>, today = 
  *  Canva back catalogue, or a bot row with no design recorded — is view only. */
 export function editBlockOf(r: Pick<Rec, 'meta'>): string | null {
   const m = r.meta ?? {}
+  // Old-format quotations, recorded from the Canva back catalogue: kept exactly
+  // as sent (Aereon's call), so never redrawn from the template.
+  if (m.source === 'canva_quote')
+    return 'Old-format quotation (Canva, before the dashboard) — editing is not possible. Create a new quotation instead.'
   if (m.source === 'canva' || !m.render?.design_id || m.render?.status !== 'done')
     return 'View only — made before the current Canva template'
   if (!m.job || !Array.isArray(m.deliverables) || !m.deliverables.length)
-    return 'View only — this invoice is missing its job or scope of work'
+    return 'View only — missing its job or scope of work'
   return null
 }
 
@@ -76,6 +80,7 @@ export function editValuesOf(r: Rec): EditValues {
     date: str(m.invoice_date) || String(r.created_at).slice(0, 10),
     dueDate: str(r.due_date),
     status: isPaid(r) ? 'paid' : isIssued(r) ? 'issued' : 'waiting',
+    validity: String(m.validity_days ?? 14),
   }
 }
 
