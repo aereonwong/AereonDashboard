@@ -9,7 +9,7 @@ import { startRender, commitRender, discardRender, type RenderPreview } from '@/
 import type { DocKind } from '@/lib/invoice-render'
 import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
-import { loadEditable, withRowDates, applyEdit, undoLastEdit } from '@/lib/invoice-edit'
+import { loadEditable, withRowDates, applyEdit, undoLastEdit, rowKind } from '@/lib/invoice-edit'
 
 // 👉 The dashboard's invoice buttons. Each goes database → app → (Canva or
 // Drive only when the action needs it) → database. No model is involved.
@@ -212,7 +212,7 @@ export async function reuploadToDrive(id: number) {
  *  under the SAME number. Nothing changes until saveEdit. */
 export async function previewEdit(id: number, form: InvoiceForm): Promise<PreviewResult> {
   await requireSession()
-  if (kindOf(form) !== 'invoice') return fail('Only invoices can be edited here.')
+
   const blocked = await guard()
   if (blocked) return blocked
   const invalid = validate(form)
@@ -221,13 +221,16 @@ export async function previewEdit(id: number, form: InvoiceForm): Promise<Previe
 
   const row = await loadEditable(id)
   if ('ok' in row) return row
+  // The row decides invoice or quotation; a form claiming otherwise is refused.
+  const kind = rowKind(row as Rec)
+  if (kind !== kindOf(form)) return fail(`${row.meta.invoice_no} is not ${kindOf(form) === 'quotation' ? 'a quotation' : 'an invoice'}.`)
   try {
     const no = String(row.meta.invoice_no)
     const draft = invoiceRow(withRowDates(row, toDraft(form)), no)
-    const preview = await startRender({ ...draft, id } as unknown as Rec, 'invoice')
+    const preview = await startRender({ ...draft, id } as unknown as Rec, kind)
     return { ok: true, no, preview }
   } catch (e) {
-    return fail(`Canva could not draw the invoice: ${msg(e)}`)
+    return fail(`Canva could not draw the ${kind}: ${msg(e)}`)
   }
 }
 
@@ -236,10 +239,6 @@ export async function previewEdit(id: number, form: InvoiceForm): Promise<Previe
  *  snapshot so the edit can be undone. */
 export async function saveEdit(id: number, form: InvoiceForm, preview: RenderPreview, expectDesign: string) {
   await requireSession()
-  if (kindOf(form) !== 'invoice') {
-    await discardRender(preview).catch(() => {})
-    return fail('Only invoices can be edited here.')
-  }
   const blocked = await guard()
   if (blocked) {
     await discardRender(preview).catch(() => {})
@@ -251,6 +250,10 @@ export async function saveEdit(id: number, form: InvoiceForm, preview: RenderPre
   if ('ok' in row) {
     await discardRender(preview).catch(() => {})
     return row
+  }
+  if (rowKind(row as Rec) !== kindOf(form)) {
+    await discardRender(preview).catch(() => {})
+    return fail(`${row.meta.invoice_no} is not ${kindOf(form) === 'quotation' ? 'a quotation' : 'an invoice'}.`)
   }
   const res = await applyEdit(id, withRowDates(row, toDraft(form)), {
     status: form.status,

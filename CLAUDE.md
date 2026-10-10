@@ -201,7 +201,9 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
 - **Create quotation** (Quotations page header): the Create Invoice dialog with `kind="quotation"` — same Canva
   preview → Save flow as invoices and as Telegram `/quote`: `SYCP-Q-YYYYMM-NNN`, `TEMPLATES.quotation`, Canva's
   Quotation folder, a validity period instead of payment status/due date. Filed by `fileInvoice` as `doc`/`quotation`.
-  Quotations can't be edited from the dashboard yet (Edit is invoice-only).
+- **Edit / undo a quotation** (row buttons): same `lib/invoice-edit.ts` flow as invoices; the ROW decides the kind
+  (`rowKind`), redrawn from the quotation template, status stays `quotation`, no Drive. Old-format quotes
+  (`source: 'canva_quote'`) and quotes without a recorded template design are view only — `editBlockOf` says why.
 - Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
 
 ## Raising an invoice or a quotation

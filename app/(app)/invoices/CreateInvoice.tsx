@@ -43,7 +43,15 @@ const fmt = (n: number, cur: string) => `${cur} ${n.toLocaleString('en-MY', { mi
 
 type Phase = 'form' | 'rendering' | 'preview' | 'saving'
 
-export type EditTarget = { id: number; no: string; designId: string; values: EditValues; driveUploaded: boolean }
+export type EditTarget = {
+  id: number
+  no: string
+  designId: string
+  values: EditValues
+  driveUploaded: boolean
+  /** Quotations: invoices already raised from it (they are not changed by the edit). */
+  invoicedAs?: string[]
+}
 /** A quote being turned into an invoice: the form opens filled in from it. */
 export type QuoteSource = { id: number; no: string; values: Partial<EditValues> }
 
@@ -103,9 +111,10 @@ export default function CreateInvoice({
   const [f, setF] = useState(() =>
     edit ? { ...blank(), ...edit.values, dueTouched: true } : fromQuote ? { ...blank(), ...fromQuote.values } : blank(),
   )
-  const wasPaid = edit?.values.status === 'paid'
+  const wasPaid = kind !== 'quotation' && edit?.values.status === 'paid'
   // Field ids differ per dialog: Create and Edit can both be on the page at once.
-  const isQuote = kind === 'quotation' && !edit && !fromQuote
+  // Convert always makes an invoice; Create and Edit follow `kind`.
+  const isQuote = kind === 'quotation' && !fromQuote
   const doc = isQuote ? 'quotation' : 'invoice'
   const Doc = isQuote ? 'Quotation' : 'Invoice'
   const px = edit ? `ce${edit.id}` : fromQuote ? `cq${fromQuote.id}` : isQuote ? 'nq' : 'ci'
@@ -259,7 +268,7 @@ export default function CreateInvoice({
             <div className="idt-wait" role="status">
               <Icon name="refresh" />
               <div>
-                <b>{edit ? 'Redrawing the invoice in Canva…' : `Drawing the ${doc} in Canva…`}</b>
+                <b>{edit ? `Redrawing the ${doc} in Canva…` : `Drawing the ${doc} in Canva…`}</b>
                 <br />
                 Copying the template and filling it in. About 15 seconds.
               </div>
@@ -313,9 +322,9 @@ export default function CreateInvoice({
                   </dl>
                   {edit ? (
                     <p className="note">
-                      Nothing is changed yet. <b>Save changes</b> asks you to confirm, then replaces the invoice&apos;s
-                      Canva design, moves its old Drive PDF to trash and updates your records. Same number:{' '}
-                      <b>{edit.no}</b>.
+                      Nothing is changed yet. <b>Save changes</b> asks you to confirm, then replaces the {doc}&apos;s
+                      Canva design{isQuote ? '' : ', moves its old Drive PDF to trash'} and updates your records. Same
+                      number: <b>{edit.no}</b>.
                     </p>
                   ) : isQuote ? (
                     <p className="note">
@@ -610,14 +619,23 @@ export default function CreateInvoice({
           onCancel={() => setAsking(false)}
           ask={{
             title: `Replace ${edit.no} with this version?`,
-            lines: [
-              'Canva: this new design becomes the invoice. The old one moves to "TODO: Delete".',
-              edit.driveUploaded
-                ? 'Google Drive: the old PDF moves to Drive\'s trash (kept 30 days) and the row goes back to "Not uploaded". Upload the new PDF from its row.'
-                : 'Google Drive: nothing uploaded yet, nothing to remove.',
-              'Records: amount, dates and payment status update everywhere.',
-              'You can undo this from the invoice\'s row.',
-            ],
+            lines: isQuote
+              ? [
+                  'Canva: this new design becomes the quotation. The old one moves to "TODO: Delete".',
+                  'Records: amount, dates and validity update on Quotations. A quotation is never income.',
+                  ...(edit.invoicedAs?.length
+                    ? [`Already invoiced as ${edit.invoicedAs.join(', ')} — ${edit.invoicedAs.length === 1 ? 'that invoice is' : 'those invoices are'} not changed.`]
+                    : []),
+                  "You can undo this from the quotation's row.",
+                ]
+              : [
+                  'Canva: this new design becomes the invoice. The old one moves to "TODO: Delete".',
+                  edit.driveUploaded
+                    ? 'Google Drive: the old PDF moves to Drive\'s trash (kept 30 days) and the row goes back to "Not uploaded". Upload the new PDF from its row.'
+                    : 'Google Drive: nothing uploaded yet, nothing to remove.',
+                  'Records: amount, dates and payment status update everywhere.',
+                  'You can undo this from the invoice\'s row.',
+                ],
             warning: wasPaid ? 'This invoice is marked paid. Check the amount still matches what was received.' : undefined,
             confirmLabel: 'Yes, replace',
             onConfirm: save,

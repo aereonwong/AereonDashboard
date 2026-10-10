@@ -6,6 +6,7 @@ import { commitRender, discardRender, fileDesign, parkForDeletion, designIdOf, t
 import { driveOf, driveStatus, type DriveMeta } from './invoice-drive'
 import { editBlockOf } from './invoice-details'
 import { invoiceRow, quoteIdFor, rememberClient, type Draft } from './invoice-intake'
+import type { DocKind } from './invoice-render'
 
 // 👉 Edit an invoice already filed, and undo that edit. Same idea as Create
 // Invoice: the template is copied and filled in fresh (a preview Aereon
@@ -22,6 +23,11 @@ import { invoiceRow, quoteIdFor, rememberClient, type Draft } from './invoice-in
 //
 // Snapshots live on the row (`meta.edits`, newest last), so undo needs no
 // extra table and works one step at a time back through several edits.
+//
+// Quotations (doc / 'quotation' rows) edit the same way, from the quotation
+// template: their status stays 'quotation', they have no due date or payment,
+// and nothing is in Drive. Old-format quotes from the Canva back catalogue are
+// view only — editBlockOf() says so.
 
 const KEEP_EDITS = 10
 
@@ -42,15 +48,21 @@ type Fail = { ok: false; error: string }
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e))
 const notFound = (e: unknown) => /not ?found|404/i.test(msg(e))
 
+/** Invoice or quotation, from the row itself — never from what the browser sent. */
+export const rowKind = (r: Pick<Rec, 'category' | 'status'>): DocKind | null =>
+  r.category === 'cash_in' ? 'invoice' : r.category === 'doc' && r.status === 'quotation' ? 'quotation' : null
+
+/** An invoice or quotation row (by `rowKind`), with the fields edit and undo need. */
+async function loadDoc(id: number, select: string) {
+  const { data } = await supabase.from('records').select(`category, status, ${select}`).eq('id', id).in('category', ['cash_in', 'doc']).single()
+  const row = data as unknown as (Row & Pick<Rec, 'category'>) | null
+  return row && rowKind(row) && row.meta?.invoice_no ? row : null
+}
+
 export async function loadEditable(id: number): Promise<Row | Fail> {
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
-  const { data } = await supabase
-    .from('records')
-    .select('id, title, notes, amount, status, due_date, created_at, meta')
-    .eq('id', id)
-    .eq('category', 'cash_in')
-    .single()
-  if (!data?.meta?.invoice_no) return { ok: false, error: 'Invoice not found' }
+  const data = await loadDoc(id, 'id, title, notes, amount, due_date, created_at, meta')
+  if (!data) return { ok: false, error: 'Invoice or quotation not found' }
   const block = editBlockOf(data)
   if (block) return { ok: false, error: block }
   return data as Row
@@ -79,6 +91,9 @@ export async function applyEdit(
   }
   const meta = row.meta
   const no = String(meta.invoice_no)
+  const kind = rowKind(row as Row & Pick<Rec, 'category'>)!
+  const isQuote = kind === 'quotation'
+  const noun = isQuote ? 'quotation' : 'invoice'
   const oldDesign = designIdOf(row)!
   if (oldDesign !== opts.expectDesign) {
     await discardRender(opts.preview).catch(() => {})
@@ -86,11 +101,11 @@ export async function applyEdit(
   }
   if (driveStatus(row) === 'uploading') {
     await discardRender(opts.preview).catch(() => {})
-    return { ok: false, error: 'A Google Drive upload for this invoice is running — wait for it, then edit.' }
+    return { ok: false, error: `A Google Drive upload for this ${noun} is running — wait for it, then edit.` }
   }
 
   try {
-    await commitRender({ designId: opts.preview.designId, transactionId: opts.preview.transactionId, invoiceDate: draft.date! })
+    await commitRender({ designId: opts.preview.designId, transactionId: opts.preview.transactionId, invoiceDate: draft.date!, kind })
   } catch (e) {
     return { ok: false, error: `Canva could not save the design: ${msg(e)}. Generate the preview again.` }
   }
@@ -120,24 +135,34 @@ export async function applyEdit(
   }
   // Keep the quote link while the printed reference is unchanged; a new reference
   // is looked up again (lib/quotes.ts reads quotation_id first).
-  const quotationId =
-    (draft.quotation ?? '') === String(prevMeta.quotation_no ?? '') ? prevMeta.quotation_id : await quoteIdFor(draft.quotation)
-  const next = invoiceRow({ ...draft, quotationId }, no)
+  const quotationId = isQuote
+    ? undefined
+    : (draft.quotation ?? '') === String(prevMeta.quotation_no ?? '')
+      ? prevMeta.quotation_id
+      : await quoteIdFor(draft.quotation)
+  // The row's kind wins over the draft's: an edit can never turn one into the other.
+  const next = invoiceRow({ ...draft, kind, quotationId }, no)
+  // A quotation stays a quotation: no payment status, no due date, never income.
+  const payment = isQuote
+    ? { payment_tracked: undefined, paid_at: undefined, paid_on: undefined }
+    : {
+        payment_tracked: opts.status !== 'issued',
+        paid_at: opts.status === 'paid' ? (wasPaid ? prevMeta.paid_at : undefined) ?? now : undefined,
+        // The payment date only survives while the invoice stays paid.
+        paid_on: opts.status === 'paid' ? prevMeta.paid_on : undefined,
+      }
   const update = {
     title: next.title,
     notes: next.notes,
     amount: next.amount,
     created_at: next.created_at,
-    status: opts.status,
-    due_date: opts.dueDate,
+    status: isQuote ? 'quotation' : opts.status,
+    due_date: isQuote ? null : opts.dueDate,
     meta: {
       ...prevMeta,
       ...next.meta,
       source: prevMeta.source,
-      payment_tracked: opts.status !== 'issued',
-      paid_at: opts.status === 'paid' ? (wasPaid ? prevMeta.paid_at : undefined) ?? now : undefined,
-      // The payment date only survives while the invoice stays paid.
-      paid_on: opts.status === 'paid' ? prevMeta.paid_on : undefined,
+      ...payment,
       canva_design: opts.preview.designId,
       canva_url: opts.preview.viewUrl ?? `https://www.canva.com/design/${opts.preview.designId}/view`,
       render: { status: 'done', design_id: opts.preview.designId, rendered_at: now, source: 'dashboard-edit' },
@@ -152,7 +177,7 @@ export async function applyEdit(
     // Put Drive and Canva back so nothing points at a version the row doesn't have.
     if (trashed) await untrash(trashed).catch(() => {})
     await parkForDeletion(opts.preview.designId)
-    return { ok: false, error: `The invoice row could not be updated: ${error.message}. Nothing was changed.` }
+    return { ok: false, error: `The ${noun} row could not be updated: ${error.message}. Nothing was changed.` }
   }
 
   await parkForDeletion(oldDesign)
@@ -164,19 +189,16 @@ export type UndoResult = { ok: true; no: string; warning?: string } | Fail
 
 export async function undoLastEdit(id: number): Promise<UndoResult> {
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
-  const { data: row } = await supabase
-    .from('records')
-    .select('id, meta')
-    .eq('id', id)
-    .eq('category', 'cash_in')
-    .single()
+  const row = await loadDoc(id, 'id, meta')
   const meta = row?.meta ?? {}
+  const kind = row ? rowKind(row)! : 'invoice'
+  const noun = kind === 'quotation' ? 'quotation' : 'invoice'
   const edits: EditSnapshot[] = Array.isArray(meta.edits) ? meta.edits : []
   const last = edits[edits.length - 1]
-  if (!row || !last) return { ok: false, error: 'There is no edit to undo on this invoice' }
+  if (!row || !last) return { ok: false, error: `There is no edit to undo on this ${noun}` }
   const no = String(meta.invoice_no)
   if (designIdOf(row) !== last.design_id) return { ok: false, error: `${no}'s Canva design changed after the edit, so it can't be undone safely.` }
-  if (driveStatus(row) === 'uploading') return { ok: false, error: 'A Google Drive upload for this invoice is running — wait for it, then undo.' }
+  if (driveStatus(row) === 'uploading') return { ok: false, error: `A Google Drive upload for this ${noun} is running — wait for it, then undo.` }
 
   const warnings: string[] = []
 
@@ -207,10 +229,10 @@ export async function undoLastEdit(id: number): Promise<UndoResult> {
     .from('records')
     .update({ ...last.prev, meta: { ...prevMeta, ig_posts: meta.ig_posts, edits: rest.length ? rest : undefined } })
     .eq('id', id)
-  if (error) return { ok: false, error: `The invoice row could not be restored: ${error.message}` }
+  if (error) return { ok: false, error: `The ${noun} row could not be restored: ${error.message}` }
 
   const prevDate = String(prevMeta.invoice_date ?? last.prev.created_at).slice(0, 10)
-  await fileDesign(last.old_design_id, prevDate)
+  await fileDesign(last.old_design_id, prevDate, kind)
   await parkForDeletion(last.design_id)
 
   return warnings.length ? { ok: true, no, warning: `${no} restored, but ${warnings.join('; ')}.` } : { ok: true, no }

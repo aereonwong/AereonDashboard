@@ -3,7 +3,7 @@
 // table as Invoice Details; quotes are `doc` rows and never count as income.
 import { getRecords, demoMode } from '@/lib/records'
 import { toQuoteRows, quoteLinks } from '@/lib/quotes'
-import { formOptions } from '@/lib/invoice-details'
+import { formOptions, editBlockOf, editValuesOf } from '@/lib/invoice-details'
 import { composioReady } from '@/lib/composio-exec'
 import { readVersion } from '@/lib/v3/version'
 import Quotations, { type LinkableInvoice } from './Quotations'
@@ -32,9 +32,15 @@ export default async function QuotationsPage({ searchParams }: { searchParams: P
       currency: String(r.meta?.currency ?? 'MYR'),
     }))
     .sort((a, b) => b.date.localeCompare(a.date))
+  const byId = new Map(rows.map(r => [r.id, r]))
+  const quotes = toQuoteRows(rows, today).map(q => {
+    const r = byId.get(q.id)!
+    const block = editBlockOf(r)
+    return { ...q, editBlock: block, edit: block ? null : editValuesOf(r) }
+  })
   return (
     <Quotations
-      rows={toQuoteRows(rows, today)}
+      rows={quotes}
       invoices={invoices}
       options={formOptions(rows, today)}
       initial={{ year: one(sp.year), status: one(sp.status), client: one(sp.client), q: one(sp.q) }}
