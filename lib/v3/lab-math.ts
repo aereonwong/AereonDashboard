@@ -112,7 +112,8 @@ const MYT_MS = 8 * 3_600_000
 export const myt = (iso: string) => new Date(Date.parse(iso) + MYT_MS)
 export const mytDay = (iso: string) => myt(iso).toISOString().slice(0, 10)
 
-/** The timeline presets. `today` is the newest post's day, not the clock, so the same data
+/** The timeline presets. The Lab opens on '90' (Aereon, 10 Oct 2026: default to the last 90 days or
+ *  the year, never a long range a panel does not need). `today` is the newest post's day, not the clock, so the same data
  *  always gives the same slice; `since` is where the Lab's data starts (1 January). A single
  *  month is picked from the month list, which `months()` builds. */
 export function presets(today: string, since: string): { key: string; label: string; range: Range }[] {
@@ -120,9 +121,12 @@ export function presets(today: string, since: string): { key: string; label: str
     const d = new Date(Date.parse(today + 'T00:00:00Z') - days * 86_400_000).toISOString().slice(0, 10)
     return d < since ? since : d
   }
+  const short = back(89) === since // the year so far is 90 days or less: "90 days" and "the year" are the same slice
   return [
-    { key: 'ytd', label: `${today.slice(0, 4)} so far`, range: { from: since, to: today } },
-    { key: '90', label: 'Last 90 days', range: { from: back(89), to: today } },
+    ...(short ? [] : [{ key: 'ytd', label: `${today.slice(0, 4)} so far`, range: { from: since, to: today } }]),
+    // Early in the year 90 days would reach back before 1 January, where the Lab has no data,
+    // so it is clamped — and labelled for what it then is.
+    { key: '90', label: back(89) === since ? `${today.slice(0, 4)} so far` : 'Last 90 days', range: { from: back(89), to: today } },
     { key: '30', label: 'Last 30 days', range: { from: back(29), to: today } },
   ]
 }
