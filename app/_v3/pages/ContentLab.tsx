@@ -29,7 +29,8 @@ import {
 import { compact, longDate, num, shortDate } from '../fmt'
 import '../lab.css'
 
-// 👉 v3 Instagram, Content Lab view: what to post next, read from every stored post since 2020.
+// 👉 v3 Instagram, Content Lab view: what to post next, read from THIS YEAR's posts only
+// (from 1 January, Malaysia time — Aereon's choice on 10 Oct 2026; lib/v3/content-lab.ts labSince).
 //
 // One filter bar scopes the page (timeline · format · angle · hook). A panel that IS one of
 // those filters (the hook board, the angle grid) shows all its own options and highlights
@@ -52,7 +53,9 @@ const times = (x: number) => (x >= 10 ? `${x.toFixed(0)}×` : `${x.toFixed(1)}×
 const pc = (x: number) => `${Math.round(x * 100)}%`
 /** SVG coordinates to 0.1 unit: Math.log10 can differ in the last digit between server and browser, which breaks hydration. */
 const r1 = (v: number) => Math.round(v * 10) / 10
-const rate = (x: number) => (x >= 10 ? x.toFixed(0) : x.toFixed(1))
+const rate = (x: number | null) => (x === null ? '—' : x >= 10 ? x.toFixed(0) : x.toFixed(1))
+const n0 = (x: number | null) => (x === null ? '—' : num(x))
+const c0 = (x: number | null) => (x === null ? '—' : compact(x))
 
 // ------------------------------------------------------------------ motion helpers
 
@@ -157,10 +160,10 @@ function PostTip({ p, typical }: { p: LabPost; typical: number }) {
           <b>{typical ? times(p.reach / typical) : '—'}</b> typical
         </span>
         <span>
-          <b>{num(p.shares)}</b> shares
+          <b>{n0(p.shares)}</b> shares
         </span>
         <span>
-          <b>{num(p.saves)}</b> saves
+          <b>{n0(p.saves)}</b> saves
         </span>
         {p.watchSec !== null ? (
           <span>
@@ -202,7 +205,7 @@ function Panel({ id, title, note, scope, span, children }: { id: string; title: 
 // ------------------------------------------------------------------ the page
 
 export default function ContentLab({ lab, username }: { lab: Lab; username: string }) {
-  const today = lab.newest ? mytDay(lab.newest) : new Date().toISOString().slice(0, 10)
+  const today = lab.today || (lab.newest ? mytDay(lab.newest) : '')
   const since = lab.since || today.slice(0, 4) + '-01-01'
   const ranges = useMemo(() => [...presets(today, since), ...months(today, since)], [today, since])
   const [preset, setPreset] = useState('ytd')
@@ -362,8 +365,8 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
           <Kpi label="Combined reach" value={p.reach} prev={prev?.reach ?? null} fmt={compact} note="every post's reach added up" />
           <Kpi label="Typical post" value={p.typical} prev={prev?.typical ?? null} fmt={compact} note="median reach" />
           <Kpi label="Hit rate" value={p.hitRate * 100} prev={prev ? prev.hitRate * 100 : null} fmt={n => `${Math.round(n)}%`} note={`${p.hits} posts ≥ 2× typical`} points />
-          <Kpi label="Shares per 1K" value={p.sharesK} prev={prev?.sharesK ?? null} fmt={rate} note="median post" />
-          <Kpi label="Saves per 1K" value={p.savesK} prev={prev?.savesK ?? null} fmt={rate} note="median post" />
+          <Kpi label="Shares per 1K" value={p.sharesK ?? 0} prev={p.sharesK === null ? null : prev?.sharesK ?? null} fmt={x => (p.sharesK === null ? '—' : rate(x))} note="median post" />
+          <Kpi label="Saves per 1K" value={p.savesK ?? 0} prev={p.savesK === null ? null : prev?.savesK ?? null} fmt={x => (p.savesK === null ? '—' : rate(x))} note="median post" />
           <Kpi label="Reel watch" value={p.watch ?? 0} prev={prev?.watch ?? null} fmt={n => (p.watch === null ? '—' : `${n.toFixed(1)}s`)} note="median, per play" />
         </section>
 
@@ -576,7 +579,9 @@ function WhoSaw({ windows, range, tips }: { windows: Lab['windows']; range: Rang
         <b className="num">
           <Count value={newPct * 100} format={n => `${Math.round(n)}%`} />
         </b>
-        <span>of the people reached did not follow you</span>
+        <span>
+          of people reached were not followers · average of {ws.length} Instagram window{ws.length === 1 ? '' : 's'}, {shortDate(ws[0].since)} – {shortDate(ws.at(-1)!.until)}
+        </span>
       </div>
       <div className="lab-who-bars">
         {ws.map((w, i) => {
@@ -1188,9 +1193,9 @@ function Pareto({ posts, tips }: { posts: LabPost[]; tips: Tips }) {
 
 const SORTS = [
   { key: 'reach', label: 'Furthest reach', by: (p: LabPost) => p.reach },
-  { key: 'shares', label: 'Most shared', by: (p: LabPost) => p.shares },
-  { key: 'saves', label: 'Most saved', by: (p: LabPost) => p.saves },
-  { key: 'rate', label: 'Best share rate', by: (p: LabPost) => (p.reach >= 3000 ? p.shares / p.reach : 0) },
+  { key: 'shares', label: 'Most shared', by: (p: LabPost) => p.shares ?? -1 },
+  { key: 'saves', label: 'Most saved', by: (p: LabPost) => p.saves ?? -1 },
+  { key: 'rate', label: 'Best share rate', by: (p: LabPost) => (p.reach >= 3000 && p.shares !== null ? p.shares / p.reach : -1) },
   { key: 'quiet', label: 'Quietest', by: (p: LabPost) => -p.reach },
 ] as const
 
@@ -1235,10 +1240,10 @@ function Ranked({ posts, typical }: { posts: LabPost[]; typical: number }) {
                     <b className="num">{compact(p.reach)}</b> reach
                   </span>
                   <span>
-                    <b className="num">{compact(p.shares)}</b> shares
+                    <b className="num">{c0(p.shares)}</b> shares
                   </span>
                   <span>
-                    <b className="num">{compact(p.saves)}</b> saves
+                    <b className="num">{c0(p.saves)}</b> saves
                   </span>
                   {p.watchSec !== null ? (
                     <span>

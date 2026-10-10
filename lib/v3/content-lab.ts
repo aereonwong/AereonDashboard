@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode } from '@/lib/records'
-import { angleOf, brandOf, hookOf, type Format, type LabDay, type LabPost, type LabWindow } from './lab-math'
+import { angleOf, brandOf, hookOf, type Format, type LabPost, type LabWindow } from './lab-math'
 
 // 👉 Content Lab — what it reads. This calendar year's posts (ig_posts for the caption and
 // format, the LATEST reading in ig_post_metrics for the numbers), plus
@@ -14,9 +14,9 @@ import { angleOf, brandOf, hookOf, type Format, type LabDay, type LabPost, type 
  *  It rolls over by itself on 1 January. */
 export const labSince = () => `${new Date(Date.now() + 8 * 3_600_000).getUTCFullYear()}-01-01`
 
-export type Lab = { since: string; posts: LabPost[]; windows: LabWindow[]; daily: LabDay[]; newest: string | null; read: string | null }
+export type Lab = { since: string; today: string; posts: LabPost[]; windows: LabWindow[]; newest: string | null; read: string | null }
 
-const EMPTY: Lab = { since: '', posts: [], windows: [], daily: [], newest: null, read: null }
+const EMPTY: Lab = { since: '', today: '', posts: [], windows: [], newest: null, read: null }
 
 type PostRow = { media_id: string; posted_at: string | null; type: string | null; media_type: string | null; caption: string | null; permalink: string | null; likes: number | null; comments: number | null }
 type MetricRow = {
@@ -33,7 +33,7 @@ type MetricRow = {
 }
 
 // Supabase returns at most 1,000 rows a request, so every read is paged. Oldest first,
-// and a failed page gives up rather than quietly dropping the newest rows.
+// so a failed page — or running past the cap — gives up rather than quietly dropping the newest rows.
 async function paged<T>(build: (from: number) => PromiseLike<{ data: unknown; error: unknown }>): Promise<T[] | null> {
   const out: T[] = []
   for (let from = 0; from < 100_000; from += 1000) {
@@ -41,9 +41,9 @@ async function paged<T>(build: (from: number) => PromiseLike<{ data: unknown; er
     if (error) return null
     const rows = (data ?? []) as T[]
     out.push(...rows)
-    if (rows.length < 1000) break
+    if (rows.length < 1000) return out
   }
-  return out
+  return null
 }
 
 const formatOf = (type: string | null, media: string | null): Format =>
@@ -58,14 +58,15 @@ const hookLine = (caption: string) => {
 export async function readLab(): Promise<Lab> {
   if (!supabaseConfigured || (await demoMode())) return EMPTY
   const since = labSince()
+  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10) // Malaysia's date: "last 30 days" ends today, not on the last post
   const sinceUtc = new Date(Date.parse(since + 'T00:00:00+08:00')).toISOString()
-  const [posts, metrics, periods, daily] = await Promise.all([
+  const [posts, metrics, periods] = await Promise.all([
     paged<PostRow>(from =>
       supabase
         .from('ig_posts')
         .select('media_id, posted_at, type, media_type, caption, permalink, likes, comments')
         .gte('posted_at', sinceUtc)
-        .neq('type', 'STORY')
+        .or('type.is.null,type.neq.STORY') // a NULL type is a post, not a story: neq alone would drop it
         .order('posted_at', { ascending: true })
         .order('media_id', { ascending: true })
         .range(from, from + 999),
@@ -74,15 +75,13 @@ export async function readLab(): Promise<Lab> {
       supabase
         .from('ig_post_metrics')
         .select('media_id, captured_at, reach, views, likes, comments, saved, shares, watch_ms, follows')
-        .gte('posted_at', sinceUtc)
+        .gte('captured_at', sinceUtc) // any reading of a this-year post was taken after 1 Jan
+        .not('reach', 'is', null) // a refresh whose insights failed must not hide the last good reading
         .order('captured_at', { ascending: true })
         .order('media_id', { ascending: true })
         .range(from, from + 999),
     ),
     supabase.from('ig_account_periods').select('since, until, totals, follow_type').gte('until', since).order('since', { ascending: true }),
-    paged<{ day: string; reach: number | null }>(from =>
-      supabase.from('ig_account_daily').select('day, reach').gte('day', since).order('day', { ascending: true }).range(from, from + 999),
-    ),
   ])
   if (!posts || !metrics) return EMPTY
 
@@ -103,11 +102,12 @@ export async function readLab(): Promise<Lab> {
       hook: hookLine(caption),
       link: p.permalink,
       reach: m.reach,
-      views: m.views ?? 0,
-      likes: m.likes ?? p.likes ?? 0,
-      comments: m.comments ?? p.comments ?? 0,
-      saves: m.saved ?? 0,
-      shares: m.shares ?? 0,
+      // Missing is not zero: a metric Instagram did not return stays null and is left out of every median.
+      views: m.views,
+      likes: m.likes ?? p.likes,
+      comments: m.comments ?? p.comments,
+      saves: m.saved,
+      shares: m.shares,
       watchSec: format === 'reel' && m.watch_ms ? m.watch_ms / 1000 : null,
       follows: format === 'reel' ? null : m.follows,
       angle: angleOf(caption),
@@ -126,13 +126,13 @@ export async function readLab(): Promise<Lab> {
     nonFollowers: share(w.follow_type?.reach, 'NON_FOLLOWER'),
     views: Number(w.totals?.views ?? 0),
     interactions: Number(w.totals?.total_interactions ?? 0),
-  }))
+  })).filter(w => w.followers + w.nonFollowers > 0) // the backfill omits the split when that call failed
 
   return {
     since,
+    today,
     posts: out,
     windows,
-    daily: (daily ?? []).filter(d => d.reach !== null).map(d => ({ day: d.day, reach: d.reach! })),
     newest: out.at(-1)?.at ?? null,
     read: metrics.at(-1)?.captured_at ?? null,
   }

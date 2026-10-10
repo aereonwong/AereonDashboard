@@ -21,11 +21,11 @@ export type LabPost = {
   hook: string // the caption's first line, clipped
   link: string | null
   reach: number
-  views: number
-  likes: number
-  comments: number
-  saves: number
-  shares: number
+  views: number | null // null = Instagram did not return it; never counted as 0
+  likes: number | null
+  comments: number | null
+  saves: number | null
+  shares: number | null
   watchSec: number | null // Reels: average watch time per play
   follows: number | null // photos/carousels: follows the post caused
   angle: AngleKey
@@ -35,7 +35,6 @@ export type LabPost = {
 
 /** Instagram's own 30-day account windows: the only UNIQUE reach figures. */
 export type LabWindow = { since: string; until: string; reach: number; followers: number; nonFollowers: number; views: number; interactions: number }
-export type LabDay = { day: string; reach: number }
 
 // ------------------------------------------------------------------ classifiers
 
@@ -166,10 +165,14 @@ export function median(xs: number[]): number {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
 }
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
-/** Per 1,000 accounts reached — a rate, so a viral post and a quiet one weigh the same. */
-const perK = (ps: LabPost[], k: 'shares' | 'saves' | 'comments') => median(ps.map(p => (p.reach ? (p[k] / p.reach) * 1000 : 0)))
+/** Per 1,000 accounts reached — a rate, so a viral post and a quiet one weigh the same.
+ *  Posts without the figure are left out; null when none have it. */
+const perK = (ps: LabPost[], k: 'shares' | 'saves' | 'comments'): number | null => {
+  const xs = ps.filter(p => p[k] !== null && p.reach > 0).map(p => ((p[k] as number) / p.reach) * 1000)
+  return xs.length ? median(xs) : null
+}
 
-export type Group = { n: number; median: number; lift: number; hitRate: number; sharesK: number; savesK: number; reach: number; thin: boolean; best: LabPost | null }
+export type Group = { n: number; median: number; lift: number; hitRate: number; sharesK: number | null; savesK: number | null; reach: number; thin: boolean; best: LabPost | null }
 
 export function group(ps: LabPost[], typical: number): Group {
   const m = median(ps.map(p => p.reach))
@@ -193,10 +196,9 @@ export type Pulse = {
   typical: number
   hits: number
   hitRate: number
-  sharesK: number
-  savesK: number
+  sharesK: number | null
+  savesK: number | null
   watch: number | null
-  follows: number
 }
 
 export function pulse(ps: LabPost[]): Pulse {
@@ -206,14 +208,13 @@ export function pulse(ps: LabPost[]): Pulse {
   return {
     posts: ps.length,
     reach: sum(ps.map(p => p.reach)),
-    views: sum(ps.map(p => p.views)),
+    views: sum(ps.map(p => p.views ?? 0)),
     typical,
     hits,
     hitRate: ps.length ? hits / ps.length : 0,
     sharesK: perK(ps, 'shares'),
     savesK: perK(ps, 'saves'),
     watch: reels.length ? median(reels.map(p => p.watchSec!)) : null,
-    follows: sum(ps.map(p => p.follows ?? 0)),
   }
 }
 
