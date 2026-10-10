@@ -198,6 +198,10 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
 - **Old Canva quotes are record-only** (Aereon's call): 65 imported by `npm run quote:import` from git-ignored
   `.quote-data/`, numbers kept exactly as printed (odd formats and repeats included), designs untouched.
   `docs/QUOTE-AUDIT.md` has the formats; the client-level findings are in git-ignored `.quote-data/QUOTE-AUDIT.md`.
+- **Create quotation** (Quotations page header): the Create Invoice dialog with `kind="quotation"` — same Canva
+  preview → Save flow as invoices and as Telegram `/quote`: `SYCP-Q-YYYYMM-NNN`, `TEMPLATES.quotation`, Canva's
+  Quotation folder, a validity period instead of payment status/due date. Filed by `fileInvoice` as `doc`/`quotation`.
+  Quotations can't be edited from the dashboard yet (Edit is invoice-only).
 - Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
 
 ## Raising an invoice or a quotation

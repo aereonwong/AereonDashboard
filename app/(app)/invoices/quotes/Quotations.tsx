@@ -103,6 +103,17 @@ export default function Quotations({
             <a href="/invoices/details">Invoice Details</a>
           </p>
         </div>
+        <CreateInvoice
+          kind="quotation"
+          options={options}
+          disabled={!!locked || !ready}
+          disabledReason={locked ?? offline}
+          onSaved={no => {
+            setF(x => ({ ...x, year: '', status: '', client: '', q: '' }))
+            setToast({ text: `${no} saved and filed in Canva's Quotation folder. Convert it when the job is confirmed.` })
+            router.refresh()
+          }}
+        />
       </header>
 
       {converting ? (
