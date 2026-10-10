@@ -387,7 +387,7 @@ export default function Quotations({
                         className="idt-act"
                         disabled={isBusy || !!locked || !ready || !r.edit || !r.designId}
                         onClick={() =>
-                          r.edit && r.designId && setEditing({ id: r.id, no: r.no, designId: r.designId, values: r.edit, driveUploaded: false })
+                          r.edit && r.designId && setEditing({ id: r.id, no: r.no, designId: r.designId, values: r.edit, driveUploaded: false, invoicedAs: r.invoices.map(i => i.no) })
                         }
                         aria-label={`Edit ${r.no}`}
                         title={locked ?? offline ?? r.editBlock ?? 'Edit quotation — redrawn in Canva, same number'}

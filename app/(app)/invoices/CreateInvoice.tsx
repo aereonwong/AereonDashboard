@@ -43,7 +43,15 @@ const fmt = (n: number, cur: string) => `${cur} ${n.toLocaleString('en-MY', { mi
 
 type Phase = 'form' | 'rendering' | 'preview' | 'saving'
 
-export type EditTarget = { id: number; no: string; designId: string; values: EditValues; driveUploaded: boolean }
+export type EditTarget = {
+  id: number
+  no: string
+  designId: string
+  values: EditValues
+  driveUploaded: boolean
+  /** Quotations: invoices already raised from it (they are not changed by the edit). */
+  invoicedAs?: string[]
+}
 /** A quote being turned into an invoice: the form opens filled in from it. */
 export type QuoteSource = { id: number; no: string; values: Partial<EditValues> }
 
@@ -615,6 +623,9 @@ export default function CreateInvoice({
               ? [
                   'Canva: this new design becomes the quotation. The old one moves to "TODO: Delete".',
                   'Records: amount, dates and validity update on Quotations. A quotation is never income.',
+                  ...(edit.invoicedAs?.length
+                    ? [`Already invoiced as ${edit.invoicedAs.join(', ')} — ${edit.invoicedAs.length === 1 ? 'that invoice is' : 'those invoices are'} not changed.`]
+                    : []),
                   "You can undo this from the quotation's row.",
                 ]
               : [
