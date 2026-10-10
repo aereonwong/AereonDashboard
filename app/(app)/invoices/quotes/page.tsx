@@ -15,7 +15,9 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
 export default async function QuotationsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const [rows, demo, { version }, sp] = await Promise.all([getRecords(), demoMode(), readVersion(), searchParams])
-  const today = new Date().toISOString().slice(0, 10)
+  // Malaysia's date, not the server's UTC one: Convert dates the invoice today, and
+  // before 8am MYT UTC is still yesterday (on the 1st, last month's number series).
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
   const linked = quoteLinks(rows)
   // Invoices a quote can be linked to by hand: the ones no quote claims yet.
   const invoices: LinkableInvoice[] = rows
