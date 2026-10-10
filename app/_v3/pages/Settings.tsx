@@ -2,10 +2,10 @@ import type { Version } from '@/lib/v3/catalog'
 import type { Site } from '@/lib/v3/site'
 import DemoToggle from '@/app/_components/DemoToggle'
 import AccountPanel from '../AccountPanel'
-import { VersionPicker, Theme, LandingSwitch, AccentPicker } from '../SettingsControls'
+import { VersionPicker, Theme, LandingSwitch, AccentPicker, IgViewPicker } from '../SettingsControls'
 
 // 👉 v3 Settings: what you actually change, in the order you change it.
-export default function Settings({ version, site, demo }: { version: Version; site: Site; demo: boolean }) {
+export default function Settings({ version, site, demo, igView }: { version: Version; site: Site; demo: boolean; igView: 'studio' | 'lab' }) {
   return (
     <div>
       <header className="v3-head">
@@ -26,6 +26,16 @@ export default function Settings({ version, site, demo }: { version: Version; si
             <p className="v3-panel-note">All three read the same records; only the layout changes</p>
           </div>
           <VersionPicker version={version} />
+        </section>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-igview">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-igview">
+              Instagram page
+            </h2>
+            <p className="v3-panel-note">Saved on this device · both read the same posts</p>
+          </div>
+          <IgViewPicker view={igView} />
         </section>
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-accent">

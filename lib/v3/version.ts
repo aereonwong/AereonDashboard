@@ -25,3 +25,14 @@ export async function readVersion(): Promise<{ version: Version; world: World }>
     return { version: 'v3', world: 'canon' }
   }
 }
+
+/** The Instagram page's view, per device (cookie `cfo-ig`): the Studio page, or the
+ *  Content Lab (10 Oct 2026) — this year's posts read for what to post next. */
+export type IgView = 'studio' | 'lab'
+export async function readIgView(): Promise<IgView> {
+  try {
+    return (await cookies()).get('cfo-ig')?.value === 'lab' ? 'lab' : 'studio'
+  } catch {
+    return 'studio'
+  }
+}
