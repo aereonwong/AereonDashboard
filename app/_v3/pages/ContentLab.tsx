@@ -536,6 +536,7 @@ function TimelineChart({ posts, range, focus, tips, onZoom }: { posts: LabPost[]
                 </span>
               </div>
               {b.best ? <div className="lab-tip-meta">Best: {b.best.hook || '(no caption)'} · {compact(b.best.reach)}</div> : null}
+              {focus && b.from < focus.from && b.to >= focus.from ? <div className="lab-tip-meta">This bar is the whole {weekly ? 'week' : 'month'}; the highlight starts {shortDate(focus.from)}.</div> : null}
               {b.n ? <div className="lab-tip-cta">Click to zoom in</div> : null}
             </div>
           )
