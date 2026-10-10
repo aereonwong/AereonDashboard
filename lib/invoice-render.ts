@@ -190,6 +190,9 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
   const terms = String(m.terms ?? '').trim()
   const discount = Number(m.discount ?? 0)
   const hasTime = !!(m.event_time && m.event_time !== '-')
+  // An invoice that follows a quotation prints "QUOTATION No." as a reference
+  // line above its own number — the line the template's leading blank is there for.
+  const quoteRef = !isQuote ? String(m.quotation_no ?? '').trim() : ''
 
   // A discount prints as the LAST scope-of-work bullet, plain weight — not
   // bold. Bold only survives a find-and-replace when the new text extends an
@@ -210,7 +213,14 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // a line below it.
     fill(FIELDS.numberAndDate, 'NUMBER', String(m.invoice_no ?? '')),
     fill(FIELDS.numberAndDate, 'DATE', stamp(String(m.invoice_date))),
-    { type: 'find_and_replace_text', locator_id: FIELDS.numberAndDate, find_text: '\nINVOICE No.', replace_text: 'INVOICE No.' },
+    // With a quotation reference the blank line becomes that reference; without
+    // one it is closed up.
+    {
+      type: 'find_and_replace_text',
+      locator_id: FIELDS.numberAndDate,
+      find_text: '\nINVOICE No.',
+      replace_text: quoteRef ? `QUOTATION No. ${quoteRef}\nINVOICE No.` : 'INVOICE No.',
+    },
     ...strip(FIELDS.numberAndDate),
 
     // Client — ATTN and company stay bold, the address stays normal. The
@@ -236,7 +246,9 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // this box's own blank line only when it's an invoice AND the address runs
     // to 3+ lines. A quotation never drops it — its header keeps its own blank
     // line, so the two stay level no matter how long the address is.
-    ...(!isQuote && address.split('\n').length >= 3
+    // With a quotation reference the left header is a line taller again, so the
+    // address keeps its blank line (one line lower) to end level with the date.
+    ...(!isQuote && !quoteRef && address.split('\n').length >= 3
       ? [{ type: 'find_and_replace_text', locator_id: FIELDS.client, find_text: '\nATTN:', replace_text: 'ATTN:' }]
       : []),
     ...strip(FIELDS.client),
