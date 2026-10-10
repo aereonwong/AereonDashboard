@@ -882,7 +882,6 @@ function AngleGrid({ posts, chosen, onPick, tips }: { posts: LabPost[]; chosen: 
                 aria-pressed={on}
                 aria-label={`${a.label}, ${fm.label}: ${g.n} posts, typical ${num(g.median)}`}
                 data-thin={g.thin || undefined}
-                data-strong={(g.n && !g.thin && 0.08 + 0.92 * Math.sqrt(g.median / max) > 0.6) || undefined}
                 style={{ ['--a' as string]: g.n && !g.thin ? (0.08 + 0.92 * Math.sqrt(g.median / max)).toFixed(3) : 0, ['--i' as string]: ri * 3 + ci }}
                 onClick={() => onPick(a.key, fm.key)}
                 onPointerMove={e => tips.show(e, body)}
@@ -890,8 +889,14 @@ function AngleGrid({ posts, chosen, onPick, tips }: { posts: LabPost[]; chosen: 
                 onFocus={e => tips.focus(e, body)}
                 onBlur={tips.hide}
               >
-                {g.n ? <b className="num">{compact(g.median)}</b> : '—'}
-                {g.n ? <small>{g.n}</small> : null}
+                {g.n ? (
+                  <span className="lab-pill">
+                    <b className="num">{compact(g.median)}</b>
+                    <small>{g.n}</small>
+                  </span>
+                ) : (
+                  '—'
+                )}
               </button>
             )
           })}
@@ -1051,7 +1056,10 @@ function WhenGrid({ posts, tips }: { posts: LabPost[]; tips: Tips }) {
         <span />
         {DAYPARTS.map(d => (
           <span key={d.label} className="lab-heat-col">
-            {d.label}
+            <span className="lab-full">{d.label}</span>
+            <span className="lab-abbr" aria-hidden="true">
+              {d.label.slice(0, 3)}
+            </span>
             <small>{d.hours}</small>
           </span>
         ))}
@@ -1083,14 +1091,19 @@ function WhenGrid({ posts, tips }: { posts: LabPost[]; tips: Tips }) {
                   tabIndex={0}
                   data-thin={c.n < 2 || undefined}
                   data-best={(best && best.d === di && best.t === ti) || undefined}
-                  data-strong={(c.n >= 2 && 0.08 + 0.92 * Math.sqrt(c.median / w.max) > 0.6) || undefined}
                   style={{ ['--a' as string]: c.n >= 2 ? (0.08 + 0.92 * Math.sqrt(c.median / w.max)).toFixed(3) : 0, ['--i' as string]: di * 4 + ti }}
                   onPointerMove={e => tips.show(e, body)}
                   onPointerLeave={tips.hide}
                   onFocus={e => tips.focus(e, body)}
                   onBlur={tips.hide}
                 >
-                  {c.n ? <b className="num">{compact(c.median)}</b> : '·'}
+                  {c.n ? (
+                    <span className="lab-pill">
+                      <b className="num">{compact(c.median)}</b>
+                    </span>
+                  ) : (
+                    '·'
+                  )}
                 </span>
               )
             })}

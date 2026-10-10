@@ -207,16 +207,18 @@ html[data-theme="dark"] .lab {
 }
 .lab-when .lab-heat-cell { min-height: 38px; cursor: default; }
 .lab-heat-cell b { font-size: var(--t-sm); }
-.lab-heat-cell small { font-size: 10px; color: var(--ink-3); }
+.lab-heat-cell small { font-size: 10px; }
 .lab-heat-cell:hover, .lab-heat-cell:focus-visible { transform: scale(1.06); border-color: var(--ink-3); outline: none; z-index: 1; }
 .lab-heat-cell[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
 .lab-heat-cell[data-best] { border-color: var(--ink); }
 .lab-heat-cell[data-thin] { background-image: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--ink) 7%, transparent) 5px 6px); color: var(--ink-3); }
 .lab-heat-cell:disabled { cursor: default; opacity: 0.4; transform: none; }
 @keyframes lab-cell { from { opacity: 0; transform: scale(0.82); } }
-/* High fills need light text: past ~60% accent the cell is dark in light mode, light in dark. */
-.lab-heat-cell[data-strong] { color: var(--on-accent); }
-.lab-heat-cell[data-strong] small { color: var(--on-accent); opacity: 0.8; }
+/* The figure sits on its own solid pill, so it reads at full contrast whatever the fill
+   behind it — every accent, light and dark, graphite included. */
+.lab-pill { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 7px; border-radius: 6px; background: color-mix(in srgb, var(--film) 90%, transparent); color: var(--ink); line-height: 1.2; }
+.lab-pill small { color: var(--ink-2); }
+.lab-abbr { display: none; }
 
 /* ---------------------------------------------------------------- watch columns */
 
@@ -280,4 +282,12 @@ html[data-theme="dark"] .lab {
 @media (max-width: 720px) {
   .lab-filters { position: static; gap: var(--space-2) var(--space-3); }
   .lab-fcount { margin-left: 0; }
+  /* A segmented row wider than the phone scrolls inside itself, never the page. */
+  .lab .v3-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .lab .v3-seg button { flex: none; }
+  .lab-heat, .lab-when { grid-template-columns: minmax(3.6rem, 0.8fr) repeat(var(--cols, 4), minmax(0, 1fr)); }
+  .lab-full { display: none; }
+  .lab-abbr { display: inline; }
+  .lab-heat-col small { display: none; }
+  .lab-heat-lab { font-size: var(--t-xs); }
 }
