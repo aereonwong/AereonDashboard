@@ -4,6 +4,7 @@ import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { EMAIL } from '@/lib/agent-site'
 import PostGrid from '../PostGrid'
 import Icon from '@/app/_components/Icon'
 import { compact, num } from '../fmt'
@@ -24,7 +25,6 @@ const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {
   Other: null,
 }
 
-const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
 export default function MediaKit({

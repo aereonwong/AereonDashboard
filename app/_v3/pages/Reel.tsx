@@ -7,6 +7,7 @@ import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ReelFilm, { type ReelData, type ReelPost } from '../ReelFilm'
 import { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { EMAIL } from '@/lib/agent-site'
 import { socials, combined } from '@/lib/socials'
 import { intro as introFor } from '../intro'
 
@@ -19,7 +20,6 @@ import { intro as introFor } from '../intro'
 // business data, and no figure Instagram did not report. Account figures are
 // shown only while fresh; a section without data is left out.
 
-const EMAIL = 'aereon.wong@gmail.com'
 const IG = 'https://www.instagram.com/aereonwong/'
 
 const SERVICES: Record<WorkKind, { title: string; line: string } | null> = {

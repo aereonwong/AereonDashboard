@@ -7,7 +7,7 @@
 export const SITE_URL = 'https://aereonwong.com'
 export const SITE_NAME = 'Aereon Wong'
 export const COMPANY = 'SY Creative Production Sdn. Bhd.'
-export const EMAIL = 'aereon.wong@gmail.com'
+export const EMAIL = 'collab@aereonwong.com'
 export const INSTAGRAM = 'https://www.instagram.com/aereonwong/'
 export const OG_IMAGE = { path: '/img/klcc-sunset.jpg', width: 2000, height: 1332 }
 export const SUMMARY =

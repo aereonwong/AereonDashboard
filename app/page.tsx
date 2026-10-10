@@ -12,7 +12,7 @@ import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
-import { jsonLd } from '@/lib/agent-site'
+import { jsonLd, EMAIL } from '@/lib/agent-site'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
 
@@ -203,7 +203,7 @@ async function LandingBody({
               </svg>
               @aereonwong
             </a>
-            <a className="land-btn ghost" href="mailto:aereon.wong@gmail.com">
+            <a className="land-btn ghost" href={`mailto:${EMAIL}?subject=Collaboration`}>
               <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="14" rx="3" />
                 <path d="m3.5 7 8.5 6 8.5-6" />
