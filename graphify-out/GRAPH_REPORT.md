@@ -1,9 +1,9 @@
-# Graph Report - AereonDashboard-eq  (2026-10-10)
+# Graph Report - AereonDashboard  (2026-10-10)
 
 ## Corpus Check
-- 498 files · ~493,039 words
+- 498 files · ~493,083 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 15 file(s) not represented in the graph (top: .css 7, (none) 5, .example 1)
+- Unclassified: 14 file(s) not represented in the graph (top: .css 7, (none) 4, .example 1)
 
 ## Summary
 - 3880 nodes · 6814 edges · 309 communities (239 shown, 70 thin omitted)
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5130f4eb`
+- Built from commit: `c11bb58f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
