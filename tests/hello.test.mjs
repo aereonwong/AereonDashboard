@@ -44,3 +44,19 @@ test('collab mailto carries topic and a brief', () => {
   assert.ok(decodeURIComponent(m).includes('Collab enquiry: Travel & hotel'))
   assert.ok(decodeURIComponent(m).includes('Budget range'))
 })
+
+test('affiliates: own list, codes kept, bad links dropped, ids unique across lists', () => {
+  const c = cleanHello({
+    links: [{ id: 'gear', label: 'Gear', url: 'a.co' }],
+    affiliates: [
+      { id: 'gear', label: 'DJI Mini', url: 'https://dji.com/x', code: '  AEREON10 ' },
+      { label: 'Bad', url: 'javascript:1', code: 'X' },
+    ],
+  })
+  assert.equal(c.affiliates.length, 1)
+  assert.equal(c.affiliates[0].code, 'AEREON10')
+  assert.notEqual(c.affiliates[0].id, c.links[0].id)
+  assert.ok(!('code' in c.links[0]))
+  assert.equal(c.affiliateTitle, DEFAULT_HELLO.affiliateTitle)
+  assert.deepEqual(cleanHello({}).affiliates, [])
+})

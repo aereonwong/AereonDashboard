@@ -78,6 +78,19 @@ export default function Settings({ version, site, demo, igView }: { version: Ver
           </div>
           <LandingSwitch landing={site.landing} kit={site.kit} />
         </section>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-hello">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-hello">
+              Link page
+            </h2>
+            <p className="v3-panel-note">aereonwong.com/hello, the link in your Instagram bio</p>
+          </div>
+          <p className="v3-panel-note" style={{ marginBottom: 'var(--space-3)' }}>
+            Intro line, collab card, links and affiliate links (with discount codes).
+          </p>
+          <a className="v3-btn" href="/links">Edit link page</a>
+        </section>
       </div>
     </div>
   )

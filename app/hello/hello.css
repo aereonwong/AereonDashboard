@@ -142,6 +142,29 @@
 .hl-link-text b { font-weight: 600; font-size: 15.5px; }
 .hl-link-text small { font-size: 13px; color: var(--hl-ink-3); }
 
+/* ---------- affiliate gear: own heading + disclosure, code chip under each link */
+.hl-gear { margin: 26px 0 0; }
+.hl-gear h2 { margin: 0; font-family: Sora, Inter, sans-serif; font-size: 17px; font-weight: 700; }
+.hl-disclose { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: var(--hl-ink-3); }
+.hl-gear ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.hl-gear li { border-radius: 16px; background: var(--hl-card); border: 1px solid var(--hl-line); overflow: hidden; }
+.hl-gear li > a {
+  min-height: 60px; padding: 10px 16px 10px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  transition: background-color 0.2s;
+}
+.hl-gear li > a:hover { background: var(--hl-card-hover); }
+.hl-gear li > a svg { flex: none; color: var(--hl-ink-3); }
+.hl-code {
+  width: 100%; min-height: 40px; padding: 0 16px 0 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(244, 184, 96, 0.08); border: 0; border-top: 1px dashed rgba(244, 184, 96, 0.35);
+  color: var(--hl-ink); font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+}
+.hl-code span { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.06em; }
+.hl-code span::before { content: 'Code '; font-family: Inter, sans-serif; letter-spacing: 0; color: var(--hl-ink-3); }
+.hl-code em { font-style: normal; font-weight: 600; color: var(--hl-accent); }
+
 .hl-foot { margin-top: 28px; text-align: center; font-size: 12px; color: var(--hl-ink-3); }
 .hl-foot a { text-decoration: underline; text-underline-offset: 3px; }
 
