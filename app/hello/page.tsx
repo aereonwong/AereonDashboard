@@ -49,7 +49,7 @@ const Mail = () => (
 function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string }) {
   return (
     <>
-      <p className="hl-disclose">{note}</p>
+      {note ? <p className="hl-disclose">{note}</p> : null}
       <ul className="hl-aff">
         {items.map(a => (
           <li key={a.id}>
@@ -81,7 +81,7 @@ export default async function Hello() {
 
   const audiences: Audience[] = [
     {
-      id: 'collab', icon: 'spark', title: 'Brand collab', sub: 'Reviews, features, campaigns',
+      id: 'collab', icon: 'spark', title: 'Brand Collab', sub: 'Tech Reviews, Travel Campaigns, and Other Collabs',
       panel: (
         <>
           <p className="hl-kicker">For brands</p>
@@ -110,11 +110,11 @@ export default async function Hello() {
       ),
     },
     {
-      id: 'shoot', icon: 'camera', title: 'Photo & video', sub: 'Visitors & local brands',
+      id: 'shoot', icon: 'camera', title: 'Photographer or Videographer Service', sub: 'Visitors & local brands',
       panel: (
         <>
           <p className="hl-kicker">Book a shoot</p>
-          <h2>Photo &amp; video</h2>
+          <h2>Photographer or Videographer Service</h2>
           <p className="hl-note">{cfg.shootNote}</p>
           <div className="hl-split">
             <a className="hl-option" href={briefMailto(EMAIL, 'visitor')}>
@@ -133,11 +133,11 @@ export default async function Hello() {
       ),
     },
     {
-      id: 'drone', icon: 'drone', title: 'Drone pilot', sub: 'Aerial photo & video',
+      id: 'drone', icon: 'drone', title: 'Drone Pilot', sub: 'Aerial photo & video',
       panel: (
         <>
           <p className="hl-kicker">Aerial</p>
-          <h2>Hire a drone pilot</h2>
+          <h2>Hire a Drone Pilot</h2>
           <p className="hl-note">{cfg.droneNote}</p>
           <a className="hl-primary" href={briefMailto(EMAIL, 'drone')}><Mail /><span>Send the job details</span></a>
           <CopyText text={EMAIL} label="the email address" />
