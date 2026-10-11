@@ -16,7 +16,7 @@
   padding-bottom: var(--space-3); border-bottom: 1px solid var(--line);
 }
 .lk-list li .v3-input { width: 100%; }
-.lk-list-code li { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.7fr) auto; }
+.lk-list-code li { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto minmax(0, 0.7fr) auto; }
 .lk-code { font-family: var(--font-mono, ui-monospace, monospace); }
 .lk-list li.lk-off .v3-field { opacity: 0.5; }
 .lk-list .v3-input[aria-invalid="true"] { border-color: var(--neg); }

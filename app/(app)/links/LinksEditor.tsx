@@ -80,10 +80,27 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
         </div>
       </section>
 
+      <section className="v3-panel v3-span-12" aria-labelledby="lk-svc">
+        <div className="v3-panel-head">
+          <h2 className="v3-panel-title" id="lk-svc">Services</h2>
+          <p className="v3-panel-note">The Photo &amp; video and Drone pilot sections. Their email buttons ask the right questions for each.</p>
+        </div>
+        <div className="lk-stack">
+          <label className="v3-field lk-wide">
+            <span>Photo &amp; video intro</span>
+            <input className="v3-input" maxLength={LIMITS.shootNote} value={cfg.shootNote} onChange={e => set('shootNote', e.target.value)} disabled={!dbReady} />
+          </label>
+          <label className="v3-field lk-wide">
+            <span>Drone pilot intro</span>
+            <input className="v3-input" maxLength={LIMITS.droneNote} value={cfg.droneNote} onChange={e => set('droneNote', e.target.value)} disabled={!dbReady} />
+          </label>
+        </div>
+      </section>
+
       <section className="v3-panel v3-span-12" aria-labelledby="lk-links">
         <div className="v3-panel-head">
           <h2 className="v3-panel-title" id="lk-links">Links</h2>
-          <p className="v3-panel-note">Shown in this order under the collab card. Untick to hide without deleting.</p>
+          <p className="v3-panel-note">Shown in the Brand collab section, in this order. Untick to hide without deleting.</p>
         </div>
         <ListEditor rows={cfg.links} onChange={v => set('links', v)} max={LIMITS.links} disabled={!dbReady} addLabel="Add a link" />
       </section>
@@ -91,11 +108,15 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
       <section className="v3-panel v3-span-12" aria-labelledby="lk-aff">
         <div className="v3-panel-head">
           <h2 className="v3-panel-title" id="lk-aff">Affiliate links</h2>
-          <p className="v3-panel-note">Their own section at the bottom of the page, marked as sponsored. A code shows with a copy button.</p>
+          <p className="v3-panel-note">Pick a section for each: Attractions &amp; promos or Gear. Marked as sponsored; a code shows with a copy button. A section stays hidden while it has no links.</p>
         </div>
         <div className="lk-stack" style={{ marginBottom: 'var(--space-4)' }}>
           <label className="v3-field lk-wide">
-            <span>Section heading</span>
+            <span>Attractions &amp; promos heading</span>
+            <input className="v3-input" maxLength={LIMITS.affiliateTitle} value={cfg.dealsTitle} onChange={e => set('dealsTitle', e.target.value)} disabled={!dbReady} />
+          </label>
+          <label className="v3-field lk-wide">
+            <span>Gear heading</span>
             <input className="v3-input" maxLength={LIMITS.affiliateTitle} value={cfg.affiliateTitle} onChange={e => set('affiliateTitle', e.target.value)} disabled={!dbReady} />
           </label>
           <label className="v3-field lk-wide">

@@ -60,3 +60,11 @@ test('affiliates: own list, codes kept, bad links dropped, ids unique across lis
   assert.equal(c.affiliateTitle, DEFAULT_HELLO.affiliateTitle)
   assert.deepEqual(cleanHello({}).affiliates, [])
 })
+
+test('affiliate kind defaults to deal; briefs differ per audience', async () => {
+  const { briefMailto } = await import('../lib/hello-config.ts')
+  const c = cleanHello({ affiliates: [{ label: 'A', url: 'a.co' }, { label: 'B', url: 'b.co', kind: 'gear' }, { label: 'C', url: 'c.co', kind: 'evil' }] })
+  assert.deepEqual(c.affiliates.map(a => a.kind), ['deal', 'gear', 'deal'])
+  assert.ok(decodeURIComponent(briefMailto('x@y.co', 'drone')).includes('Drone pilot enquiry'))
+  assert.ok(decodeURIComponent(briefMailto('x@y.co', 'visitor')).includes('Dates you are in Kuala Lumpur'))
+})

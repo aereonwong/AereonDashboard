@@ -210,12 +210,15 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
 
 The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public, tracked in `site_visits`).
 Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
-reduced motion), social icons from `lib/socials.ts`, the collab card (main ask — mailto `EMAIL` with a
-pre-filled brief; topic chips put the topic in the subject; Copy button because Instagram's in-app browser
-often can't open mail), then plain links, then **affiliate links** under their own heading with a disclosure
-line, `rel="sponsored"` and an optional discount code with a copy button (section hidden while empty).
+reduced motion), social icons from `lib/socials.ts`, then **"What brings you here?"** (`app/hello/Chooser.tsx`):
+tiles for five audiences — `collab`, `shoot` (visiting KL / local business), `drone`, `deals` (attractions &
+promos), `gear` — each opening only its section, addressable as `/hello#<id>` for Stories (CSS `:target` is the
+no-JS fallback). Every email button is a mailto `EMAIL` with a brief for that audience (`briefMailto`); a Copy
+button sits beside them because Instagram's in-app browser often can't open mail. Plain links live in the
+collab section. **Affiliate links** carry `kind` deal|gear (missing = deal), a disclosure line,
+`rel="sponsored"` and an optional discount code; a deals/gear tile is hidden while it has no links.
 Edited on the **Link page** tab (`/links`, Studio group under Dashboard; also linked from Settings): tagline,
-collab text, topics, links and affiliates (add, edit, reorder, hide, delete — `ListEditor.tsx` serves both).
+collab text, topics, services intros, links and affiliates (add, edit, reorder, hide, delete, section — `ListEditor.tsx` serves both).
 Stored as one `records` row (`doc` / `setting` / title `hello`) like the site settings — no table.
 `lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
 Affiliate click counts are not tracked yet.

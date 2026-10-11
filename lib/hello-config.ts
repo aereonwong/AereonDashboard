@@ -4,12 +4,16 @@
 // lib/hello-actions.ts. Socials are NOT stored here — they come from lib/socials.ts, the
 // same list the landing page and media kits use.
 //
-// Affiliate links are their own group (`affiliates`), shown under their own heading with a
-// disclosure line and rel="sponsored" — never mixed into the plain `links`.
+// The page sorts visitors first ("What brings you here?") into five audiences, each its own
+// section reachable as /hello#<id>: collab, shoot (tourist or local business), drone, deals
+// (attractions & promos) and gear. Affiliate links carry a `kind` that puts them in deals or
+// gear, always with a disclosure line and rel="sponsored" — never mixed into the plain `links`
+// (which sit in the collab section: media kit, about).
 
 export type HelloLink = { id: string; label: string; url: string; note: string; on: boolean }
+export type AffiliateKind = 'deal' | 'gear'
 /** An affiliate link may carry a discount code, shown with a copy button. */
-export type HelloAffiliate = HelloLink & { code: string }
+export type HelloAffiliate = HelloLink & { code: string; kind: AffiliateKind }
 
 export type HelloConfig = {
   /** One line under the name. */
@@ -21,14 +25,20 @@ export type HelloConfig = {
   /** Quick-pick chips. Each opens the collab email with that topic in the subject. */
   topics: string[]
   links: HelloLink[]
-  /** Heading over the affiliate links. */
+  /** One sentence in the photo & video section. */
+  shootNote: string
+  /** One sentence in the drone pilot section. */
+  droneNote: string
+  /** Heading over the attraction & promo affiliate links. */
+  dealsTitle: string
+  /** Heading over the gear affiliate links. */
   affiliateTitle: string
   /** Disclosure shown under that heading. */
   affiliateNote: string
   affiliates: HelloAffiliate[]
 }
 
-export const LIMITS = { tagline: 90, collabTitle: 40, collabNote: 140, topic: 28, topics: 6, label: 48, note: 70, url: 500, links: 12, code: 24, affiliates: 24, affiliateTitle: 40, affiliateNote: 160 }
+export const LIMITS = { tagline: 90, collabTitle: 40, collabNote: 140, topic: 28, topics: 6, label: 48, note: 70, url: 500, links: 12, code: 24, affiliates: 24, affiliateTitle: 40, affiliateNote: 160, shootNote: 160, droneNote: 160 }
 
 export const DEFAULT_HELLO: HelloConfig = {
   tagline: 'Tech & travel creator · drone pilot · Kuala Lumpur',
@@ -39,6 +49,9 @@ export const DEFAULT_HELLO: HelloConfig = {
     { id: 'kit', label: 'Media kit & past work', url: 'https://aereonwong.com/', note: 'Brands, reach and audience', on: true },
     { id: 'about', label: 'About the studio', url: 'https://aereonwong.com/about', note: 'SY Creative Production', on: true },
   ],
+  shootNote: 'Travel portraits around Kuala Lumpur, and photo & video for local brands, hotels and events.',
+  droneNote: 'Aerial photo and video for property, tourism, events and film shoots in Malaysia.',
+  dealsTitle: 'Attractions & promos',
   affiliateTitle: 'Gear I use',
   affiliateNote: 'Some of these are affiliate links: I may earn a small commission, at no extra cost to you.',
   affiliates: [],
@@ -79,11 +92,11 @@ export function cleanHello(raw: unknown): HelloConfig {
       let id = slug(text(o.id, 24)) || slug(label) || 'link'
       while (seen.has(id)) id = `${id}-x`
       seen.add(id)
-      out.push({ id, label, url, note: text(o.note, LIMITS.note), on: o.on !== false, code: text(o.code, LIMITS.code) })
+      out.push({ id, label, url, note: text(o.note, LIMITS.note), on: o.on !== false, code: text(o.code, LIMITS.code), kind: o.kind === 'gear' ? 'gear' : 'deal' })
     }
     return out
   }
-  const links: HelloLink[] = list(r.links, DEFAULT_HELLO.links, LIMITS.links).map(({ code: _code, ...l }) => l)
+  const links: HelloLink[] = list(r.links, DEFAULT_HELLO.links, LIMITS.links).map(({ code: _code, kind: _kind, ...l }) => l)
   const affiliates = list(r.affiliates, DEFAULT_HELLO.affiliates, LIMITS.affiliates)
   return {
     tagline: text(r.tagline, LIMITS.tagline) || DEFAULT_HELLO.tagline,
@@ -91,22 +104,32 @@ export function cleanHello(raw: unknown): HelloConfig {
     collabNote: text(r.collabNote, LIMITS.collabNote) || DEFAULT_HELLO.collabNote,
     topics,
     links,
+    shootNote: text(r.shootNote, LIMITS.shootNote) || DEFAULT_HELLO.shootNote,
+    droneNote: text(r.droneNote, LIMITS.droneNote) || DEFAULT_HELLO.droneNote,
+    dealsTitle: text(r.dealsTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.dealsTitle,
     affiliateTitle: text(r.affiliateTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.affiliateTitle,
     affiliateNote: text(r.affiliateNote, LIMITS.affiliateNote) || DEFAULT_HELLO.affiliateNote,
     affiliates,
   }
 }
 
-/** The collab email, pre-filled so a brand sends a usable brief on the first try. */
-export function collabMailto(email: string, topic?: string): string {
-  const subject = topic ? `Collab enquiry: ${topic}` : 'Collab enquiry'
-  const body = [
-    'Hi Aereon,', '',
-    `Brand / company: `,
-    `What we'd like made${topic ? ` (${topic})` : ''}: `,
-    'Dates or deadline: ',
-    'Budget range: ', '',
-    '(Found you through Instagram)',
-  ].join('\n')
+export type Brief = 'collab' | 'visitor' | 'business' | 'drone'
+
+const BRIEF: Record<Brief, { subject: string; lines: string[] }> = {
+  collab: { subject: 'Collab enquiry', lines: ['Brand / company: ', "What we'd like made: ", 'Dates or deadline: ', 'Budget range: '] },
+  visitor: { subject: 'Photo shoot in KL', lines: ['Who is in the shoot (solo, couple, family): ', 'Dates you are in Kuala Lumpur: ', 'Places you would like (e.g. KLCC, Merdeka 118): ', 'Photos, video or both: '] },
+  business: { subject: 'Photo / video for our business', lines: ['Business name: ', 'What to shoot (product, food, venue, event): ', 'Where and when: ', 'Budget range: '] },
+  drone: { subject: 'Drone pilot enquiry', lines: ['Location: ', 'Date(s): ', 'What to capture (photo, video, mapping): ', 'Who it is for (brand, property, event): ', 'Budget range: '] },
+}
+
+/** An email to Aereon, pre-filled so the sender gives a usable brief on the first try. */
+export function briefMailto(email: string, kind: Brief, topic?: string): string {
+  const b = BRIEF[kind]
+  const subject = topic ? `${b.subject}: ${topic}` : b.subject
+  const lines = topic && kind === 'collab' ? b.lines.map(l => (l.startsWith("What we'd") ? `What we'd like made (${topic}): ` : l)) : b.lines
+  const body = ['Hi Aereon,', '', ...lines, '', '(Found you through Instagram)'].join('\n')
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
+
+/** The collab email with an optional topic in the subject. */
+export const collabMailto = (email: string, topic?: string) => briefMailto(email, 'collab', topic)
