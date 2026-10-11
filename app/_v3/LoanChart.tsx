@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { LoanMonth } from '@/lib/property-math'
+import { sen } from './pages/property/shared'
 
 // Two strips on one time axis. Top: the outstanding balance. Bottom: each month's interest as a
 // solid bar inside a grey bar for the full-rate interest — the grey part is what the flexi
@@ -12,7 +13,6 @@ const W = 960
 const H = 320
 const PAD = { l: 56, r: 8, t: 10, b: 24 }
 const SPLIT = 170 // balance strip ends, interest strip starts
-const sen = (n: number | null) => (n == null ? '—' : n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
 const k = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}K` : String(Math.round(n)))
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

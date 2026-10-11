@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { recordLoanMonth } from '@/lib/property-actions'
+import { sen } from './pages/property/shared'
 
 // The monthly job in one field: the outstanding balance from the statement. The instalment carries
 // over from last month; the statement's interest figure is optional (worked out when blank).
 
 type Option = { month: string; label: string; instalment: number | null }
-const sen = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export default function LoanRecord({
   propertyId,

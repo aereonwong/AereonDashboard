@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
-import { signedIn } from '@/lib/auth'
+import { canEdit } from '@/lib/auth'
 import { readSite, siteRow, type Site } from './site'
 
 // 👉 Saving the site-wide settings (Settings → Public landing page). A server
@@ -20,7 +20,7 @@ const pick = (patch: Partial<Site>): Partial<Site> => {
 
 export async function saveSite(patch: Partial<Site>): Promise<{ ok: boolean; error?: string }> {
   // Same rule as proxy.ts (lib/auth.ts): only a signed session may save.
-  if (!(await signedIn())) return { ok: false, error: 'Sign in again to change this.' }
+  if (!(await canEdit())) return { ok: false, error: 'Sign in again (or ask the owner for edit access) to change this.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const clean = pick(patch ?? {})
   if (!Object.keys(clean).length) return { ok: false, error: 'Nothing to change' }

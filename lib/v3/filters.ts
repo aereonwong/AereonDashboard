@@ -88,4 +88,3 @@ export function withParam(f: Filters, key: string, value: string | undefined): s
   return s ? `?${s}` : '?'
 }
 
-export const isFiltered = (f: Filters) => f.range !== 'ytd' || !!f.client || !!f.kind

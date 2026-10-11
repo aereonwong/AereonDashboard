@@ -23,6 +23,13 @@ export function sessionSecret(): string {
   return (process.env.AUTH_SECRET ?? '').trim() || (process.env.APP_PASSCODE ?? '').trim()
 }
 
+/**
+ * No secret at all = the open-door setup mode, so a fresh clone never locks its owner out.
+ * On the live (production) deployment that would publish every private tab if the env vars
+ * were ever lost, so there it fails CLOSED instead: nobody gets in until a secret is set.
+ */
+export const openDoor = () => !sessionSecret() && process.env.VERCEL_ENV !== 'production'
+
 export const passcodeLoginOn = () => (process.env.PASSCODE_LOGIN ?? '').trim().toLowerCase() !== 'off'
 
 function signingKey(secret: string): Buffer {
