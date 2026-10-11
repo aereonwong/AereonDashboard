@@ -1,7 +1,7 @@
 # Graph Report - AereonDashboard  (2026-10-11)
 
 ## Corpus Check
-- 508 files · ~498,079 words
+- 508 files · ~498,095 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 16 file(s) not represented in the graph (top: .css 9, (none) 4, .example 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b2023917`
+- Built from commit: `c87109ae`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1331,10 +1331,10 @@ Nodes (3): Report, The rules, IgAccount
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `next` connect `next` to `Quotations.tsx`, `analytics.ts`, `package.json`, `telegram/route.ts`, `demoMode`, `dashboard/page.tsx`, `records.ts`, `hello/page.tsx`, `_load.ts`, `users/actions.ts`, `app/page.tsx`, `make-icons.mjs`, `PublicPage.tsx`, `invoices/actions.ts`, `Instagram.tsx`, `lib/actions.ts`, `property-actions.ts`, `Appearance.tsx`, `supabase.ts`, `app/layout.tsx`, `InvoiceDetails.tsx`, `Invoices.tsx`, `version.ts`, `hello-config.ts`, `invoice-drive-upload.ts`, `react`, `compact`, `news.ts`, `links/page.tsx`, `session.ts`, `agent-site.ts`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Why does `react` connect `react` to `Quotations.tsx`, `analytics.ts`, `package.json`, `records.ts`, `hello/page.tsx`, `users/actions.ts`, `KitMotion.tsx`, `Instagram.tsx`, `ReelFilm.tsx`, `lib/actions.ts`, `property-actions.ts`, `Appearance.tsx`, `SubmeterForms.tsx`, `SubmeterChart.tsx`, `IgInsights.tsx`, `next`, `LoanChart.tsx`, `app/layout.tsx`, `InvoiceDetails.tsx`, `Invoices.tsx`, `LinkPosts.tsx`, `ContentLab.tsx`, `hello-config.ts`, `version.ts`, `compact`, `news.ts`, `ledger.ts`, `links/page.tsx`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `next` connect `next` to `Quotations.tsx`, `analytics.ts`, `package.json`, `telegram/route.ts`, `demoMode`, `dashboard/page.tsx`, `records.ts`, `hello/page.tsx`, `_load.ts`, `users/actions.ts`, `app/page.tsx`, `make-icons.mjs`, `PublicPage.tsx`, `invoices/actions.ts`, `Instagram.tsx`, `lib/actions.ts`, `property-actions.ts`, `Appearance.tsx`, `supabase.ts`, `app/layout.tsx`, `InvoiceDetails.tsx`, `Invoices.tsx`, `version.ts`, `hello-config.ts`, `invoice-drive-upload.ts`, `react`, `compact`, `news.ts`, `links/page.tsx`, `session.ts`, `agent-site.ts`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Why does `propose()` connect `lib/actions.ts` to `READ — ask it anything, answered instantly`, `cron-daily/route.ts`, `4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2)`, `telegram/route.ts`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **What connects `session-start.sh script`, `WhenTrigger`, `AgentDefinition` to the rest of the system?**

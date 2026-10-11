@@ -83,11 +83,11 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
       <section className="v3-panel v3-span-12" aria-labelledby="lk-svc">
         <div className="v3-panel-head">
           <h2 className="v3-panel-title" id="lk-svc">Services</h2>
-          <p className="v3-panel-note">The Photo &amp; video and Drone pilot sections. Their email buttons ask the right questions for each.</p>
+          <p className="v3-panel-note">The Photographer or Videographer and Drone Pilot sections. Their email buttons ask the right questions for each.</p>
         </div>
         <div className="lk-stack">
           <label className="v3-field lk-wide">
-            <span>Photo &amp; video intro</span>
+            <span>Photographer / Videographer intro</span>
             <input className="v3-input" maxLength={LIMITS.shootNote} value={cfg.shootNote} onChange={e => set('shootNote', e.target.value)} disabled={!dbReady} />
           </label>
           <label className="v3-field lk-wide">
@@ -108,11 +108,11 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
       <section className="v3-panel v3-span-12" aria-labelledby="lk-aff">
         <div className="v3-panel-head">
           <h2 className="v3-panel-title" id="lk-aff">Affiliate links</h2>
-          <p className="v3-panel-note">Pick a section for each: Attractions &amp; promos or Gear. Marked as sponsored; a code shows with a copy button. A section stays hidden while it has no links.</p>
+          <p className="v3-panel-note">Pick a section for each: Attractions or Gear List. Marked as sponsored; a code shows with a copy button. A section stays hidden while it has no links.</p>
         </div>
         <div className="lk-stack" style={{ marginBottom: 'var(--space-4)' }}>
           <label className="v3-field lk-wide">
-            <span>Attractions &amp; promos heading</span>
+            <span>Attractions heading</span>
             <input className="v3-input" maxLength={LIMITS.affiliateTitle} value={cfg.dealsTitle} onChange={e => set('dealsTitle', e.target.value)} disabled={!dbReady} />
           </label>
           <label className="v3-field lk-wide">
@@ -120,7 +120,7 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
             <input className="v3-input" maxLength={LIMITS.affiliateTitle} value={cfg.affiliateTitle} onChange={e => set('affiliateTitle', e.target.value)} disabled={!dbReady} />
           </label>
           <label className="v3-field lk-wide">
-            <span>Disclosure (keep one: it tells followers you may earn from these)</span>
+            <span>Disclosure line (optional; leave blank to hide)</span>
             <input className="v3-input" maxLength={LIMITS.affiliateNote} value={cfg.affiliateNote} onChange={e => set('affiliateNote', e.target.value)} disabled={!dbReady} />
           </label>
         </div>

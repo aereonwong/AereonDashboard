@@ -49,8 +49,8 @@ export default function ListEditor<T extends Row>({ rows, onChange, max, withCod
               {withCode ? (
                 <label className="v3-field"><span>Section</span>
                   <select className="v3-select" value={l.kind ?? 'deal'} onChange={e => edit(i, { kind: e.target.value as AffiliateKind })} disabled={disabled}>
-                    <option value="deal">Attractions &amp; promos</option>
-                    <option value="gear">Gear</option>
+                    <option value="deal">Attractions</option>
+                    <option value="gear">Gear List</option>
                   </select>
                 </label>
               ) : null}

@@ -58,6 +58,7 @@ test('affiliates: own list, codes kept, bad links dropped, ids unique across lis
   assert.notEqual(c.affiliates[0].id, c.links[0].id)
   assert.ok(!('code' in c.links[0]))
   assert.equal(c.affiliateTitle, DEFAULT_HELLO.affiliateTitle)
+  assert.equal(cleanHello({ affiliateNote: "" }).affiliateNote, "")
   assert.deepEqual(cleanHello({}).affiliates, [])
 })
 

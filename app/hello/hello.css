@@ -102,7 +102,8 @@
 .hl-tile small { font-size: 12.5px; line-height: 1.3; color: var(--hl-ink-3); }
 .hl-tile:hover { background: var(--hl-card-hover); }
 .hl-tile:active { transform: scale(0.97); }
-.hl-tile:first-child, .hl-tile:last-child:nth-child(even) { grid-column: 1 / -1; }
+/* Collab and the photo/video service (long name) take full rows; the rest pair up, and an odd one out spans. */
+.hl-tile:nth-child(-n+2), .hl-tile:nth-child(n+3):last-child:nth-child(odd) { grid-column: 1 / -1; }
 .hl-tile-collab { background: linear-gradient(160deg, rgba(244, 184, 96, 0.16), rgba(255, 255, 255, 0.04) 60%); border-color: rgba(244, 184, 96, 0.3); }
 .hl-tile.is-open { border-color: var(--hl-accent); background: rgba(244, 184, 96, 0.14); box-shadow: inset 0 0 0 1px var(--hl-accent); }
 

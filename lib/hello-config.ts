@@ -33,7 +33,7 @@ export type HelloConfig = {
   dealsTitle: string
   /** Heading over the gear affiliate links. */
   affiliateTitle: string
-  /** Disclosure shown under that heading. */
+  /** Optional disclosure under the affiliate headings; blank = not shown. */
   affiliateNote: string
   affiliates: HelloAffiliate[]
 }
@@ -51,9 +51,9 @@ export const DEFAULT_HELLO: HelloConfig = {
   ],
   shootNote: 'Travel portraits around Kuala Lumpur, and photo & video for local brands, hotels and events.',
   droneNote: 'Aerial photo and video for property, tourism, events and film shoots in Malaysia.',
-  dealsTitle: 'Attractions & promos',
-  affiliateTitle: 'Gear I use',
-  affiliateNote: 'Some of these are affiliate links: I may earn a small commission, at no extra cost to you.',
+  dealsTitle: 'Attractions',
+  affiliateTitle: 'Gear List',
+  affiliateNote: '',
   affiliates: [],
 }
 
@@ -108,7 +108,8 @@ export function cleanHello(raw: unknown): HelloConfig {
     droneNote: text(r.droneNote, LIMITS.droneNote) || DEFAULT_HELLO.droneNote,
     dealsTitle: text(r.dealsTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.dealsTitle,
     affiliateTitle: text(r.affiliateTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.affiliateTitle,
-    affiliateNote: text(r.affiliateNote, LIMITS.affiliateNote) || DEFAULT_HELLO.affiliateNote,
+    // Blank is a real choice here (Aereon removed it, 11 Oct 2026), so no fallback to the default.
+    affiliateNote: typeof r.affiliateNote === 'string' ? text(r.affiliateNote, LIMITS.affiliateNote) : DEFAULT_HELLO.affiliateNote,
     affiliates,
   }
 }

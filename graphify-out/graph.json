@@ -989,7 +989,7 @@
       "file_type": "code",
       "norm_label": "brief",
       "source_file": "lib/hello-config.ts",
-      "source_location": "L116"
+      "source_location": "L117"
     },
     {
       "id": "lib_hello_config_helloconfig",
@@ -7038,7 +7038,7 @@
       "file_type": "code",
       "norm_label": "briefmailto()",
       "source_file": "lib/hello-config.ts",
-      "source_location": "L126"
+      "source_location": "L127"
     },
     {
       "id": "lib_hello_config_collabmailto",
@@ -7050,7 +7050,7 @@
       "file_type": "code",
       "norm_label": "collabmailto()",
       "source_file": "lib/hello-config.ts",
-      "source_location": "L135"
+      "source_location": "L136"
     },
     {
       "id": "lib_socials_combined",
@@ -57842,7 +57842,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-config.ts",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -63614,7 +63614,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/hello.test.mjs",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -63823,7 +63823,7 @@
       "context": "import",
       "deferred": true,
       "source_file": "tests/hello.test.mjs",
-      "source_location": "L65",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -117714,7 +117714,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-config.ts",
-      "source_location": "L118",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -117725,7 +117725,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-config.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -117747,7 +117747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-config.ts",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -127379,5 +127379,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b20239173506d5709d4964c3050400288e16e178"
+  "built_at_commit": "c87109aea10b84631f48a07f8cce427bba4cc668"
 }
