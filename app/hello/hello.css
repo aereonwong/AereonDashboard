@@ -36,7 +36,7 @@
   position: relative;
   width: calc(100% + 32px);     /* full-bleed on phones */
   margin: 0 -16px;
-  height: 172px;
+  height: 184px;
   overflow: hidden;
   border-radius: 0 0 28px 28px;
 }
@@ -61,7 +61,7 @@
 .hl-avatar {
   width: 96px; height: 96px; object-fit: cover; object-position: 50% 20%;
   border-radius: 50%;
-  margin-top: -52px; position: relative; z-index: 2;
+  margin-top: -92px; position: relative; z-index: 2;   /* starts halfway down the KLCC shot */
   border: 3px solid var(--hl-ground);
   box-shadow: 0 0 0 1.5px var(--hl-accent), 0 10px 30px rgba(0, 0, 0, 0.45);
   animation: hl-pop 0.7s 0.1s var(--hl-ease) both;
@@ -69,11 +69,20 @@
 .hl-name {
   font-family: Sora, Inter, sans-serif; font-weight: 700;
   font-size: 26px; line-height: 1.15; letter-spacing: -0.02em;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
 }
 .hl-tag { margin: 6px 0 0; font-size: 15px; line-height: 1.4; color: var(--hl-ink-2); max-width: 34ch; text-wrap: balance; }
-.hl-proof { margin: 8px 0 0; font-size: 13px; color: var(--hl-ink-3); }
-.hl-proof b { color: var(--hl-ink); font-weight: 600; }
+/* Proof strip: big numbers, small labels; dt is the label, dd the number (visually first). */
+.hl-stats { margin: 14px 0 0; width: 100%; display: flex; justify-content: center; gap: 8px; }
+.hl-stats div {
+  flex: 1 1 0; max-width: 132px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 10px 6px 9px; border-radius: 14px;
+  background: var(--hl-card); border: 1px solid var(--hl-line);
+}
+.hl-stats dd { order: -1; margin: 0; font-family: Sora, Inter, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.hl-stats dt { margin-top: 1px; font-size: 12px; font-weight: 600; color: var(--hl-ink-2); }
+.hl-stats small { font-size: 10.5px; color: var(--hl-ink-3); white-space: nowrap; }
 
 /* ---------- socials: icons only, one row */
 .hl-socials { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; }
@@ -217,7 +226,7 @@
 
 @media (min-width: 560px) {
   .hl { padding-top: 24px; }
-  .hl-band { width: 100%; margin: 0; border-radius: 28px; height: 200px; }
-  .hl-avatar { width: 108px; height: 108px; margin-top: -58px; }
+  .hl-band { width: 100%; margin: 0; border-radius: 28px; height: 210px; }
+  .hl-avatar { width: 108px; height: 108px; margin-top: -104px; }
   .hl-name { font-size: 30px; }
 }
