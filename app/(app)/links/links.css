@@ -36,3 +36,12 @@
   .lk-list-code li { grid-template-columns: auto minmax(0, 1fr); }
   .lk-list-code li > .v3-field, .lk-list-code li > .lk-row-btns { grid-column: 2; }
 }
+
+/* Tap counts: label, bar, count, share of visits. */
+.lk-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.lk-bars li { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 3.5rem 2.5rem; gap: var(--space-2); align-items: center; font-size: var(--t-sm); }
+.lk-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.lk-bar-track { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.lk-bar-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.lk-bars b { text-align: right; font-variant-numeric: tabular-nums; }
+.lk-bars small { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }

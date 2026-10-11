@@ -69,6 +69,7 @@ export default function Chooser({ audiences, style }: { audiences: Audience[]; s
             className={`hl-tile hl-tile-${a.id}${open === a.id ? ' is-open' : ''}`}
             aria-expanded={open === a.id}
             aria-controls={a.id}
+            data-t={open === a.id ? undefined : `tap/${a.id}`}
             onClick={e => pick(e, a.id)}
           >
             <Glyph name={a.icon} />

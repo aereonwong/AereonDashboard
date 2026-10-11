@@ -15,10 +15,11 @@ import { readHello } from '@/lib/hello'
 import { briefMailto, collabMailto, type HelloAffiliate } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
 import { latestAccount, ninety } from '@/lib/instagram'
-import { EMAIL, OG_IMAGE } from '@/lib/agent-site'
+import { EMAIL } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
 import Chooser, { type Audience } from './Chooser'
+import TapTracker from './TapTracker'
 import './hello.css'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,9 @@ export const metadata: Metadata = {
   title: 'Aereon Wong · Links',
   description: 'Tech & travel creator and drone pilot in Kuala Lumpur. Brand collabs, photo & video shoots, drone work, attraction promos and gear.',
   alternates: { canonical: '/hello' },
-  openGraph: { title: 'Aereon Wong · Links', url: '/hello', images: [{ url: OG_IMAGE.path, width: OG_IMAGE.width, height: OG_IMAGE.height }] },
+  // The share image is app/hello/opengraph-image.tsx (photo, name, live stats); twitter-image reuses it.
+  openGraph: { title: 'Aereon Wong · Links', url: '/hello' },
+  twitter: { card: 'summary_large_image', title: 'Aereon Wong · Links' },
 }
 
 export const viewport: Viewport = { themeColor: '#0B0D12' }
@@ -55,14 +58,14 @@ function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string 
       <ul className="hl-aff">
         {items.map(a => (
           <li key={a.id}>
-            <a href={a.url} target="_blank" rel="sponsored noopener noreferrer">
+            <a href={a.url} target="_blank" rel="sponsored noopener noreferrer" data-t={`out/${a.id}`}>
               <span className="hl-link-text">
                 <b>{a.label}</b>
                 {a.note ? <small>{a.note}</small> : null}
               </span>
               <Arrow />
             </a>
-            {a.code ? <CopyText text={a.code} className="hl-code" label={`the code for ${a.label}`} /> : null}
+            {a.code ? <CopyText text={a.code} className="hl-code" label={`the code for ${a.label}`} t={`out/code-${a.id}`} /> : null}
           </li>
         ))}
       </ul>
@@ -94,18 +97,18 @@ export default async function Hello() {
           <p className="hl-kicker">For brands</p>
           <h2>{cfg.collabTitle}</h2>
           <p className="hl-note">{cfg.collabNote}</p>
-          <a className="hl-primary" href={collabMailto(EMAIL)}><Mail /><span>Email for a collab</span></a>
+          <a className="hl-primary" href={collabMailto(EMAIL)} data-t="out/mail-collab"><Mail /><span>Email for a collab</span></a>
           {cfg.topics.length ? (
             <div className="hl-topics" role="group" aria-label="Or pick what you need">
-              {cfg.topics.map(t => <a key={t} href={collabMailto(EMAIL, t)}>{t}</a>)}
+              {cfg.topics.map(t => <a key={t} href={collabMailto(EMAIL, t)} data-t="out/mail-topic">{t}</a>)}
             </div>
           ) : null}
-          <CopyText text={EMAIL} label="the email address" />
+          <CopyText text={EMAIL} label="the email address" t="out/copy-email" />
           {links.length ? (
             <ul className="hl-links">
               {links.map(l => (
                 <li key={l.id}>
-                  <a href={l.url} target={l.url.startsWith('mailto:') ? undefined : '_blank'} rel="noopener noreferrer">
+                  <a href={l.url} target={l.url.startsWith('mailto:') ? undefined : '_blank'} rel="noopener noreferrer" data-t={`out/${l.id}`}>
                     <span className="hl-link-text"><b>{l.label}</b>{l.note ? <small>{l.note}</small> : null}</span>
                     <Arrow />
                   </a>
@@ -124,18 +127,19 @@ export default async function Hello() {
           <h2>Photographer or Videographer Service</h2>
           <p className="hl-note">{cfg.shootNote}</p>
           <div className="hl-split">
-            <a className="hl-option" href={briefMailto(EMAIL, 'visitor')}>
+            <a className="hl-option" href={briefMailto(EMAIL, 'visitor')} data-t="out/mail-visitor">
               <b>Visiting Kuala Lumpur</b>
               <small>Travel portraits for you, your partner or family at the city&rsquo;s best spots</small>
+              {cfg.shootFrom ? <em className="hl-price">{cfg.shootFrom}</em> : null}
               <span>Ask for a shoot <Arrow /></span>
             </a>
-            <a className="hl-option" href={briefMailto(EMAIL, 'business')}>
+            <a className="hl-option" href={briefMailto(EMAIL, 'business')} data-t="out/mail-business">
               <b>Local business</b>
               <small>Product, food, venue and event photos and video for your brand</small>
               <span>Get a quote <Arrow /></span>
             </a>
           </div>
-          <CopyText text={EMAIL} label="the email address" />
+          <CopyText text={EMAIL} label="the email address" t="out/copy-email" />
         </>
       ),
     },
@@ -146,8 +150,8 @@ export default async function Hello() {
           <p className="hl-kicker">Aerial</p>
           <h2>Hire a Drone Pilot</h2>
           <p className="hl-note">{cfg.droneNote}</p>
-          <a className="hl-primary" href={briefMailto(EMAIL, 'drone')}><Mail /><span>Send the job details</span></a>
-          <CopyText text={EMAIL} label="the email address" />
+          <a className="hl-primary" href={briefMailto(EMAIL, 'drone')} data-t="out/mail-drone"><Mail /><span>Send the job details</span></a>
+          <CopyText text={EMAIL} label="the email address" t="out/copy-email" />
         </>
       ),
     },
@@ -184,7 +188,7 @@ export default async function Hello() {
 
         <nav className="hl-socials hl-in" style={step()} aria-label="Follow Aereon">
           {channels.map(s => (
-            <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.name} ${s.handle}`} title={s.name}>
+            <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.name} ${s.handle}`} title={s.name} data-t={`out/social-${s.key}`}>
               <svg viewBox="0 0 24 24" aria-hidden="true" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 {GLYPH[s.key]}
               </svg>
@@ -193,6 +197,7 @@ export default async function Hello() {
         </nav>
 
         <Chooser audiences={audiences} style={step()} />
+        <TapTracker />
 
       </div>
     </main>

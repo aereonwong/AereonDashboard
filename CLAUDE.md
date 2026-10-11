@@ -222,7 +222,12 @@ Edited on the **Link page** tab (`/links`, Studio group under Dashboard; also li
 collab text, topics, services intros, links and affiliates (add, edit, reorder, hide, delete, section — `ListEditor.tsx` serves both).
 Stored as one `records` row (`doc` / `setting` / title `hello`) like the site settings — no table.
 `lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
-Affiliate click counts are not tracked yet.
+**Tap tracking:** elements with `data-t` (`tap/<section>`, `out/<link id | mail-* | social-* | code-* | copy-email>`)
+send a beacon via `app/hello/TapTracker.tsx` to `/api/track`, logged in `site_visits` as `/hello/tap/…` / `/hello/out/…`
+(`HELLO_EVENT` in `lib/site-visits.ts`; same no-IP, no-owner, no-bot, 10-minute de-dupe rules). The Link page tab shows
+30-day counts (`lib/hello-stats.ts`). **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
+every 6 hours; `/hello` is a public PREFIX so these image routes are reachable. Tourist shoots show `shootFrom`
+("From USD 150", editable).
 
 ## Raising an invoice or a quotation
 
