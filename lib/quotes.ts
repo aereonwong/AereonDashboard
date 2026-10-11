@@ -1,5 +1,6 @@
 import type { Rec } from './records'
 import { TERMS, type EditValues } from './invoice-figures'
+import { todayISO } from '@/lib/today'
 
 // 👉 Quotations, read from the same `records` table as everything else. A quote
 // is a `doc` row with status 'quotation' — NEVER income — whether the Telegram
@@ -165,7 +166,7 @@ export function prefillOf(q: Rec, today: string): Partial<EditValues> {
   }
 }
 
-export function toQuoteRows(rows: Rec[], today = new Date().toISOString().slice(0, 10)): QuoteRow[] {
+export function toQuoteRows(rows: Rec[], today = todayISO()): QuoteRow[] {
   const quotes = rows.filter(isQuote)
   const links = quoteLinks(rows)
   const invById = new Map(rows.filter(isInvoice).map(r => [r.id, r]))

@@ -1,6 +1,7 @@
 import type { Rec } from '@/lib/records'
 import { toInvoices, type Invoice, type WorkKind } from '@/lib/invoices'
 import { inRange, narrow, KINDS, type Filters } from './filters'
+import { todayISO } from '@/lib/today'
 
 // 👉 The deeper money analysis behind v3's Invoice Summary, for the chosen range:
 // how it compares with the period before, the shape of the year, what kind of
@@ -67,7 +68,7 @@ const SIZE_BANDS = [
   { label: '20K +', min: 20000, max: Infinity },
 ]
 
-export function buildSummary(recs: Rec[], f: Filters, today = new Date().toISOString().slice(0, 10)): Summary {
+export function buildSummary(recs: Rec[], f: Filters, today = todayISO()): Summary {
   const all = toInvoices(recs)
   const scope = rm(narrow(all, f)) // client + work-type filters, every date
   const cur = rm(inRange(all, f))

@@ -1,6 +1,7 @@
 import type { Rec } from '@/lib/records'
 import { toInvoices, type Invoice } from '@/lib/invoices'
 import { narrow, type Filters } from './filters'
+import { todayISO } from '@/lib/today'
 
 // 👉 Relationship analytics for v3 Clients, beyond the map: who is due back
 // (their usual gap between jobs has passed), how well each year's new clients
@@ -41,7 +42,7 @@ export type ClientPulse = {
 // A relationship that has been silent for this long has ended, not slipped.
 const COLD_MONTHS = 36
 
-export function clientPulse(rows: Rec[], f: Filters, today = new Date().toISOString().slice(0, 10)): ClientPulse {
+export function clientPulse(rows: Rec[], f: Filters, today = todayISO()): ClientPulse {
   const named = (xs: Invoice[]) => xs.filter(i => i.client && i.client !== '—')
   // The work-type filter steers who is due and who was active; first jobs, cohorts and
   // the repeat rate always read every invoice, so a filter never makes an old client new.

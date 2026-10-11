@@ -33,6 +33,7 @@ const monthsSince = (iso: string, today: string) =>
   Math.max(0, Math.floor((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${iso}T00:00:00Z`)) / (86_400_000 * 30.44)))
 
 import { QUIET_MONTHS } from './catalog'
+import { todayISO } from '@/lib/today'
 export { QUIET_MONTHS }
 
 export function buildRelationships(
@@ -40,7 +41,7 @@ export function buildRelationships(
   f: Filters,
   sort: ClientSort = 'value',
   q = '',
-  today = new Date().toISOString().slice(0, 10),
+  today = todayISO(),
 ): { list: Relationship[]; median: number; stats: { clients: number; repeat: number; quiet: number; average: number; repeatShare: number } } {
   const all = toInvoices(recs)
   const inR = inRange(all, f)

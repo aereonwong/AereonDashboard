@@ -9,6 +9,7 @@ import TrendBars from '../TrendBars'
 import { GettingPaid, SeasonsGrid } from '../dashboard/Insights'
 import { KpiCard, PaymentPanel, WorkTypes, MixByYear, Sizes, Cohorts, TopClients, Movers, ForeignNote } from '../summary/Panels'
 import { rmFull, longDate, shortDate } from '../fmt'
+import { todayISO } from '@/lib/today'
 
 // 👉 v3 Invoice Summary — the deep money view for the chosen range. The Dashboard
 // is the daily pulse (this year's pace, who owes me, audience); this page is
@@ -20,7 +21,7 @@ import { rmFull, longDate, shortDate } from '../fmt'
 type Params = Record<string, string | string[] | undefined>
 
 export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayISO()
   const s = buildSummary(rows, filters, today)
   const speed = paySpeed(rows, filters)
   const season = seasons(rows, filters, today)
