@@ -130,12 +130,14 @@ until then the login page is the old passcode form. A verified Google account mu
   keep a second Google account on it.
 - `app_users` table (`supabase/app-users.sql`) — the managed list, edited on the **Users** page (`/users`,
   `app/(app)/users/`): role owner/admin/viewer, `active` (Lock), `last_login_at`. Owner manages everyone; admin
-  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Roles gate
-  only the Users page so far — a viewer can still use every other tab and server action (not read-only yet).
+  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Since 12 Oct 2026 a
+  viewer is read-only: `requireSession()` (every server action) and `canEdit()` refuse them; they can still open every tab.
 - Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
   Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. `signedIn()`
   (lib/auth.ts, used by the (app) layout and every server action) re-checks a Google account against the list,
   so Lock/Remove cuts someone off on their next click. The proxy only checks the cookie signature.
+- On production with no `AUTH_SECRET`/`APP_PASSCODE` the app now fails CLOSED (`openDoor()` in lib/session.ts);
+  local and preview runs still open without a secret.
 - Backup access ladder: second Google account → passcode (`APP_PASSCODE`, behind "Use backup passcode") →
   edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
   Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
@@ -168,6 +170,8 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   Merging deploys the live app, so only merge after `npm run build` passes (for app code) and the
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
+
+Last full audit: `docs/REVIEW-2026-10-12.md` — read it before auditing again.
 
 ## Review agents (`.claude/agents/`)
 
