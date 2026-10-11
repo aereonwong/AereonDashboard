@@ -47,7 +47,7 @@ export const DEFAULT_HELLO: HelloConfig = {
   topics: ['Product review', 'Travel & hotel', 'Aerial / drone', 'Event coverage'],
   links: [
     { id: 'kit', label: 'Media kit & past work', url: 'https://aereonwong.com/', note: 'Brands, reach and audience', on: true },
-    { id: 'about', label: 'About the studio', url: 'https://aereonwong.com/about', note: 'SY Creative Production', on: true },
+    { id: 'about', label: 'About the studio', url: 'https://aereonwong.com/about', note: '', on: true },
   ],
   shootNote: 'Travel portraits around Kuala Lumpur, and photo & video for local brands, hotels and events.',
   droneNote: 'Aerial photo and video for property, tourism, events and film shoots in Malaysia.',

@@ -187,9 +187,6 @@ export default async function Hello() {
 
         <Chooser audiences={audiences} style={step()} />
 
-        <footer className="hl-foot">
-          SY Creative Production · <a href="/">aereonwong.com</a>
-        </footer>
       </div>
     </main>
   )
