@@ -155,6 +155,32 @@ const formatAddress = (address: string): string => {
   return lines.join('\n')
 }
 
+/** How many characters the description box fits per line. Measured against
+ *  Canva's own wrapping on SYCP-202610-003 (11 Oct 2026): a bullet held 46
+ *  characters ("All raw footage handed over to client (editing") and broke a
+ *  48-character one. Unindented lines (job, venue, date, time) have the bullet
+ *  indent back, about 3 characters more. The font is proportional, so this is
+ *  an estimate — good for ordinary wording, not for a line of all-wide letters. */
+const BULLET_CHARS = 46
+const LINE_CHARS = 49
+
+/** Lines a text takes when word-wrapped at `max` characters, the way Canva
+ *  breaks at spaces. A word longer than a whole line still counts as one. */
+export function printedLines(text: string, max: number): number {
+  let lines = 1
+  let used = 0
+  for (const word of text.trim().split(/\s+/).filter(Boolean)) {
+    const need = used ? used + 1 + word.length : word.length
+    if (need > max && used) {
+      lines++
+      used = word.length
+    } else {
+      used = need
+    }
+  }
+  return lines
+}
+
 export type Operation = Record<string, unknown>
 
 const fill = (locator: string, token: string, value: string): Operation => ({
@@ -199,9 +225,22 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
   // existing bold run; tried here, right before "Payment Terms:", it instead
   // strips the bold off "Payment Terms:" itself (confirmed by testing, not
   // assumed). Price/Qty/Amount skip down to match: JOB, Venue, Date, Time
-  // (if any), a blank line, "Scope of Work:", then one line per deliverable
-  // ahead of the discount bullet itself.
-  const discountLineGap = discount ? 5 + (hasTime ? 1 : 0) + deliverableList.length : 0
+  // (if any), a blank line, "Scope of Work:", then every deliverable ahead of
+  // the discount bullet itself — counted in PRINTED lines, since a long one
+  // wraps. Counting one line per deliverable put the discount amount two lines
+  // high on SYCP-202610-003 (11 Oct 2026), whose first two bullets each wrapped.
+  const eventDate = m.event_date_label ? String(m.event_date_label) : m.event_date ? longDate(String(m.event_date)) : '—'
+  const headLines = [
+    String(m.job ?? rec.title),
+    `Venue: ${m.venue ?? '—'}`,
+    `Date: ${eventDate}`,
+    ...(hasTime ? [`Time: ${m.event_time}`] : []),
+  ]
+  const discountLineGap = discount
+    ? headLines.reduce((n, l) => n + printedLines(l, LINE_CHARS), 0) +
+      2 + // the blank line and "Scope of Work:"
+      deliverableList.reduce((n, d) => n + printedLines(d, BULLET_CHARS), 0)
+    : 0
   const deliverables = [...deliverableList, ...(discount ? ['Discount Offer'] : [])].join('\n')
 
   const ops: Operation[] = [
@@ -258,7 +297,7 @@ export function buildOperations(rec: Rec, kind: DocKind = 'invoice'): Operation[
     // "Scope of Work" stays the same single blank line as when it's filled.
     fill(FIELDS.description, 'JOB', String(m.job ?? rec.title)),
     fill(FIELDS.description, 'VENUE', String(m.venue ?? '—')),
-    fill(FIELDS.description, 'EVENT_DATE', m.event_date_label ? String(m.event_date_label) : m.event_date ? longDate(String(m.event_date)) : '—'),
+    fill(FIELDS.description, 'EVENT_DATE', eventDate),
     ...(m.event_time && m.event_time !== '-'
       ? [fill(FIELDS.description, 'TIME', String(m.event_time))]
       : [{ type: 'find_and_replace_text', locator_id: FIELDS.description, find_text: 'Time: {{TIME}}\n', replace_text: '' }]),
