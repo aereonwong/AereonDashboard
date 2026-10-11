@@ -1,10 +1,10 @@
 // 👉 Link page — edits the public /hello page (the link in the Instagram bio): the line
-// under the name, the collab card and the list of links. Socials come from lib/socials.ts
+// under the name, the sections, links and affiliates, plus what visitors open and tap (lib/hello-stats.ts). Socials come from lib/socials.ts
 // and the email from lib/agent-site.ts, so they are shown here but not edited.
 import { readHello } from '@/lib/hello'
 import { readVersion } from '@/lib/v3/version'
-import { supabase, supabaseConfigured } from '@/lib/supabase'
-import { klDay } from '@/lib/site-visits'
+import { supabaseConfigured } from '@/lib/supabase'
+import { readHelloStats, type Count } from '@/lib/hello-stats'
 import { EMAIL } from '@/lib/agent-site'
 import { SOCIALS } from '@/lib/socials'
 import LinksEditor from './LinksEditor'
@@ -14,17 +14,25 @@ import { v3Fonts } from '@/app/_v3/fonts'
 
 export const dynamic = 'force-dynamic'
 
-/** Page views of /hello in the last 30 days (site_visits; the owner and bots are never logged). */
-async function views30(): Promise<number | null> {
-  if (!supabaseConfigured) return null
-  const since = klDay(new Date(Date.now() - 29 * 86_400_000))
-  const { count, error } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
-    .eq('path', '/hello').gte('day', since)
-  return error ? null : count ?? 0
-}
-
 export default async function Links() {
-  const [config, { version }, views] = await Promise.all([readHello(), readVersion(), views30()])
+  const [config, { version }] = await Promise.all([readHello(), readVersion()])
+  const stats = await readHelloStats(config)
+  const views = stats?.visits ?? null
+  const Bars = ({ rows, of }: { rows: Count[]; of: number }) => {
+    const top = Math.max(1, ...rows.map(r => r.count))
+    return rows.length ? (
+      <ol className="lk-bars">
+        {rows.map(r => (
+          <li key={r.id}>
+            <span className="lk-bar-label">{r.label}</span>
+            <span className="lk-bar-track"><span className="lk-bar-fill" style={{ width: `${(r.count / top) * 100}%` }} /></span>
+            <b>{r.count.toLocaleString('en-MY')}</b>
+            <small>{of ? `${Math.round((r.count / of) * 100)}%` : ''}</small>
+          </li>
+        ))}
+      </ol>
+    ) : <p className="v3-empty">Nothing yet. Counts start from today.</p>
+  }
   const page = (
     <div>
       <header className="v3-head">
@@ -37,6 +45,24 @@ export default async function Links() {
         </div>
       </header>
       <div className="v3-grid">
+        {stats ? (
+          <>
+            <section className="v3-panel v3-span-6" aria-labelledby="lk-st-sec">
+              <div className="v3-panel-head">
+                <h2 className="v3-panel-title" id="lk-st-sec">What visitors came for</h2>
+                <p className="v3-panel-note">Sections opened, last {stats.days} days · % of visits</p>
+              </div>
+              <Bars rows={stats.sections} of={stats.visits} />
+            </section>
+            <section className="v3-panel v3-span-6" aria-labelledby="lk-st-out">
+              <div className="v3-panel-head">
+                <h2 className="v3-panel-title" id="lk-st-out">What they tapped</h2>
+                <p className="v3-panel-note">Links, emails, socials and copies, last {stats.days} days · % of visits</p>
+              </div>
+              <Bars rows={stats.clicks} of={stats.visits} />
+            </section>
+          </>
+        ) : null}
         <LinksEditor
           initial={config}
           dbReady={supabaseConfigured}

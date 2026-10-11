@@ -27,6 +27,8 @@ export type HelloConfig = {
   links: HelloLink[]
   /** One sentence in the photo & video section. */
   shootNote: string
+  /** Price line on the "Visiting Kuala Lumpur" option; blank = not shown. */
+  shootFrom: string
   /** One sentence in the drone pilot section. */
   droneNote: string
   /** Heading over the attraction & promo affiliate links. */
@@ -38,7 +40,7 @@ export type HelloConfig = {
   affiliates: HelloAffiliate[]
 }
 
-export const LIMITS = { tagline: 90, collabTitle: 40, collabNote: 140, topic: 28, topics: 6, label: 48, note: 70, url: 500, links: 12, code: 24, affiliates: 24, affiliateTitle: 40, affiliateNote: 160, shootNote: 160, droneNote: 160 }
+export const LIMITS = { tagline: 90, collabTitle: 40, collabNote: 140, topic: 28, topics: 6, label: 48, note: 70, url: 500, links: 12, code: 24, affiliates: 24, affiliateTitle: 40, affiliateNote: 160, shootNote: 160, droneNote: 160, shootFrom: 40 }
 
 export const DEFAULT_HELLO: HelloConfig = {
   tagline: 'Tech & travel creator · drone pilot · Kuala Lumpur',
@@ -50,6 +52,7 @@ export const DEFAULT_HELLO: HelloConfig = {
     { id: 'about', label: 'About the studio', url: 'https://aereonwong.com/about', note: '', on: true },
   ],
   shootNote: 'Travel portraits around Kuala Lumpur, and photo & video for local brands, hotels and events.',
+  shootFrom: 'From USD 150',
   droneNote: 'Aerial photo and video for property, tourism, events and film shoots in Malaysia.',
   dealsTitle: 'Attractions',
   affiliateTitle: 'Gear List',
@@ -105,6 +108,7 @@ export function cleanHello(raw: unknown): HelloConfig {
     topics,
     links,
     shootNote: text(r.shootNote, LIMITS.shootNote) || DEFAULT_HELLO.shootNote,
+    shootFrom: typeof r.shootFrom === 'string' ? text(r.shootFrom, LIMITS.shootFrom) : DEFAULT_HELLO.shootFrom,
     droneNote: text(r.droneNote, LIMITS.droneNote) || DEFAULT_HELLO.droneNote,
     dealsTitle: text(r.dealsTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.dealsTitle,
     affiliateTitle: text(r.affiliateTitle, LIMITS.affiliateTitle) || DEFAULT_HELLO.affiliateTitle,

@@ -152,10 +152,11 @@ export const PAGES: PublicPage[] = [
 
 /** Public, no sign-in needed. Everything else is private or does not exist. */
 export const PUBLIC_EXACT = [
-  '/', '/about', '/contact', '/privacy', '/hello', '/robots.txt', '/sitemap.xml', '/llms.txt',
+  '/', '/about', '/contact', '/privacy', '/robots.txt', '/sitemap.xml', '/llms.txt',
   '/manifest.webmanifest', '/manifest.json', '/favicon.ico',
 ]
 export const PUBLIC_PREFIX = [
+  '/hello',   // the link page and its share image (/hello/opengraph-image…)
   '/login', '/api/login', '/api/auth/google', '/api/logout', '/api/telegram',
   '/api/cron-daily', '/api/cron-news', '/api/cron-instagram', '/api/track', '/icons', '/img', '/_next',
 ]

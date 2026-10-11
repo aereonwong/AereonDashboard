@@ -7,6 +7,16 @@ import crypto from 'node:crypto'
 /** Only these public pages are logged. Anything else is ignored, so private paths never land here. */
 export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '/login']
 
+/** Taps on the /hello link page, logged as pseudo-paths beside the page views:
+ *  /hello/tap/<section> = a "What brings you here?" section opened,
+ *  /hello/out/<id>      = a link, email button, social icon or copy button used.
+ *  Only lowercase ids, so nothing a visitor types can land in the log. */
+export const HELLO_EVENT = /^\/hello\/(tap\/(collab|shoot|drone|deals|gear)|out\/[a-z0-9-]{1,40})$/
+/** Most /hello tap rows one visitor may add per 10 minutes — made-up ids can't flood the log. */
+export const HELLO_TAP_CAP = 20
+
+export const isTrackedPath = (path: string) => TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path)
+
 const BOT = /bot|crawl|spider|slurp|preview|fetch|monitor|headless|lighthouse|curl|wget|python|axios|node-fetch|go-http|java\/|httpclient|vercel|facebookexternalhit|whatsapp|telegram|discord|slack/i
 
 export const isBot = (ua: string) => !ua || BOT.test(ua)

@@ -69,3 +69,9 @@ test('affiliate kind defaults to deal; briefs differ per audience', async () => 
   assert.ok(decodeURIComponent(briefMailto('x@y.co', 'drone')).includes('Drone pilot enquiry'))
   assert.ok(decodeURIComponent(briefMailto('x@y.co', 'visitor')).includes('Dates you are in Kuala Lumpur'))
 })
+
+test('only well-formed /hello tap events are tracked', async () => {
+  const { isTrackedPath } = await import('../lib/site-visits.ts')
+  for (const p of ['/hello', '/hello/tap/collab', '/hello/out/icity', '/hello/out/mail-drone']) assert.ok(isTrackedPath(p), p)
+  for (const p of ['/hello/x', '/hello/tap/', '/hello/tap/nope', '/hello/out/A', '/hello/out/a/b', '/dashboard', '/hello/tap/' + 'a'.repeat(41)]) assert.ok(!isTrackedPath(p), p)
+})

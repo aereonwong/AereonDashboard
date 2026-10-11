@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
-import { TRACKED_PATHS, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
+import { isTrackedPath, HELLO_TAP_CAP, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
 
 // 👉 Page-view beacon for the PUBLIC pages (app/_components/Tracker.tsx posts here). Public on
 // purpose — a visitor has no session — so it only ever INSERTS one small row (and answers nothing back).
 // It answers 204 whatever happens: a tracker must never break or slow a page.
 //
+// Also logs taps on /hello (lib/site-visits.ts HELLO_EVENT) the same way, one row per tap.
 // Not counted: the signed-in owner (valid session cookie), bots, browsers sending Do Not Track
 // or Global Privacy Control, and any path that is not a public page. No IP is stored.
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => null) as Record<string, unknown> | null
     const path = body?.path
-    if (typeof path !== 'string' || !TRACKED_PATHS.includes(path)) return done()
+    if (typeof path !== 'string' || !isTrackedPath(path)) return done()
     if (!supabaseConfigured) return done()
 
     const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || ''
@@ -41,6 +42,12 @@ export async function POST(req: NextRequest) {
     const { count } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
       .eq('visitor_hash', hash).eq('path', path).gte('ts', since)
     if (count) return done()
+    if (path.startsWith('/hello/')) {
+      // Tap events have open-ended ids, so cap each visitor's total, not just per path.
+      const { count: taps } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
+        .eq('visitor_hash', hash).like('path', '/hello/%').gte('ts', since)
+      if ((taps ?? 0) >= HELLO_TAP_CAP) return done()
+    }
 
     const { error } = await supabase.from('site_visits').insert({
       path,

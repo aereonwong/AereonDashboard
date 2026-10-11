@@ -91,6 +91,10 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
             <input className="v3-input" maxLength={LIMITS.shootNote} value={cfg.shootNote} onChange={e => set('shootNote', e.target.value)} disabled={!dbReady} />
           </label>
           <label className="v3-field lk-wide">
+            <span>Price on &ldquo;Visiting Kuala Lumpur&rdquo; (optional; blank hides it)</span>
+            <input className="v3-input" maxLength={LIMITS.shootFrom} value={cfg.shootFrom} onChange={e => set('shootFrom', e.target.value)} disabled={!dbReady} />
+          </label>
+          <label className="v3-field lk-wide">
             <span>Drone pilot intro</span>
             <input className="v3-input" maxLength={LIMITS.droneNote} value={cfg.droneNote} onChange={e => set('droneNote', e.target.value)} disabled={!dbReady} />
           </label>

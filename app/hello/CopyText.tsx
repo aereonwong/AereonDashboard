@@ -4,12 +4,13 @@ import { useState } from 'react'
 // One tap copies a value: the collab email (Instagram's in-app browser often has no mail
 // app to hand a mailto: link to) or an affiliate discount code. The value stays on screen
 // either way, so a blocked clipboard still leaves it selectable.
-export default function CopyText({ text, className = 'hl-copy', label }: { text: string; className?: string; label?: string }) {
+export default function CopyText({ text, className = 'hl-copy', label, t }: { text: string; className?: string; label?: string; t?: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <button
       type="button"
       className={className}
+      data-t={t}
       aria-label={`Copy ${label ?? text}`}
       onClick={async () => {
         try {
