@@ -1,27 +1,30 @@
-// 👉 /hello — the link in Aereon's Instagram bio. Public, phone-first, one screen:
-// who he is, every channel as an icon, the collab email up front, then a short list
-// of links, then affiliate gear. Text, topics and links are edited on the Link page tab (/links) and read
-// from one settings row (lib/hello.ts); the channels come from lib/socials.ts.
+// 👉 /hello — the link in Aereon's Instagram bio. Public, phone-first. The first screen is
+// short on purpose: who he is, every channel as an icon, then "What brings you here?" — five
+// audiences (brand collab, photo & video, drone pilot, attractions & promos, gear). Picking
+// one opens only that section (Chooser.tsx), and each has its own address (/hello#deals…)
+// for Stories. Text, topics and links are edited on the Link page tab (/links) and read from
+// one settings row (lib/hello.ts); the channels come from lib/socials.ts.
 //
 // Design rules borrowed from Linktree-style pages and kept on purpose:
-//   • the main ask (collab email) and all socials sit above the fold on a phone;
+//   • socials and the audience choice sit above the fold on a phone; nothing long to scroll;
 //   • one column, big tap targets (≥ 48px), nothing to learn;
 //   • the intro motion is CSS only, done in under a second, never blocks a tap,
 //     and switches off for prefers-reduced-motion.
 import type { Metadata, Viewport } from 'next'
 import { readHello } from '@/lib/hello'
-import { collabMailto } from '@/lib/hello-config'
+import { briefMailto, collabMailto, type HelloAffiliate } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
 import { EMAIL, OG_IMAGE } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
+import Chooser, { type Audience } from './Chooser'
 import './hello.css'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Aereon Wong · Links',
-  description: 'Tech & travel creator and drone pilot in Kuala Lumpur. All channels, and the email for brand collaborations.',
+  description: 'Tech & travel creator and drone pilot in Kuala Lumpur. Brand collabs, photo & video shoots, drone work, attraction promos and gear.',
   alternates: { canonical: '/hello' },
   openGraph: { title: 'Aereon Wong · Links', url: '/hello', images: [{ url: OG_IMAGE.path, width: OG_IMAGE.width, height: OG_IMAGE.height }] },
 }
@@ -36,15 +39,120 @@ const Arrow = () => (
   </svg>
 )
 
+const Mail = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="3" /><path d="m4 7 8 6 8-6" />
+  </svg>
+)
+
+/** One affiliate list (deals or gear): disclosure, sponsored links, copyable codes. */
+function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string }) {
+  return (
+    <>
+      <p className="hl-disclose">{note}</p>
+      <ul className="hl-aff">
+        {items.map(a => (
+          <li key={a.id}>
+            <a href={a.url} target="_blank" rel="sponsored noopener noreferrer">
+              <span className="hl-link-text">
+                <b>{a.label}</b>
+                {a.note ? <small>{a.note}</small> : null}
+              </span>
+              <Arrow />
+            </a>
+            {a.code ? <CopyText text={a.code} className="hl-code" label={`the code for ${a.label}`} /> : null}
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+
 export default async function Hello() {
   const cfg = await readHello()
   const channels = socials()
   const total = combined(channels)
   const links = cfg.links.filter(l => l.on)
-  const gear = cfg.affiliates.filter(a => a.on)
+  const deals = cfg.affiliates.filter(a => a.on && a.kind === 'deal')
+  const gear = cfg.affiliates.filter(a => a.on && a.kind === 'gear')
   // Stagger index for the intro: each block arrives a beat after the one above it.
   let beat = 0
   const step = () => ({ '--i': beat++ } as React.CSSProperties)
+
+  const audiences: Audience[] = [
+    {
+      id: 'collab', icon: 'spark', title: 'Brand collab', sub: 'Reviews, features, campaigns',
+      panel: (
+        <>
+          <p className="hl-kicker">For brands</p>
+          <h2>{cfg.collabTitle}</h2>
+          <p className="hl-note">{cfg.collabNote}</p>
+          <a className="hl-primary" href={collabMailto(EMAIL)}><Mail /><span>Email for a collab</span></a>
+          {cfg.topics.length ? (
+            <div className="hl-topics" role="group" aria-label="Or pick what you need">
+              {cfg.topics.map(t => <a key={t} href={collabMailto(EMAIL, t)}>{t}</a>)}
+            </div>
+          ) : null}
+          <CopyText text={EMAIL} label="the email address" />
+          {links.length ? (
+            <ul className="hl-links">
+              {links.map(l => (
+                <li key={l.id}>
+                  <a href={l.url} target={l.url.startsWith('mailto:') ? undefined : '_blank'} rel="noopener noreferrer">
+                    <span className="hl-link-text"><b>{l.label}</b>{l.note ? <small>{l.note}</small> : null}</span>
+                    <Arrow />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      id: 'shoot', icon: 'camera', title: 'Photo & video', sub: 'Visitors & local brands',
+      panel: (
+        <>
+          <p className="hl-kicker">Book a shoot</p>
+          <h2>Photo &amp; video</h2>
+          <p className="hl-note">{cfg.shootNote}</p>
+          <div className="hl-split">
+            <a className="hl-option" href={briefMailto(EMAIL, 'visitor')}>
+              <b>Visiting Kuala Lumpur</b>
+              <small>Travel portraits for you, your partner or family at the city&rsquo;s best spots</small>
+              <span>Ask for a shoot <Arrow /></span>
+            </a>
+            <a className="hl-option" href={briefMailto(EMAIL, 'business')}>
+              <b>Local business</b>
+              <small>Product, food, venue and event photos and video for your brand</small>
+              <span>Get a quote <Arrow /></span>
+            </a>
+          </div>
+          <CopyText text={EMAIL} label="the email address" />
+        </>
+      ),
+    },
+    {
+      id: 'drone', icon: 'drone', title: 'Drone pilot', sub: 'Aerial photo & video',
+      panel: (
+        <>
+          <p className="hl-kicker">Aerial</p>
+          <h2>Hire a drone pilot</h2>
+          <p className="hl-note">{cfg.droneNote}</p>
+          <a className="hl-primary" href={briefMailto(EMAIL, 'drone')}><Mail /><span>Send the job details</span></a>
+          <CopyText text={EMAIL} label="the email address" />
+        </>
+      ),
+    },
+    ...(deals.length ? [{
+      id: 'deals', icon: 'ticket', title: cfg.dealsTitle, sub: 'Tickets & deals',
+      panel: (<><p className="hl-kicker">Promos</p><h2>{cfg.dealsTitle}</h2><AffiliateList items={deals} note={cfg.affiliateNote} /></>),
+    } satisfies Audience] : []),
+    ...(gear.length ? [{
+      id: 'gear', icon: 'bag', title: cfg.affiliateTitle, sub: 'Kit links & codes',
+      panel: (<><p className="hl-kicker">Gear</p><h2>{cfg.affiliateTitle}</h2><AffiliateList items={gear} note={cfg.affiliateNote} /></>),
+    } satisfies Audience] : []),
+  ]
 
   return (
     <main className="hl">
@@ -77,62 +185,7 @@ export default async function Hello() {
           ))}
         </nav>
 
-        <section className="hl-collab hl-in" style={step()} aria-labelledby="hl-collab-title">
-          <p className="hl-kicker">For brands</p>
-          <h2 id="hl-collab-title">{cfg.collabTitle}</h2>
-          <p className="hl-note">{cfg.collabNote}</p>
-          <a className="hl-primary" href={collabMailto(EMAIL)}>
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="3" /><path d="m4 7 8 6 8-6" />
-            </svg>
-            <span>Email for a collab</span>
-          </a>
-          {cfg.topics.length ? (
-            <div className="hl-topics" role="group" aria-label="Or pick what you need">
-              {cfg.topics.map(t => (
-                <a key={t} href={collabMailto(EMAIL, t)}>{t}</a>
-              ))}
-            </div>
-          ) : null}
-          <CopyText text={EMAIL} label="the collab email" />
-        </section>
-
-        {links.length ? (
-          <ul className="hl-links">
-            {links.map(l => (
-              <li key={l.id} className="hl-in" style={step()}>
-                <a href={l.url} target={l.url.startsWith('mailto:') ? undefined : '_blank'} rel="noopener noreferrer">
-                  <span className="hl-link-text">
-                    <b>{l.label}</b>
-                    {l.note ? <small>{l.note}</small> : null}
-                  </span>
-                  <Arrow />
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {gear.length ? (
-          <section className="hl-gear hl-in" style={step()} aria-labelledby="hl-gear-title">
-            <h2 id="hl-gear-title">{cfg.affiliateTitle}</h2>
-            <p className="hl-disclose">{cfg.affiliateNote}</p>
-            <ul>
-              {gear.map(a => (
-                <li key={a.id}>
-                  <a href={a.url} target="_blank" rel="sponsored noopener noreferrer">
-                    <span className="hl-link-text">
-                      <b>{a.label}</b>
-                      {a.note ? <small>{a.note}</small> : null}
-                    </span>
-                    <Arrow />
-                  </a>
-                  {a.code ? <CopyText text={a.code} className="hl-code" label={`the code for ${a.label}`} /> : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <Chooser audiences={audiences} style={step()} />
 
         <footer className="hl-foot">
           SY Creative Production · <a href="/">aereonwong.com</a>

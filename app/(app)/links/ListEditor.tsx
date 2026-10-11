@@ -1,13 +1,13 @@
 'use client'
-import { LIMITS, cleanUrl, type HelloAffiliate } from '@/lib/hello-config'
+import { LIMITS, cleanUrl, type HelloLink, type AffiliateKind } from '@/lib/hello-config'
 
 // One ordered list of links on the Link page tab — used for the plain links and for the
 // affiliate links (which add a discount-code field). Add, edit, hide, reorder, delete.
 
-type Row = Omit<HelloAffiliate, 'code'> & { code?: string }
+type Row = HelloLink & { code?: string; kind?: AffiliateKind }
 
 export const newRow = (withCode: boolean): Row =>
-  ({ id: `l${Date.now().toString(36)}`, label: '', url: '', note: '', on: true, ...(withCode ? { code: '' } : {}) })
+  ({ id: `l${Date.now().toString(36)}`, label: '', url: '', note: '', on: true, ...(withCode ? { code: '', kind: 'deal' as AffiliateKind } : {}) })
 
 export default function ListEditor<T extends Row>({ rows, onChange, max, withCode, disabled, addLabel }: {
   rows: T[]
@@ -46,6 +46,14 @@ export default function ListEditor<T extends Row>({ rows, onChange, max, withCod
               <label className="v3-field"><span>Small note (optional)</span>
                 <input className="v3-input" maxLength={LIMITS.note} value={l.note} onChange={e => edit(i, { note: e.target.value })} disabled={disabled} />
               </label>
+              {withCode ? (
+                <label className="v3-field"><span>Section</span>
+                  <select className="v3-select" value={l.kind ?? 'deal'} onChange={e => edit(i, { kind: e.target.value as AffiliateKind })} disabled={disabled}>
+                    <option value="deal">Attractions &amp; promos</option>
+                    <option value="gear">Gear</option>
+                  </select>
+                </label>
+              ) : null}
               {withCode ? (
                 <label className="v3-field"><span>Discount code (optional)</span>
                   <input className="v3-input lk-code" maxLength={LIMITS.code} value={l.code ?? ''} onChange={e => edit(i, { code: e.target.value })} disabled={disabled} />

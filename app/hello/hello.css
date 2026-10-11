@@ -86,17 +86,41 @@
 .hl-socials a:hover { background: var(--hl-card-hover); border-color: rgba(255, 255, 255, 0.24); transform: translateY(-2px); }
 .hl-socials a:active { transform: scale(0.94); }
 
-/* ---------- collab card: the main ask */
-.hl-collab {
-  margin: 22px 0 0;
+/* ---------- "What brings you here?" — tiles, then the one open section */
+.hl-choose { margin: 22px 0 0; }
+.hl-choose-title { margin: 0 0 10px; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hl-ink-3); }
+.hl-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hl-tile {
+  min-height: 72px; padding: 12px 14px; border-radius: 18px;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--hl-card); border: 1px solid var(--hl-line);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s var(--hl-ease);
+}
+.hl-tile svg { flex: none; color: var(--hl-accent); }
+.hl-tile span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hl-tile b { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hl-tile small { font-size: 12.5px; line-height: 1.3; color: var(--hl-ink-3); }
+.hl-tile:hover { background: var(--hl-card-hover); }
+.hl-tile:active { transform: scale(0.97); }
+.hl-tile:first-child, .hl-tile:last-child:nth-child(even) { grid-column: 1 / -1; }
+.hl-tile-collab { background: linear-gradient(160deg, rgba(244, 184, 96, 0.16), rgba(255, 255, 255, 0.04) 60%); border-color: rgba(244, 184, 96, 0.3); }
+.hl-tile.is-open { border-color: var(--hl-accent); background: rgba(244, 184, 96, 0.14); box-shadow: inset 0 0 0 1px var(--hl-accent); }
+
+.hl-panel {
+  margin: 12px 0 0;
   padding: 20px 18px 16px;
   border-radius: 22px;
-  background: linear-gradient(160deg, rgba(244, 184, 96, 0.14), rgba(255, 255, 255, 0.04) 55%);
-  border: 1px solid rgba(244, 184, 96, 0.28);
+  background: linear-gradient(160deg, rgba(244, 184, 96, 0.12), rgba(255, 255, 255, 0.04) 55%);
+  border: 1px solid rgba(244, 184, 96, 0.26);
   text-align: left;
+  scroll-margin: 16px;
+  animation: hl-rise 0.45s var(--hl-ease) both;
 }
+.hl-panel[hidden] { display: none; }
+.hl-panel:target { display: block; }      /* no-JS fallback and deep links before hydration */
+.hl-panel h2 { margin: 4px 0 0; font-family: Sora, Inter, sans-serif; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+
 .hl-kicker { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hl-accent); }
-.hl-collab h2 { margin: 4px 0 0; font-family: Sora, Inter, sans-serif; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
 .hl-note { margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: var(--hl-ink-2); }
 .hl-primary {
   margin-top: 14px;
@@ -126,6 +150,19 @@
 }
 .hl-copy em { font-style: normal; font-weight: 600; color: var(--hl-accent); }
 
+/* ---------- photo & video: two ways in */
+.hl-split { display: grid; gap: 10px; margin-top: 14px; }
+.hl-option {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid var(--hl-line);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.hl-option b { font-size: 16px; font-weight: 600; }
+.hl-option small { font-size: 13.5px; line-height: 1.4; color: var(--hl-ink-2); }
+.hl-option span { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--hl-accent); }
+.hl-option:hover { background: rgba(244, 184, 96, 0.12); border-color: rgba(244, 184, 96, 0.45); }
+
 /* ---------- links */
 .hl-links { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .hl-links a {
@@ -142,19 +179,17 @@
 .hl-link-text b { font-weight: 600; font-size: 15.5px; }
 .hl-link-text small { font-size: 13px; color: var(--hl-ink-3); }
 
-/* ---------- affiliate gear: own heading + disclosure, code chip under each link */
-.hl-gear { margin: 26px 0 0; }
-.hl-gear h2 { margin: 0; font-family: Sora, Inter, sans-serif; font-size: 17px; font-weight: 700; }
-.hl-disclose { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: var(--hl-ink-3); }
-.hl-gear ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.hl-gear li { border-radius: 16px; background: var(--hl-card); border: 1px solid var(--hl-line); overflow: hidden; }
-.hl-gear li > a {
+/* ---------- affiliate lists (deals, gear): disclosure, code chip under each link */
+.hl-disclose { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: var(--hl-ink-3); }
+.hl-aff { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.hl-aff li { border-radius: 16px; background: var(--hl-card); border: 1px solid var(--hl-line); overflow: hidden; }
+.hl-aff li > a {
   min-height: 60px; padding: 10px 16px 10px 18px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   transition: background-color 0.2s;
 }
-.hl-gear li > a:hover { background: var(--hl-card-hover); }
-.hl-gear li > a svg { flex: none; color: var(--hl-ink-3); }
+.hl-aff li > a:hover { background: var(--hl-card-hover); }
+.hl-aff li > a svg { flex: none; color: var(--hl-ink-3); }
 .hl-code {
   width: 100%; min-height: 40px; padding: 0 16px 0 18px;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
