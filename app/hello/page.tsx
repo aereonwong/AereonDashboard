@@ -14,6 +14,7 @@ import type { Metadata, Viewport } from 'next'
 import { readHello } from '@/lib/hello'
 import { briefMailto, collabMailto, type HelloAffiliate } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
+import { latestAccount, ninety } from '@/lib/instagram'
 import { EMAIL, OG_IMAGE } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
@@ -31,7 +32,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#0B0D12' }
 
-const compact = (n: number) => (n >= 1_000 ? `${Math.round(n / 1000)}K` : String(n))
+const compact = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M` : n >= 1_000 ? `${Math.round(n / 1000)}K` : String(n)
 
 const Arrow = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,7 +71,12 @@ function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string 
 }
 
 export default async function Hello() {
-  const cfg = await readHello()
+  // Instagram's last 90 days come from the stored account snapshot (refreshed by the daily cron),
+  // never a live call. Views and interactions add up across the three 30-day windows; reach would not.
+  const [cfg, account] = await Promise.all([readHello(), latestAccount().catch(() => null)])
+  // Hidden once the snapshot is over a week old, so a stalled refresh never passes off old numbers as "90 days".
+  const fresh = account && Date.now() - new Date(account.captured_at).getTime() < 7 * 86_400_000
+  const d90 = fresh ? ninety(account) : null
   const channels = socials()
   const total = combined(channels)
   const links = cfg.links.filter(l => l.on)
@@ -168,11 +175,11 @@ export default async function Hello() {
           <img className="hl-avatar" src="/img/aereon.jpg" alt="Aereon Wong" width={760} height={900} />
           <h1 className="hl-name hl-in" style={step()}>Aereon Wong</h1>
           <p className="hl-tag hl-in" style={step()}>{cfg.tagline}</p>
-          {total ? (
-            <p className="hl-proof hl-in" style={step()}>
-              <b>{compact(total)}</b> followers across {channels.length} platforms
-            </p>
-          ) : null}
+          <dl className="hl-stats hl-in" style={step()}>
+            {d90?.views ? <div><dt>Views</dt><dd>{compact(d90.views)}</dd><small>Instagram · 90 days</small></div> : null}
+            {d90?.interactions ? <div><dt>Interactions</dt><dd>{compact(d90.interactions)}</dd><small>Instagram · 90 days</small></div> : null}
+            {total ? <div><dt>Followers</dt><dd>{compact(total)}</dd><small>{channels.length} platforms</small></div> : null}
+          </dl>
         </header>
 
         <nav className="hl-socials hl-in" style={step()} aria-label="Follow Aereon">

@@ -210,7 +210,8 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
 
 The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public, tracked in `site_visits`).
 Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
-reduced motion), social icons from `lib/socials.ts`, then **"What brings you here?"** (`app/hello/Chooser.tsx`):
+reduced motion), a proof strip (Instagram views + interactions over 90 days via `ninety()` from the stored
+snapshot — hidden when the snapshot is over 7 days old — and combined followers; Aereon's call, 11 Oct 2026), social icons from `lib/socials.ts`, then **"What brings you here?"** (`app/hello/Chooser.tsx`):
 tiles for five audiences — `collab`, `shoot` (visiting KL / local business), `drone`, `deals` (attractions &
 promos), `gear` — each opening only its section, addressable as `/hello#<id>` for Stories (CSS `:target` is the
 no-JS fallback). Every email button is a mailto `EMAIL` with a brief for that audience (`briefMailto`); a Copy
