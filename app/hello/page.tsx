@@ -1,6 +1,6 @@
 // 👉 /hello — the link in Aereon's Instagram bio. Public, phone-first, one screen:
 // who he is, every channel as an icon, the collab email up front, then a short list
-// of links. Text, topics and links are edited on the Link page tab (/links) and read
+// of links, then affiliate gear. Text, topics and links are edited on the Link page tab (/links) and read
 // from one settings row (lib/hello.ts); the channels come from lib/socials.ts.
 //
 // Design rules borrowed from Linktree-style pages and kept on purpose:
@@ -14,7 +14,7 @@ import { collabMailto } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
 import { EMAIL, OG_IMAGE } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
-import CopyEmail from './CopyEmail'
+import CopyText from './CopyText'
 import './hello.css'
 
 export const dynamic = 'force-dynamic'
@@ -41,6 +41,7 @@ export default async function Hello() {
   const channels = socials()
   const total = combined(channels)
   const links = cfg.links.filter(l => l.on)
+  const gear = cfg.affiliates.filter(a => a.on)
   // Stagger index for the intro: each block arrives a beat after the one above it.
   let beat = 0
   const step = () => ({ '--i': beat++ } as React.CSSProperties)
@@ -93,7 +94,7 @@ export default async function Hello() {
               ))}
             </div>
           ) : null}
-          <CopyEmail email={EMAIL} />
+          <CopyText text={EMAIL} label="the collab email" />
         </section>
 
         {links.length ? (
@@ -110,6 +111,27 @@ export default async function Hello() {
               </li>
             ))}
           </ul>
+        ) : null}
+
+        {gear.length ? (
+          <section className="hl-gear hl-in" style={step()} aria-labelledby="hl-gear-title">
+            <h2 id="hl-gear-title">{cfg.affiliateTitle}</h2>
+            <p className="hl-disclose">{cfg.affiliateNote}</p>
+            <ul>
+              {gear.map(a => (
+                <li key={a.id}>
+                  <a href={a.url} target="_blank" rel="sponsored noopener noreferrer">
+                    <span className="hl-link-text">
+                      <b>{a.label}</b>
+                      {a.note ? <small>{a.note}</small> : null}
+                    </span>
+                    <Arrow />
+                  </a>
+                  {a.code ? <CopyText text={a.code} className="hl-code" label={`the code for ${a.label}`} /> : null}
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
 
         <footer className="hl-foot">

@@ -1,9 +1,8 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { saveHello } from '@/lib/hello-actions'
-import { LIMITS, cleanUrl, type HelloConfig, type HelloLink } from '@/lib/hello-config'
-
-const newId = () => `l${Date.now().toString(36)}`
+import { LIMITS, cleanUrl, type HelloConfig } from '@/lib/hello-config'
+import ListEditor from './ListEditor'
 
 export default function LinksEditor({ initial, dbReady, email, socials }: {
   initial: HelloConfig
@@ -19,21 +18,13 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
   const dirty = JSON.stringify(cfg) !== saved
 
   const set = <K extends keyof HelloConfig>(k: K, v: HelloConfig[K]) => { setCfg(c => ({ ...c, [k]: v })); setMsg(null) }
-  const setLink = (i: number, patch: Partial<HelloLink>) => set('links', cfg.links.map((l, j) => (j === i ? { ...l, ...patch } : l)))
-  const move = (i: number, d: -1 | 1) => {
-    const j = i + d
-    if (j < 0 || j >= cfg.links.length) return
-    const next = [...cfg.links]
-    ;[next[i], next[j]] = [next[j], next[i]]
-    set('links', next)
-  }
   const addTopic = () => {
     const t = topic.trim().slice(0, LIMITS.topic)
     if (!t || cfg.topics.includes(t) || cfg.topics.length >= LIMITS.topics) return
     set('topics', [...cfg.topics, t])
     setTopic('')
   }
-  const badLinks = cfg.links.filter(l => l.label.trim() && l.url.trim() && !cleanUrl(l.url)).length
+  const badLinks = [...cfg.links, ...cfg.affiliates].filter(l => l.label.trim() && l.url.trim() && !cleanUrl(l.url)).length
 
   const save = () => start(async () => {
     const r = await saveHello(cfg)
@@ -94,39 +85,28 @@ export default function LinksEditor({ initial, dbReady, email, socials }: {
           <h2 className="v3-panel-title" id="lk-links">Links</h2>
           <p className="v3-panel-note">Shown in this order under the collab card. Untick to hide without deleting.</p>
         </div>
-        <ol className="lk-list">
-          {cfg.links.map((l, i) => (
-            <li key={l.id} className={l.on ? '' : 'lk-off'}>
-              <label className="lk-on" title={l.on ? 'Shown' : 'Hidden'}>
-                <input type="checkbox" checked={l.on} onChange={e => setLink(i, { on: e.target.checked })} disabled={!dbReady} />
-                <span className="sr-only">Show {l.label}</span>
-              </label>
-              <label className="v3-field"><span>Label</span>
-                <input className="v3-input" maxLength={LIMITS.label} value={l.label} onChange={e => setLink(i, { label: e.target.value })} disabled={!dbReady} />
-              </label>
-              <label className="v3-field"><span>Link</span>
-                <input className="v3-input" inputMode="url" placeholder="https://" maxLength={LIMITS.url} value={l.url}
-                  aria-invalid={!!l.url.trim() && !cleanUrl(l.url)} onChange={e => setLink(i, { url: e.target.value })} disabled={!dbReady} />
-              </label>
-              <label className="v3-field"><span>Small note (optional)</span>
-                <input className="v3-input" maxLength={LIMITS.note} value={l.note} onChange={e => setLink(i, { note: e.target.value })} disabled={!dbReady} />
-              </label>
-              <div className="lk-row-btns">
-                <button type="button" className="v3-btn" onClick={() => move(i, -1)} disabled={i === 0 || !dbReady} aria-label={`Move ${l.label} up`}>↑</button>
-                <button type="button" className="v3-btn" onClick={() => move(i, 1)} disabled={i === cfg.links.length - 1 || !dbReady} aria-label={`Move ${l.label} down`}>↓</button>
-                <button type="button" className="v3-btn" onClick={() => set('links', cfg.links.filter((_, j) => j !== i))} disabled={!dbReady} aria-label={`Delete ${l.label}`}>Delete</button>
-              </div>
-            </li>
-          ))}
-        </ol>
-        {cfg.links.length < LIMITS.links ? (
-          <button type="button" className="v3-btn" style={{ marginTop: 'var(--space-3)' }} disabled={!dbReady}
-            onClick={() => set('links', [...cfg.links, { id: newId(), label: '', url: '', note: '', on: true }])}>
-            + Add a link
-          </button>
-        ) : null}
+        <ListEditor rows={cfg.links} onChange={v => set('links', v)} max={LIMITS.links} disabled={!dbReady} addLabel="Add a link" />
+      </section>
+
+      <section className="v3-panel v3-span-12" aria-labelledby="lk-aff">
+        <div className="v3-panel-head">
+          <h2 className="v3-panel-title" id="lk-aff">Affiliate links</h2>
+          <p className="v3-panel-note">Their own section at the bottom of the page, marked as sponsored. A code shows with a copy button.</p>
+        </div>
+        <div className="lk-stack" style={{ marginBottom: 'var(--space-4)' }}>
+          <label className="v3-field lk-wide">
+            <span>Section heading</span>
+            <input className="v3-input" maxLength={LIMITS.affiliateTitle} value={cfg.affiliateTitle} onChange={e => set('affiliateTitle', e.target.value)} disabled={!dbReady} />
+          </label>
+          <label className="v3-field lk-wide">
+            <span>Disclosure (keep one: it tells followers you may earn from these)</span>
+            <input className="v3-input" maxLength={LIMITS.affiliateNote} value={cfg.affiliateNote} onChange={e => set('affiliateNote', e.target.value)} disabled={!dbReady} />
+          </label>
+        </div>
+        <ListEditor rows={cfg.affiliates} onChange={v => set('affiliates', v)} max={LIMITS.affiliates} withCode disabled={!dbReady} addLabel="Add an affiliate link" />
+        {!cfg.affiliates.length ? <p className="v3-panel-note" style={{ marginTop: 'var(--space-3)' }}>None yet. The section stays hidden on the page until one is added.</p> : null}
         <p className="v3-panel-note" style={{ marginTop: 'var(--space-3)' }}>
-          Affiliate links get their own section later (gear, codes, click counts). Links without a label or a valid address are dropped on save.
+          Links without a label or a valid address are dropped on save.
         </p>
       </section>
 

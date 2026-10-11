@@ -212,10 +212,13 @@ The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public
 Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
 reduced motion), social icons from `lib/socials.ts`, the collab card (main ask — mailto `EMAIL` with a
 pre-filled brief; topic chips put the topic in the subject; Copy button because Instagram's in-app browser
-often can't open mail), then plain links. Edited on the **Link page** tab (`/links`, Social group):
-tagline, collab text, topics, links (order, hide, delete). Stored as one `records` row (`doc` / `setting` /
-title `hello`) like the site settings — no table. `lib/hello-config.ts` cleans every save (http(s)/mailto
-only). Affiliate links are the NEXT step: their own group beside `links`, not mixed into it.
+often can't open mail), then plain links, then **affiliate links** under their own heading with a disclosure
+line, `rel="sponsored"` and an optional discount code with a copy button (section hidden while empty).
+Edited on the **Link page** tab (`/links`, Studio group under Dashboard; also linked from Settings): tagline,
+collab text, topics, links and affiliates (add, edit, reorder, hide, delete — `ListEditor.tsx` serves both).
+Stored as one `records` row (`doc` / `setting` / title `hello`) like the site settings — no table.
+`lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
+Affiliate click counts are not tracked yet.
 
 ## Raising an invoice or a quotation
 
