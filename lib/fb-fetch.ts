@@ -165,6 +165,9 @@ const FIELDS =
 const typeOf = (s: string | null): FbPost['type'] =>
   s === 'added_video' ? 'VIDEO' : s === 'added_photos' ? 'PHOTO' : s === 'shared_story' ? 'LINK' : 'TEXT'
 
+// Links come from Facebook; anything but https is dropped rather than rendered as a link or image.
+const https = (v: unknown) => (typeof v === 'string' && v.startsWith('https://') ? v : null)
+
 const shapePost = (pageId: string, p: any): FbPost => ({
   post_id: String(p.id),
   page_id: pageId,
@@ -172,8 +175,8 @@ const shapePost = (pageId: string, p: any): FbPost => ({
   status_type: p.status_type ?? null,
   type: typeOf(p.status_type ?? null),
   message: p.message ?? null,
-  permalink: p.permalink_url ?? null,
-  picture: p.full_picture ?? null,
+  permalink: https(p.permalink_url),
+  picture: https(p.full_picture),
   reactions: n(p.reactions?.summary?.total_count),
   comments: n(p.comments?.summary?.total_count),
   shares: n(p.shares?.count) ?? 0, // Facebook leaves `shares` out when nobody shared

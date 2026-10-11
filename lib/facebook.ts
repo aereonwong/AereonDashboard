@@ -152,9 +152,10 @@ function rateOf(ps: FbPostRow[]) {
   return v ? (ps.reduce((s, p) => s + engagement(p), 0) / v) * 100 : 0
 }
 
-/** Follower change over the last `days` stored days: follows − unfollows, plus the count it started from. */
-export function followerFlow(daily: FbDay[], days = 30) {
-  const span = daily.slice(-days)
+/** Follower change over the last `days` calendar days: follows − unfollows. A missed refresh leaves a gap, never stretches the window. */
+export function followerFlow(daily: FbDay[], days = 30, now = Date.now()) {
+  const since = new Date(now - days * 86_400_000).toISOString().slice(0, 10)
+  const span = daily.filter(d => d.day >= since)
   const follows = span.reduce((s, d) => s + (d.follows ?? 0), 0)
   const unfollows = span.reduce((s, d) => s + (d.unfollows ?? 0), 0)
   return { follows, unfollows, net: follows - unfollows, days: span.length }

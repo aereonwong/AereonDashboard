@@ -10,7 +10,7 @@ import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
 import { Spark } from '../summary/Panels'
-import { rmFull, pct, compact, num } from '../fmt'
+import { rmFull, pct, compact, num, shortDate } from '../fmt'
 import { analyseFb, followerFlow, type Facebook } from '@/lib/facebook'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
@@ -53,6 +53,9 @@ export default function Dashboard({
   // Facebook beside Instagram. People who follow or see both are counted on each, so
   // combined figures are labelled as platform totals, never as unique people.
   const hasFb = !!fb && (fb.daily.length > 0 || fb.posts.length > 0)
+  // Combined figures need BOTH platforms' current windows; otherwise a missing one would read as zero.
+  const fbFresh = !!fb?.window && fb.window.until >= new Date(Date.parse(`${s.today}T00:00:00Z`) - 7 * 86_400_000).toISOString().slice(0, 10)
+  const both = hasFb && fbFresh && reach30 > 0 && netFollows !== null
   const fbFlow = hasFb ? followerFlow(fb!.daily, 30) : null
   const fbStats = hasFb ? analyseFb(fb!.posts, 30) : null
   const fbViewers = fb?.window?.viewers ?? null
@@ -105,12 +108,12 @@ export default function Dashboard({
               {s.owed.length} tracked unpaid, last 120 days{s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
             </div>
           </a>
-          {hasFb ? (
+          {both ? (
             <a className="v3-kpi" href="#audience">
               <div className="v3-kpi-label">Social reach, last month</div>
               <div className="v3-kpi-value">{compact(allReach)}</div>
               <div className="v3-kpi-note">
-                Instagram {compact(reach30)} + Facebook {compact(fbViewers ?? 0)} · {compact(allFollowers)} followers
+                Instagram {compact(reach30)} + Facebook {compact(fbViewers ?? 0)} · platform total, someone on both counts twice
               </div>
             </a>
           ) : (
@@ -226,7 +229,7 @@ export default function Dashboard({
               </a>
             ) : null}
           </div>
-          {hasFb ? (
+          {both ? (
             <>
               <p className="v3-kpi-label" style={{ marginBottom: 'var(--space-3)' }}>Instagram + Facebook</p>
               <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
@@ -252,7 +255,7 @@ export default function Dashboard({
                   <div className="v3-kpi-label">Posting, both</div>
                   <div className="v3-kpi-value num">{((stats?.postsPerWeek ?? 0) + (fbStats?.postsPerWeek ?? 0)).toFixed(1)}/wk</div>
                   <div className="v3-kpi-note">
-                    Instagram {(stats?.postsPerWeek ?? 0).toFixed(1)} · Facebook {(fbStats?.postsPerWeek ?? 0).toFixed(1)}
+                    Instagram {(stats?.postsPerWeek ?? 0).toFixed(1)} · Facebook {(fbStats?.postsPerWeek ?? 0).toFixed(1)} · a cross-post counts on each
                   </div>
                 </div>
               </div>
@@ -320,7 +323,7 @@ export default function Dashboard({
                 <div>
                   <div className="v3-kpi-label">Viewers</div>
                   <div className="v3-kpi-value num">{fbViewers !== null ? compact(fbViewers) : '—'}</div>
-                  <div className="v3-kpi-note">28 days · typical post {compact(fbStats.typical)}</div>
+                  <div className="v3-kpi-note">{fb!.window ? `28 days to ${shortDate(fb!.window.until)}` : '28 days'} · typical post {compact(fbStats.typical)}</div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement</div>

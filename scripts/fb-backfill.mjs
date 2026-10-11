@@ -18,7 +18,6 @@ import { DEFAULT_PAGE_ID, fetchDaily, fetchPeriods, fetchPosts, postMetrics, per
 
 const run = promisify(execFile)
 const CLI = `${process.env.HOME}/.local/bin/composio`
-const PROJECT = process.env.COMPOSIO_PROJECT_NAME || 'aereon.wong_workspace_first_project'
 const USER = process.env.COMPOSIO_USER_ID || 'aereon'
 const PAGE = process.env.FB_PAGE_ID || DEFAULT_PAGE_ID
 
@@ -30,6 +29,16 @@ const PAGE_FROM = arg('page-from') || '2024-08-01'
 const flags = process.argv.slice(2)
 const doPage = !flags.includes('--posts')
 const doPosts = !flags.includes('--page')
+
+// The Composio project: COMPOSIO_PROJECT_NAME, or the only project this login has.
+async function project() {
+  if (process.env.COMPOSIO_PROJECT_NAME) return process.env.COMPOSIO_PROJECT_NAME
+  const { stdout } = await run(CLI, ['dev', 'projects', 'list'], { env: { ...process.env, NO_COLOR: '1' } })
+  const list = JSON.parse(stdout.slice(stdout.indexOf('[')))
+  if (list.length !== 1) throw new Error('Several Composio projects — set COMPOSIO_PROJECT_NAME in .env')
+  return list[0].name
+}
+const PROJECT = await project()
 
 let calls = 0
 const started = Date.now()

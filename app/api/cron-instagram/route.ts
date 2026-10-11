@@ -19,12 +19,15 @@ export async function GET(req: Request) {
   const authed = !!secret && safeEqual(req.headers.get('authorization'), `Bearer ${secret}`)
   if (!authed) return new Response('forbidden', { status: 401 })
 
-  // One failing never stops the other.
-  const [ig, fb] = await Promise.all([refreshInstagram('cron'), refreshFacebook('cron')])
+  // Instagram first, then Facebook — in turn, so the two never share Composio's rate
+  // limit at once. Neither throws, so one failing never stops the other.
+  const ig = await refreshInstagram('cron')
+  const fb = await refreshFacebook('cron')
   const body = {
-    ok: ig.ok,
+    ok: ig.ok && fb.ok,
     instagram: ig.ok ? { posts: ig.posts, warnings: ig.warnings } : { error: ig.error },
     facebook: fb.ok ? { posts: fb.posts, days: fb.days, warnings: fb.warnings } : { error: fb.error },
   }
-  return Response.json(body, { status: ig.ok ? 200 : ig.status })
+  // Red in Vercel's cron log when either failed, so a stalled Facebook history shows up.
+  return Response.json(body, { status: !ig.ok ? ig.status : fb.ok ? 200 : 502 })
 }
