@@ -13,6 +13,7 @@ import { readVersion } from '@/lib/v3/version'
 import { parseFilters } from '@/lib/v3/filters'
 import { readAudience } from '@/lib/v3/audience'
 import { readPostReach } from '@/lib/v3/ig-extras'
+import { readFacebook } from '@/lib/facebook'
 import { demoMode } from '@/lib/records'
 
 export const dynamic = 'force-dynamic'
@@ -46,8 +47,8 @@ export default async function Dashboard({
 }) {
   const { version } = await readVersion()
   if (version === 'v3') {
-    const [rows, audience, metrics, demo, sp] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams])
-    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} />
+    const [rows, audience, metrics, demo, sp, fb] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readFacebook()])
+    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} fb={fb} />
   }
 
   const [rows, snap, waiting, which, account] = await Promise.all([

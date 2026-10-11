@@ -163,11 +163,11 @@ export const PUBLIC_PREFIX = [
 /** Top-level folders under app/(app). A new one must be added here; tests/agent-site.test.mjs checks. */
 export const PRIVATE_SEGMENTS = [
   'approvals', 'cash-in', 'cash-out', 'clients', 'content', 'customers', 'dashboard', 'employees',
-  'instagram', 'invoices', 'leads', 'links', 'news', 'property', 'settings', 'tasks', 'users', 'vault',
+  'facebook', 'instagram', 'invoices', 'leads', 'links', 'news', 'property', 'settings', 'tasks', 'users', 'vault',
 ]
 /** Folders under app/api that exist (public ones above are listed too). */
 export const API_SEGMENTS = [
-  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'instagram', 'invoices', 'login', 'logout', 'telegram', 'track',
+  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'facebook', 'instagram', 'invoices', 'login', 'logout', 'telegram', 'track',
 ]
 
 const under = (path: string, base: string) => path === base || path.startsWith(base + '/')
