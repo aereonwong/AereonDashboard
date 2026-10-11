@@ -201,8 +201,6 @@
 .hl-code span::before { content: 'Code '; font-family: Inter, sans-serif; letter-spacing: 0; color: var(--hl-ink-3); }
 .hl-code em { font-style: normal; font-weight: 600; color: var(--hl-accent); }
 
-.hl-foot { margin-top: 28px; text-align: center; font-size: 12px; color: var(--hl-ink-3); }
-.hl-foot a { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- intro: each .hl-in rises in a beat after the one above (--i set inline) */
 .hl-in { animation: hl-rise 0.6s calc(0.22s + var(--i, 0) * 0.07s) var(--hl-ease) both; }
