@@ -9,7 +9,7 @@ const compact = (n: number) =>
 
 const asOf = new Date(`${SOCIALS_AS_OF}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 
-const GLYPH: Record<Social['key'], React.ReactNode> = {
+export const GLYPH: Record<Social['key'], React.ReactNode> = {
   instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></>,
   tiktok: <><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5" /><path d="M14 3c.4 2.6 2.2 4.4 5 4.6" /></>,
   facebook: <path d="M14.5 21v-7h2.6l.4-3.2h-3V8.9c0-.9.3-1.6 1.6-1.6h1.6V4.5a20 20 0 0 0-2.4-.1c-2.4 0-4 1.4-4 4.1v2.3H8.7V14h2.6v7" />,

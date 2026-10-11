@@ -21,6 +21,7 @@ const MORE: MoreTab[] = [
   { href: '/clients', label: 'Clients', ico: '🤝' },
   { href: '/instagram', label: 'Instagram', ico: '📸' },
   { href: '/news', label: 'News', ico: '📰' },
+  { href: '/links', label: 'Link page', ico: '🔗' },
   { href: '/cash-in', label: 'Cash In', ico: '💰' },
   { href: '/leads', label: 'Leads', ico: '🧲' },
   { href: '/customers', label: 'Customers', ico: '🧑‍🤝‍🧑' },

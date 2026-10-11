@@ -1,0 +1,32 @@
+/* Link page editor (/links). Studio Standard tokens only. */
+.lk-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+.lk-wide { max-width: 640px; }
+.lk-wide .v3-input { width: 100%; }
+
+.lk-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.lk-chip { display: inline-flex; gap: 6px; align-items: center; }
+.lk-chip-add { display: inline-flex; gap: var(--space-2); }
+.lk-chip-add .v3-input { width: 11rem; }
+
+.lk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.lk-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: var(--space-3); align-items: end;
+  padding-bottom: var(--space-3); border-bottom: 1px solid var(--line);
+}
+.lk-list li .v3-input { width: 100%; }
+.lk-list li.lk-off .v3-field { opacity: 0.5; }
+.lk-list .v3-input[aria-invalid="true"] { border-color: var(--neg); }
+.lk-on { display: grid; place-items: center; height: 36px; }
+.lk-on input { width: 18px; height: 18px; accent-color: var(--accent); }
+.lk-row-btns { display: flex; gap: var(--space-1); }
+
+.lk-savebar { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.lk-savebar .v3-error { margin: 0; }
+.lk-ok { color: var(--pos); font-size: var(--t-sm); }
+
+@media (max-width: 860px) {
+  .lk-list li { grid-template-columns: auto minmax(0, 1fr); }
+  .lk-list li > .v3-field, .lk-list li > .lk-row-btns { grid-column: 2; }
+}

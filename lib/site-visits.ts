@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 // includes the day, so it counts unique visitors per day and cannot follow anyone further.
 
 /** Only these public pages are logged. Anything else is ignored, so private paths never land here. */
-export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/login']
+export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '/login']
 
 const BOT = /bot|crawl|spider|slurp|preview|fetch|monitor|headless|lighthouse|curl|wget|python|axios|node-fetch|go-http|java\/|httpclient|vercel|facebookexternalhit|whatsapp|telegram|discord|slack/i
 
