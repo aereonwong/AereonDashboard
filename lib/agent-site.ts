@@ -152,7 +152,7 @@ export const PAGES: PublicPage[] = [
 
 /** Public, no sign-in needed. Everything else is private or does not exist. */
 export const PUBLIC_EXACT = [
-  '/', '/about', '/contact', '/privacy', '/robots.txt', '/sitemap.xml', '/llms.txt',
+  '/', '/about', '/contact', '/privacy', '/hello', '/robots.txt', '/sitemap.xml', '/llms.txt',
   '/manifest.webmanifest', '/manifest.json', '/favicon.ico',
 ]
 export const PUBLIC_PREFIX = [
@@ -162,7 +162,7 @@ export const PUBLIC_PREFIX = [
 /** Top-level folders under app/(app). A new one must be added here; tests/agent-site.test.mjs checks. */
 export const PRIVATE_SEGMENTS = [
   'approvals', 'cash-in', 'cash-out', 'clients', 'content', 'customers', 'dashboard', 'employees',
-  'instagram', 'invoices', 'leads', 'news', 'property', 'settings', 'tasks', 'users', 'vault',
+  'instagram', 'invoices', 'leads', 'links', 'news', 'property', 'settings', 'tasks', 'users', 'vault',
 ]
 /** Folders under app/api that exist (public ones above are listed too). */
 export const API_SEGMENTS = [

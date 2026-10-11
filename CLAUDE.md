@@ -206,6 +206,17 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
   (`source: 'canva_quote'`) and quotes without a recorded template design are view only — `editBlockOf` says why.
 - Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
 
+## Link page — /hello (added 11 Oct 2026)
+
+The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public, tracked in `site_visits`).
+Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
+reduced motion), social icons from `lib/socials.ts`, the collab card (main ask — mailto `EMAIL` with a
+pre-filled brief; topic chips put the topic in the subject; Copy button because Instagram's in-app browser
+often can't open mail), then plain links. Edited on the **Link page** tab (`/links`, Social group):
+tagline, collab text, topics, links (order, hide, delete). Stored as one `records` row (`doc` / `setting` /
+title `hello`) like the site settings — no table. `lib/hello-config.ts` cleans every save (http(s)/mailto
+only). Affiliate links are the NEXT step: their own group beside `links`, not mixed into it.
+
 ## Raising an invoice or a quotation
 
 `/invoice` and `/quote` in Telegram — the interview flow, numbering rules, Canva template editing,
@@ -329,3 +340,13 @@ uv tool install "yt-dlp[default]"
 OpenCLI (`opencli`) needs its Chrome "Browser Bridge" extension loaded (chrome://extensions →
 Developer Mode → Load unpacked, from github.com/jackwener/opencli/releases) and Chrome logged in to
 the site. Not connected yet as of 2 Oct 2026. Cookies/logins are Aereon's to provide — never type them.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

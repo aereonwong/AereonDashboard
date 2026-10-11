@@ -22,6 +22,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
     items: [
       { href: '/instagram', label: 'Instagram', icon: 'instagram' },
       { href: '/news', label: 'News', icon: 'news' },
+      { href: '/links', label: 'Link page', icon: 'share' },
     ],
   },
   {
