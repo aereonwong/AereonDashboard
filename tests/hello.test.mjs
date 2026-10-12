@@ -75,3 +75,41 @@ test('only well-formed /hello tap events are tracked', async () => {
   for (const p of ['/hello', '/hello/tap/collab', '/hello/out/icity', '/hello/out/mail-drone']) assert.ok(isTrackedPath(p), p)
   for (const p of ['/hello/x', '/hello/tap/', '/hello/tap/nope', '/hello/out/A', '/hello/out/a/b', '/dashboard', '/hello/tap/' + 'a'.repeat(41)]) assert.ok(!isTrackedPath(p), p)
 })
+
+test('insights: funnel, per-section rate, sources and in-app detection', async () => {
+  const { analyseHello, sourceOf } = await import('../lib/hello-insights.ts')
+  const { parseUa } = await import('../lib/site-visits.ts')
+  assert.equal(parseUa('Mozilla/5.0 (iPhone) Instagram 300.0').browser, 'Instagram app')
+  assert.equal(parseUa('Mozilla/5.0 (iPhone) Safari/604.1').browser, 'Safari')
+  assert.equal(sourceOf({ browser: 'Instagram app' }), 'Instagram')
+  assert.equal(sourceOf({ browser: 'Chrome', utm_source: 'story' }), 'Tag: story')
+  assert.equal(sourceOf({ browser: 'Safari', utm_source: 'ig' }), 'Instagram')
+  assert.equal(sourceOf({ browser: 'Chrome', referrer_host: 'l.facebook.com' }), 'Facebook')
+  assert.equal(sourceOf({ browser: 'Chrome' }), 'Direct or unknown')
+
+  const cfg = cleanHello({ affiliates: [{ id: 'icity', label: 'i-City', url: 'a.co', kind: 'deal' }] })
+  const d = '2026-10-12'
+  const rows = [
+    { path: '/hello', day: d, visitor_hash: 'a', browser: 'Instagram app', country: 'MY', city: 'Kuala Lumpur', device: 'mobile' },
+    { path: '/hello/tap/drone', day: d, visitor_hash: 'a' },
+    { path: '/hello/out/mail-drone', day: d, visitor_hash: 'a' },
+    { path: '/hello', day: d, visitor_hash: 'b', country: 'SG', device: 'mobile' },
+    { path: '/hello/tap/drone', day: d, visitor_hash: 'b' },
+    { path: '/hello/tap/deals', day: d, visitor_hash: 'b' },
+    { path: '/hello/out/icity', day: d, visitor_hash: 'b' },
+    { path: '/hello/out/made-up', day: d, visitor_hash: 'b' },
+    { path: '/hello', day: '2026-10-11', visitor_hash: 'c', device: 'desktop' },
+  ]
+  const r = analyseHello(rows, cfg, 7, d)
+  assert.equal(r.visitors, 3)
+  assert.equal(r.opened, 2)
+  assert.equal(r.emailed, 1)
+  assert.equal(r.promo, 1)
+  assert.deepEqual(r.sections.find(s => s.id === 'drone'), { id: 'drone', label: 'Drone Pilot', opened: 2, acted: 1 })
+  assert.deepEqual(r.sections.find(s => s.id === 'deals'), { id: 'deals', label: 'Attractions', opened: 1, acted: 1 })
+  assert.ok(!r.clicks.some(c => c.id === 'made-up'))
+  assert.equal(r.daily.length, 7)
+  assert.equal(r.daily.at(-1).visitors, 2)
+  assert.equal(r.sources.find(s => s.label === 'Instagram').count, 1)
+  assert.equal(r.countries[0].label.length > 2, true)
+})
