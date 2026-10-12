@@ -131,56 +131,14 @@ filters it ignores. Typical = median; hit = 2× the slice's typical. Empty in de
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
-## Showcase — work across the board (added 5 Oct 2026)
+## Showcase (5 Oct 2026)
 
-The landing page and both media kits show a spread of Aereon's work, not just the recent feed (lately
-mostly KLCC). `npm run ig:archive` (Composio CLI, like `ig:refresh`) lists two years of posts, gets each
-one's reach, and `lib/showcase.ts` picks one tile per kind: product review, event, car review, hotel
-review, aerial (drone flying or from above; a drone show stays an event), travel in Singapore / Bali / Brunei / Malaysia / abroad — KLCC at most once.
-Tiles are **blended** (strongest, weakest, next strongest…) and reach is printed only on tiles at or
-above the two-year median; weaker ones show their label alone. Output: `lib/showcase.json` + covers in
-`public/img/work/` (saved locally — Instagram image URLs expire). Not refreshed by the cron; re-run the
-script when new work should be able to make it. Classifier rules are order-sensitive; comments say why.
+Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `npm run ig:archive`). Full rules: `docs/SHOWCASE.md` — read before touching the classifier or tiles.
 
-## Property section (own sidebar group since 4 Oct 2026)
+## Property (own sidebar group since 4 Oct 2026)
 
-Property is its own section, apart from the studio Dashboard — nothing property-related feeds it. v3 sidebar
-group **Property**: `/property` Overview (one card per property; the future property dashboard grows here),
-`/property/loans`, `/property/tenancy`, `/property/costs`. Pages live in `app/(app)/property/**`, v3 UI in
-`app/_v3/pages/property/` (loader `app/(app)/property/_load.ts`); v1/v2 only keep the one-table view at `/property`.
-- **Tenancy** (`supabase/tenancy.sql`, `lib/tenancy-math.ts`): `property_tenancy` is one row per term; terms with the
-  same `tenant_name` form one tenant group (original + extensions). A tenant's score = rent due so far less bills tagged
-  to them (`property_cost.tenant_name`). Deposits are columns on the original term (advance rent, security, utility,
-  access cards). Renaming a tenant (`renameTenant`) changes every term and tagged bill. Rent due is computed, never stored.
-- **Recovered from deposit**: a bill tagged to a tenant can be ticked `recovered_from_deposit` — the owner paid it but it was
-  deducted from the tenant's deposit, so it is NOT a cost (excluded from `costTotals`, tenant net and estimate). The tenant card
-  shows the deposit settlement (held − deducted = due back; `deposit_refunded` = actually paid back; the difference is kept).
-- **Dual key** (a property with two tenants at once, e.g. main unit + studio): each unit is simply its own tenant name; there is no unit column.
-  `cashResult(..., all)` splits the one loan instalment and one maintenance fee between concurrent tenants by rent share, and Overview adds
-  the live tenants together (`propertyMonthly`), so nothing is counted twice. Single-tenant properties are unchanged.
-- **Costs**: `property_cost`, kinds maintenance_fee / repair / agent_fee / stamping_fee / other; one row per bill,
-  listed ten to a page. Monthly maintenance is entered as one row per month (no recurring rule yet).
-- Run `supabase/tenancy.sql` once (safe to repeat); the Tenancy and Costs pages ask for it until the columns exist.
-  Tenancy terms load with `npm run property:import -- --tenancy` (from `.property-data/tenancies.json`, replaces all terms).
-- Same privacy rule as the loans: tenant names, rents, fees and deposits live only in Supabase and `.property-data/`.
-
-## Property tab — home loans (added 4 Oct 2026)
-
-`/property` replaces the "Interest Rate" Numbers sheet (Dropbox/Personal/Property) for Aereon's home loans.
-Which properties, banks and spreads they are is private: see `.property-data/loans.json` (git-ignored).
-- Tables in `supabase/property.sql` (`property_loan`, `property_loan_month`, `property_bank_rate`,
-  `property_data_issue`). Only raw inputs are stored; all maths is `lib/property-math.ts`.
-- **Monthly job: one figure**, the outstanding balance from the statement, typed on the page. Saving
-  marks it `statement` and opens next month as `pending` with the instalment carried over.
-- The rate is never typed. It is the bank's published BR on each day of the period + the loan's spread.
-  When a bank changes its rate, add a row to `property_bank_rate` (and `.property-data/bank_rates.json`).
-- A row dated month M pays interest for the period ending on M's instalment day (`cycle_day`), which the
-  bank figures prove to the sen. Both loans' instalment days are confirmed by Aereon (in loans.json).
-- Everything about the loans is private: it lives in Supabase and `.property-data/` (git-ignored), loaded
-  by `npm run property:import` (`-- --dry` works it out offline). The repo is public: never commit
-  balances, property or bank names, or spreads, not even in comments or commit messages.
-- `property_data_issue` holds what the spreadsheet move found. Aereon approves each fix; don't apply
-  open ones without asking.
+Overview, loans, tenancy, costs, submeter — full rules in `app/(app)/property/CLAUDE.md` (read it before touching `lib/property*`, `lib/tenancy-math.ts`, `lib/submeter*` or `app/_v3/pages/property/`).
+**Privacy (repo is public):** loan balances, property/bank names, spreads, tenant names, rents, fees and deposits live only in Supabase and `.property-data/` — never in code, comments or commit messages. `property_data_issue` fixes need Aereon's approval.
 
 ## Sign-in (Google + backup passcode, added 4 Oct 2026)
 
@@ -191,12 +149,14 @@ until then the login page is the old passcode form. A verified Google account mu
   keep a second Google account on it.
 - `app_users` table (`supabase/app-users.sql`) — the managed list, edited on the **Users** page (`/users`,
   `app/(app)/users/`): role owner/admin/viewer, `active` (Lock), `last_login_at`. Owner manages everyone; admin
-  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Roles gate
-  only the Users page so far — a viewer can still use every other tab and server action (not read-only yet).
+  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Since 12 Oct 2026 a
+  viewer is read-only: `requireSession()` (every server action) and `canEdit()` refuse them; they can still open every tab.
 - Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
   Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. `signedIn()`
   (lib/auth.ts, used by the (app) layout and every server action) re-checks a Google account against the list,
   so Lock/Remove cuts someone off on their next click. The proxy only checks the cookie signature.
+- On production with no `AUTH_SECRET`/`APP_PASSCODE` the app now fails CLOSED (`openDoor()` in lib/session.ts);
+  local and preview runs still open without a secret.
 - Backup access ladder: second Google account → passcode (`APP_PASSCODE`, behind "Use backup passcode") →
   edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
   Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
@@ -205,52 +165,13 @@ until then the login page is the old passcode form. A verified Google account mu
   Google Cloud. `/api/logout` (POST) clears the cookie; Sign out is in the v3 rail, the classic sidebar and Settings → Account.
   The login page (`app/login/`) is Studio Standard: KLCC photo beside the form, passcode folded under the Google button.
 
-## Quotations (added 10 Oct 2026)
+## Quotations (10 Oct 2026)
 
-`/invoices/quotes` (v3 + classic sidebar, beside Invoice Details): every quote with its outcome — won / open /
-no invoice / lost — and a **Convert** button that opens Create Invoice filled in from the quote. Logic in
-`lib/quotes.ts`, page in `app/(app)/invoices/quotes/`. A quote is a `doc` row, status `quotation` — never income.
-- **The quote → invoice link lives on the INVOICE only**: `meta.quotation_id` (firm; written by Convert, by
-  `fileInvoice` when a typed reference names exactly one quote, and by the import) and `meta.quotation_no` (the
-  `QUOTATION No.` it prints). Outcome is derived each render, never stored on the quote (except `quote_outcome:
-  'lost'`). One quote can win several invoices (deposit + balance, add-ons).
-- **Old Canva quotes are record-only** (Aereon's call): 65 imported by `npm run quote:import` from git-ignored
-  `.quote-data/`, numbers kept exactly as printed (odd formats and repeats included), designs untouched.
-  `docs/QUOTE-AUDIT.md` has the formats; the client-level findings are in git-ignored `.quote-data/QUOTE-AUDIT.md`.
-- **Create quotation** (Quotations page header): the Create Invoice dialog with `kind="quotation"` — same Canva
-  preview → Save flow as invoices and as Telegram `/quote`: `SYCP-Q-YYYYMM-NNN`, `TEMPLATES.quotation`, Canva's
-  Quotation folder, a validity period instead of payment status/due date. Filed by `fileInvoice` as `doc`/`quotation`.
-- **Edit / undo a quotation** (row buttons): same `lib/invoice-edit.ts` flow as invoices; the ROW decides the kind
-  (`rowKind`), redrawn from the quotation template, status stays `quotation`, no Drive. Old-format quotes
-  (`source: 'canva_quote'`) and quotes without a recorded template design are view only — `editBlockOf` says why.
-- Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
+`/invoices/quotes`. A quote is a `doc` row, status `quotation` — never income; the quote→invoice link lives on the INVOICE only (`meta.quotation_id`). Full rules: `app/(app)/invoices/quotes/CLAUDE.md`.
 
-## Link page — /hello (added 11 Oct 2026)
+## Link page — /hello (11 Oct 2026)
 
-The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public, tracked in `site_visits`).
-Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
-reduced motion), a proof strip (Instagram views + interactions over 90 days via `ninety()` from the stored
-snapshot — hidden when the snapshot is over 7 days old — and combined followers; Aereon's call, 11 Oct 2026), social icons from `lib/socials.ts`, then **"What brings you here?"** (`app/hello/Chooser.tsx`):
-tiles for five audiences — `collab`, `shoot` (visiting KL / local business), `drone`, `deals` (attractions &
-promos), `gear` — each opening only its section, addressable as `/hello#<id>` for Stories (CSS `:target` is the
-no-JS fallback). Every email button is a mailto `EMAIL` with a brief for that audience (`briefMailto`); a Copy
-button sits beside them because Instagram's in-app browser often can't open mail. Plain links live in the
-collab section. **Affiliate links** carry `kind` deal|gear (missing = deal), a disclosure line,
-`rel="sponsored"` and an optional discount code; a deals/gear tile is hidden while it has no links.
-Edited on the **Link page** tab (`/links`, Social group after News; also linked from Settings): tagline,
-collab text, topics, services intros, links and affiliates (add, edit, reorder, hide, delete, section — `ListEditor.tsx` serves both).
-Stored as one `records` row (`doc` / `setting` / title `hello`) like the site settings — no table.
-`lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
-**Tap tracking:** elements with `data-t` (`tap/<section>`, `out/<link id | mail-* | social-* | code-* | copy-email>`)
-send a beacon via `app/hello/TapTracker.tsx` to `/api/track`, logged in `site_visits` as `/hello/tap/…` / `/hello/out/…`
-(`HELLO_EVENT` in `lib/site-visits.ts`; same no-IP, no-owner, no-bot, 10-minute de-dupe rules). The Link page tab shows
-insights (`lib/hello-stats.ts` reads, `lib/hello-insights.ts` is the tested maths): 7/30/90-day switch, visitors (daily
-hash, so one person on two days counts twice), funnel (opened a section / started an email / opened a promo / went
-to a social), per-section opened → acted, taps, sources (in-app browser from `parseUa` — Instagram, Threads, Facebook,
-TikTok, Xiaohongshu, LINE — split by Aereon's own `utm_source` tag, e.g. "Instagram · bio" (the app's own `ig` tag doesn't
-split); else the tag, with short tags like `ig` named; else referrer). Bio link: `aereonwong.com/hello?utm_source=bio`), countries, cities, devices. **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
-every 6 hours; `/hello` is a public PREFIX so these image routes are reachable. Tourist shoots show `shootFrom`
-("From USD 150", editable).
+Instagram bio link (`app/hello/`, public), edited on the `/links` tab, stored as one `records` row (`doc`/`setting`/`hello`). Full rules: `app/hello/CLAUDE.md` (read before touching `lib/hello*`, `lib/socials.ts`, `/links` or `/api/track`).
 
 ## Raising an invoice or a quotation
 
@@ -269,6 +190,8 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
 
+Last full audit: `docs/REVIEW-2026-10-12.md` — read it before auditing again.
+
 ## Review agents (`.claude/agents/`)
 
 Before opening a pull request, run the reviewers whose files the diff touches — in parallel, and
@@ -283,38 +206,9 @@ fix every BLOCK before merging:
 
 Each opens with **Verdict: SHIP** or **Verdict: BLOCK**. All are read-only.
 
-## Motion skills (installed 2 Oct 2026)
+## Tooling: motion, video, research
 
-From https://github.com/kevinbadi/claude-motion-skills (an index of 16 packs by iart.ai, MIT).
-Two packs copied into `.claude/skills/` — load on new chat start:
-
-- **Web motion** (`iart-ai/web-animation-skills`): `gsap-web`, `micro-interaction`,
-  `accessible-animation`, `svg-animation`, `lottie-animation`, `page-transition-animation`,
-  `glassmorphism`, `ascii-animation`, `60fps-animation`.
-- **Motion design** (`iart-ai/motion-design-skills`): `animation-principles`, `motion-art-direction`,
-  `motion-background`, `color-motion`, `logo-animation`, `shot-composition`, `remotion-video`,
-  `beat-sync-editing`, `after-effects`.
-
-**Use them when implementing any animation, transition, hover/scroll effect or video in the app.**
-Read the matching `SKILL.md` first, honour `prefers-reduced-motion` (`accessible-animation`), keep
-animation to `transform`/`opacity` (`60fps-animation`), and follow the skill's render → screenshot →
-check loop before claiming it works.
-
-Ten more packs installed for content/video work (not dashboard UI) — read the matching `SKILL.md` first:
-
-- **Short-form / YouTube:** `short-form-video`, `caption-animation`, `countdown-video`, `lower-thirds`,
-  `audiogram`, `youtube-intro-outro`.
-- **Ads / products:** `ad-creative-video`, `launch-video`, `testimonial-video`, `promo-video`,
-  `product-demo-video`, `photo-slideshow`.
-- **Data / explainers:** `chart-animation`, `animated-infographic`, `presentation-video`,
-  `explainer-video`, `diagram-animation`, `isometric-animation`, `whiteboard-animation`, `wrapped-video`.
-- **Maps / type / 3D:** `map-animation` (travel routes), `kinetic-typography`, `threejs-animation`,
-  `shader-glsl`, `particle-system`.
-- **Client work (SY Creative):** `creative-brief`, `brand-motion-guidelines`, `client-revisions`,
-  `motion-pricing`, `video-delivery-specs`.
-
-Skipped as niche: `text-message-video-skills`, `manim-skills`, `generative-illustration-skills`,
-`javascript-animation-skills` — add with `npx skills add iart-ai/<pack-name>`.
+Motion skills, HyperFrames (HTML→MP4) and Agent Reach (web research) — what's installed and how: `docs/TOOLING.md`. Read the matching skill's `SKILL.md` before any animation, video or online research; honour `prefers-reduced-motion`.
 
 ## Reading documents
 
@@ -332,51 +226,6 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
-## Folder move (27 Sep 2026)
-The project folder was renamed from `~/cashflowos-aereon` to `~/AereonDashboard`. A symlink at the old path
-still points here so old references keep working; it can be deleted once nothing uses it.
-
-## HyperFrames — HTML to MP4 video (installed 2 Oct 2026)
-
-From https://github.com/heygen-com/hyperframes (HeyGen, Apache 2.0). Write HTML/CSS/GSAP, render
-deterministic MP4. Installed as a user-scope Claude Code plugin (needs Node >= 22; this Mac has 24).
-
-Install on a fresh machine or cloud session:
-
-```bash
-claude plugin marketplace add heygen-com/hyperframes
-claude plugin install hyperframes@hyperframes
-```
-
-Use `/hyperframes:hyperframes` first — it routes to the right workflow (`product-launch-video`,
-`motion-graphics`, `short-form` etc). Standalone skills alternative: `npx hyperframes skills update`.
-Use it for any video/animation render in the app; follow render → preview → check before claiming done.
-
-## Agent Reach — internet access for research (installed 2 Oct 2026)
-
-From https://github.com/Panniantong/agent-reach (MIT). Reads web pages, YouTube, RSS, V2EX, Bilibili,
-GitHub, plus Reddit/Facebook/Instagram/Twitter/LinkedIn once logged in. Skill is at
-`~/.claude/skills/agent-reach`.
-
-**Use it automatically** when Aereon asks to research, search or look something up online, or shares
-a URL or names a platform (YouTube, Reddit, Instagram, X, Bilibili, LinkedIn, GitHub, RSS) — before
-guessing or using plain WebFetch. Run `agent-reach doctor` to see which channels work right now.
-
-Install on a fresh machine (python 3.10+ via uv; npm global folder must be user-writable):
-
-```bash
-uv tool install --python 3.12 https://github.com/Panniantong/agent-reach/archive/main.zip
-agent-reach install --env=auto --system --channels=opencli
-npm install -g --allow-scripts=@jackwener/opencli @jackwener/opencli mcporter
-mcporter config add exa https://mcp.exa.ai/mcp --scope home
-uv tool install "yt-dlp[default]"
-```
-
-OpenCLI (`opencli`) needs its Chrome "Browser Bridge" extension loaded (chrome://extensions →
-Developer Mode → Load unpacked, from github.com/jackwener/opencli/releases) and Chrome logged in to
-the site. Not connected yet as of 2 Oct 2026. Cookies/logins are Aereon's to provide — never type them.
-
-<!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
 

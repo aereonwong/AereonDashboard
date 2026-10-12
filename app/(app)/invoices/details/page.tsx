@@ -7,6 +7,7 @@ import { reachFor } from '@/lib/ig-links'
 import { composioReady } from '@/lib/composio-exec'
 import { readVersion } from '@/lib/v3/version'
 import InvoiceDetails from './InvoiceDetails'
+import { todayISO } from '@/lib/today'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 
 export default async function InvoiceDetailsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const [rows, demo, { version }, sp] = await Promise.all([getRecords(), demoMode(), readVersion(), searchParams])
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayISO()
   // Reach for linked posts only — one small query, no Instagram call.
   const reach = await reachFor(rows.flatMap(r => linkedPostsOf(r).map(p => p.id)))
   return (

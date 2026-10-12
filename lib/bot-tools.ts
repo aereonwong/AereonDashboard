@@ -322,7 +322,7 @@ export function runBotTool(name: string, input: any, rows: Rec[]): string {
       const today = todayISO()
       const window: 'today' | 'week' | 'all' =
         input?.window === 'today' || input?.window === 'all' ? input.window : 'week'
-      const weekAhead = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
+      const weekAhead = new Date(Date.parse(`${today}T00:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10)
       const openTasks = rows.filter(r => r.category === 'task' && !PAID.has((r.status || '').toLowerCase()))
       const picked = openTasks.filter(r => {
         if (window === 'all') return true

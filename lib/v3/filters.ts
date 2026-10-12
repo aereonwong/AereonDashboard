@@ -1,4 +1,5 @@
 import type { Invoice, WorkKind } from '@/lib/invoices'
+import { todayISO } from '@/lib/today'
 
 // 👉 One filter model for every v3 surface, carried in the URL so a filtered
 // view survives a refresh and can be bookmarked. The server reads it and does
@@ -32,7 +33,7 @@ const iso = (s: string | undefined) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s :
 
 export function parseFilters(
   sp: Params,
-  today = new Date().toISOString().slice(0, 10),
+  today = todayISO(),
   /** What an empty URL means. Clients reads a relationship, so it defaults to all time. */
   fallback: Range = 'ytd',
 ): Filters {
@@ -88,4 +89,3 @@ export function withParam(f: Filters, key: string, value: string | undefined): s
   return s ? `?${s}` : '?'
 }
 
-export const isFiltered = (f: Filters) => f.range !== 'ytd' || !!f.client || !!f.kind

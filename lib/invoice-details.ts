@@ -4,6 +4,7 @@ import { toInvoices } from './invoices'
 import { driveOf, driveStatus } from './invoice-drive'
 import { quoteLinks, isQuote } from './quotes'
 import { TERMS, type Payment, type DetailRow, type KnownClient, type FormOptions, type EditValues } from './invoice-figures'
+import { todayISO } from './today'
 
 export { statusFigures } from './invoice-figures'
 export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from './invoice-figures'
@@ -30,7 +31,7 @@ function canvaUrlOf(m: Rec['meta']): string | null {
   return null
 }
 
-export function paymentOf(r: Pick<Rec, 'status' | 'due_date' | 'meta'>, today = new Date().toISOString().slice(0, 10)): Payment {
+export function paymentOf(r: Pick<Rec, 'status' | 'due_date' | 'meta'>, today = todayISO()): Payment {
   if (isPaid(r)) return 'paid'
   if (isIssued(r)) return 'untracked'
   return r.due_date && r.due_date < today ? 'overdue' : 'outstanding'
@@ -169,7 +170,7 @@ export function knownClients(rows: Rec[]): KnownClient[] {
   return [...by.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export function formOptions(rows: Rec[], today = new Date().toISOString().slice(0, 10)): FormOptions {
+export function formOptions(rows: Rec[], today = todayISO()): FormOptions {
   const venues = new Set<string>()
   for (const r of rows) if (r.meta?.venue && r.meta.venue !== '—') venues.add(String(r.meta.venue))
   const quotations = rows

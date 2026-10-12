@@ -2,6 +2,7 @@ import { supabase, supabaseConfigured } from './supabase'
 import type { InlineKeyboard } from './telegram'
 import type { DocKind } from './invoice-render'
 import { TERMS } from './invoice-figures'
+import { todayISO } from './today'
 
 // 👉 The invoice interview. Aereon says /invoice in Telegram, answers eight
 // questions, and a real invoice record is filed the moment he confirms.
@@ -372,7 +373,7 @@ export async function fileInvoice(
   } = {},
 ): Promise<{ no: string; id: number } | null> {
   if (!supabaseConfigured) return null
-  const date = draft.date ?? new Date().toISOString().slice(0, 10)
+  const date = draft.date ?? todayISO()
   const no = opts.no ?? (await nextInvoiceNo(date, draft.kind))
   // An id from the browser is only trusted when it is a quote printing the same number.
   const quotationId = draft.kind === 'invoice' ? (await quoteIdFor(draft.quotation, draft.quotationId)) : undefined
@@ -421,7 +422,7 @@ export async function quoteIdFor(no?: string, preferId?: number): Promise<number
  */
 export function invoiceRow(draft: Draft, no: string) {
   const isQuote = draft.kind === 'quotation'
-  const date = draft.date ?? new Date().toISOString().slice(0, 10)
+  const date = draft.date ?? todayISO()
   const cur = draft.currency ?? 'MYR'
   const net = netOf(draft)
   const project = [draft.job, ...(draft.deliverables ?? [])].filter(Boolean).join(' — ')

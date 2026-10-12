@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
-import { signedIn } from '@/lib/auth'
+import { canEdit } from '@/lib/auth'
 import { helloRow } from './hello'
 import { cleanHello, type HelloConfig } from './hello-config'
 
@@ -11,7 +11,7 @@ import { cleanHello, type HelloConfig } from './hello-config'
 // cleanHello — only known fields and http(s)/mailto links reach the row.
 
 export async function saveHello(input: HelloConfig): Promise<{ ok: true; config: HelloConfig } | { ok: false; error: string }> {
-  if (!(await signedIn())) return { ok: false, error: 'Sign in again to change this.' }
+  if (!(await canEdit())) return { ok: false, error: 'Sign in again (or ask the owner for edit access) to change this.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const config = cleanHello(input)
   const r = await helloRow()

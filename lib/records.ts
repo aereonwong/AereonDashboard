@@ -63,8 +63,8 @@ export const m = (r: Rec, k: string) => {
 // Format a number as Malaysian Ringgit for display.
 export const rm = (n: number) => 'RM ' + Number(n || 0).toLocaleString('en-MY')
 
-// Today as YYYY-MM-DD (for due-date comparisons + seeds).
-export const todayISO = () => new Date().toISOString().slice(0, 10)
+// Today as YYYY-MM-DD, Malaysia time (lib/today.ts).
+export { todayISO } from './today'
 
 // An "issued" cash_in row is an invoice that's documented but whose payment isn't
 // tracked yet — it counts as neither money received nor money owed. That is

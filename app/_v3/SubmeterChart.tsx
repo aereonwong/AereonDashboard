@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { sen } from './pages/property/shared'
 
 // One bar per TNB bill: each unit's kWh stacked (worked out from its readings), with TNB's own kWh as a
 // line across the bar — a bar that pokes out above the line means the sub-meters read more than TNB.
@@ -24,7 +25,6 @@ const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct
 const label = (iso: string) => `${MON[Number(iso.slice(5, 7)) - 1]} ’${iso.slice(2, 4)}`
 const full = (iso: string) => `${Number(iso.slice(8, 10))} ${MON[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`
 const kwh = (n: number | null) => (n == null ? '—' : `${n.toLocaleString('en-MY', { maximumFractionDigits: 0 })} kWh`)
-const sen = (n: number) => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const pct = (f: number | null) => (f == null ? '—' : `${f > 0 ? '+' : f < 0 ? '−' : ''}${Math.abs(f * 100).toFixed(1)}%`)
 
 export default function SubmeterChart({ cycles, high }: { cycles: ChartCycle[]; high: number }) {

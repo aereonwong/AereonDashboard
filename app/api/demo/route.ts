@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { signedIn } from '@/lib/auth'
+import { canEdit } from '@/lib/auth'
 
 // 🔒 The demo-data switch, guarded by its own password.
 //
@@ -16,7 +16,7 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   // Second lock behind proxy.ts — this route spends or switches modes.
-  if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
+  if (!(await canEdit())) return Response.json({ ok: false, error: 'Not allowed' }, { status: 403 })
   const secret = (process.env.DEMO_PASSCODE ?? '').trim()
   if (!secret) {
     return NextResponse.json(

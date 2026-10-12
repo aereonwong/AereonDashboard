@@ -68,12 +68,13 @@ export type Studio = {
 }
 
 import { OWED_WINDOW_DAYS } from './catalog'
+import { todayISO } from '@/lib/today'
 export { OWED_WINDOW_DAYS }
 
 const dayDiff = (a: string, b: string) =>
   Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000)
 
-export function buildStudio(rows: Rec[], f: Filters, today = new Date().toISOString().slice(0, 10)): Studio {
+export function buildStudio(rows: Rec[], f: Filters, today = todayISO()): Studio {
   const all = toInvoices(rows)
   const narrowed = rm(narrow(all, f))
   const year = f.year

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { MARKDOWN_PATHS, isKnownPrivatePath, isPublicPath, markdownFor, notFoundHtml, notFoundMarkdown, wantsMarkdown } from '@/lib/agent-site'
-import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
+import { SESSION_COOKIE, isValidSession, openDoor, sessionSecret } from '@/lib/session'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The passcode gate. In Next 16 this file is called `proxy.ts` (the old name
@@ -45,8 +45,8 @@ export function proxy(req: NextRequest) {
   if (isPublicPath(path)) return NextResponse.next()
   if (!isKnownPrivatePath(path)) return notFound(req)    // nothing lives here → honest 404
 
+  if (openDoor()) return NextResponse.next()        // no lock installed (not on production) → open door
   const secret = sessionSecret()
-  if (!secret) return NextResponse.next()            // no lock installed → open door
 
   const session = req.cookies.get(SESSION_COOKIE)?.value
   if (isValidSession(session, secret)) return NextResponse.next()   // signed by us → allow

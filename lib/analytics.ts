@@ -1,5 +1,6 @@
 import { type Rec } from './records'
 import { toInvoices, type Invoice } from './invoices'
+import { todayISO } from './today'
 
 // 👉 The operating picture: everything the v2 Dashboard states about the
 // business is computed HERE, in code, from the invoice rows. Nothing on that
@@ -152,7 +153,7 @@ export function openBook(rows: Rec[], now = new Date()): Book {
   return {
     all,
     rm: all.filter(i => i.currency === 'MYR').sort((a, b) => a.date.localeCompare(b.date)),
-    today: now.toISOString().slice(0, 10),
+    today: todayISO(),
   }
 }
 
