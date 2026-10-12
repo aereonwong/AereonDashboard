@@ -3,7 +3,7 @@
 // follows whatever palette is active.
 export type IconName =
   | 'dashboard' | 'cash-in' | 'cash-out' | 'leads' | 'customers' | 'invoice' | 'clients'
-  | 'instagram' | 'content' | 'tasks' | 'approvals' | 'robot' | 'vault' | 'settings'
+  | 'instagram' | 'facebook' | 'content' | 'tasks' | 'approvals' | 'robot' | 'vault' | 'settings'
   | 'chart' | 'calendar' | 'trend' | 'eye' | 'heart' | 'share' | 'bookmark' | 'sparkle'
   | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet' | 'home'
   | 'news' | 'play' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
@@ -17,6 +17,7 @@ const P: Record<IconName, React.ReactNode> = {
   customers: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><path d="M16.5 8.5a3 3 0 1 0-1-5.8" /><path d="M18 20c0-2.6-1-4.3-2.6-5.2" /></>,
   invoice: <><path d="M6 3h9l4 4v14l-2.5-1.5L14 21l-2.5-1.5L9 21l-2.5-1.5L4 21V5a2 2 0 0 1 2-2Z" /><path d="M8.5 9h7M8.5 13h5" /></>,
   clients: <><rect x="3" y="7" width="18" height="13" rx="3" /><path d="M8.5 7V5.5A2.5 2.5 0 0 1 11 3h2a2.5 2.5 0 0 1 2.5 2.5V7" /><path d="M3 12h18" /></>,
+  facebook: <><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M15.5 8H14a2.5 2.5 0 0 0-2.5 2.5V21M9 13.5h6" /></>,
   instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></>,
   content: <><path d="M4 5h16v11H7l-3 3V5Z" /><path d="M8 9h8M8 12.5h5" /></>,
   tasks: <><rect x="3" y="4" width="18" height="17" rx="3" /><path d="m8 12 2.5 2.5L16 9" /></>,

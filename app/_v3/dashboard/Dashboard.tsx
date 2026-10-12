@@ -10,7 +10,8 @@ import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
 import { Spark } from '../summary/Panels'
-import { rmFull, pct, compact, num } from '../fmt'
+import { rmFull, pct, compact, num, shortDate } from '../fmt'
+import { analyseFb, followerFlow, type Facebook } from '@/lib/facebook'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
 // The daily pulse: deeper money analysis lives on Invoice Summary.
@@ -21,12 +22,14 @@ export default function Dashboard({
   audience,
   metrics = [],
   demo = false,
+  fb,
 }: {
   rows: Rec[]
   filters: Filters
   audience: Audience
   metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
+  fb?: Facebook // the Facebook Page's stored history — empty until the first refresh
 }) {
   const s = buildStudio(rows, filters)
   const risk = clientRisk(rows, filters, s.today)
@@ -47,6 +50,19 @@ export default function Dashboard({
     s.pacePct === null
       ? `No ${s.year - 1} invoices to compare against.`
       : `${up ? 'Ahead of' : 'Behind'} ${s.year - 1} by ${rmFull(Math.abs(s.ytd - s.lastYtd))} at this point in the year.`
+  // Facebook beside Instagram. People who follow or see both are counted on each, so
+  // combined figures are labelled as platform totals, never as unique people.
+  const hasFb = !!fb && (fb.daily.length > 0 || fb.posts.length > 0)
+  // Combined figures need BOTH platforms' current windows; otherwise a missing one would read as zero.
+  const fbFresh = !!fb?.window && fb.window.until >= new Date(Date.parse(`${s.today}T00:00:00Z`) - 7 * 86_400_000).toISOString().slice(0, 10)
+  const both = hasFb && fbFresh && reach30 > 0 && netFollows !== null
+  const fbFlow = hasFb ? followerFlow(fb!.daily, 30) : null
+  const fbStats = hasFb ? analyseFb(fb!.posts, 30) : null
+  const fbViewers = fb?.window?.viewers ?? null
+  const fbEngPer100 = fb?.window?.engagements && fbViewers ? (fb.window.engagements / fbViewers) * 100 : null
+  const allFollowers = audience.followers + (hasFb ? fb!.followers : 0)
+  const allNet = netFollows !== null && fbFlow ? netFollows + fbFlow.net : null
+  const allReach = reach30 + (fbViewers ?? 0)
   const filterNote = [filters.client, filters.kind].filter(Boolean).join(' · ')
 
   return (
@@ -92,14 +108,24 @@ export default function Dashboard({
               {s.owed.length} tracked unpaid, last 120 days{s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
             </div>
           </a>
-          <a className="v3-kpi" href="#audience">
-            <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
-            <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
-            <div className="v3-kpi-note">
-              {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}
-              {compact(audience.followers)} followers
-            </div>
-          </a>
+          {both ? (
+            <a className="v3-kpi" href="#audience">
+              <div className="v3-kpi-label">Social reach, last month</div>
+              <div className="v3-kpi-value">{compact(allReach)}</div>
+              <div className="v3-kpi-note">
+                Instagram {compact(reach30)} + Facebook {compact(fbViewers ?? 0)} · platform total, someone on both counts twice
+              </div>
+            </a>
+          ) : (
+            <a className="v3-kpi" href="#audience">
+              <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
+              <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
+              <div className="v3-kpi-note">
+                {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}
+                {compact(audience.followers)} followers
+              </div>
+            </a>
+          )}
       </section>
 
       {/* ---------------- The body ---------------- */}
@@ -197,9 +223,47 @@ export default function Dashboard({
             <a className="v3-panel-link" href="/instagram">
               Instagram
             </a>
+            {hasFb ? (
+              <a className="v3-panel-link" href="/facebook">
+                Facebook
+              </a>
+            ) : null}
           </div>
+          {both ? (
+            <>
+              <p className="v3-kpi-label" style={{ marginBottom: 'var(--space-3)' }}>Instagram + Facebook</p>
+              <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
+                <div>
+                  <div className="v3-kpi-label">Followers, both</div>
+                  <div className="v3-kpi-value num">{num(allFollowers)}</div>
+                  <div className="v3-kpi-note">
+                    {allNet !== null ? `${allNet >= 0 ? '+' : ''}${num(allNet)} in the last 30 days · ` : ''}
+                    {Math.round((fb!.followers / Math.max(1, allFollowers)) * 100)}% on Facebook
+                  </div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Reached, both</div>
+                  <div className="v3-kpi-value num">{compact(allReach)}</div>
+                  <div className="v3-kpi-note">Instagram 30 days + Facebook 28 days · someone on both counts twice</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Where people saw you</div>
+                  <div className="v3-kpi-value num">{allReach ? `${Math.round(((fbViewers ?? 0) / allReach) * 100)}%` : '—'}</div>
+                  <div className="v3-kpi-note">of that reach was on Facebook</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Posting, both</div>
+                  <div className="v3-kpi-value num">{((stats?.postsPerWeek ?? 0) + (fbStats?.postsPerWeek ?? 0)).toFixed(1)}/wk</div>
+                  <div className="v3-kpi-note">
+                    Instagram {(stats?.postsPerWeek ?? 0).toFixed(1)} · Facebook {(fbStats?.postsPerWeek ?? 0).toFixed(1)} · a cross-post counts on each
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : null}
           {stats ? (
             <>
+              {hasFb ? <p className="v3-kpi-label" style={{ marginBottom: 'var(--space-3)' }}>Instagram</p> : null}
               <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
                 <div>
                   <div className="v3-kpi-label">Followers</div>
@@ -247,6 +311,38 @@ export default function Dashboard({
           ) : (
             <p className="v3-empty">No Instagram snapshot yet. Take one from the Instagram page.</p>
           )}
+          {hasFb && fbFlow && fbStats ? (
+            <>
+              <p className="v3-kpi-label" style={{ margin: 'var(--space-6) 0 var(--space-3)' }}>Facebook</p>
+              <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
+                <div>
+                  <div className="v3-kpi-label">Followers</div>
+                  <div className="v3-kpi-value num">{num(fb!.followers)}</div>
+                  <div className="v3-kpi-note">{`${fbFlow.net >= 0 ? '+' : ''}${num(fbFlow.net)} in the last 30 days`}</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Viewers</div>
+                  <div className="v3-kpi-value num">{fbViewers !== null ? compact(fbViewers) : '—'}</div>
+                  <div className="v3-kpi-note">{fb!.window ? `28 days to ${shortDate(fb!.window.until)}` : '28 days'} · typical post {compact(fbStats.typical)}</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Engagement</div>
+                  <div className="v3-kpi-value num">{fbEngPer100 !== null ? fbEngPer100.toFixed(1) : '—'}</div>
+                  <div className="v3-kpi-note">engagements per 100 viewers · 28 days</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Posting</div>
+                  <div className="v3-kpi-value num">{fbStats.postsPerWeek.toFixed(1)}/wk</div>
+                  <div className="v3-kpi-note">
+                    {fbStats.daysSinceLast === null ? 'no posts stored' : `last post ${fbStats.daysSinceLast === 0 ? 'today' : `${fbStats.daysSinceLast} day${fbStats.daysSinceLast === 1 ? '' : 's'} ago`}`}
+                  </div>
+                </div>
+              </div>
+              <a className="v3-recv-cta" href="/facebook">
+                Viewers, top posts and growth on Facebook<span aria-hidden="true"> →</span>
+              </a>
+            </>
+          ) : null}
         </section>
         {stats && !demo ? (
           <section className="v3-panel v3-span-12" id="reach-work" aria-labelledby="t-rvw">
