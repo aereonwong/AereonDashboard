@@ -26,7 +26,7 @@ export default function LoanRecord({
   if (!options.length) return <p className="v3-empty">Every month up to now is recorded.</p>
 
   return (
-    <form
+    <form data-edit=""
       className="v3-prop-form"
       action={form => {
         setMsg(null)

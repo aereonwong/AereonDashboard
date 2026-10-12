@@ -99,7 +99,12 @@ export default function Dashboard({
                 </span>
               ) : null}
             </div>
-            <div className="v3-kpi-note">At this pace · {s.year - 1} closed at {rmFull(s.lastFull)}</div>
+            <div className="v3-kpi-note">
+              {s.projectionYears
+                ? `Your usual season, ${s.projectionYears} past years · straight pace ${rmFull(s.projectionStraight)}`
+                : 'At this pace'}{' '}
+              · {s.year - 1} closed at {rmFull(s.lastFull)}
+            </div>
           </a>
           <a className="v3-kpi" href="#owed">
             <div className="v3-kpi-label">Owed to me</div>

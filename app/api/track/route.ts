@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
-import { isTrackedPath, HELLO_TAP_CAP, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
+import { isTrackedPath, HELLO_TAP_CAP, DAILY_ROW_CAP, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
 
 // 👉 Page-view beacon for the PUBLIC pages (app/_components/Tracker.tsx posts here). Public on
 // purpose — a visitor has no session — so it only ever INSERTS one small row (and answers nothing back).
@@ -48,6 +48,10 @@ export async function POST(req: NextRequest) {
         .eq('visitor_hash', hash).like('path', '/hello/%').gte('ts', since)
       if ((taps ?? 0) >= HELLO_TAP_CAP) return done()
     }
+
+    const { count: today } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
+      .gte('ts', `${day}T00:00:00+08:00`)
+    if ((today ?? 0) >= DAILY_ROW_CAP) return done()
 
     const { error } = await supabase.from('site_visits').insert({
       path,

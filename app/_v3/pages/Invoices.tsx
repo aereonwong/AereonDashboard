@@ -8,8 +8,12 @@ import FilterBar from '../FilterBar'
 import TrendBars from '../TrendBars'
 import { GettingPaid, SeasonsGrid } from '../dashboard/Insights'
 import { KpiCard, PaymentPanel, WorkTypes, MixByYear, Sizes, Cohorts, TopClients, Movers, ForeignNote } from '../summary/Panels'
-import { rmFull, longDate, shortDate } from '../fmt'
+import { rmFull, num, longDate, shortDate } from '../fmt'
+
+const rmCpm = (n: number | null) => (n === null ? '—' : `RM ${n < 10 ? n.toFixed(2) : Math.round(n).toLocaleString('en-MY')}`)
 import { todayISO } from '@/lib/today'
+import { linkedPostIds, paidReach } from '@/lib/v3/paid-reach'
+import { latestReach } from '@/lib/ig-links'
 
 // 👉 v3 Invoice Summary — the deep money view for the chosen range. The Dashboard
 // is the daily pulse (this year's pace, who owes me, audience); this page is
@@ -20,8 +24,9 @@ import { todayISO } from '@/lib/today'
 
 type Params = Record<string, string | string[] | undefined>
 
-export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
+export default async function Invoices({ rows, filters }: { rows: Rec[]; filters: Filters; sp?: Params }) {
   const today = todayISO()
+  const paid = paidReach(rows, filters, await latestReach(linkedPostIds(rows, filters)).catch(() => ({})))
   const s = buildSummary(rows, filters, today)
   const speed = paySpeed(rows, filters)
   const season = seasons(rows, filters, today)
@@ -177,6 +182,54 @@ export default function Invoices({ rows, filters }: { rows: Rec[]; filters: Filt
             </p>
           </div>
           <SeasonsGrid s={season} />
+        </section>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-cpm">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-cpm">
+              What a paid post delivered
+            </h2>
+            <p className="v3-panel-note">
+              {paid.cpm !== null
+                ? `Effective CPM ${rmCpm(paid.cpm)} per 1,000 reached · typical deal ${rmCpm(paid.medianCpm)}`
+                : 'Ringgit per 1,000 people reached'}
+            </p>
+          </div>
+          {paid.lines.length ? (
+            <div className="v3-table-wrap">
+              <table className="v3-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Invoice</th>
+                    <th scope="col">Client</th>
+                    <th scope="col" className="r">Amount</th>
+                    <th scope="col" className="r">Posts</th>
+                    <th scope="col" className="r">Reach</th>
+                    <th scope="col" className="r">RM per 1,000</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paid.lines.map(l => (
+                    <tr key={l.id}>
+                      <td className="num">{l.no}</td>
+                      <td>{l.client}</td>
+                      <td className="r num">{rmFull(l.amount)}</td>
+                      <td className="r num">{l.posts}</td>
+                      <td className="r num">{l.reach !== null ? num(l.reach) : '—'}</td>
+                      <td className="r num">{rmCpm(l.cpm)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="v3-empty">No invoice in this range has its Instagram posts linked yet.</p>
+          )}
+          <p className="v3-panel-note" style={{ marginTop: 'var(--space-3)' }}>
+            {paid.unlinked} ringgit invoice{paid.unlinked === 1 ? '' : 's'} in range without posts linked — link them in{' '}
+            <a href="/invoices/details">Invoice Details</a> to fill this in. Reach adds each post&rsquo;s own reach, so
+            someone who saw two posts counts twice; posts with no stored reading are left out.
+          </p>
         </section>
       </div>
     </div>

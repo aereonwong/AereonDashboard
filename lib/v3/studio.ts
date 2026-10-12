@@ -45,7 +45,10 @@ export type Studio = {
   lastYtd: number // the same point in the previous year
   lastFull: number // the whole previous year
   pacePct: number | null // this year against the same point last year
-  projection: number // this year at its current pace
+  projection: number // this year's likely close: seasonal when history allows, else straight-line pace
+  projectionStraight: number // ytd per day × 365 — the plain pace, for comparison
+  /** How many complete past years the seasonal projection rests on; 0 = straight-line only. */
+  projectionYears: number
   pace: PacePoint[]
   monthsLeft: number
   // The months of the chosen year, printed as frames
@@ -91,7 +94,30 @@ export function buildStudio(rows: Rec[], f: Filters, today = todayISO()): Studio
   const pacePct = lastYtd ? ((ytd - lastYtd) / lastYtd) * 100 : null
 
   const dayOfYear = isCurrentYear ? dayDiff(`${year}-01-01`, today) + 1 : 365
-  const projection = isCurrentYear ? (ytd / Math.max(dayOfYear, 1)) * 365 : ytd
+  const projectionStraight = isCurrentYear ? (ytd / Math.max(dayOfYear, 1)) * 365 : ytd
+
+  // Seasonal projection: in the complete past years, what share of the year's income had
+  // been invoiced by this date? Pooled (sum of to-date ÷ sum of totals), so a big year
+  // weighs more than a thin one. The first year on record is skipped — it started mid-year
+  // and would make every date look early. Needs two such years and a share of at least 15%
+  // (earlier than that one invoice swings it wildly); otherwise the straight line stands.
+  const firstYear = Math.min(...narrowed.map(i => Number(i.date.slice(0, 4))), year)
+  const pastYears = [...Array(Math.max(0, year - firstYear - 1)).keys()].map(k => firstYear + 1 + k)
+  let toDate = 0
+  let whole = 0
+  let usedYears = 0
+  for (const y of pastYears) {
+    const xs = inYear(narrowed, y)
+    const total = sum(xs)
+    if (!total) continue
+    toDate += sum(xs.filter(i => i.date.slice(5) <= cutoffMd))
+    whole += total
+    usedYears += 1
+  }
+  const share = whole ? toDate / whole : 0
+  const seasonal = isCurrentYear && usedYears >= 2 && share >= 0.15
+  const projection = seasonal ? Math.max(ytd / share, ytd) : projectionStraight
+  const projectionYears = seasonal ? usedYears : 0
 
   const monthTotal = (xs: Invoice[], m: number) => xs.filter(i => Number(i.date.slice(5, 7)) === m)
   const currentMonth = isCurrentYear ? Number(today.slice(5, 7)) : 12
@@ -171,6 +197,8 @@ export function buildStudio(rows: Rec[], f: Filters, today = todayISO()): Studio
     lastYtd,
     lastFull,
     pacePct,
+    projectionStraight,
+    projectionYears,
     projection,
     pace,
     monthsLeft: isCurrentYear ? 12 - currentMonth : 0,

@@ -16,7 +16,7 @@ export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `reading-${propertyId}`
   return (
-    <form
+    <form data-edit=""
       className="v3-prop-form"
       id={fid}
       action={form => {
@@ -62,7 +62,7 @@ export function BillForm({ propertyId }: { propertyId: string }) {
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `bill-${propertyId}`
   return (
-    <form
+    <form data-edit=""
       className="v3-prop-form"
       id={fid}
       action={form => {
@@ -143,7 +143,7 @@ export function DeleteRow({ id, kind }: { id: number; kind: 'reading' | 'bill' }
 function UnitMeter({ unit, tenant, empty, tenants, tagging, kinds }: { unit: string; tenant: string | null; empty: boolean; tenants: string[]; tagging: boolean; kinds: boolean }) {
   const [kind, setKind] = useState(empty && kinds ? 'move_in' : 'reading')
   return (
-    <fieldset className="v3-sub-meter">
+    <fieldset data-edit="" className="v3-sub-meter">
       <legend>{unit}</legend>
       <input type="hidden" name="unit" value={unit} />
       <label>

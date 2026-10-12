@@ -65,8 +65,7 @@ export default function Clients({ rows, filters, sp }: { rows: Rec[]; filters: F
         <div>
           <h1 className="v3-title">Clients</h1>
           <p className="v3-lede">
-            {stats.clients} clients · {repitch.length} valuable relationship{repitch.length === 1 ? '' : 's'} gone quiet for{' '}
-            {QUIET_MONTHS}+ months
+            {stats.clients} clients · {stats.quiet} quiet for {QUIET_MONTHS}+ months, {repitch.length} of them worth a re-pitch
           </p>
         </div>
       </header>
@@ -84,7 +83,7 @@ export default function Clients({ rows, filters, sp }: { rows: Rec[]; filters: F
             label="Active clients · 12 months"
             value={String(pulse.active12)}
             k={{ value: pulse.active12, prev: null, delta: null, spark: pulse.activeByMonth.map(m => m.count) }}
-            note="clients invoiced each month, last two years"
+            note="invoiced in the last 12 months · the line is each month, last two years"
           />
           <KpiCard label="New this year" value={String(pulse.newThisYear)} note="first-ever invoice this calendar year" />
           <KpiCard
@@ -92,8 +91,12 @@ export default function Clients({ rows, filters, sp }: { rows: Rec[]; filters: F
             value={`${Math.round(pulse.repeatRate * 100)}%`}
             note={pulse.medianGap !== null ? `of ${pulse.clients} clients ever · usually every ${Math.round(pulse.medianGap)} months` : `of ${pulse.clients} clients ever`}
           />
-          <KpiCard label="Average lifetime value" value={rmFull(stats.average)} note={`${stats.clients} clients in range · median ${rmFull(median)}`} />
-          <KpiCard label="Gone quiet" value={String(stats.quiet)} note={`of ${stats.clients} in range · no job for ${QUIET_MONTHS}+ months`} />
+          <KpiCard label="Typical lifetime value" value={rmFull(median)} note={`median of ${stats.clients} clients · average ${rmFull(stats.average)}, pulled up by a few big ones`} />
+          <KpiCard
+            label={`Quiet ${QUIET_MONTHS}+ months`}
+            value={String(stats.quiet)}
+            note={`of ${stats.clients} · ${repitch.length} worth a re-pitch, ${groups.find(g => g.id === 'drifted')?.count ?? 0} smaller (drifted)`}
+          />
         </section>
 
         <nav className="v3-span-12 v3-segs" aria-label="Client groups">

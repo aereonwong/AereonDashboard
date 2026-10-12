@@ -150,7 +150,8 @@ until then the login page is the old passcode form. A verified Google account mu
 - `app_users` table (`supabase/app-users.sql`) — the managed list, edited on the **Users** page (`/users`,
   `app/(app)/users/`): role owner/admin/viewer, `active` (Lock), `last_login_at`. Owner manages everyone; admin
   manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Since 12 Oct 2026 a
-  viewer is read-only: `requireSession()` (every server action) and `canEdit()` refuse them; they can still open every tab.
+  viewer is read-only: `requireSession()` (every server action) and `canEdit()` refuse them; they can still open every tab, and v3 hides
+  controls marked `data-edit` for them (`data-view-only` on the shell).
 - Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
   Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. `signedIn()`
   (lib/auth.ts, used by the (app) layout and every server action) re-checks a Google account against the list,

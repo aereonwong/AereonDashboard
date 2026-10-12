@@ -32,7 +32,7 @@ export default function Refresh({
     setBusy(false)
   }
   return (
-    <span style={{ display: 'inline-flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+    <span data-edit="" style={{ display: 'inline-flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
       <button type="button" className="v3-btn" onClick={run} disabled={busy}>
         <Icon name="refresh" /> {busy ? 'Fetching… about a minute' : label}
       </button>

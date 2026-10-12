@@ -117,3 +117,19 @@ export async function reachFor(ids: string[]): Promise<Record<string, { reach: n
   for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
   return out
 }
+
+/** Latest stored reach for each post id, however old the reading — for the effective-CPM
+ *  panel, where a paid post from last year still counts. */
+export async function latestReach(ids: string[]): Promise<Record<string, { reach: number; at: string }>> {
+  if (!supabaseConfigured || !ids.length) return {}
+  const { data } = await supabase
+    .from('ig_post_metrics')
+    .select('media_id, reach, captured_at')
+    .in('media_id', [...new Set(ids)].slice(0, 500))
+    .not('reach', 'is', null)
+    .order('captured_at', { ascending: false })
+    .limit(5000)
+  const out: Record<string, { reach: number; at: string }> = {}
+  for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
+  return out
+}
