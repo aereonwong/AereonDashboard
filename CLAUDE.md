@@ -237,7 +237,7 @@ no-JS fallback). Every email button is a mailto `EMAIL` with a brief for that au
 button sits beside them because Instagram's in-app browser often can't open mail. Plain links live in the
 collab section. **Affiliate links** carry `kind` deal|gear (missing = deal), a disclosure line,
 `rel="sponsored"` and an optional discount code; a deals/gear tile is hidden while it has no links.
-Edited on the **Link page** tab (`/links`, Studio group under Dashboard; also linked from Settings): tagline,
+Edited on the **Link page** tab (`/links`, Social group after News; also linked from Settings): tagline,
 collab text, topics, services intros, links and affiliates (add, edit, reorder, hide, delete, section — `ListEditor.tsx` serves both).
 Stored as one `records` row (`doc` / `setting` / title `hello`) like the site settings — no table.
 `lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
