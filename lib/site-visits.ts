@@ -24,7 +24,12 @@ export const isBot = (ua: string) => !ua || BOT.test(ua)
 export function parseUa(ua: string) {
   const device = /ipad|tablet|playbook|silk/i.test(ua) || (/android/i.test(ua) && !/mobile/i.test(ua))
     ? 'tablet' : /mobi|iphone|ipod|android/i.test(ua) ? 'mobile' : 'desktop'
-  const browser = /edg\//i.test(ua) ? 'Edge' : /opr\/|opera/i.test(ua) ? 'Opera'
+  // Apps' built-in browsers first: that is how a bio link or a shared link is usually opened,
+  // and the app is the best clue to where the visitor came from (they rarely send a referrer).
+  const browser = /instagram/i.test(ua) ? 'Instagram app' : /barcelona/i.test(ua) ? 'Threads app'
+    : /fban|fbav|fb_iab/i.test(ua) ? 'Facebook app' : /musical_ly|bytedancewebview|tiktok/i.test(ua) ? 'TikTok app'
+    : /xhsdiscover|xiaohongshu/i.test(ua) ? 'Xiaohongshu app' : /\bline\//i.test(ua) ? 'LINE app'
+    : /edg\//i.test(ua) ? 'Edge' : /opr\/|opera/i.test(ua) ? 'Opera'
     : /samsungbrowser/i.test(ua) ? 'Samsung' : /firefox|fxios/i.test(ua) ? 'Firefox'
     : /chrome|crios/i.test(ua) ? 'Chrome' : /safari/i.test(ua) ? 'Safari' : 'Other'
   const os = /windows/i.test(ua) ? 'Windows' : /iphone|ipad|ipod/i.test(ua) ? 'iOS'

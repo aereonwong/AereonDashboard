@@ -244,7 +244,10 @@ Stored as one `records` row (`doc` / `setting` / title `hello`) like the site se
 **Tap tracking:** elements with `data-t` (`tap/<section>`, `out/<link id | mail-* | social-* | code-* | copy-email>`)
 send a beacon via `app/hello/TapTracker.tsx` to `/api/track`, logged in `site_visits` as `/hello/tap/…` / `/hello/out/…`
 (`HELLO_EVENT` in `lib/site-visits.ts`; same no-IP, no-owner, no-bot, 10-minute de-dupe rules). The Link page tab shows
-30-day counts (`lib/hello-stats.ts`). **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
+insights (`lib/hello-stats.ts` reads, `lib/hello-insights.ts` is the tested maths): 7/30/90-day switch, visitors (daily
+hash, so one person on two days counts twice), funnel (opened a section / started an email / opened a promo / went
+to a social), per-section opened → acted, taps, sources (in-app browser from `parseUa` — Instagram, Threads, Facebook,
+TikTok, Xiaohongshu, LINE — else `utm_source` with short tags like `ig` named, else referrer), countries, cities, devices. **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
 every 6 hours; `/hello` is a public PREFIX so these image routes are reachable. Tourist shoots show `shootFrom`
 ("From USD 150", editable).
 

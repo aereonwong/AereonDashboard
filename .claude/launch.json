@@ -4,16 +4,40 @@
     {
       "name": "AereonDashboard",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3007,
       "autoPort": true
     },
     {
       "name": "AereonDashboard (no passcode)",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["APP_PASSCODE=", "npm", "run", "dev"],
+      "runtimeArgs": [
+        "APP_PASSCODE=",
+        "npm",
+        "run",
+        "dev"
+      ],
       "port": 3008,
       "autoPort": true
+    },
+    {
+      "name": "Facebook worktree",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "APP_PASSCODE=",
+        "npm",
+        "--prefix",
+        "/Users/aereonwong/AereonDashboard-fb",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3011"
+      ],
+      "port": 3011
     }
   ]
 }
