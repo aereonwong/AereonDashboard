@@ -1,17 +1,17 @@
 # Graph Report - AereonDashboard-review  (2026-10-12)
 
 ## Corpus Check
-- 527 files · ~507,508 words
+- 527 files · ~507,507 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: .css 9, (none) 5, .example 1)
 
 ## Summary
-- 4059 nodes · 7309 edges · 325 communities (254 shown, 71 thin omitted)
+- 4059 nodes · 7309 edges · 326 communities (255 shown, 71 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 121 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3dd01aa8`
+- Built from commit: `5d0baac9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -294,6 +294,7 @@
 - The rules
 - Property section
 - Showcase — work across the board
+- Checked and fine
 
 ## God Nodes (most connected - your core abstractions)
 1. `next` - 63 edges
@@ -322,7 +323,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (325 total, 71 thin omitted)
+## Communities (326 total, 71 thin omitted)
 
 ### Community 0 - "registry.ts"
 Cohesion: 0.14
@@ -1285,8 +1286,8 @@ Cohesion: 0.27
 Nodes (9): app_app_links_links, Bars(), dynamic, fmt(), Links(), pct(), Count, RANGES (+1 more)
 
 ### Community 309 - "next"
-Cohesion: 0.09
-Nodes (31): POST(), runtime, AppLayout(), BottomNav(), MORE, PRIMARY, IconName, MoreSheet() (+23 more)
+Cohesion: 0.11
+Nodes (26): POST(), runtime, AppLayout(), BottomNav(), MORE, PRIMARY, IconName, MoreSheet() (+18 more)
 
 ### Community 310 - "compact"
 Cohesion: 0.14
@@ -1340,6 +1341,10 @@ Nodes (3): DEFAULT_HELLO, ref_node_assert, ref_node_test
 Cohesion: 0.50
 Nodes (3): Report, The rules, IgAccount
 
+### Community 325 - "Checked and fine"
+Cohesion: 0.33
+Nodes (5): Checked and fine, Fixed in this pass, Open suggestions (not done — need Aereon's call), Token-saving habits, v3 audit — 12 Oct 2026
+
 ## Knowledge Gaps
 - **2025 isolated node(s):** `session-start.sh script`, `WhenTrigger`, `AgentDefinition`, `definition`, `DraftPayload` (+2020 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2333 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
@@ -1349,10 +1354,10 @@ Nodes (3): Report, The rules, IgAccount
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `next` connect `next` to `analytics.ts`, `package.json`, `telegram/route.ts`, `demoMode`, `session.ts`, `callback/route.ts`, `submeter.ts`, `users/actions.ts`, `Quotations.tsx`, `ref_node_fs`, `opengraph-image.tsx`, `instagram/page.tsx`, `invoices/actions.ts`, `sendMessage`, `hello/page.tsx`, `getRecords`, `LinkPosts.tsx`, `compact`, `summary.ts`, `requireSession`, `Appearance.tsx`, `property-actions.ts`, `version.ts`, `hello-config.ts`, `track/route.ts`, `invoice-drive-upload.ts`, `news.ts`, `react`, `supabase.ts`, `PublicPage.tsx`, `Clients.tsx`, `fonts.ts`, `login/route.ts`, `agent-site.ts`, `records.ts`?**
-  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **Why does `react` connect `react` to `analytics.ts`, `package.json`, `demoMode`, `session.ts`, `users/actions.ts`, `Quotations.tsx`, `instagram/page.tsx`, `invoices/actions.ts`, `Instagram.tsx`, `sendMessage`, `hello/page.tsx`, `ContentLab.tsx`, `SubmeterChart.tsx`, `LinkPosts.tsx`, `next`, `compact`, `Loans.tsx`, `requireSession`, `summary.ts`, `Appearance.tsx`, `ReelFilm.tsx`, `property-actions.ts`, `hello-config.ts`, `version.ts`, `_v1.tsx`, `news.ts`, `PublicPage.tsx`, `Clients.tsx`, `tenancy-math.ts`, `records.ts`?**
   _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **Why does `server-only` connect `supabase.ts` to `invoice-canva.ts`, `cron-daily/route.ts`, `users/actions.ts`, `facebook.ts`, `package.json`, `ig-fetch.ts`, `property.ts`, `version.ts`, `hello-insights.ts`, `invoice-drive-upload.ts`, `fb-fetch.ts`, `LinkPosts.tsx`, `next`, `callback/route.ts`, `invoice-edit.ts`, `cron-news/route.ts`, `submeter.ts`, `lib/actions.ts`?**
+- **Why does `supabaseConfigured` connect `supabase.ts` to `registry.ts`, `invoice-bot.ts`, `telegram/route.ts`, `demoMode`, `property.ts`, `submeter.ts`, `users/actions.ts`, `cron-daily/route.ts`, `Quotations.tsx`, `facebook.ts`, `instagram/page.tsx`, `invoices/actions.ts`, `Instagram.tsx`, `ContentLab.tsx`, `hello-insights.ts`, `LinkPosts.tsx`, `links/page.tsx`, `requireSession`, `approvals/page.tsx`, `property-actions.ts`, `hello-config.ts`, `version.ts`, `track/route.ts`, `invoice-drive-upload.ts`, `news.ts`, `invoice-edit.ts`, `lib/actions.ts`, `login/route.ts`, `instagram.ts`, `records.ts`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `requireSession()` (e.g. with `Sign-in (Google + backup passcode, added 4 Oct 2026)` and `Checked and fine`) actually correct?**
   _`requireSession()` has 3 INFERRED edges - model-reasoned connections that need verification._

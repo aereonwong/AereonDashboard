@@ -39261,78 +39261,6 @@
       "source_location": "L143"
     },
     {
-      "id": "docs_review_2026_10_12",
-      "label": "REVIEW-2026-10-12.md",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "review-2026-10-12.md",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_review_2026_10_12_checked_and_fine",
-      "label": "Checked and fine",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "checked and fine",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L6"
-    },
-    {
-      "id": "docs_review_2026_10_12_fixed_in_this_pass",
-      "label": "Fixed in this pass",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "fixed in this pass",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L13"
-    },
-    {
-      "id": "docs_review_2026_10_12_open_suggestions_not_done_need_aereon_s_call",
-      "label": "Open suggestions (not done \u2014 need Aereon's call)",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "open suggestions (not done \u2014 need aereon's call)",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L22"
-    },
-    {
-      "id": "docs_review_2026_10_12_token_saving_habits",
-      "label": "Token-saving habits",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "token-saving habits",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_review_2026_10_12_v3_audit_12_oct_2026",
-      "label": "v3 audit \u2014 12 Oct 2026",
-      "_origin": "ast",
-      "community": 309,
-      "community_name": "next",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "v3 audit \u2014 12 oct 2026",
-      "source_file": "docs/REVIEW-2026-10-12.md",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_security_checklist",
       "label": "security-checklist.md",
       "_origin": "ast",
@@ -40526,6 +40454,78 @@
       "norm_label": "showcase \u2014 work across the board (added 5 oct 2026)",
       "source_file": "docs/SHOWCASE.md",
       "source_location": "L5"
+    },
+    {
+      "id": "docs_review_2026_10_12",
+      "label": "REVIEW-2026-10-12.md",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "review-2026-10-12.md",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_review_2026_10_12_checked_and_fine",
+      "label": "Checked and fine",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "checked and fine",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L6"
+    },
+    {
+      "id": "docs_review_2026_10_12_fixed_in_this_pass",
+      "label": "Fixed in this pass",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "fixed in this pass",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L13"
+    },
+    {
+      "id": "docs_review_2026_10_12_open_suggestions_not_done_need_aereon_s_call",
+      "label": "Open suggestions (not done \u2014 need Aereon's call)",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "open suggestions (not done \u2014 need aereon's call)",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L22"
+    },
+    {
+      "id": "docs_review_2026_10_12_token_saving_habits",
+      "label": "Token-saving habits",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "token-saving habits",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "docs_review_2026_10_12_v3_audit_12_oct_2026",
+      "label": "v3 audit \u2014 12 Oct 2026",
+      "_origin": "ast",
+      "community": 325,
+      "community_name": "Checked and fine",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "v3 audit \u2014 12 oct 2026",
+      "source_file": "docs/REVIEW-2026-10-12.md",
+      "source_location": "L1"
     },
     {
       "id": "jarvis_my_jarvis",
@@ -49206,7 +49206,7 @@
     },
     {
       "source": "app_api_facebook_refresh_route_post",
-      "target": "lib_auth_signedin",
+      "target": "lib_auth_canedit",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -67117,7 +67117,7 @@
     },
     {
       "source": "app_api_facebook_refresh_route",
-      "target": "lib_auth_signedin",
+      "target": "lib_auth_canedit",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -132960,5 +132960,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3dd01aa8d5f34752f15c125b5d73e774278e7503"
+  "built_at_commit": "5d0baac996803196e5b5a0e39199a56801bd5a6b"
 }
