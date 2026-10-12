@@ -11,7 +11,6 @@ import Icon, { type IconName } from './Icon'
 export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; icon: IconName }[] }[] = [
   { label: 'Overview', tabs: [
     { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/links', label: 'Link page', icon: 'share' },
   ] },
   { label: 'Invoice', tabs: [
     { href: '/invoices', label: 'Invoice Summary', icon: 'invoice' },
@@ -23,6 +22,7 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
     { href: '/instagram', label: 'Instagram', icon: 'instagram' },
     { href: '/facebook', label: 'Facebook', icon: 'facebook' },
     { href: '/news', label: 'News', icon: 'news' },
+    { href: '/links', label: 'Link page', icon: 'share' },
   ] },
   { label: 'Money', tabs: [
     { href: '/cash-in', label: 'Cash In', icon: 'cash-in' },

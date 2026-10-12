@@ -11,7 +11,6 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
     title: 'Studio',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-      { href: '/links', label: 'Link page', icon: 'share' },
       { href: '/invoices', label: 'Invoice Summary', icon: 'invoice' },
       { href: '/invoices/details', label: 'Invoice Details', icon: 'tasks' },
       { href: '/invoices/quotes', label: 'Quotations', icon: 'design' },
@@ -24,6 +23,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
       { href: '/instagram', label: 'Instagram', icon: 'instagram' },
       { href: '/facebook', label: 'Facebook', icon: 'facebook' },
       { href: '/news', label: 'News', icon: 'news' },
+      { href: '/links', label: 'Link page', icon: 'share' },
     ],
   },
   {
