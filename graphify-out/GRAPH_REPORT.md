@@ -1,24 +1,24 @@
 # Graph Report - AereonDashboard-review  (2026-10-12)
 
 ## Corpus Check
-- 516 files · ~498,313 words
+- 527 files · ~507,508 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: .css 9, (none) 5, .example 1)
 
 ## Summary
-- 3952 nodes · 7028 edges · 316 communities (243 shown, 73 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 106 edges (avg confidence: 0.93)
+- 4059 nodes · 7309 edges · 325 communities (254 shown, 71 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 121 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `79a77ae6`
+- Built from commit: `3dd01aa8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- supabase.ts
+- registry.ts
 - Submeter.tsx
-- Quotations.tsx
+- invoice-details.ts
 - analytics.ts
 - invoice-bot.ts
 - package.json
@@ -34,10 +34,10 @@
 - Codec & Export Matrix — Detailed Reference
 - The inconsistencies
 - The 11 acceptance tests
-- hello/page.tsx
+- fb-fetch.ts
 - /jarvis-setup — Make Jarvis yours
 - The 8 questions ✍️
-- google-auth.ts
+- callback/route.ts
 - /team-owner — let four more people in
 - Aereon Dashboard — your Money Robot 🤖💰
 - The 5-Finger Rule (LATAR) — how every robot in Aereon Dashboard thinks 🤚
@@ -60,7 +60,7 @@
 - CashFlowOS AI Agents — V2 BUILD SPEC
 - The AI C-Suite Blueprint — your one-page take-home
 - 🎯 Cold-Lead Follow-up — my-agent.md  (Sales · worked example)
-- lab-math.ts
+- ContentLab.tsx
 - 🧾 Expense Filer — my-agent.md  (Finance · the graduated-autonomy worked example)
 - 🗂️ Leave / Claim Approval — my-agent.md  (HR · worked example)
 - 💸 Overdue-Invoice Chaser — my-agent.md  (Finance · worked example)
@@ -71,8 +71,8 @@
 - LinkPosts.tsx
 - 4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2)
 - graphify reference: query, path, explain
-- Invoices.tsx
-- Components
+- summary.ts
+- Design System: Aereon Studio v3
 - How to make your own (the one prompt)
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
@@ -96,29 +96,29 @@
 - Shot Composition
 - track/route.ts
 - invoice-drive-upload.ts
-- next
+- _v1.tsx
 - studio.ts
 - ig-archive.mjs
 - news.ts
-- invoice-render.ts
+- react
 - session-start.sh
 - drive-reconcile.mjs
-- ContentLab
-- summary.ts
+- invoice-edit.ts
+- Reduced Motion — Detailed Patterns
 - insights.ts
 - Tenancy.tsx
 - Aereon Dashboard
 - AE Performance — Detailed Diagnostics Reference
 - Product
 - Easing in the After Effects Graph Editor
-- react
-- instagram/page.tsx
-- property-actions.ts
+- lib/actions.ts
+- supabase.ts
+- PublicPage.tsx
 - Gradient cookbook
 - Surface brief: Dashboard v3 (and its sibling surfaces)
 - SVG Animation Techniques (detailed)
 - Clients.tsx
-- V3Nav.tsx
+- fonts.ts
 - Three.js / R3F Resource Disposal — Detailed Recipes
 - ig-fetch.ts
 - login/route.ts
@@ -137,7 +137,7 @@
 - GLSL Cookbook
 - Named camera-move recipes
 - Video Delivery Specs
-- property-import.mjs
+- Shader / GLSL
 - After Effects Expression Library, Rigging & Export
 - The 12 principles of animation, applied to motion graphics
 - Motion Principles
@@ -205,12 +205,12 @@
 - Glassmorphism Recipes
 - Full examples and variants
 - Slide Components (runnable Remotion)
-- ContentLab.tsx
+- Invoices.tsx
 - Batch pipeline: one template → many personalized videos
 - YouTube Intro & Outro
-- invoice-edit.ts
-- Patterns, profiling, and cost cheat sheet
-- Appearance.tsx
+- invoice-canva.ts
+- top
+- property-actions.ts
 - Launch Video Structure — Cookbook
 - Lower-Third Component — runnable code
 - Worked Estimate Example
@@ -255,44 +255,54 @@
 - hero-timeline.js
 - Quote Template (full)
 - full-template.md
-- _load.ts
-- auth.ts
-- Editing Techniques — Detailed Cookbook
-- app/page.tsx
-- content-lab.ts
-- make-icons.mjs
-- links/page.tsx
+- submeter.ts
 - users/actions.ts
-- invoices.ts
+- Editing Techniques — Detailed Cookbook
+- Reel.tsx
+- Quotations.tsx
+- ref_node_fs
+- opengraph-image.tsx
+- facebook.ts
+- instagram/page.tsx
 - theme-qa.md
 - build-verifier.md
-- median
-- ReelFilm.tsx
+- Scene
+- Diagram & Data Animation
 - ig-backfill.mjs
-- lib/actions.ts
-- approvals/page.tsx
-- Reduced Motion — Detailed Patterns
-- vault/page.tsx
-- Tooling — motion, video, research
-- invoice-details.ts
+- sendMessage
+- hello/page.tsx
+- hello-insights.ts
+- getRecords
+- Components
+- invoices.ts
 - SubmeterChart.tsx
 - 📅 Content Approval — my-agent.md  (Marketing · worked example)
-- BottomNav.tsx
-- Property section
+- links/page.tsx
+- next
+- compact
 - Loans.tsx
 - requireSession
-- Link page — /hello
-- canEdit
+- cron-news/route.ts
+- safeEqual
+- The Jarvis Playbook 🤖💬
+- Appearance.tsx
+- ReelFilm.tsx
+- approvals/page.tsx
+- R3F: the automatic case and where it leaks
+- Tooling — motion, video, research
+- hello.test.mjs
+- The rules
+- Property section
 - Showcase — work across the board
 
 ## God Nodes (most connected - your core abstractions)
-1. `next` - 62 edges
-2. `react` - 47 edges
-3. `compact()` - 46 edges
-4. `requireSession()` - 43 edges
-5. `supabaseConfigured` - 43 edges
-6. `demoMode()` - 41 edges
-7. `supabase` - 41 edges
+1. `next` - 63 edges
+2. `compact()` - 51 edges
+3. `react` - 49 edges
+4. `supabaseConfigured` - 44 edges
+5. `requireSession()` - 43 edges
+6. `demoMode()` - 43 edges
+7. `supabase` - 43 edges
 8. `getRecords()` - 35 edges
 9. `Rec` - 34 edges
 10. `rm()` - 34 edges
@@ -312,35 +322,35 @@
 ## Import Cycles
 - None detected.
 
-## Communities (316 total, 73 thin omitted)
+## Communities (325 total, 71 thin omitted)
 
-### Community 0 - "supabase.ts"
-Cohesion: 0.10
-Nodes (26): AgentMeta, AGENTS, draftOnly(), Executor, EXECUTORS, fileReceipt(), overdueInvoiceCheck, ScheduledCheck (+18 more)
+### Community 0 - "registry.ts"
+Cohesion: 0.14
+Nodes (12): AgentMeta, draftOnly(), Executor, EXECUTORS, fileReceipt(), overdueInvoiceCheck, ProposalDraft, SCHEDULED (+4 more)
 
 ### Community 1 - "Submeter.tsx"
-Cohesion: 0.13
-Nodes (37): pct(), per(), PropertySubmeter(), share(), billing(), buffers(), byDate(), costPerKwh() (+29 more)
+Cohesion: 0.12
+Nodes (42): kwh(), pct(), per(), PropertySubmeter(), share(), TenantCard(), who(), Bill (+34 more)
 
-### Community 2 - "Quotations.tsx"
-Cohesion: 0.16
-Nodes (20): ConfirmAsk, ConfirmDialog(), guard(), linkInvoice(), refresh(), Res, setQuoteLost(), unlinkInvoice() (+12 more)
+### Community 2 - "invoice-details.ts"
+Cohesion: 0.12
+Nodes (34): dynamic, InvoiceDetailsPage(), one(), Params, dynamic, one(), Params, QuotationsPage() (+26 more)
 
 ### Community 3 - "analytics.ts"
 Cohesion: 0.07
 Nodes (46): DashboardV2(), monthName(), rm(), short(), Delta(), Bucket, compact(), LensData (+38 more)
 
 ### Community 4 - "invoice-bot.ts"
-Cohesion: 0.15
-Nodes (28): Quotations, Quotations (added 10 Oct 2026), handleInvoiceCallback(), handleInvoiceText(), parseDate(), put(), startInvoice(), todayKL() (+20 more)
+Cohesion: 0.18
+Nodes (24): handleInvoiceCallback(), handleInvoiceText(), parseDate(), put(), startInvoice(), todayKL(), advance(), ask (+16 more)
 
 ### Community 5 - "package.json"
 Cohesion: 0.05
-Nodes (39): dependencies, @anthropic-ai/sdk, @composio/core, next, react, react-dom, server-only, @supabase/supabase-js (+31 more)
+Nodes (40): dependencies, @anthropic-ai/sdk, @composio/core, next, react, react-dom, server-only, @supabase/supabase-js (+32 more)
 
 ### Community 6 - "telegram/route.ts"
-Cohesion: 0.08
-Nodes (38): addressedToBot(), ALLOWED, answerWithTools(), buildProposalText(), dynamic, handleMessage(), isAllowed(), isFreshUpdate() (+30 more)
+Cohesion: 0.09
+Nodes (34): addressedToBot(), ALLOWED, answerWithTools(), buildProposalText(), dynamic, handleMessage(), isAllowed(), isFreshUpdate() (+26 more)
 
 ### Community 7 - "/agent-builder — Hire YOUR AI Employee (live in Telegram)"
 Cohesion: 0.06
@@ -359,16 +369,16 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 11 - "property.ts"
-Cohesion: 0.10
-Nodes (34): dynamic, Page(), LoanIssue(), BOOK, day(), demoProperty(), demoRecords(), demoSubmeter() (+26 more)
+Cohesion: 0.12
+Nodes (29): BOOK, day(), demoProperty(), demoRecords(), iso(), row(), build(), addMonth() (+21 more)
 
 ### Community 12 - "DAY 1 — Robot LIVE + your first AI Employee"
 Cohesion: 0.10
 Nodes (19): 0 · Mindset, 1 · Before you start — accounts + machine (all free), Appendix — what "working" data looks like (the 20 seed rows), CashFlowOS AI Agents — Dry-Run Brief for Yong, DAY 1 — Robot LIVE + your first AI Employee, DAY 2 — Your own AI Employee + break it + sell it, How to log a finding (copy per issue), Known traps (confirm whether they still bite) (+11 more)
 
 ### Community 13 - "session.ts"
-Cohesion: 0.14
-Nodes (18): GET(), runtime, dynamic, GET(), maxDuration, runtime, Check each of these, How to report (+10 more)
+Cohesion: 0.16
+Nodes (12): runtime, app_login_login, GOOGLE_ERRORS, LoginForm(), Login(), isValidSession(), PASSCODE_WHO, passcodeLoginOn() (+4 more)
 
 ### Community 14 - "compilerOptions"
 Cohesion: 0.11
@@ -383,12 +393,12 @@ Cohesion: 0.11
 Nodes (17): 10. Client identity is loose, 1. Six numbering schemes in five years, 2. Six duplicate invoice numbers, 3. The file name disagrees with the document, 4. Two bank accounts, 5. Personal data printed on invoices, 6. Six currencies, no exchange rate recorded, 7. Discounts live inside the price cell (+9 more)
 
 ### Community 17 - "The 11 acceptance tests"
-Cohesion: 0.14
-Nodes (13): 10 · `scripts/import.mjs` with a messy CSV ⇒ valid rows in, plain-English skip report, no crash — ✅ **PASS (macOS)**, 11 · Gallery swap: `_template` → a Sales agent changes ONLY the 4 knobs + one added `registry.ts` line — ✅ **PASS**, 1 · Build clean on Node 20 + latest (26); all routes compile — ⚠️ **PARTIAL**, 2 · Fresh clone + placeholder env → connect banner instantly, nothing hangs/500s — ✅ **PASS**, 4 · Passcode: wrong rejected; right → cookie; the 3 excluded paths reachable without the cookie; every page locked — ✅ **PASS**, 5 · Mobile 375px: bottom bar, no horizontal scroll, tables→cards; PWA installs; funnel renders 5 stages with non-zero seed %s — ⚠️ **PARTIAL**, 6 · Photo (above threshold) → propose → Approve/Reject/double-tap/dup/wrong-id/expired/replay — 🔑 **NEEDS LIVE KEYS (dry-run)**, 6b · Photo (below threshold) ⇒ 🟢 autopilot + `/undo`; low-confidence ⇒ forced 🟡 — 🔑 **NEEDS LIVE KEYS (dry-run)** (+5 more)
+Cohesion: 0.13
+Nodes (14): 10 · `scripts/import.mjs` with a messy CSV ⇒ valid rows in, plain-English skip report, no crash — ✅ **PASS (macOS)**, 11 · Gallery swap: `_template` → a Sales agent changes ONLY the 4 knobs + one added `registry.ts` line — ✅ **PASS**, 1 · Build clean on Node 20 + latest (26); all routes compile — ⚠️ **PARTIAL**, 2 · Fresh clone + placeholder env → connect banner instantly, nothing hangs/500s — ✅ **PASS**, 4 · Passcode: wrong rejected; right → cookie; the 3 excluded paths reachable without the cookie; every page locked — ✅ **PASS**, 5 · Mobile 375px: bottom bar, no horizontal scroll, tables→cards; PWA installs; funnel renders 5 stages with non-zero seed %s — ⚠️ **PARTIAL**, 6 · Photo (above threshold) → propose → Approve/Reject/double-tap/dup/wrong-id/expired/replay — 🔑 **NEEDS LIVE KEYS (dry-run)**, 6b · Photo (below threshold) ⇒ 🟢 autopilot + `/undo`; low-confidence ⇒ forced 🟡 — 🔑 **NEEDS LIVE KEYS (dry-run)** (+6 more)
 
-### Community 18 - "hello/page.tsx"
-Cohesion: 0.08
-Nodes (33): asOf, compact(), GLYPH, SocialLinks(), Audience, Chooser(), ICON, CopyText() (+25 more)
+### Community 18 - "fb-fetch.ts"
+Cohesion: 0.09
+Nodes (40): dynamic, maxDuration, POST(), Stuck for ideas? Steal one (fill-in examples), fbPageId(), DAILY, dayOf(), Db (+32 more)
 
 ### Community 19 - "/jarvis-setup — Make Jarvis yours"
 Cohesion: 0.14
@@ -398,9 +408,9 @@ Nodes (13): CLOSE, /jarvis-setup — Make Jarvis yours, OPENING, PROVE IT 🔔, 
 Cohesion: 0.14
 Nodes (13): 1. WHEN does it wake up? ⏰, 2. WHAT does it look at? 👀, 3. WHAT does it suggest or do? 🤔, 4. WHEN must it ASK you first? 🙋, 5. 🟢 GREEN list — what can it just DO on its own?, 6. 🟡 YELLOW list — what must it ASK before doing?, 7. 🔴 RED list — what must it NEVER do (even if you say yes)?, 8. WHO approves, and how? ✅ (+5 more)
 
-### Community 21 - "google-auth.ts"
-Cohesion: 0.16
-Nodes (18): GET(), runtime, app_login_login, GOOGLE_ERRORS, LoginForm(), Login(), authUrl(), b64url() (+10 more)
+### Community 21 - "callback/route.ts"
+Cohesion: 0.22
+Nodes (17): GET(), runtime, GET(), runtime, noteLogin(), authUrl(), b64url(), canonicalOrigin() (+9 more)
 
 ### Community 22 - "/team-owner — let four more people in"
 Cohesion: 0.17
@@ -415,8 +425,8 @@ Cohesion: 0.22
 Nodes (9): 🟢 GREEN — just do it (AUTOPILOT), LATAR — the five fingers ✋, 🔴 RED — never, ever (not even with approval), The 5-Finger Rule (LATAR) — how every robot in Aereon Dashboard thinks 🤚, The Golden Rule (the one sentence on the wall), The knob 🎛️, 🟢🟡🔴 The three zones — the dial, not the leash 🎚️, 🎮 The Zone Sorting Game — sort these 10 cards (+1 more)
 
 ### Community 25 - "READ — ask it anything, answered instantly"
-Cohesion: 0.18
-Nodes (11): ACT — things it can actually do, through the approval engine, 📣 Content, 💰 Money, 🤝 People, 🏞️ Pipeline, READ — ask it anything, answered instantly, ✅ Tasks, The Jarvis Playbook 🤖💬 (+3 more)
+Cohesion: 0.29
+Nodes (7): 📣 Content, 💰 Money, 🤝 People, 🏞️ Pipeline, READ — ask it anything, answered instantly, ✅ Tasks, 🚨 Triage
 
 ### Community 26 - "Sell It — packaging Aereon Dashboard as a RM5k–50k offer"
 Cohesion: 0.18
@@ -451,8 +461,8 @@ Cohesion: 0.20
 Nodes (9): ✅ Check it worked, 🤖 my-jarvis — teach the bot YOUR business, 👉 NEVER — your own red lines, ✍️ Or fill it in yourself, ⚡ The lazy way (recommended), 👉 VOICE — how it talks back, 👉 WATCH — what it brings up first, 🔒 What you can't switch off (+1 more)
 
 ### Community 34 - "cron-daily/route.ts"
-Cohesion: 0.08
-Nodes (27): ProposalDraft, SCHEDULED, The knobs (what you're allowed to change), The pipeline, step by step (with the LATAR letter for each), 📸 The Vault — the Day-1 build-together agent, Why each guard exists (the safety story), buildBrief(), chiefOfStaff() (+19 more)
+Cohesion: 0.14
+Nodes (17): buildBrief(), chiefOfStaff(), dynamic, GET(), maxDuration, recipients(), Report, The rules (+9 more)
 
 ### Community 35 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
@@ -468,15 +478,15 @@ Nodes (7): Bonus — a blurry receipt → 🟡 ASK, flagged "unsure", 🧾 Expen
 
 ### Community 38 - "Instagram.tsx"
 Cohesion: 0.09
-Nodes (45): A, B, GrowthRhythm(), PAD, smooth(), CollabPanel(), FollowFlow(), kind() (+37 more)
+Nodes (46): A, B, GrowthRhythm(), PAD, smooth(), CollabPanel(), FollowFlow(), kind() (+38 more)
 
 ### Community 39 - "invoices/actions.ts"
 Cohesion: 0.17
-Nodes (28): CURRENCIES, discardInvoice(), Fail, guard(), InvoiceForm, kindOf(), msg(), noun() (+20 more)
+Nodes (30): CURRENCIES, discardInvoice(), Fail, guard(), InvoiceForm, kindOf(), msg(), noun() (+22 more)
 
 ### Community 40 - "Add Your Own Tab — the copy-paste prompt"
-Cohesion: 0.33
-Nodes (5): Add Your Own Tab — the copy-paste prompt, Stuck for ideas? Steal one (fill-in examples), ▶️ THE PROMPT — copy everything in the box into Claude Code (inside your Aereon Dashboard repo), Watch-for (the 5 things that go wrong), Why this is easy in Aereon Dashboard (the one-table pattern)
+Cohesion: 0.29
+Nodes (3): Add Your Own Tab — the copy-paste prompt, ▶️ THE PROMPT — copy everything in the box into Claude Code (inside your Aereon Dashboard repo), Watch-for (the 5 things that go wrong)
 
 ### Community 41 - "CashFlowOS AI Agents — V2 BUILD SPEC"
 Cohesion: 0.25
@@ -490,9 +500,9 @@ Nodes (7): Escalation rules — when a head must stop and come to you, From canv
 Cohesion: 0.29
 Nodes (6): 1. WHEN does it wake up?  → knob `when` in `definition.ts`, 2. LOOK AT — what does it read?  → knob `lookAt` in `definition.ts`, 3. SUGGEST — what does it draft?  → knob `suggest` in `prompt.ts`, 4. ASK-BEFORE — what must it never do without a YES?  → knob `askBefore` in `definition.ts`, 🎯 Cold-Lead Follow-up — my-agent.md  (Sales · worked example), The autonomy dial
 
-### Community 44 - "lab-math.ts"
-Cohesion: 0.12
-Nodes (15): WhenGrid(), AngleKey, ANGLES, BrandKey, Bucket, DAYPARTS, Filters, HookKey (+7 more)
+### Community 44 - "ContentLab.tsx"
+Cohesion: 0.06
+Nodes (74): longDate(), num(), app_v3_lab, AngleGrid(), angleLabel(), BrandPlacement(), c0(), ContentLab() (+66 more)
 
 ### Community 45 - "🧾 Expense Filer — my-agent.md  (Finance · the graduated-autonomy worked example)"
 Cohesion: 0.29
@@ -523,8 +533,8 @@ Cohesion: 0.12
 Nodes (12): dry, H, ids, invById, key, likely, linkOf, links (+4 more)
 
 ### Community 52 - "LinkPosts.tsx"
-Cohesion: 0.17
-Nodes (21): Card(), compact(), day(), esc(), Highlight(), kind(), LinkPosts(), STOP (+13 more)
+Cohesion: 0.14
+Nodes (25): Card(), compact(), day(), esc(), Highlight(), kind(), LinkPosts(), STOP (+17 more)
 
 ### Community 53 - "4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2)"
 Cohesion: 0.33
@@ -534,13 +544,13 @@ Nodes (6): 4 · THE TELEGRAM BOT — "the agentic upgrade" (the real V2), 4a · 
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
-### Community 55 - "Invoices.tsx"
-Cohesion: 0.23
-Nodes (18): SeasonsGrid(), rmFull(), Params, Cohorts(), DeltaChip(), ForeignNote(), KpiCard(), MixByYear() (+10 more)
+### Community 55 - "summary.ts"
+Cohesion: 0.11
+Nodes (21): PAD, Testing, Gotchas, buildSummary(), change(), ClientMove, ClientRow, Cohort (+13 more)
 
-### Community 56 - "Components"
-Cohesion: 0.06
-Nodes (32): AudienceBreakdown(), Brand wall (media kit), Buttons, Cards / Containers (panels), Chips and segmented controls, Colors, Components, Design System: Aereon Studio v3 (+24 more)
+### Community 56 - "Design System: Aereon Studio v3"
+Cohesion: 0.12
+Nodes (16): Colors, Design System: Aereon Studio v3, Elevation & Depth, Hierarchy, Layout, Named Rules, Named Rules, Named Rules (+8 more)
 
 ### Community 57 - "How to make your own (the one prompt)"
 Cohesion: 0.50
@@ -560,7 +570,7 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
 
 ### Community 76 - "version.ts"
 Cohesion: 0.12
-Nodes (27): dynamic, Settings(), DemoToggle(), generateMetadata(), Settings(), AccentPicker(), ACCENTS, IgViewPicker() (+19 more)
+Nodes (27): dynamic, Settings(), DemoToggle(), AccountPanel(), Settings(), AccentPicker(), ACCENTS, IgViewPicker() (+19 more)
 
 ### Community 77 - "Shot Composition"
 Cohesion: 0.10
@@ -571,52 +581,52 @@ Cohesion: 0.29
 Nodes (13): done(), dynamic, POST(), clip(), HELLO_EVENT, HELLO_TAP_CAP, isBot(), isTrackedPath() (+5 more)
 
 ### Community 79 - "invoice-drive-upload.ts"
-Cohesion: 0.17
-Nodes (17): From the dashboard (27 Sep 2026) — no Claude in the loop, Raising an invoice or a quotation, Telegram now draws in Canva itself (27 Sep 2026), driveStatus, driveViewUrl(), loadInvoice(), reuploadInvoiceToDrive(), ReuploadResult (+9 more)
+Cohesion: 0.11
+Nodes (30): dynamic, GET(), GET(), From the dashboard (27 Sep 2026) — no Claude in the loop, Raising an invoice or a quotation, Telegram now draws in Canva itself (27 Sep 2026), apiKey(), composioExec() (+22 more)
 
-### Community 80 - "next"
-Cohesion: 0.08
-Nodes (28): compact(), DashboardV1(), dynamic, InvoiceSummary(), pct(), dynamic, Tasks(), AreaChart() (+20 more)
+### Community 80 - "_v1.tsx"
+Cohesion: 0.16
+Nodes (14): compact(), DashboardV1(), AreaChart(), AreaPoint, COLORS, Donut(), fmt(), Slice (+6 more)
 
 ### Community 81 - "studio.ts"
-Cohesion: 0.16
-Nodes (17): Receivables(), money(), isPaid(), AGE_BUCKETS, ageing(), buildStudio(), ClientLine, dayDiff() (+9 more)
+Cohesion: 0.15
+Nodes (18): Receivables(), WorkKind, OWED_WINDOW_DAYS, AGE_BUCKETS, ageing(), buildStudio(), ClientLine, dayDiff() (+10 more)
 
 ### Community 82 - "ig-archive.mjs"
 Cohesion: 0.10
 Nodes (23): ArchivePost, classify(), CURATED, isKlcc(), Kind, median(), pickShowcase(), Place (+15 more)
 
 ### Community 83 - "news.ts"
-Cohesion: 0.11
-Nodes (29): chunk(), dynamic, GET(), maxDuration, research(), toPlain(), dynamic, NewsPage() (+21 more)
+Cohesion: 0.13
+Nodes (22): dynamic, NewsPage(), one(), Params, NewsFilters(), WINDOWS, dayTitle(), label() (+14 more)
 
-### Community 84 - "invoice-render.ts"
-Cohesion: 0.21
-Nodes (12): buildOperations(), FIELDS, fill(), FOLDERS, formatAddress(), invoiceYearFolders, longDate(), money() (+4 more)
+### Community 84 - "react"
+Cohesion: 0.10
+Nodes (23): FbFilters(), TYPES, WINDOWS, IgFilters(), TYPES, WINDOWS, delta(), Facebook() (+15 more)
 
 ### Community 86 - "drive-reconcile.mjs"
 Cohesion: 0.12
 Nodes (14): args, byNo, db, exec(), files, invoices, match, missing (+6 more)
 
-### Community 87 - "ContentLab"
-Cohesion: 0.36
-Nodes (9): ContentLab(), isMonth(), useTip(), inRange(), months(), mytDay(), presets(), slice() (+1 more)
+### Community 87 - "invoice-edit.ts"
+Cohesion: 0.17
+Nodes (23): Quotations, Quotations (added 10 Oct 2026), commitRender(), fileDesign(), parkForDeletion(), driveOf(), driveStatus, applyEdit() (+15 more)
 
-### Community 88 - "summary.ts"
-Cohesion: 0.12
-Nodes (19): Testing, Gotchas, buildSummary(), change(), ClientMove, ClientRow, Cohort, Delta (+11 more)
+### Community 88 - "Reduced Motion — Detailed Patterns"
+Cohesion: 0.25
+Nodes (7): Auto-carousel / marquee with a pause control (WCAG 2.2.2), Framer Motion: MotionConfig for app-wide reduction, GSAP: full matchMedia with teardown, Lenis: start/stop on live toggle, Reduced Motion — Detailed Patterns, Reusable wrapper: animate with motion preference, Tier classification audit checklist
 
 ### Community 89 - "insights.ts"
-Cohesion: 0.11
-Nodes (34): Dashboard(), ClientRiskCard(), days(), GettingPaid(), ReachAndWork(), share(), FilterBar(), pct() (+26 more)
+Cohesion: 0.19
+Nodes (13): Invoice, dayDiff(), deliveredOn(), isoDay(), LagLine, median(), MONTHS, mytDay() (+5 more)
 
 ### Community 90 - "Tenancy.tsx"
-Cohesion: 0.16
-Nodes (33): Property section (own sidebar group since 4 Oct 2026), Costs(), PropertyCosts(), Loans(), Card(), Overview(), dmy(), FULL (+25 more)
+Cohesion: 0.18
+Nodes (30): Property section (own sidebar group since 4 Oct 2026), Costs(), PropertyCosts(), Loans(), Card(), Overview(), dmy(), FULL (+22 more)
 
 ### Community 91 - "Aereon Dashboard"
 Cohesion: 0.05
-Nodes (36): Aereon Dashboard, Appearance, FINISH LIKE THIS, 🔒 HARD RULES, Q1 — The repo, Q2 — Your name, /team-deputy — get build access without the keys, THE 2 QUESTIONS (+28 more)
+Nodes (37): Aereon Dashboard, Appearance, FINISH LIKE THIS, 🔒 HARD RULES, Q1 — The repo, Q2 — Your name, /team-deputy — get build access without the keys, THE 2 QUESTIONS (+29 more)
 
 ### Community 92 - "AE Performance — Detailed Diagnostics Reference"
 Cohesion: 0.11
@@ -630,17 +640,17 @@ Nodes (10): Brand Commitments, Capabilities and Constraints, Evidence on Hand, O
 Cohesion: 0.11
 Nodes (17): Anticipation, Bounce (expression), Bounce (hand-keyed), Display tips, Easing in the After Effects Graph Editor, Gotchas, Graph Editor basics, Handle techniques (+9 more)
 
-### Community 95 - "react"
+### Community 95 - "lib/actions.ts"
+Cohesion: 0.14
+Nodes (22): The knobs (what you're allowed to change), The pipeline, step by step (with the LATAR letter for each), 📸 The Vault — the Day-1 build-together agent, Why each guard exists (the safety story), runAgentNow(), ActionRow, attachNotify(), executeClaimed() (+14 more)
+
+### Community 96 - "supabase.ts"
+Cohesion: 0.11
+Nodes (23): AGENTS, dynamic, maxDuration, dynamic, Employees(), getLastRuns(), LastRun, outcomeClass() (+15 more)
+
+### Community 97 - "PublicPage.tsx"
 Cohesion: 0.12
-Nodes (26): PaceChart(), PAD, Strip(), compact(), longDate(), MONTHS, num(), shortDate() (+18 more)
-
-### Community 96 - "instagram/page.tsx"
-Cohesion: 0.16
-Nodes (25): Clients(), dynamic, monthsBetween(), Dashboard(), dynamic, proposedCount(), ago(), dynamic (+17 more)
-
-### Community 97 - "property-actions.ts"
-Cohesion: 0.20
-Nodes (19): LoanRecord(), Option, CostForm(), Msg, TenantName(), TermForm(), addPropertyCost(), addTenancyTerm() (+11 more)
+Nodes (14): metadata, pageMetadata(), PublicPage(), Tracker(), metadata, app_globals, metadata, viewport (+6 more)
 
 ### Community 98 - "Gradient cookbook"
 Cohesion: 0.11
@@ -655,20 +665,20 @@ Cohesion: 0.11
 Nodes (17): 1. Stroke draw-on: the math, 2. Morphing, 3. Motion along a path — details, 4. SMIL vs CSS vs JS — tradeoffs, 5. SVGO config tuned for animation, 6. Reduced motion, CSS offset-path (declarative, modern), Flubber (standalone, framework-friendly) (+9 more)
 
 ### Community 101 - "Clients.tsx"
-Cohesion: 0.13
-Nodes (24): Clients(), one(), Params, SEG_NAME, SEG_NOTE, SORTS, PAD, QUAD (+16 more)
+Cohesion: 0.11
+Nodes (29): FilterBar(), one(), Params, SEG_NAME, SEG_NOTE, SORTS, PAD, QUAD (+21 more)
 
-### Community 102 - "V3Nav.tsx"
-Cohesion: 0.39
-Nodes (6): app_v3_v3, HREFS, isCurrent(), V3_NAV, V3MobileBar(), V3Nav()
+### Community 102 - "fonts.ts"
+Cohesion: 0.18
+Nodes (12): dynamic, geist, geistMono, serif, v3Fonts, Shell(), app_v3_v3, HREFS (+4 more)
 
 ### Community 103 - "Three.js / R3F Resource Disposal — Detailed Recipes"
-Cohesion: 0.12
-Nodes (16): A reusable `<DisposeOnUnmount>` helper, Complete disposal utility, Detecting leaks with renderer.info, Disposing render targets and EffectComposer, Full renderer teardown (SPA route leaving the 3D view), GLTF full cleanup, Gotchas, Leak-test harness (+8 more)
+Cohesion: 0.18
+Nodes (10): Complete disposal utility, Detecting leaks with renderer.info, Disposing render targets and EffectComposer, Full renderer teardown (SPA route leaving the 3D view), Gotchas, Leak-test harness, Loaders: clearing the cache, Quick reference (+2 more)
 
 ### Community 104 - "ig-fetch.ts"
-Cohesion: 0.13
-Nodes (24): Report, The rules, AccountWindow, attachCovers(), BASE, buildAccount(), buildSnapshot(), Db (+16 more)
+Cohesion: 0.17
+Nodes (22): AccountWindow, attachCovers(), BASE, buildAccount(), buildSnapshot(), Db, Exec, guard() (+14 more)
 
 ### Community 105 - "login/route.ts"
 Cohesion: 0.17
@@ -683,12 +693,12 @@ Cohesion: 0.12
 Nodes (16): Before you finish — checklist, Common mistakes, Core principle, Creative Brief, Decision tree — how far to take the brief, Deliverable spec — what a good brief contains, Handling "I don't know what I want", Question bank by gap (which question fixes which hole) (+8 more)
 
 ### Community 110 - "agent-site.ts"
-Cohesion: 0.06
-Nodes (48): metadata, pageMetadata(), PublicPage(), Tracker(), metadata, app_globals, metadata, viewport (+40 more)
+Cohesion: 0.10
+Nodes (31): GET(), sitemap(), AI_AGENTS, API_SEGMENTS, COMPANY, HOME, INSTAGRAM, isKnownPrivatePath() (+23 more)
 
 ### Community 111 - "records.ts"
-Cohesion: 0.07
-Nodes (37): definition, WhenTrigger, AgentDefinition, definition, WhenTrigger, DraftPayload, DraftResult, suggest() (+29 more)
+Cohesion: 0.10
+Nodes (19): definition, WhenTrigger, AgentDefinition, definition, WhenTrigger, DraftPayload, DraftResult, suggest() (+11 more)
 
 ### Community 112 - "Motion Direction Playbook"
 Cohesion: 0.12
@@ -726,9 +736,9 @@ Nodes (15): Camera moves, grids, safe areas, and parallax, CSS scroll-driven (pu
 Cohesion: 0.12
 Nodes (15): Before you finish — checklist, Captions and accessibility, Common mistakes, Cutdown / repurposing matrix (one master → all ratios), Decision tree — master strategy and spec path, Deliverable spec — what a good handover contains, Per-platform spec sheet (essentials), Pre-delivery QC checklist (top items) (+7 more)
 
-### Community 121 - "property-import.mjs"
-Cohesion: 0.10
-Nodes (16): Core building blocks, Deliver & verify (standalone HTML), Fragment shader skeleton, Image transitions, Mobile / performance, Quick reference, Reference files, Shader / GLSL (+8 more)
+### Community 121 - "Shader / GLSL"
+Cohesion: 0.17
+Nodes (11): Core building blocks, Deliver & verify (standalone HTML), Fragment shader skeleton, Image transitions, Mobile / performance, Quick reference, Reference files, Shader / GLSL (+3 more)
 
 ### Community 122 - "After Effects Expression Library, Rigging & Export"
 Cohesion: 0.13
@@ -851,8 +861,8 @@ Cohesion: 0.15
 Nodes (12): Animated star rating (fractional), Deliver & verify (rendered stills → MP4), Kinetic emphasis on the key phrase, Output checklist, Reference files, Staggered line reveal, Template × reviews — one video per quote, Testimonial Video (+4 more)
 
 ### Community 152 - "Three.js Motion (3D / WebGL)"
-Cohesion: 0.17
-Nodes (11): Camera lerp and scroll-linked motion, Deliver & verify (standalone HTML), GLTF animation clips, Instancing for many objects, Minimal scene + render loop, Performance and cleanup (critical), Quick reference, React Three Fiber (R3F) (+3 more)
+Cohesion: 0.18
+Nodes (10): Camera lerp and scroll-linked motion, Deliver & verify (standalone HTML), GLTF animation clips, Instancing for many objects, Minimal scene + render loop, Performance and cleanup (critical), Quick reference, Reference files (+2 more)
 
 ### Community 153 - "Pre-delivery QC"
 Cohesion: 0.15
@@ -998,9 +1008,9 @@ Nodes (9): Crossfade variant (no mode="wait"), Directional slide transitions, Fr
 Cohesion: 0.20
 Nodes (9): Built by the team behind iart.ai, Content slide (mounts its own narration), Legibility checklist for these components, Reusable enter helper, Section divider, Shared theme, Slide Components (runnable Remotion), Staggered bullet list (+1 more)
 
-### Community 189 - "ContentLab.tsx"
-Cohesion: 0.13
-Nodes (21): app_v3_lab, angleLabel(), BrandPlacement(), c0(), fmtLabel(), FORMATS, HookBoard(), hookMeta() (+13 more)
+### Community 189 - "Invoices.tsx"
+Cohesion: 0.22
+Nodes (21): money(), rmFull(), Clients(), Invoices(), Params, Cohorts(), DeltaChip(), ForeignNote() (+13 more)
 
 ### Community 190 - "Batch pipeline: one template → many personalized videos"
 Cohesion: 0.20
@@ -1010,17 +1020,17 @@ Nodes (9): Batch pipeline: one template → many personalized videos, Built by t
 Cohesion: 0.20
 Nodes (9): Deliver & verify (rendered stills → MP4), Intro: the logo sting, Output checklist, Outro: end-screen layout that respects YouTube's element zones, Reference files, Reusable brand template, Two hard rules (platform, not taste), When to use (+1 more)
 
-### Community 192 - "invoice-edit.ts"
-Cohesion: 0.11
-Nodes (39): dynamic, GET(), dynamic, GET(), maxDuration, apiKey(), composioExec(), ComposioNotConfigured (+31 more)
+### Community 192 - "invoice-canva.ts"
+Cohesion: 0.20
+Nodes (15): cancelQuietly(), forComposio(), startRender(), buildOperations(), DocKind, FIELDS, fill(), FOLDERS (+7 more)
 
-### Community 193 - "Patterns, profiling, and cost cheat sheet"
-Cohesion: 0.22
-Nodes (8): Accordion with grid height (no JS measurement), FLIP reorder list (batched reads), Just-in-time will-change, Parallax without scroll-jank, Patterns, profiling, and cost cheat sheet, Profiling: prove it's compositor-only, Property cost cheat sheet, Reduced-motion gate
+### Community 193 - "top"
+Cohesion: 0.14
+Nodes (13): Accordion with grid height (no JS measurement), FLIP reorder list (batched reads), Just-in-time will-change, Parallax without scroll-jank, Patterns, profiling, and cost cheat sheet, Profiling: prove it's compositor-only, Property cost cheat sheet, Reduced-motion gate (+5 more)
 
-### Community 194 - "Appearance.tsx"
-Cohesion: 0.16
-Nodes (14): ADVANCED, Appearance(), BASIC, Bg, Dash, Font, FONTS, Glass (+6 more)
+### Community 194 - "property-actions.ts"
+Cohesion: 0.24
+Nodes (16): LoanRecord(), Option, TermForm(), addPropertyCost(), addTenancyTerm(), deletePropertyCost(), deleteTenancyTerm(), done() (+8 more)
 
 ### Community 195 - "Launch Video Structure — Cookbook"
 Cohesion: 0.22
@@ -1059,8 +1069,8 @@ Cohesion: 0.22
 Nodes (8): Animation cheatsheet, Fonts, Percentile bar (the climax scene), Remotion recipes for Wrapped scenes, Sequencing scenes into the film, Staggered top-X list, The one rule that prevents broken renders, Transitions between scenes
 
 ### Community 204 - "hello-config.ts"
-Cohesion: 0.21
-Nodes (18): LinksEditor(), ListEditor(), newRow(), Row, saveHello(), AffiliateKind, Brief, briefMailto() (+10 more)
+Cohesion: 0.23
+Nodes (16): LinksEditor(), ListEditor(), newRow(), Row, saveHello(), AffiliateKind, Brief, cleanHello() (+8 more)
 
 ### Community 205 - "Platform Specs & Message-Match Worksheet"
 Cohesion: 0.25
@@ -1179,88 +1189,88 @@ Cohesion: 0.40
 Nodes (4): Example prompts, Short-Form Video, What's inside, When it activates
 
 ### Community 234 - "tenancy-math.ts"
-Cohesion: 0.18
-Nodes (18): addMonths(), CashFrame, cashResult(), Cost, CostKind, day(), DEPOSIT_FIELDS, depositsOf() (+10 more)
+Cohesion: 0.15
+Nodes (20): Msg, TenantName(), addMonths(), CashFrame, cashResult(), Cost, CostKind, day() (+12 more)
 
 ### Community 235 - "instagram.ts"
 Cohesion: 0.14
-Nodes (18): IgSnapshot, accountDaily(), analyse(), AudienceView, avg(), DailyPoint, DAYS, FORMAT (+10 more)
+Nodes (17): IgProfile, Slice, accountDaily(), analyse(), AudienceView, avg(), DAYS, FORMAT (+9 more)
 
-### Community 286 - "_load.ts"
-Cohesion: 0.18
-Nodes (12): dynamic, Page(), loadProperty(), dynamic, Page(), dynamic, PropertyPage(), rm() (+4 more)
+### Community 286 - "submeter.ts"
+Cohesion: 0.13
+Nodes (18): dynamic, Page(), loadProperty(), dynamic, Page(), dynamic, PropertyPage(), rm() (+10 more)
 
-### Community 287 - "auth.ts"
-Cohesion: 0.18
-Nodes (18): AppLayout(), dynamic, Users(), when(), ShownUser, Nav(), AccountPanel(), Shell() (+10 more)
+### Community 287 - "users/actions.ts"
+Cohesion: 0.23
+Nodes (18): addUser(), clean(), fail(), gate(), removeUser(), Result, setActive(), setRole() (+10 more)
 
 ### Community 288 - "Editing Techniques — Detailed Cookbook"
 Cohesion: 0.18
 Nodes (10): Series, BPM → frame math, Cut on action / cut on motion, Editing Techniques — Detailed Cookbook, Example edit plan (portable), J-cut and L-cut, Match cut, step by step, NLE timeline vs code timeline (+2 more)
 
-### Community 289 - "app/page.tsx"
-Cohesion: 0.10
-Nodes (33): compact(), showcase, ShowcaseGrid(), BRAND_WORDS, compact(), dynamic, geist, geistMono (+25 more)
+### Community 289 - "Reel.tsx"
+Cohesion: 0.12
+Nodes (25): compact(), showcase, ShowcaseGrid(), intro, app_v3_kit2, MediaKit2(), SERVICES, ShareList() (+17 more)
 
-### Community 290 - "content-lab.ts"
+### Community 290 - "Quotations.tsx"
 Cohesion: 0.18
-Nodes (17): Dashboard v3 — the creator studio, EMPTY, formatOf(), hookLine(), Lab, labSince(), MetricRow, paged() (+9 more)
+Nodes (19): QuoteSource, guard(), linkInvoice(), refresh(), Res, setQuoteLost(), unlinkInvoice(), Filters (+11 more)
 
-### Community 291 - "make-icons.mjs"
-Cohesion: 0.18
-Nodes (12): here, nextConfig, securityHeaders, ref_node_path, ref_node_url, ref_node_zlib, AMBER, chunk() (+4 more)
+### Community 291 - "ref_node_fs"
+Cohesion: 0.16
+Nodes (13): here, nextConfig, securityHeaders, ref_node_fs, ref_node_path, ref_node_url, ref_node_zlib, AMBER (+5 more)
 
-### Community 292 - "links/page.tsx"
-Cohesion: 0.24
-Nodes (10): app_app_links_links, dynamic, Links(), Count, FIXED, HelloStats, labelOf(), readHelloStats() (+2 more)
+### Community 292 - "opengraph-image.tsx"
+Cohesion: 0.14
+Nodes (20): asOf, compact(), GLYPH, SocialLinks(), alt, compact(), contentType, dataUri() (+12 more)
 
-### Community 293 - "users/actions.ts"
-Cohesion: 0.47
-Nodes (10): addUser(), clean(), fail(), gate(), removeUser(), Result, setActive(), setRole() (+2 more)
+### Community 293 - "facebook.ts"
+Cohesion: 0.15
+Nodes (16): Facebook(), analyseFb(), EMPTY, engagement(), Facebook, FbPostRow, FbStats, median() (+8 more)
 
-### Community 294 - "invoices.ts"
-Cohesion: 0.38
-Nodes (9): byMonth(), classify(), ClientRoll, InvoiceSummary, MonthPoint, myr(), rollUpClients(), summarize() (+1 more)
+### Community 294 - "instagram/page.tsx"
+Cohesion: 0.15
+Nodes (23): Dashboard(), dynamic, proposedCount(), ago(), dynamic, Instagram(), n(), short() (+15 more)
 
 ### Community 295 - "theme-qa.md"
 Cohesion: 0.50
 Nodes (3): Report, Steps, The settings matrix
 
-### Community 297 - "median"
-Cohesion: 0.36
-Nodes (8): Scene(), What must be disposed (and what must not), Cleanup & GPU memory (disposal), group, median(), perK(), pulse, verdict()
+### Community 297 - "Scene"
+Cohesion: 0.67
+Nodes (3): Scene(), What must be disposed (and what must not), Cleanup & GPU memory (disposal)
 
-### Community 298 - "ReelFilm.tsx"
-Cohesion: 0.10
-Nodes (24): at(), CHAPTERS, clamp(), compact(), easeOut(), LENGTH, ReelBrand, ReelData (+16 more)
+### Community 298 - "Diagram & Data Animation"
+Cohesion: 0.17
+Nodes (11): Build-tool choice, Charts, Core principle: progressive disclosure, Deliver & verify (standalone HTML), Diagram & Data Animation, Flowing connector (marching dash + traveling dot), Output checklist, Progressive node/edge reveal (SVG + GSAP) (+3 more)
 
 ### Community 299 - "ig-backfill.mjs"
 Cohesion: 0.14
 Nodes (15): MAX_POSTS, persist(), postRows(), saveSnapshot(), ref_node_child_process, ref_node_util, args, db (+7 more)
 
-### Community 300 - "lib/actions.ts"
-Cohesion: 0.16
-Nodes (27): handleCallback(), runAgentNow(), approveAction(), approverId(), plain(), rejectAction(), ApproveButtons(), ActionRow (+19 more)
+### Community 300 - "sendMessage"
+Cohesion: 0.42
+Nodes (10): handleCallback(), approveAction(), approverId(), plain(), rejectAction(), ApproveButtons(), claim(), summarizeResult() (+2 more)
 
-### Community 301 - "approvals/page.tsx"
-Cohesion: 0.36
-Nodes (8): Approvals(), describePayload(), dynamic, getHistory(), getPending(), HistItem, Pending, pill()
+### Community 301 - "hello/page.tsx"
+Cohesion: 0.11
+Nodes (16): Audience, Chooser(), ICON, Link page — /hello, Link page — /hello (added 11 Oct 2026), CopyText(), app_hello_hello, compact() (+8 more)
 
-### Community 302 - "Reduced Motion — Detailed Patterns"
-Cohesion: 0.25
-Nodes (7): Auto-carousel / marquee with a pause control (WCAG 2.2.2), Framer Motion: MotionConfig for app-wide reduction, GSAP: full matchMedia with teardown, Lenis: start/stop on live toggle, Reduced Motion — Detailed Patterns, Reusable wrapper: animate with motion preference, Tier classification audit checklist
+### Community 302 - "hello-insights.ts"
+Cohesion: 0.15
+Nodes (18): analyseHello(), APPS, bump(), byCount(), countryName(), FIXED, HelloInsights, HOSTS (+10 more)
 
-### Community 303 - "vault/page.tsx"
-Cohesion: 0.38
-Nodes (6): dynamic, getVaultCards(), prettySize(), Vault(), VaultCard, VaultRow
+### Community 303 - "getRecords"
+Cohesion: 0.15
+Nodes (24): CashIn(), dynamic, WAITING, CashOut(), dynamic, Content(), dynamic, Customers() (+16 more)
 
-### Community 304 - "Tooling — motion, video, research"
-Cohesion: 0.33
-Nodes (5): Agent Reach — internet access for research (installed 2 Oct 2026), Folder move (27 Sep 2026), HyperFrames — HTML to MP4 video (installed 2 Oct 2026), Motion skills (installed 2 Oct 2026), Tooling — motion, video, research
+### Community 304 - "Components"
+Cohesion: 0.17
+Nodes (12): AudienceBreakdown(), Brand wall (media kit), Buttons, Cards / Containers (panels), Chips and segmented controls, Components, Inputs / Fields, Lists, owed, tables (+4 more)
 
-### Community 305 - "invoice-details.ts"
-Cohesion: 0.10
-Nodes (39): dynamic, InvoiceDetailsPage(), one(), Params, dynamic, one(), Params, QuotationsPage() (+31 more)
+### Community 305 - "invoices.ts"
+Cohesion: 0.15
+Nodes (21): Clients(), dynamic, monthsBetween(), dynamic, InvoiceSummary(), pct(), BarRow, RowBars() (+13 more)
 
 ### Community 306 - "SubmeterChart.tsx"
 Cohesion: 0.33
@@ -1270,41 +1280,85 @@ Nodes (8): ChartCycle, full(), kwh(), label(), MON, PAD, pct(), SubmeterChart()
 Cohesion: 0.29
 Nodes (6): 1. WHEN does it wake up?  → knob `when` in `definition.ts`, 2. LOOK AT — what does it read?  → knob `lookAt` in `definition.ts`, 3. SUGGEST — what does it draft?  → knob `suggest` in `prompt.ts`, 4. ASK-BEFORE — what must it never do without a YES?  → knob `askBefore` in `definition.ts`, 📅 Content Approval — my-agent.md  (Marketing · worked example), The autonomy dial
 
-### Community 309 - "BottomNav.tsx"
-Cohesion: 0.21
-Nodes (10): BottomNav(), MORE, PRIMARY, MoreSheet(), MoreTab, apply(), FACE, Mode (+2 more)
+### Community 308 - "links/page.tsx"
+Cohesion: 0.27
+Nodes (9): app_app_links_links, Bars(), dynamic, fmt(), Links(), pct(), Count, RANGES (+1 more)
+
+### Community 309 - "next"
+Cohesion: 0.09
+Nodes (31): POST(), runtime, AppLayout(), BottomNav(), MORE, PRIMARY, IconName, MoreSheet() (+23 more)
+
+### Community 310 - "compact"
+Cohesion: 0.14
+Nodes (25): Dashboard(), ClientRiskCard(), days(), GettingPaid(), ReachAndWork(), SeasonsGrid(), share(), PaceChart() (+17 more)
 
 ### Community 311 - "Loans.tsx"
-Cohesion: 0.16
-Nodes (14): k(), label(), LoanChart(), MON, PAD, STATUS, LoanChapter(), MonthTable() (+6 more)
+Cohesion: 0.15
+Nodes (15): k(), label(), LoanChart(), MON, PAD, STATUS, LoanIssue(), LoanChapter() (+7 more)
 
 ### Community 312 - "requireSession"
-Cohesion: 0.17
-Nodes (22): refresh(), reuploadToDrive(), undoEdit(), uploadToDrive(), ageOf(), Filters, InvoiceDetails(), money() (+14 more)
+Cohesion: 0.13
+Nodes (26): refresh(), reuploadToDrive(), undoEdit(), uploadToDrive(), ConfirmAsk, ConfirmDialog(), ageOf(), Filters (+18 more)
 
-### Community 314 - "canEdit"
-Cohesion: 0.15
-Nodes (14): POST(), runtime, dynamic, maxDuration, POST(), Sign-in (Google + backup passcode, added 4 Oct 2026), Checked and fine, Fixed in this pass (+6 more)
+### Community 313 - "cron-news/route.ts"
+Cohesion: 0.18
+Nodes (13): chunk(), dynamic, GET(), maxDuration, research(), toPlain(), 8 · No `ANTHROPIC_API_KEY` ⇒ calm 200 everywhere AI is touched; bot ≤ ~5s with a key — ⚠️ **PARTIAL**, saveNews() (+5 more)
+
+### Community 314 - "safeEqual"
+Cohesion: 0.18
+Nodes (11): dynamic, GET(), maxDuration, dynamic, maxDuration, POST(), Check each of these, How to report (+3 more)
+
+### Community 315 - "The Jarvis Playbook 🤖💬"
+Cohesion: 0.33
+Nodes (4): ACT — things it can actually do, through the approval engine, The Jarvis Playbook 🤖💬, The safety one-liner, The zones, in one glance 🎚️
+
+### Community 316 - "Appearance.tsx"
+Cohesion: 0.16
+Nodes (14): ADVANCED, Appearance(), BASIC, Bg, Dash, Font, FONTS, Glass (+6 more)
+
+### Community 317 - "ReelFilm.tsx"
+Cohesion: 0.21
+Nodes (13): at(), CHAPTERS, clamp(), compact(), easeOut(), LENGTH, ReelBrand, ReelData (+5 more)
+
+### Community 318 - "approvals/page.tsx"
+Cohesion: 0.36
+Nodes (8): Approvals(), describePayload(), dynamic, getHistory(), getPending(), HistItem, Pending, pill()
+
+### Community 319 - "R3F: the automatic case and where it leaks"
+Cohesion: 0.33
+Nodes (6): A reusable `<DisposeOnUnmount>` helper, GLTF full cleanup, Loaded texture not via useLoader, R3F: the automatic case and where it leaks, Ref-created geometry/material, The useMemo + cleanup-effect dispose pattern
+
+### Community 320 - "Tooling — motion, video, research"
+Cohesion: 0.33
+Nodes (5): Agent Reach — internet access for research (installed 2 Oct 2026), Folder move (27 Sep 2026), HyperFrames — HTML to MP4 video (installed 2 Oct 2026), Motion skills (installed 2 Oct 2026), Tooling — motion, video, research
+
+### Community 321 - "hello.test.mjs"
+Cohesion: 0.40
+Nodes (3): DEFAULT_HELLO, ref_node_assert, ref_node_test
+
+### Community 322 - "The rules"
+Cohesion: 0.50
+Nodes (3): Report, The rules, IgAccount
 
 ## Knowledge Gaps
-- **2001 isolated node(s):** `session-start.sh script`, `WhenTrigger`, `AgentDefinition`, `definition`, `DraftPayload` (+1996 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2305 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **73 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2025 isolated node(s):** `session-start.sh script`, `WhenTrigger`, `AgentDefinition`, `definition`, `DraftPayload` (+2020 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2333 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **71 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `Quotations.tsx`, `analytics.ts`, `package.json`, `demoMode`, `property.ts`, `hello/page.tsx`, `google-auth.ts`, `auth.ts`, `users/actions.ts`, `Instagram.tsx`, `invoices/actions.ts`, `ReelFilm.tsx`, `lib/actions.ts`, `SubmeterChart.tsx`, `LinkPosts.tsx`, `BottomNav.tsx`, `Loans.tsx`, `requireSession`, `Invoices.tsx`, `ContentLab.tsx`, `Appearance.tsx`, `hello-config.ts`, `version.ts`, `next`, `news.ts`, `insights.ts`, `instagram/page.tsx`, `property-actions.ts`, `Clients.tsx`, `agent-site.ts`, `records.ts`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `next` connect `next` to `Quotations.tsx`, `analytics.ts`, `package.json`, `telegram/route.ts`, `demoMode`, `property.ts`, `session.ts`, `hello/page.tsx`, `google-auth.ts`, `_load.ts`, `auth.ts`, `app/page.tsx`, `make-icons.mjs`, `users/actions.ts`, `invoices/actions.ts`, `lib/actions.ts`, `LinkPosts.tsx`, `BottomNav.tsx`, `Invoices.tsx`, `requireSession`, `canEdit`, `invoice-edit.ts`, `Appearance.tsx`, `version.ts`, `hello-config.ts`, `track/route.ts`, `news.ts`, `insights.ts`, `react`, `instagram/page.tsx`, `property-actions.ts`, `V3Nav.tsx`, `login/route.ts`, `agent-site.ts`, `records.ts`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **Why does `supabaseConfigured` connect `supabase.ts` to `Quotations.tsx`, `invoice-bot.ts`, `telegram/route.ts`, `demoMode`, `property.ts`, `auth.ts`, `cron-daily/route.ts`, `content-lab.ts`, `links/page.tsx`, `users/actions.ts`, `Instagram.tsx`, `invoices/actions.ts`, `lib/actions.ts`, `approvals/page.tsx`, `vault/page.tsx`, `LinkPosts.tsx`, `requireSession`, `invoice-edit.ts`, `hello-config.ts`, `version.ts`, `track/route.ts`, `invoice-drive-upload.ts`, `news.ts`, `instagram/page.tsx`, `property-actions.ts`, `login/route.ts`, `instagram.ts`, `records.ts`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `next` connect `next` to `analytics.ts`, `package.json`, `telegram/route.ts`, `demoMode`, `session.ts`, `callback/route.ts`, `submeter.ts`, `users/actions.ts`, `Quotations.tsx`, `ref_node_fs`, `opengraph-image.tsx`, `instagram/page.tsx`, `invoices/actions.ts`, `sendMessage`, `hello/page.tsx`, `getRecords`, `LinkPosts.tsx`, `compact`, `summary.ts`, `requireSession`, `Appearance.tsx`, `property-actions.ts`, `version.ts`, `hello-config.ts`, `track/route.ts`, `invoice-drive-upload.ts`, `news.ts`, `react`, `supabase.ts`, `PublicPage.tsx`, `Clients.tsx`, `fonts.ts`, `login/route.ts`, `agent-site.ts`, `records.ts`?**
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `analytics.ts`, `package.json`, `demoMode`, `session.ts`, `users/actions.ts`, `Quotations.tsx`, `instagram/page.tsx`, `invoices/actions.ts`, `Instagram.tsx`, `sendMessage`, `hello/page.tsx`, `ContentLab.tsx`, `SubmeterChart.tsx`, `LinkPosts.tsx`, `next`, `compact`, `Loans.tsx`, `requireSession`, `summary.ts`, `Appearance.tsx`, `ReelFilm.tsx`, `property-actions.ts`, `hello-config.ts`, `version.ts`, `_v1.tsx`, `news.ts`, `PublicPage.tsx`, `Clients.tsx`, `tenancy-math.ts`, `records.ts`?**
+  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+- **Why does `server-only` connect `supabase.ts` to `invoice-canva.ts`, `cron-daily/route.ts`, `users/actions.ts`, `facebook.ts`, `package.json`, `ig-fetch.ts`, `property.ts`, `version.ts`, `hello-insights.ts`, `invoice-drive-upload.ts`, `fb-fetch.ts`, `LinkPosts.tsx`, `next`, `callback/route.ts`, `invoice-edit.ts`, `cron-news/route.ts`, `submeter.ts`, `lib/actions.ts`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `requireSession()` (e.g. with `Sign-in (Google + backup passcode, added 4 Oct 2026)` and `Checked and fine`) actually correct?**
   _`requireSession()` has 3 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `session-start.sh script`, `WhenTrigger`, `AgentDefinition` to the rest of the system?**
-  _2001 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `supabase.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.0960960960960961 - nodes in this community are weakly interconnected._
+  _2025 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `registry.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.1437908496732026 - nodes in this community are weakly interconnected._
 - **Should `Submeter.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.13360323886639677 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11733615221987315 - nodes in this community are weakly interconnected._

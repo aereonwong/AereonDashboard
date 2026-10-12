@@ -4,8 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import Icon from '@/app/_components/Icon'
 
-// Takes a fresh Instagram snapshot through the existing refresh endpoint.
-export default function Refresh({ label = 'Refresh from Instagram' }: { label?: string }) {
+// Takes a fresh snapshot through a refresh endpoint — Instagram's unless told otherwise.
+export default function Refresh({
+  label = 'Refresh from Instagram',
+  endpoint = '/api/instagram/refresh',
+}: {
+  label?: string
+  endpoint?: string
+}) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -14,7 +20,7 @@ export default function Refresh({ label = 'Refresh from Instagram' }: { label?: 
     setBusy(true)
     setMsg(null)
     try {
-      const r = await fetch('/api/instagram/refresh', { method: 'POST' })
+      const r = await fetch(endpoint, { method: 'POST' })
       const j = await r.json().catch(() => ({}))
       if (r.ok && j.ok) {
         setMsg(`Updated · ${j.posts} posts${j.warnings?.length ? ` · not saved: ${j.warnings.join('; ')}` : ''}`)

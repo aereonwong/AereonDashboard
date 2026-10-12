@@ -45,3 +45,27 @@
 .lk-bar-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 .lk-bars b { text-align: right; font-variant-numeric: tabular-nums; }
 .lk-bars small { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* Insights: range switch, KPI strip, per-day columns, section table. */
+.lk-range { display: inline-flex; gap: 4px; align-self: flex-start; }
+.lk-range a { padding: 6px 12px; border-radius: 999px; font-size: var(--t-sm); color: var(--ink-2); text-decoration: none; border: 1px solid var(--line-2); }
+.lk-range a.is-on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.lk-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-4); }
+.lk-kpi { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lk-kpi span { font-size: var(--t-xs); color: var(--ink-3); }
+.lk-kpi b { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.lk-kpi small { font-size: var(--t-xs); color: var(--ink-2); }
+@media (max-width: 860px) { .lk-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.lk-days { list-style: none; margin: 0; padding: 0; height: 120px; display: flex; align-items: flex-end; gap: 3px; }
+.lk-days li { flex: 1 1 0; height: 100%; display: flex; align-items: flex-end; border-radius: 3px; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.lk-days li span { display: block; width: 100%; min-height: 0; border-radius: 3px; background: var(--accent); }
+.lk-days-dense { gap: 1px; }
+.lk-days-axis { display: flex; justify-content: space-between; margin: var(--space-2) 0 0; font-size: var(--t-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.lk-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.lk-table th { text-align: right; font-weight: 500; color: var(--ink-3); font-size: var(--t-xs); padding: 0 0 var(--space-2); }
+.lk-table th:first-child, .lk-table td:first-child { text-align: left; }
+.lk-table td { text-align: right; padding: var(--space-2) 0; border-top: 1px solid var(--line); }
+.lk-table td:last-child { font-weight: 600; }
+.lk-tip code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.95em; }

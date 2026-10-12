@@ -81,7 +81,7 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 ## Scheduled
 
 - **`cron-instagram` runs daily at 6:00am MYT** (`0 22 * * *` UTC) — the only cron. It only reads
-  Instagram through Composio and writes history rows; no Claude call, no message.
+  Instagram and the Facebook Page through Composio and writes history rows; no Claude call, no message.
 - **`cron-daily` is no longer scheduled** — Aereon removed the 8:30am job on 27 Sep 2026. The
   route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
   it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
@@ -99,6 +99,25 @@ its structure and design-system pointers. **One look since 3 Oct 2026: Studio St
 Contact Sheet and Flight HUD were removed at Aereon's request. **Only v3 is developed**; v1 and v2
 stay as they are (they must still build). Analytics or design changes cover Dashboard, Invoice
 Summary, Invoice Details, Instagram and Clients together.
+
+## Facebook — the Aereon Wong Page (added 12 Oct 2026)
+
+`/facebook` (v3 Social group beside Instagram; classic layouts get the same page in a v3 frame) and a combined
+Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top KPI becomes "Social reach").
+- Connection: Composio project auth config `facebook-dashboard`, user `aereon` (OAuth done by Aereon 12 Oct 2026).
+  Page id `835556219912496` (public; `FB_PAGE_ID` overrides). The connection can also see "Discover Kuala Lumpur" — not used.
+- Tables (`supabase/facebook.sql`): `fb_page_daily` (one row per day: followers, follows, unfollows, views, viewers,
+  engagements, video views — back to Aug 2024 for views), `fb_page_periods` (rolling 28-day totals per day, Facebook's
+  own unique count), `fb_posts`, `fb_post_metrics` (+ view `fb_post_latest`).
+- Meta retired impressions/reach on 15 Nov 2025: **views** = every showing (additive), **viewers** = unique people,
+  true only per day or per 28-day window — never add viewers across days, windows or posts. Typical post = median viewers.
+- Fetch in `lib/fb-fetch.ts` (no imports, shared with `scripts/fb-backfill.mjs`), refresh in `lib/fb-refresh.ts`,
+  read + maths in `lib/facebook.ts`. Two Graph quirks, both answer EMPTY instead of failing: all seven daily
+  metrics in one 89-day call (asked in groups of ≤3), and a heavy page of posts (paging starts at 25 and halves).
+- The daily `cron-instagram` (6am MYT) refreshes Facebook too (last 10 days + posts of the last 30 days); the
+  Refresh button on the page calls `/api/facebook/refresh`. `npm run fb:backfill` (Mac, Composio CLI via
+  `composio dev playground-execute` against the project) fills history: page figures from Aug 2024, posts from 1 Jan 2025.
+- Combined figures add platforms, so someone on both counts twice — the UI says so. Empty in demo mode.
 
 **Instagram Content Lab** (10 Oct 2026, `app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
 read in `lib/v3/content-lab.ts`): the second view of the v3 Instagram page, chosen per device in Settings

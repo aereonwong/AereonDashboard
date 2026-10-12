@@ -22,6 +22,7 @@ export const V3_NAV: { title: string; items: { href: string; label: string; icon
     title: 'Social',
     items: [
       { href: '/instagram', label: 'Instagram', icon: 'instagram' },
+      { href: '/facebook', label: 'Facebook', icon: 'facebook' },
       { href: '/news', label: 'News', icon: 'news' },
     ],
   },
