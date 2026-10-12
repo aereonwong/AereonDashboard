@@ -79,9 +79,15 @@ const HOSTS: [RegExp, string][] = [
   [/youtube|youtu\.be/, 'YouTube'], [/xiaohongshu|xhslink/, 'Xiaohongshu'], [/linkedin|lnkd\.in/, 'LinkedIn'],
 ]
 
-/** Where a visit came from: the app it opened in, else a ?utm_source= tag, else the referring site. */
+/** Where a visit came from: the app it opened in (plus your own ?utm_source= tag, e.g. "Instagram · bio"),
+ *  else the tag, else the referring site. */
 export function sourceOf(r: Pick<VisitRow, 'browser' | 'utm_source' | 'referrer_host'>): string {
-  if (r.browser && APPS[r.browser]) return APPS[r.browser]
+  if (r.browser && APPS[r.browser]) {
+    // Inside an app, your own tag splits it (bio / story / reel); the app's automatic tag (ig…) does not.
+    const app = APPS[r.browser]
+    const tag = (r.utm_source ?? '').trim()
+    return tag && UTM[tag.toLowerCase()] !== app ? `${app} · ${tag}` : app
+  }
   if (r.utm_source) {
     // Apps add their own short tags (Instagram's bio link adds utm_source=ig).
     const t = r.utm_source.toLowerCase()

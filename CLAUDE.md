@@ -247,7 +247,8 @@ send a beacon via `app/hello/TapTracker.tsx` to `/api/track`, logged in `site_vi
 insights (`lib/hello-stats.ts` reads, `lib/hello-insights.ts` is the tested maths): 7/30/90-day switch, visitors (daily
 hash, so one person on two days counts twice), funnel (opened a section / started an email / opened a promo / went
 to a social), per-section opened → acted, taps, sources (in-app browser from `parseUa` — Instagram, Threads, Facebook,
-TikTok, Xiaohongshu, LINE — else `utm_source` with short tags like `ig` named, else referrer), countries, cities, devices. **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
+TikTok, Xiaohongshu, LINE — split by Aereon's own `utm_source` tag, e.g. "Instagram · bio" (the app's own `ig` tag doesn't
+split); else the tag, with short tags like `ig` named; else referrer). Bio link: `aereonwong.com/hello?utm_source=bio`), countries, cities, devices. **Share card:** `app/hello/opengraph-image.tsx` (+ `twitter-image.tsx`), rebuilt
 every 6 hours; `/hello` is a public PREFIX so these image routes are reachable. Tourist shoots show `shootFrom`
 ("From USD 150", editable).
 
