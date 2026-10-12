@@ -215,7 +215,10 @@ export default async function Invoices({ rows, filters }: { rows: Rec[]; filters
                       <td>{l.client}</td>
                       <td className="r num">{rmFull(l.amount)}</td>
                       <td className="r num">{l.posts}</td>
-                      <td className="r num">{l.reach !== null ? num(l.reach) : '—'}</td>
+                      <td className="r num">
+                        {l.reach !== null ? num(l.reach) : '—'}
+                        {l.read < l.posts ? <span className="v3-panel-note"> · {l.read} of {l.posts} read</span> : null}
+                      </td>
                       <td className="r num">{rmCpm(l.cpm)}</td>
                     </tr>
                   ))}

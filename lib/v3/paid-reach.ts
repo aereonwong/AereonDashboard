@@ -9,7 +9,8 @@ import { inRange, type Filters } from './filters'
 //
 // Reach is unique per post. A line's reach adds its posts together, so someone who saw two
 // posts counts twice — the panel says so. A post with no stored reading yet is left out of
-// the reach, and its invoice out of the CPM, rather than counted as zero.
+// the reach, and its invoice out of the CPM (unless EVERY post has one), rather than counted as
+// zero — dividing the whole fee by one post's reach would overstate the price.
 
 export type PaidLine = {
   id: number
@@ -18,9 +19,11 @@ export type PaidLine = {
   date: string
   amount: number
   posts: number
+  /** Posts with a stored reach reading. */
+  read: number
   /** Sum of each read post's latest reach; null when none of its posts has a reading. */
   reach: number | null
-  /** RM per 1,000 reach; null without reach. */
+  /** RM per 1,000 reach; null unless every post has a reading. */
   cpm: number | null
 }
 
@@ -73,12 +76,13 @@ export function paidReach(rows: Rec[], f: Filters, reach: Record<string, { reach
       date: i.date,
       amount: i.amount,
       posts: posts.length,
+      read: read.length,
       reach: total,
-      cpm: total ? (i.amount / total) * 1000 : null,
+      cpm: total && read.length === posts.length ? (i.amount / total) * 1000 : null,
     })
   }
   lines.sort((a, b) => (a.cpm ?? Infinity) - (b.cpm ?? Infinity))
-  const withReach = lines.filter(l => l.reach)
+  const withReach = lines.filter(l => l.cpm !== null)
   const amt = withReach.reduce((s, l) => s + l.amount, 0)
   const rch = withReach.reduce((s, l) => s + (l.reach ?? 0), 0)
   return {
