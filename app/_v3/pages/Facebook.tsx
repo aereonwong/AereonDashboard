@@ -15,7 +15,7 @@ import { compact, num, longDate, shortDate } from '../fmt'
 
 type Params = Record<string, string | string[] | undefined>
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
-const per100 = (n: number) => (n >= 10 ? n.toFixed(0) : n.toFixed(1))
+const per100 = (n: number) => (n >= 10 ? n.toFixed(0) : n.toFixed(n >= 1 ? 1 : 2))
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(2, 4)}`
 const TYPE_LABEL: Record<string, string> = { VIDEO: 'Videos', PHOTO: 'Photos', LINK: 'Links', TEXT: 'Text posts' }
