@@ -126,9 +126,9 @@ export default async function Links({ searchParams }: { searchParams: Promise<Re
               <div style={{ marginTop: 'var(--space-4)' }}><Bars rows={st.devices} of={st.visits} /></div>
             </Panel>
             <p className="v3-span-12 v3-panel-note lk-tip">
-              Tip: tag links you post elsewhere so they show up by name under &ldquo;Where they came from&rdquo;, e.g.
-              <code> aereonwong.com/hello?utm_source=story</code> for a Story or <code>?utm_source=tiktok</code> for your TikTok bio.
-              Instagram and Threads visits are recognised automatically.
+              Tip: tag each place you post the link and it gets its own line under &ldquo;Where they came from&rdquo;:
+              Instagram bio <code>aereonwong.com/hello?utm_source=bio</code>, Story <code>?utm_source=story</code>,
+              Reel caption <code>?utm_source=reel</code>, TikTok bio <code>?utm_source=tiktok</code>.
             </p>
           </>
         ) : null}

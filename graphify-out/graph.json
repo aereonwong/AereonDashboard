@@ -9527,7 +9527,7 @@
       "file_type": "code",
       "norm_label": "analysehello()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L111"
+      "source_location": "L117"
     },
     {
       "id": "lib_hello_insights_bump",
@@ -9539,7 +9539,7 @@
       "file_type": "code",
       "norm_label": "bump()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L109"
+      "source_location": "L115"
     },
     {
       "id": "lib_hello_insights_bycount",
@@ -9551,7 +9551,7 @@
       "file_type": "code",
       "norm_label": "bycount()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L102"
+      "source_location": "L108"
     },
     {
       "id": "lib_hello_insights_countryname",
@@ -9563,7 +9563,7 @@
       "file_type": "code",
       "norm_label": "countryname()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L98"
+      "source_location": "L104"
     },
     {
       "id": "lib_hello_insights_labelof",
@@ -9599,7 +9599,7 @@
       "file_type": "code",
       "norm_label": "sourceof()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L83"
+      "source_location": "L84"
     },
     {
       "id": "lib_hello_insights_top",
@@ -9611,7 +9611,7 @@
       "file_type": "code",
       "norm_label": "top()",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L103"
+      "source_location": "L109"
     },
     {
       "id": "app_app_content_page_content",
@@ -39109,7 +39109,7 @@
       "file_type": "code",
       "norm_label": "region",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L95"
+      "source_location": "L101"
     },
     {
       "id": "lib_hello_insights_section",
@@ -46627,7 +46627,7 @@
       "node_kind": "heading",
       "norm_label": "agent reach \u2014 internet access for research (installed 2 oct 2026)",
       "source_file": "CLAUDE.md",
-      "source_location": "L354"
+      "source_location": "L355"
     },
     {
       "id": "claude_appearance",
@@ -46783,7 +46783,7 @@
       "node_kind": "heading",
       "norm_label": "folder move (27 sep 2026)",
       "source_file": "CLAUDE.md",
-      "source_location": "L334"
+      "source_location": "L335"
     },
     {
       "id": "claude_graphify",
@@ -46795,7 +46795,7 @@
       "node_kind": "heading",
       "norm_label": "graphify",
       "source_file": "CLAUDE.md",
-      "source_location": "L324"
+      "source_location": "L325"
     },
     {
       "id": "claude_house_rules",
@@ -46807,7 +46807,7 @@
       "node_kind": "heading",
       "norm_label": "house rules",
       "source_file": "CLAUDE.md",
-      "source_location": "L259"
+      "source_location": "L260"
     },
     {
       "id": "claude_hyperframes_html_to_mp4_video_installed_2_oct_2026",
@@ -46819,7 +46819,7 @@
       "node_kind": "heading",
       "norm_label": "hyperframes \u2014 html to mp4 video (installed 2 oct 2026)",
       "source_file": "CLAUDE.md",
-      "source_location": "L338"
+      "source_location": "L339"
     },
     {
       "id": "claude_link_page_hello_added_11_oct_2026",
@@ -46855,7 +46855,7 @@
       "node_kind": "heading",
       "norm_label": "motion skills (installed 2 oct 2026)",
       "source_file": "CLAUDE.md",
-      "source_location": "L285"
+      "source_location": "L286"
     },
     {
       "id": "claude_property_tab_home_loans_added_4_oct_2026",
@@ -46879,7 +46879,7 @@
       "node_kind": "heading",
       "norm_label": "raising an invoice or a quotation",
       "source_file": "CLAUDE.md",
-      "source_location": "L254"
+      "source_location": "L255"
     },
     {
       "id": "claude_reading_documents",
@@ -46891,7 +46891,7 @@
       "node_kind": "heading",
       "norm_label": "reading documents",
       "source_file": "CLAUDE.md",
-      "source_location": "L318"
+      "source_location": "L319"
     },
     {
       "id": "claude_review_agents_claude_agents",
@@ -46903,7 +46903,7 @@
       "node_kind": "heading",
       "norm_label": "review agents (`.claude/agents/`)",
       "source_file": "CLAUDE.md",
-      "source_location": "L271"
+      "source_location": "L272"
     },
     {
       "id": "claude_scheduled",
@@ -47047,7 +47047,7 @@
       "node_kind": "heading",
       "norm_label": "this is not the next.js you know",
       "source_file": "CLAUDE.md",
-      "source_location": "L380"
+      "source_location": "L381"
     },
     {
       "id": "claude_skills_after_effects_references_performance_triage",
@@ -60315,7 +60315,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L129",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -60327,7 +60327,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L129",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -60339,7 +60339,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -60351,7 +60351,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L146",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -60363,7 +60363,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L174",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -66195,7 +66195,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/hello.test.mjs",
-      "source_location": "L103",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -101056,7 +101056,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L380",
+      "source_location": "L381",
       "weight": 1.0
     },
     {
@@ -101155,7 +101155,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L254",
+      "source_location": "L255",
       "weight": 1.0
     },
     {
@@ -101166,7 +101166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L259",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -101188,7 +101188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L271",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -101199,7 +101199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L285",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -101210,7 +101210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L318",
+      "source_location": "L319",
       "weight": 1.0
     },
     {
@@ -101221,7 +101221,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L324",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -101232,7 +101232,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L334",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -101243,7 +101243,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L338",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -101254,7 +101254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CLAUDE.md",
-      "source_location": "L354",
+      "source_location": "L355",
       "weight": 1.0
     },
     {
@@ -122885,13 +122885,35 @@
     },
     {
       "source": "lib_hello_insights",
+      "target": "lib_hello_insights_region",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/hello-insights.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_hello_insights",
+      "target": "lib_hello_insights_countryname",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/hello-insights.ts",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "lib_hello_insights",
       "target": "lib_hello_insights_bycount",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L102",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -122902,7 +122924,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L103",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -122913,7 +122935,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L109",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -122924,7 +122946,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L111",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -123067,29 +123089,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L83",
-      "weight": 1.0
-    },
-    {
-      "source": "lib_hello_insights",
-      "target": "lib_hello_insights_region",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/hello-insights.ts",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "lib_hello_insights",
-      "target": "lib_hello_insights_countryname",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/hello-insights.ts",
-      "source_location": "L98",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -131715,7 +131715,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L173",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -131727,7 +131727,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L175",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -131739,7 +131739,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "lib/hello-insights.ts",
-      "source_location": "L104",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -132579,7 +132579,7 @@
       "confidence_score": 0.95,
       "context": "main",
       "source_file": "CLAUDE.md",
-      "source_location": "L266",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -132956,5 +132956,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c30fd8b71b485679c5e258d620a2f687c7cfd844"
+  "built_at_commit": "847d5ce8d51e1827ab949444f158344cda65f14a"
 }
