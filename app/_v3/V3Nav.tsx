@@ -41,6 +41,16 @@ export const V3_NAV: NavGroup[] = [
     ],
   },
   {
+    title: 'Property',
+    items: [
+      { href: '/property', label: 'Overview', icon: 'home' },
+      { href: '/property/loans', label: 'Loans', icon: 'wallet' },
+      { href: '/property/tenancy', label: 'Tenancy', icon: 'users' },
+      { href: '/property/costs', label: 'Running costs', icon: 'cash-out' },
+      { href: '/property/submeter', label: 'Sub-meter', icon: 'chart' },
+    ],
+  },
+  {
     title: 'Classic tabs',
     folded: true,
     items: [
@@ -50,16 +60,6 @@ export const V3_NAV: NavGroup[] = [
       { href: '/customers', label: 'Customers', icon: 'customers' },
       { href: '/content', label: 'Content', icon: 'content' },
       { href: '/tasks', label: 'Tasks', icon: 'tasks' },
-    ],
-  },
-  {
-    title: 'Property',
-    items: [
-      { href: '/property', label: 'Overview', icon: 'home' },
-      { href: '/property/loans', label: 'Loans', icon: 'wallet' },
-      { href: '/property/tenancy', label: 'Tenancy', icon: 'users' },
-      { href: '/property/costs', label: 'Running costs', icon: 'cash-out' },
-      { href: '/property/submeter', label: 'Sub-meter', icon: 'chart' },
     ],
   },
 ]
