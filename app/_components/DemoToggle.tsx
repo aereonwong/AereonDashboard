@@ -42,7 +42,7 @@ export default function DemoToggle({ initial }: { initial: boolean }) {
   }
 
   return (
-    <div className={`switchrow${on ? ' demo-flag' : ''}`}>
+    <div data-edit="" className={`switchrow${on ? ' demo-flag' : ''}`}>
       <div style={{ flex: 1 }}>
         <p className="sr-t">Use demo data 🔒</p>
         <p className="sr-s">

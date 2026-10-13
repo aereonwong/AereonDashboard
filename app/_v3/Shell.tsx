@@ -8,15 +8,18 @@ export default function Shell({
   pending,
   demo,
   who,
+  viewOnly = false,
   children,
 }: {
   pending: number
   demo: boolean
   who: string | null
+  /** Viewer role: edit controls (marked data-edit) are hidden. The server refuses them anyway. */
+  viewOnly?: boolean
   children: React.ReactNode
 }) {
   return (
-    <div className={`v3 ${v3Fonts}`} data-world="canon">
+    <div className={`v3 ${v3Fonts}`} data-world="canon" data-view-only={viewOnly ? '' : undefined}>
       <div className="v3-backdrop" aria-hidden="true" />
       <V3MobileBar />
       <div className="v3-app">

@@ -24,7 +24,7 @@ export default function ApproveButtons({ id }: { id: number }) {
     })
 
   return (
-    <div className="btnrow">
+    <div data-edit="" className="btnrow">
       <button className="btn" disabled={pending} onClick={() => decide(approveAction)}>
         {pending ? '…' : '✅ Approve'}
       </button>

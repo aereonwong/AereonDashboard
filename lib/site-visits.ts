@@ -14,6 +14,9 @@ export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '
 export const HELLO_EVENT = /^\/hello\/(tap\/(collab|shoot|drone|deals|gear)|out\/[a-z0-9-]{1,40})$/
 /** Most /hello tap rows one visitor may add per 10 minutes — made-up ids can't flood the log. */
 export const HELLO_TAP_CAP = 20
+/** Rows per Malaysian day, all visitors together. Real traffic is in the tens; this only stops a
+ *  flood (a script rotating X-Forwarded-For gets a fresh visitor hash each time). */
+export const DAILY_ROW_CAP = 5000
 
 export const isTrackedPath = (path: string) => TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path)
 

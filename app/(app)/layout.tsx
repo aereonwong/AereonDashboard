@@ -6,18 +6,18 @@ import { getPendingCount, demoMode } from '@/lib/records'
 import { readVersion } from '@/lib/v3/version'
 import V3Shell from '@/app/_v3/Shell'
 import { redirect } from 'next/navigation'
-import { signedIn, sessionUser } from '@/lib/auth'
+import { canEdit, signedIn, sessionUser } from '@/lib/auth'
 
 // The dashboard chrome: sidebar on desktop, bottom bar on phones. Everything
 // inside app/(app)/ gets it; the landing page and /login do not.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // Locked or removed in Users? Out they go (the cookie alone is still valid).
   if (!(await signedIn())) redirect('/login?error=revoked')
-  const [pending, demo, { version }, who] = await Promise.all([getPendingCount(), demoMode(), readVersion(), sessionUser()])
+  const [pending, demo, { version }, who, editor] = await Promise.all([getPendingCount(), demoMode(), readVersion(), sessionUser(), canEdit()])
   // v3 is a whole-app version with its own chrome; v1 and v2 share the classic one.
   if (version === 'v3') {
     return (
-      <V3Shell pending={pending} demo={demo} who={who}>
+      <V3Shell pending={pending} demo={demo} who={who} viewOnly={!editor}>
         {children}
       </V3Shell>
     )

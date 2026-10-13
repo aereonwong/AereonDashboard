@@ -130,9 +130,19 @@ html[data-theme="dark"] .v3[data-world="canon"] {
 .v3-brand-name { font-family: var(--f-display); font-weight: 700; font-size: var(--t-lg); line-height: 1.1; letter-spacing: 0.01em; }
 .v3-brand-sub { display: block; font-size: var(--t-xs); color: var(--ink-3); font-family: var(--f-ui); font-weight: 500; letter-spacing: 0; text-transform: none; }
 
+/* Viewer role (Users page): hide what they can't use. The server refuses it regardless. */
+.v3[data-view-only] [data-edit] { display: none !important; }
+
 .v3-nav { display: flex; flex-direction: column; gap: var(--space-3); }
 .v3-nav-group { display: flex; flex-direction: column; gap: 2px; }
 .v3-nav-title { font-size: var(--t-xs); color: var(--ink-3); padding: 0 var(--space-3) var(--space-1); font-weight: 600; }
+.v3-nav-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+.v3-nav-fold > summary::-webkit-details-marker { display: none; }
+.v3-nav-fold > summary::after { content: '›'; transition: transform 0.15s ease-out; }
+.v3-nav-fold[open] > summary::after { transform: rotate(90deg); }
+.v3-nav-fold > summary:hover { color: var(--ink); }
+.v3-nav-fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .v3-nav-fold > summary::after { transition: none; } }
 .v3-nav a {
   display: flex; align-items: center; gap: var(--space-3);
   padding: 6px var(--space-3); text-decoration: none; color: var(--ink-2);
