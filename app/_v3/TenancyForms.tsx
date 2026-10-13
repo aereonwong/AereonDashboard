@@ -334,7 +334,7 @@ export function CostsBrowser({ costs, rent, tenants }: { costs: Cost[]; rent: nu
                   <tr data-recovered={c.recovered_from_deposit || undefined}>
                     <td>{dmy(c.cost_date)}</td>
                     <td>{KIND_LABEL[c.kind]}</td>
-                    <td className="num">{sen(c.amount)}</td>
+                    <td className="num" data-money>{sen(c.amount)}</td>
                     <td>{[c.description, c.vendor, c.tenant_name ? `for ${c.tenant_name}` : null, c.recovered_from_deposit ? 'deducted from deposit — not your cost' : null].filter(Boolean).join(' · ') || '—'}</td>
                     <td>
                       <RowButtons editing={open === c.id} toggle={() => setOpen(open === c.id ? null : c.id)} remove={() => deletePropertyCost(c.id)} what="cost" />
@@ -395,7 +395,7 @@ export function TermTable({ terms, today: now, tenants }: { terms: Tenancy[]; to
                 <td>
                   {dmy(t.start_date)} – {dmy(t.end_date)}
                 </td>
-                <td className="num">{sen(t.monthly_rent)}</td>
+                <td className="num" data-money>{sen(t.monthly_rent)}</td>
                 <td>{t.start_date > now ? 'Upcoming' : t.end_date < now ? 'Ended' : 'Current'}</td>
                 <td>
                   <RowButtons editing={open === t.id} toggle={() => setOpen(open === t.id ? null : t.id)} remove={() => deleteTenancyTerm(t.id)} what="term" />

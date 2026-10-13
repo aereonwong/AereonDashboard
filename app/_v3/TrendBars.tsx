@@ -62,7 +62,7 @@ export default function TrendBars({ months }: { months: MonthPoint[] }) {
           </g>
           <g className="axis">
             {[0, 0.5, 1].map(t => (
-              <text key={t} x={PAD.l - 8} y={y(t * top) + 4} textAnchor="end">
+              <text key={t} x={PAD.l - 8} y={y(t * top) + 4} textAnchor="end" data-money>
                 {compact(t * top)}
               </text>
             ))}

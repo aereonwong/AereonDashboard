@@ -157,7 +157,7 @@ export function MixByYear({ sum }: { sum: Summary }) {
               return p.share ? <i key={kind} data-i={i} style={{ flexGrow: p.share }} title={`${kind}: ${pctTxt(p.share)}`} /> : null
             })}
           </span>
-          <span className="v3-mix-total num">{y.total ? compact(y.total) : '—'}</span>
+          <span className="v3-mix-total num" data-money>{y.total ? compact(y.total) : '—'}</span>
         </div>
       ))}
       <div className="v3-mix-key">
@@ -236,7 +236,7 @@ export function Cohorts({ sum }: { sum: Summary }) {
             <span role="rowheader" className="v3-rvw-label">
               {shown(i) ? c.label : <span className="sr-only">{c.label}</span>}
             </span>
-            <span role="cell" className="v3-rvw-num">
+            <span role="cell" className="v3-rvw-num" data-money>
               {shown(i) ? compact(c.fresh + c.returning) : <span className="sr-only">{compact(c.fresh + c.returning)}</span>}
             </span>
           </div>

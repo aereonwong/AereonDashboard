@@ -5,6 +5,7 @@ import ThemeToggle from '@/app/_components/ThemeToggle'
 import { getPendingCount, demoMode } from '@/lib/records'
 import { readVersion } from '@/lib/v3/version'
 import V3Shell from '@/app/_v3/Shell'
+import MoneyMask from '@/app/_components/MoneyMask'
 import { redirect } from 'next/navigation'
 import { canEdit, signedIn, sessionUser } from '@/lib/auth'
 
@@ -17,9 +18,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // v3 is a whole-app version with its own chrome; v1 and v2 share the classic one.
   if (version === 'v3') {
     return (
-      <V3Shell pending={pending} demo={demo} who={who} viewOnly={!editor}>
-        {children}
-      </V3Shell>
+      <>
+        <V3Shell pending={pending} demo={demo} who={who} viewOnly={!editor}>
+          {children}
+        </V3Shell>
+        <MoneyMask />
+      </>
     )
   }
   return (
@@ -54,6 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
       <BottomNav />
+      <MoneyMask />
     </>
   )
 }
