@@ -61,7 +61,7 @@ export default function PaceChart({ pace, year }: { pace: PacePoint[]; year: num
         </g>
         <g className="axis">
           {ticks.map(t => (
-            <text key={t} x={PAD.l - 10} y={y(t) + 4} textAnchor="end">
+            <text key={t} x={PAD.l - 10} y={y(t) + 4} textAnchor="end" data-money>
               {compact(t)}
             </text>
           ))}

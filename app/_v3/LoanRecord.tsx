@@ -67,6 +67,7 @@ export default function LoanRecord({
           <input
             className="v3-select num"
             name="instalment"
+            data-money
             inputMode="decimal"
             autoComplete="off"
             placeholder={chosen?.instalment != null ? sen(chosen.instalment) : ''}

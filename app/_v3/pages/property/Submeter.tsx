@@ -382,7 +382,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
                       </td>
                     ))}
                     <td className="r num">{pct(c.gap)}</td>
-                    <td className="r num">{sen(c.bill.amount)}</td>
+                    <td className="r num" data-money>{sen(c.bill.amount)}</td>
                     <td className="r num">
                       {per(c.perKwh)}
                       {c.perKwhFrom === 'submeters' ? <i className="v3-sub-est"> est.</i> : null}
@@ -503,7 +503,7 @@ function ChargeRow({ s, reading, tenants, tagging, paying, earlier }: { s: Segme
       <td className="r num">{kwh(reading?.reading)}</td>
       <td className="r num">{kwh(s.kwh)} kWh</td>
       <td className="r num">{s.perDay.toFixed(1)}</td>
-      <td className="r num">{s.rate != null ? sen(s.rate) : '—'}</td>
+      <td className="r num" data-money>{s.rate != null ? sen(s.rate) : '—'}</td>
       <td>
         <DeleteRow id={s.id} kind="reading" />
       </td>
@@ -575,9 +575,9 @@ function TnbVsBilled({ pnl }: { pnl: ReturnType<typeof tnbVsTenants> }) {
                   </div>
                   {r.why ? <span className="v3-tag">{r.why} · not in the totals</span> : null}
                 </td>
-                <td className="r num">{sen(r.tnb)}</td>
-                <td className="r num">{sen(r.billed)}</td>
-                <td className="r num">{sen(r.collected)}</td>
+                <td className="r num" data-money>{sen(r.tnb)}</td>
+                <td className="r num" data-money>{sen(r.billed)}</td>
+                <td className="r num" data-money>{sen(r.collected)}</td>
                 <td className="r num v3-sub-diff" data-tone={r.covered ? (r.diff >= 0 ? 'pos' : 'neg') : undefined}>
                   {r.covered ? rm(r.diff) : '—'}
                 </td>

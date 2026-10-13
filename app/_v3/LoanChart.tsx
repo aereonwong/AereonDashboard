@@ -79,9 +79,9 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
           <line x1={PAD.l} x2={W - PAD.r} y1={H - PAD.b} y2={H - PAD.b} />
         </g>
         <g className="axis">
-          <text x={PAD.l - 8} y={yb(hi) + 5} textAnchor="end">{k(hi)}</text>
-          <text x={PAD.l - 8} y={yb(lo) + 5} textAnchor="end">{k(lo)}</text>
-          <text x={PAD.l - 8} y={yi(top) + 14} textAnchor="end">{k(top)}</text>
+          <text x={PAD.l - 8} y={yb(hi) + 5} textAnchor="end" data-money>{k(hi)}</text>
+          <text x={PAD.l - 8} y={yb(lo) + 5} textAnchor="end" data-money>{k(lo)}</text>
+          <text x={PAD.l - 8} y={yi(top) + 14} textAnchor="end" data-money>{k(top)}</text>
           <text x={PAD.l - 8} y={H - PAD.b} textAnchor="end">0</text>
           {years.filter((_, j) => j % every === 0).map(p => (
             <text key={p.y} x={PAD.l + band * p.i} y={H - 6}>{p.y}</text>

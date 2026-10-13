@@ -210,7 +210,7 @@ function MonthTable({ rows }: { rows: LoanMonth[] }) {
           {rows.map(m => (
             <tr key={m.month} data-status={m.status} title={m.note ?? undefined}>
               <td>{mon(m.month)}</td>
-              <td className="num">
+              <td className="num" data-money>
                 {sen(m.outstanding_balance)}
                 {m.added ? <span className="v3-prop-added">+{sen(m.added)} added by bank</span> : null}
               </td>

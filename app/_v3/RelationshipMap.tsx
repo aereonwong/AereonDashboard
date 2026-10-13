@@ -50,7 +50,7 @@ export default function RelationshipMap({ list, median }: { list: Relationship[]
         <line className="divider" x1={PAD.l} x2={W - PAD.r} y1={y(median)} y2={y(median)} />
         <g className="axis">
           {ticks.map(t => (
-            <text key={t} x={PAD.l - 8} y={y(t) + 4} textAnchor="end">
+            <text key={t} x={PAD.l - 8} y={y(t) + 4} textAnchor="end" data-money>
               {compact(t)}
             </text>
           ))}

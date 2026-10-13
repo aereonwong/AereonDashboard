@@ -102,7 +102,7 @@ export default function MixTrend({ lenses }: { lenses: LensData[] }) {
               })}
               </div>
             </div>
-            <p className="mix-total">{compact(b.total)}</p>
+            <p className="mix-total" data-money>{compact(b.total)}</p>
             <p className="mix-period">{b.label}</p>
           </div>
         ))}

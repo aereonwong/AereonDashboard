@@ -52,7 +52,7 @@ export default function Strip({
             onClick={() => pick(f)}
             aria-label={f.future ? `${f.label}: still to come` : `${f.label}: ${rmFull(f.total)} from ${f.count} invoices`}
           >
-            <span className="v3-cell-v num">{f.future ? '' : f.total ? compact(f.total) : '0'}</span>
+            <span className="v3-cell-v num" data-money>{f.future ? '' : f.total ? compact(f.total) : '0'}</span>
             <span className="v3-cell-m">{f.label}</span>
           </button>
         ))}

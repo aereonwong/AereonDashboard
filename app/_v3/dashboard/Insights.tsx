@@ -201,6 +201,7 @@ export function SeasonsGrid({ s }: { s: Seasons }) {
                 role="cell"
                 key={c.month}
                 className="v3-season-cell"
+                data-money
                 data-future={c.future ? 'true' : undefined}
                 data-strong={c.total / s.peak >= 0.55 ? 'true' : undefined}
                 style={{ ['--a' as string]: (c.total / s.peak).toFixed(3) }}
@@ -209,7 +210,7 @@ export function SeasonsGrid({ s }: { s: Seasons }) {
                 {c.future ? '' : c.total ? compact(c.total) : '·'}
               </span>
             ))}
-            <span role="cell" className="v3-season-total num">
+            <span role="cell" className="v3-season-total num" data-money>
               {compact(row.total)}
             </span>
           </div>
@@ -275,7 +276,7 @@ export function ReachAndWork({ v, client }: { v: ReachVsWork; client?: string })
             <span role="cell" className="v3-rvw-num">
               {m.posts ? compact(m.reach) : '0 posts'}
             </span>
-            <span role="cell" className="v3-rvw-num rm">
+            <span role="cell" className="v3-rvw-num rm" data-money>
               {m.invoiced ? compact(m.invoiced) : '—'}
             </span>
           </div>
