@@ -23,7 +23,7 @@ export type SocialPost = {
   kind: string // Reel, Carousel, Photo, Video, Link…
   people: number | null // Instagram reach / Facebook viewers — unique per post
   views: number | null
-  interactions: number
+  interactions: number | null // null when the counts behind it were not all read
   permalink: string | null
   thumb: string | null
 }
@@ -55,7 +55,8 @@ export async function readIgPosts(audience: Audience, days = 365): Promise<Socia
     // refresh re-reads only recent posts, so every post is met within a few pages.
     const want = new Set(posts.map(p => p.media_id as string))
     const latest = new Map<string, any>()
-    for (let from = 0; from < 200_000 && latest.size < want.size; from += 1000) {
+    // Capped at 30 pages: a post with no reading at all must not make every page load walk the whole table.
+    for (let from = 0; from < 30_000 && latest.size < want.size; from += 1000) {
       const { data, error } = await supabase
         .from('ig_post_metrics')
         .select('media_id, captured_at, reach, views, interactions, likes, comments, saved, shares')
@@ -71,16 +72,18 @@ export async function readIgPosts(audience: Audience, days = 365): Promise<Socia
     return posts.map(p => {
       const m = latest.get(p.media_id)
       const s = snapById.get(p.media_id)
-      const interactions =
-        m?.interactions ?? (m?.likes ?? p.likes ?? 0) + (m?.comments ?? p.comments ?? 0) + (m?.saved ?? 0) + (m?.shares ?? 0)
+      // Missing is not zero: without Instagram's own total, every part must have been read.
+      const parts = [m?.likes, m?.comments, m?.saved, m?.shares]
+      const interactions = m?.interactions ?? (parts.every(v => v != null) ? parts.reduce((a, v) => a + v, 0) : null)
       return {
         platform: 'ig' as const,
         id: p.media_id,
         at: p.posted_at,
         title: firstLine(p.caption) || IG_KIND(p.type, p.media_type),
         kind: IG_KIND(p.type, p.media_type),
-        people: m?.reach ?? s?.reach ?? null,
-        views: m?.views ?? s?.views ?? null,
+        // The snapshot stands in only for a post with no stored reading — never over a newer, failed one.
+        people: m ? m.reach : (s?.reach ?? null),
+        views: m ? m.views : (s?.views ?? null),
         interactions,
         permalink: p.permalink ?? s?.permalink ?? null,
         thumb: s?.thumb ?? null, // Instagram covers expire; only the newest snapshot has fresh ones
@@ -96,7 +99,7 @@ export async function readIgPosts(audience: Audience, days = 365): Promise<Socia
       kind: p.type === 'REELS' ? 'Reel' : 'Photo',
       people: p.reach ?? null,
       views: p.views ?? null,
-      interactions: p.interactions ?? p.likes + p.comments + (p.saved ?? 0) + (p.shares ?? 0),
+      interactions: p.interactions ?? (p.saved != null && p.shares != null ? p.likes + p.comments + p.saved + p.shares : null),
       permalink: p.permalink ?? null,
       thumb: p.thumb ?? null,
     }))
@@ -186,16 +189,19 @@ export function buildSocial(audience: Audience, fb: Facebook, posts: SocialPost[
   const fbf = figures('fb')
   // A Facebook window more than a week old would understate the month; leave it out of totals.
   const fbFresh = !!fb.window && fb.window.until >= mytDay(now - 7 * DAY)
+  // Same for Instagram's account row: a stale one would be labelled "last month" when it is not.
+  const igFresh = !!audience.view && Date.parse(audience.view.capturedAt) >= now - 7 * DAY
   const hasIg = !!audience.view || audience.followers > 0
   const hasFb = fb.daily.length > 0 || fb.posts.length > 0
   const add = (a: number | null, b: number | null) => (a !== null && b !== null ? a + b : null)
   const fbWin = (n: number | null) => (fbFresh ? n : null)
+  const igWin = (n: number | null) => (igFresh ? n : null)
   const total = {
     followers: ig.followers + fbf.followers,
     net30: add(ig.net30, fbf.net30),
-    people: add(ig.people, fbWin(fbf.people)),
-    views: add(ig.views, fbWin(fbf.views)),
-    interactions: add(ig.interactions, fbWin(fbf.interactions)),
+    people: add(igWin(ig.people), fbWin(fbf.people)),
+    views: add(igWin(ig.views), fbWin(fbf.views)),
+    interactions: add(igWin(ig.interactions), fbWin(fbf.interactions)),
     posts: ig.posts + fbf.posts,
     perWeek: ig.perWeek + fbf.perWeek,
   }
@@ -239,7 +245,7 @@ export function buildSocial(audience: Audience, fb: Facebook, posts: SocialPost[
   // Drop trailing days neither platform has reported yet.
   while (daily.length && daily.at(-1)!.ig === null && daily.at(-1)!.fb === null) daily.pop()
 
-  return { ig, fb: fbf, total, hasIg, hasFb, fbFresh, ranked, kinds, weeks, daily, days }
+  return { ig, fb: fbf, total, hasIg, hasFb, fbFresh, igFresh, ranked, kinds, weeks, daily, days }
 }
 
 export type Social = ReturnType<typeof buildSocial>

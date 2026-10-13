@@ -48,15 +48,15 @@ function Compare({ s }: { s: S }) {
       note: 'Instagram 30 days · Facebook 28 days',
       ig: ig.people !== null ? compact(ig.people) : '—',
       fb: fb.people !== null ? compact(fb.people) : '—',
-      split: [ig.people, s.fbFresh ? fb.people : null],
+      split: [s.igFresh ? ig.people : null, s.fbFresh ? fb.people : null],
     },
-    { label: 'Views', note: 'every showing', ig: ig.views !== null ? compact(ig.views) : '—', fb: fb.views !== null ? compact(fb.views) : '—', split: [ig.views, s.fbFresh ? fb.views : null] },
+    { label: 'Views', note: 'every showing', ig: ig.views !== null ? compact(ig.views) : '—', fb: fb.views !== null ? compact(fb.views) : '—', split: [s.igFresh ? ig.views : null, s.fbFresh ? fb.views : null] },
     {
       label: 'Interactions',
       note: 'Facebook adds link clicks',
       ig: ig.interactions !== null ? compact(ig.interactions) : '—',
       fb: fb.interactions !== null ? compact(fb.interactions) : '—',
-      split: [ig.interactions, s.fbFresh ? fb.interactions : null],
+      split: [s.igFresh ? ig.interactions : null, s.fbFresh ? fb.interactions : null],
     },
     {
       label: 'Interactions per 100 reached',
@@ -117,7 +117,7 @@ function PostList({ posts }: { posts: (SocialPost & { lift: number })[] }) {
             <div style={{ minWidth: 0 }}>
               <div className="t">{p.title}</div>
               <div className="s">
-                <span className={`v3-soc-tag ${p.platform}`}>{NAME[p.platform]}</span> {p.kind} · {shortDate(p.at)} · {num(p.interactions)} interactions
+                <span className={`v3-soc-tag ${p.platform}`}>{NAME[p.platform]}</span> {p.kind} · {shortDate(p.at)} · {p.interactions !== null ? `${num(p.interactions)} interactions` : 'interactions not read'}
               </div>
             </div>
             <div className="v">
@@ -128,7 +128,8 @@ function PostList({ posts }: { posts: (SocialPost & { lift: number })[] }) {
             </div>
           </>
         )
-        return p.permalink ? (
+        // Only plain https links are followed — a stored value is never trusted as a URL scheme.
+        return p.permalink?.startsWith('https://') ? (
           <a key={`${p.platform}-${p.id}`} className="v3-fb-post" href={p.permalink} target="_blank" rel="noopener noreferrer">
             {body}
           </a>
@@ -161,7 +162,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
     )
   }
 
-  const igShare = share(ig.people, s.fbFresh ? fb.people : null)
+  const igShare = share(s.igFresh ? ig.people : null, s.fbFresh ? fb.people : null)
   const lede = [
     total.people !== null ? `${compact(total.people)} reached across both in the last month` : null,
     igShare !== null ? `${Math.round(igShare * 100)}% of it on Instagram` : null,
@@ -187,6 +188,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
           <p className="v3-chapter-note">
             Added together. People reached is a platform total — someone who follows or sees you on both counts twice.
             {s.hasFb && !s.fbFresh ? ' Facebook’s figures are over a week old, so they are left out of the totals until the next refresh.' : ''}
+            {s.hasIg && !s.igFresh ? ' Instagram’s account figures are over a week old, so they are left out of the totals until the next refresh.' : ''}
           </p>
         </div>
 
