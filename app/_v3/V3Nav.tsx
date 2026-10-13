@@ -5,7 +5,7 @@ import Icon, { type IconName } from '@/app/_components/Icon'
 
 // v3's navigation. The v2 sidebar spread fourteen tabs over eight groups; for a
 // one-person business v3 folds them into four, leading with the pages opened
-// most. News sits under Social, beside Instagram.
+// most. News sits under Social, beside Instagram; Social opens on Overview (/social), both platforms together.
 // The classic Business tabs (Cash In/Out, Leads, Customers, Content, Tasks) sit folded at the
 // bottom since 12 Oct 2026: four were empty and the other two repeat Invoice Details and
 // Clients. Still one click away, and every route still works.
@@ -24,6 +24,7 @@ export const V3_NAV: NavGroup[] = [
   {
     title: 'Social',
     items: [
+      { href: '/social', label: 'Overview', icon: 'chart' },
       { href: '/instagram', label: 'Instagram', icon: 'instagram' },
       { href: '/facebook', label: 'Facebook', icon: 'facebook' },
       { href: '/news', label: 'News', icon: 'news' },

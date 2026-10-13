@@ -19,6 +19,7 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
     { href: '/clients', label: 'Clients', icon: 'clients' },
   ] },
   { label: 'Social', tabs: [
+    { href: '/social', label: 'Social overview', icon: 'chart' },
     { href: '/instagram', label: 'Instagram', icon: 'instagram' },
     { href: '/facebook', label: 'Facebook', icon: 'facebook' },
     { href: '/news', label: 'News', icon: 'news' },
