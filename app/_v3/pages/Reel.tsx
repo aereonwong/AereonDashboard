@@ -9,6 +9,7 @@ import { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
 import { EMAIL } from '@/lib/agent-site'
 import { socials, combined } from '@/lib/socials'
+import type { SocialTotals } from '@/lib/social-totals'
 import { intro as introFor } from '../intro'
 
 // 👉 The motion-reel landing (5 Oct 2026): a third public landing beside the
@@ -36,7 +37,7 @@ const label = (caption: string) => {
   return first.length > 46 ? first.slice(0, 44).trimEnd() + '…' : first
 }
 
-export default function Reel({ audience, kinds, since }: { audience: Audience; kinds: WorkKind[]; since: string }) {
+export default function Reel({ audience, kinds, since, totals }: { audience: Audience; kinds: WorkKind[]; since: string; totals?: SocialTotals }) {
   const { view } = audience
   // Instagram's own 30-day account figures — only while fresh (same rule as kit v2).
   const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
@@ -44,9 +45,16 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
   // up; reach is the best single window, never a sum). Otherwise the last 30 days.
   const d90 = fresh ? (view?.d90 ?? null) : null
   const period: 30 | 90 = d90 && d90.views !== null && d90.peakReach !== null ? 90 : 30
+  // Over 90 days, views and interactions add the Facebook Page when its figures are whole
+  // (lib/social-totals.ts — same windows, same freshness). Reach stays Instagram's: unique people never add.
+  const withFb = period === 90 && !!totals?.platforms.includes('Facebook')
   const reach = period === 90 ? d90!.peakReach! : fresh ? (view?.totals.reach ?? 0) : 0
-  const views = period === 90 ? d90!.views! : fresh ? (view?.totals.views ?? 0) : 0
-  const interactions = period === 90 ? (d90!.interactions ?? 0) : fresh ? (view?.totals.total_interactions ?? 0) : 0
+  const views = withFb && totals!.views ? totals!.views : period === 90 ? d90!.views! : fresh ? (view?.totals.views ?? 0) : 0
+  const interactions =
+    withFb && totals!.interactions ? totals!.interactions
+    : period === 90 ? (d90!.interactions ?? 0) : fresh ? (view?.totals.total_interactions ?? 0) : 0
+  const channels = socials(audience.followers, totals?.followers.facebook)
+  const followers = combined(channels)
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
   // mostly KLCC. The recent best posts are only the fallback.
   const fromShowcase: ReelPost[] = showcase.items
@@ -62,7 +70,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     label: label(p.caption),
     crop: p.crop ? 1 / Math.max(0.3, 1 - p.crop.t - p.crop.b) : undefined,
   }))
-  const intro = introFor(`${Math.floor(combined(socials(audience.followers)) / 1000)}K+`)
+  const intro = introFor(`${Math.floor(followers / 1000)}K+`)
   const posts = fromShowcase.length ? fromShowcase : recent
   const workTitle = fromShowcase.length ? 'Work across the board' : undefined
   const brands = KIT_BRANDS.map(b => {
@@ -70,7 +78,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
     const s = logoSize(b.aspect)
     return { slug: b.slug, name: b.name, w: Math.round(s.w * 1.1), h: Math.round(s.h * 1.1) }
   })
-  const data: ReelData = { followers: audience.followers, reach, views, interactions, period, posts, workTitle, intro, brands, email: EMAIL, ig: IG }
+  const data: ReelData = { followers, reach, views, interactions, period, withFb, posts, workTitle, intro, brands, email: EMAIL, ig: IG }
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
   const women = view?.genders.find(g => /^f/i.test(g.key))
   const men = view?.genders.find(g => /^m/i.test(g.key))
@@ -126,28 +134,28 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
             In numbers
           </h2>
           <dl className="rl-stats">
-            {audience.followers ? (
+            {followers ? (
               <div>
-                <dd className="num">{compact(audience.followers)}</dd>
-                <dt>Followers</dt>
+                <dd className="num">{compact(followers)}</dd>
+                <dt>Combined followers · {channels.filter(s => s.followers).length} platforms</dt>
               </div>
             ) : null}
             {reach ? (
               <div>
                 <dd className="num">{compact(reach)}</dd>
-                <dt>{period === 90 ? 'Reached · best 30 days' : 'Reached · 30 days'}</dt>
+                <dt>{period === 90 ? 'Instagram reach · best 30 days' : 'Instagram reach · 30 days'}</dt>
               </div>
             ) : null}
             {views ? (
               <div>
                 <dd className="num">{compact(views)}</dd>
-                <dt>Views · {period} days</dt>
+                <dt>Views · {period} days{withFb ? ' · IG + FB' : ''}</dt>
               </div>
             ) : null}
             {interactions ? (
               <div>
                 <dd className="num">{compact(interactions)}</dd>
-                <dt>Interactions · {period} days</dt>
+                <dt>Interactions · {period} days{withFb ? ' · IG + FB' : ''}</dt>
               </div>
             ) : null}
           </dl>
@@ -157,7 +165,7 @@ export default function Reel({ audience, kinds, since }: { audience: Audience; k
           <h2 id="rl-social" className="rl-h2 rl-sec">
             Find me on
           </h2>
-          <SocialLinks igFollowers={audience.followers} />
+          <SocialLinks igFollowers={audience.followers} fbFollowers={totals?.followers.facebook} />
         </section>
 
         {view && (view.countries.length || view.ages.length || women || men) ? (

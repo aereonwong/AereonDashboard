@@ -1,6 +1,7 @@
 // 👉 Aereon's social channels, for the landing page and the media kits.
-// Counts other than Instagram's were read off each public profile on 6 Oct 2026 until each
-// platform has its own analytics; Instagram's comes live from the latest snapshot.
+// Counts other than Instagram's and Facebook's were read off each public profile on 6 Oct 2026
+// until each platform has its own analytics; those two come live from the stored history
+// (lib/social-totals.ts) when passed in.
 // Facebook shows only a rounded 30K and Xiaohongshu a 1,000+ bracket publicly;
 // Xiaohongshu's 1.1K is Aereon's own figure.
 
@@ -24,9 +25,13 @@ export const SOCIALS: Social[] = [
   { key: 'youtube', name: 'YouTube', handle: '@AereonWong', url: 'https://www.youtube.com/aereonwong', followers: 3_620 },
 ]
 
-/** The channels with Instagram's live count swapped in when there is one. */
-export function socials(igFollowers?: number): Social[] {
-  return SOCIALS.map(s => (s.key === 'instagram' && igFollowers ? { ...s, followers: igFollowers } : s))
+/** The channels with Instagram's and Facebook's live counts swapped in when there are some. */
+export function socials(igFollowers?: number, fbFollowers?: number): Social[] {
+  return SOCIALS.map(s =>
+    s.key === 'instagram' && igFollowers ? { ...s, followers: igFollowers }
+    : s.key === 'facebook' && fbFollowers ? { ...s, followers: fbFollowers }
+    : s,
+  )
 }
 
 /** Follows added up across platforms. Someone who follows on two platforms counts

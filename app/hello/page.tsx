@@ -14,7 +14,7 @@ import type { Metadata, Viewport } from 'next'
 import { readHello } from '@/lib/hello'
 import { briefMailto, collabMailto, type HelloAffiliate } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
-import { latestAccount, ninety } from '@/lib/instagram'
+import { socialTotals, totalsLabel } from '@/lib/social-totals'
 import { EMAIL } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
@@ -74,13 +74,11 @@ function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string 
 }
 
 export default async function Hello() {
-  // Instagram's last 90 days come from the stored account snapshot (refreshed by the daily cron),
-  // never a live call. Views and interactions add up across the three 30-day windows; reach would not.
-  const [cfg, account] = await Promise.all([readHello(), latestAccount().catch(() => null)])
-  // Hidden once the snapshot is over a week old, so a stalled refresh never passes off old numbers as "90 days".
-  const fresh = account && Date.now() - new Date(account.captured_at).getTime() < 7 * 86_400_000
-  const d90 = fresh ? ninety(account) : null
-  const channels = socials()
+  // Instagram + Facebook over the last 90 days, from the stored history (refreshed by the daily
+  // cron), never a live call. Views and interactions add up; reach would not. A platform whose
+  // figures are over a week old drops out of the totals (lib/social-totals.ts).
+  const [cfg, t] = await Promise.all([readHello(), socialTotals()])
+  const channels = socials(t.followers.instagram, t.followers.facebook)
   const total = combined(channels)
   const links = cfg.links.filter(l => l.on)
   const deals = cfg.affiliates.filter(a => a.on && a.kind === 'deal')
@@ -180,8 +178,8 @@ export default async function Hello() {
           <h1 className="hl-name hl-in" style={step()}>Aereon Wong</h1>
           <p className="hl-tag hl-in" style={step()}>{cfg.tagline}</p>
           <dl className="hl-stats hl-in" style={step()}>
-            {d90?.views ? <div><dt>Views</dt><dd>{compact(d90.views)}</dd><small>Instagram · 90 days</small></div> : null}
-            {d90?.interactions ? <div><dt>Interactions</dt><dd>{compact(d90.interactions)}</dd><small>Instagram · 90 days</small></div> : null}
+            {t.views ? <div><dt>Views</dt><dd>{compact(t.views)}</dd><small>{totalsLabel(t, true)}</small></div> : null}
+            {t.interactions ? <div><dt>Interactions</dt><dd>{compact(t.interactions)}</dd><small>{totalsLabel(t, true)}</small></div> : null}
             {total ? <div><dt>Followers</dt><dd>{compact(total)}</dd><small>{channels.length} platforms</small></div> : null}
           </dl>
         </header>
