@@ -2,12 +2,12 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { readHello } from '@/lib/hello'
-import { latestAccount, ninety } from '@/lib/instagram'
+import { socialTotals } from '@/lib/social-totals'
 import { socials, combined } from '@/lib/socials'
 
 // 👉 The preview card when aereonwong.com/hello is shared (WhatsApp, DMs, X, Facebook):
 // the KLCC sunset, the round portrait, name, tagline and the same proof numbers as the
-// page (90-day Instagram views + interactions from the stored snapshot, combined followers).
+// page (90-day Instagram + Facebook views and interactions from the stored history, combined followers).
 // Rebuilt at most every 6 hours; apps cache previews for days anyway.
 
 export const alt = 'Aereon Wong — tech & travel creator and drone pilot in Kuala Lumpur'
@@ -22,15 +22,13 @@ const dataUri = async (file: string) =>
   `data:image/jpeg;base64,${(await readFile(join(process.cwd(), 'public/img', file))).toString('base64')}`
 
 export default async function Image() {
-  const [bg, face, cfg, account] = await Promise.all([
-    dataUri('klcc-sunset.jpg'), dataUri('aereon.jpg'), readHello(), latestAccount().catch(() => null),
+  const [bg, face, cfg, t] = await Promise.all([
+    dataUri('klcc-sunset.jpg'), dataUri('aereon.jpg'), readHello(), socialTotals(),
   ])
-  const fresh = account && Date.now() - new Date(account.captured_at).getTime() < 7 * 86_400_000
-  const d90 = fresh ? ninety(account) : null
-  const channels = socials()
+  const channels = socials(t.followers.instagram, t.followers.facebook)
   const stats = [
-    d90?.views ? { n: compact(d90.views), l: 'Views · 90 days' } : null,
-    d90?.interactions ? { n: compact(d90.interactions), l: 'Interactions · 90 days' } : null,
+    t.views ? { n: compact(t.views), l: 'Views · 90 days' } : null,
+    t.interactions ? { n: compact(t.interactions), l: 'Interactions · 90 days' } : null,
     { n: compact(combined(channels)), l: `Followers · ${channels.length} platforms` },
   ].filter(Boolean) as { n: string; l: string }[]
 

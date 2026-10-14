@@ -2,7 +2,8 @@
 // Aereon and links into the locked dashboard. Numbers come from the newest
 // Instagram snapshot; the brands come from the invoices, so both stay current
 // without anyone editing this file. No client names, amounts or private data.
-import { latestSnapshot, latestAccount } from '@/lib/instagram'
+import { socialTotals, totalsLabel } from '@/lib/social-totals'
+import { socials, combined } from '@/lib/socials'
 import { getRecords } from '@/lib/records'
 import { toInvoices } from '@/lib/invoices'
 import type { Metadata } from 'next'
@@ -74,11 +75,11 @@ async function LandingBody({
   const reelPreview = signedIn && sp.preview === 'reel'
   // The motion reel wins only when chosen, or when previewed explicitly.
   if ((site.landing === 'reel' && !preview) || reelPreview) {
-    const [audience, recs] = await Promise.all([readAudience(), getRecords()])
+    const [audience, recs, totals] = await Promise.all([readAudience(), getRecords(), socialTotals()])
     const inv = toInvoices(recs)
     const kinds = [...new Set(inv.map(i => i.kind))]
     const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
-    return <Reel audience={audience} kinds={kinds} since={since} />
+    return <Reel audience={audience} kinds={kinds} since={since} totals={totals} />
   }
   if (site.landing === 'kit' || preview) {
     const [audience, recs] = await Promise.all([readAudience(), getRecords()])
@@ -99,15 +100,11 @@ async function LandingBody({
     )
   }
 
-  const [snap, rows, account] = await Promise.all([latestSnapshot(), getRecords(), latestAccount()])
-  const followers = snap?.profile.followers_count ?? 0
-  // Only Instagram's own 30-day account figures, and only while fresh (the cron
-  // refreshes daily). Adding up post reach would count people twice, and an old
-  // row would show a stale "30 days" — so either way the tiles are left out.
-  const fresh = account && Date.now() - Date.parse(account.captured_at) <= 3 * 86_400_000
-  const reach = fresh ? (account!.totals.reach ?? 0) : 0
-  const views = fresh ? (account!.totals.views ?? 0) : 0
-  const span = '30 days'
+  const [rows, t] = await Promise.all([getRecords(), socialTotals()])
+  // Instagram + Facebook over 90 days from the stored history (lib/social-totals.ts): views
+  // and interactions add up; reach never would. A platform over a week stale drops out.
+  const channels = socials(t.followers.instagram, t.followers.facebook)
+  const followers = combined(channels)
 
   const invoices = toInvoices(rows)
   const text = invoices.map(i => `${i.project} ${i.client}`).join(' ')
@@ -153,26 +150,26 @@ async function LandingBody({
             {followers > 0 ? (
               <div className="land-stat">
                 <div className="v">{compact(followers)}</div>
-                <div className="l">Followers</div>
+                <div className="l">Combined followers</div>
               </div>
             ) : null}
-            {reach > 0 ? (
+            {t.views ? (
               <div className="land-stat">
-                <div className="v">{compact(reach)}</div>
-                <div className="l">Reached · {span}</div>
+                <div className="v">{compact(t.views)}</div>
+                <div className="l">Views · {totalsLabel(t, 'views')}</div>
               </div>
             ) : null}
-            {views > 0 ? (
+            {t.interactions ? (
               <div className="land-stat">
-                <div className="v">{compact(views)}</div>
-                <div className="l">Views · {span}</div>
+                <div className="v">{compact(t.interactions)}</div>
+                <div className="l">Interactions · {totalsLabel(t, 'interactions')}</div>
               </div>
             ) : null}
           </div>
 
           <div className="land-work">
             <p className="eyebrow" style={{ marginBottom: 10 }}>Find me on</p>
-            <SocialLinks igFollowers={followers || undefined} />
+            <SocialLinks igFollowers={t.followers.instagram} fbFollowers={t.followers.facebook} />
           </div>
 
           {/* Product, car and hotel reviews, events, aerial and travel — not just KLCC. */}
