@@ -9,7 +9,7 @@ import { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
 import { EMAIL } from '@/lib/agent-site'
 import { socials, combined } from '@/lib/socials'
-import type { SocialTotals } from '@/lib/social-totals'
+import { bothIn, type SocialTotals } from '@/lib/social-totals'
 import { intro as introFor } from '../intro'
 
 // 👉 The motion-reel landing (5 Oct 2026): a third public landing beside the
@@ -47,12 +47,12 @@ export default function Reel({ audience, kinds, since, totals }: { audience: Aud
   const period: 30 | 90 = d90 && d90.views !== null && d90.peakReach !== null ? 90 : 30
   // Over 90 days, views and interactions add the Facebook Page when its figures are whole
   // (lib/social-totals.ts — same windows, same freshness). Reach stays Instagram's: unique people never add.
-  const withFb = period === 90 && !!totals?.platforms.includes('Facebook')
+  const fbViews = period === 90 && bothIn(totals, 'views')
+  const fbInter = period === 90 && bothIn(totals, 'interactions')
+  const withFb = fbViews && fbInter
   const reach = period === 90 ? d90!.peakReach! : fresh ? (view?.totals.reach ?? 0) : 0
-  const views = withFb && totals!.views ? totals!.views : period === 90 ? d90!.views! : fresh ? (view?.totals.views ?? 0) : 0
-  const interactions =
-    withFb && totals!.interactions ? totals!.interactions
-    : period === 90 ? (d90!.interactions ?? 0) : fresh ? (view?.totals.total_interactions ?? 0) : 0
+  const views = withFb ? totals!.views! : period === 90 ? d90!.views! : fresh ? (view?.totals.views ?? 0) : 0
+  const interactions = withFb ? totals!.interactions! : period === 90 ? (d90!.interactions ?? 0) : fresh ? (view?.totals.total_interactions ?? 0) : 0
   const channels = socials(audience.followers, totals?.followers.facebook)
   const followers = combined(channels)
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is

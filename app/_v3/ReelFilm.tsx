@@ -310,7 +310,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
           {reach || views || interactions ? (
             <p className="rf-a rf-fine" style={at('rf-fade', 12.6, 0.6)}>
               {withFb
-                ? 'Views and interactions add Instagram and the Facebook Page over 90 days; followers add every platform, so someone on two counts twice. Reach is Instagram’s best 30-day window, as people are counted per window.'
+                ? 'Views and interactions add Instagram and the Facebook Page (its post engagements) over 90 days; followers add every platform, so someone on two counts twice. Reach is Instagram’s best 30-day window, as people are counted per window.'
                 : period === 90
                   ? 'Instagram’s own account figures. Views and interactions over 90 days; reach is the best 30-day window, as Instagram counts people per window.'
                   : 'Reach, views and interactions are Instagram’s own 30-day account figures.'}

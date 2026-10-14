@@ -18,8 +18,9 @@ const STALE = 7 * DAY
 export type SocialTotals = {
   views: number | null
   interactions: number | null
-  /** Which platforms made it into views/interactions, e.g. ['Instagram', 'Facebook']. */
-  platforms: string[]
+  /** Which platforms made it into each total, e.g. ['Instagram', 'Facebook'] — per metric,
+   *  since Instagram can return one metric and not the other. */
+  from: { views: string[]; interactions: string[] }
   /** Live follower counts, swapped into lib/socials.ts in place of the hand-typed ones. */
   followers: { instagram?: number; facebook?: number }
 }
@@ -29,18 +30,23 @@ type FbRow = { day: string; followers: number | null; views: number | null; enga
 /** Facebook Page views and engagements over the last 90 complete days, plus the latest follower count. */
 async function facebook90() {
   if (!supabaseConfigured) return null
+  // The refresh also stores today, still counting — so the window ends yesterday (Malaysia time).
+  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10)
   const { data, error } = await supabase
     .from('fb_page_daily')
     .select('day, followers, views, engagements')
     .eq('page_id', fbPageId())
+    .lt('day', today)
     .order('day', { ascending: false })
     .limit(90)
   if (error || !data?.length) return null
   const rows = data as FbRow[]
-  const followers = rows.find(r => r.followers)?.followers ?? undefined
   const latest = Date.parse(rows[0].day)
+  const recent = Date.now() - latest < STALE
+  // A stalled refresh must not pass an old count off as live — the hand-typed one stands in.
+  const followers = recent ? (rows.find(r => r.followers)?.followers ?? undefined) : undefined
   // All 90 days present, the newest within a week, and every day measured — or no Facebook total.
-  const whole = rows.length === 90 && Date.now() - latest < STALE && Date.parse(rows[89].day) === latest - 89 * DAY
+  const whole = rows.length === 90 && recent && Date.parse(rows[89].day) === latest - 89 * DAY
   const sum = (k: 'views' | 'engagements') => (whole && rows.every(r => typeof r[k] === 'number') ? rows.reduce((t, r) => t + r[k]!, 0) : null)
   return { followers, views: sum('views'), engagements: sum('engagements') }
 }
@@ -54,23 +60,28 @@ export async function socialTotals(): Promise<SocialTotals> {
   ])
   const fresh = account && Date.now() - Date.parse(account.captured_at) < STALE
   const ig = fresh ? ninety(account) : null
-  const add = (a: number | null | undefined, b: number | null | undefined) =>
-    a == null && b == null ? null : (a ?? 0) + (b ?? 0)
-  const platforms = [
-    ig?.views != null || ig?.interactions != null ? 'Instagram' : null,
-    fb?.views != null || fb?.engagements != null ? 'Facebook' : null,
-  ].filter(Boolean) as string[]
+  // Each total names exactly the platforms in it; a platform without the metric is left out, never zero.
+  const total = (parts: [string, number | null | undefined][]) => {
+    const have = parts.filter((p): p is [string, number] => typeof p[1] === 'number')
+    return { value: have.length ? have.reduce((t, p) => t + p[1], 0) : null, from: have.map(p => p[0]) }
+  }
+  const views = total([['Instagram', ig?.views], ['Facebook', fb?.views]])
+  const interactions = total([['Instagram', ig?.interactions], ['Facebook', fb?.engagements]])
   const igFollowers = Number(snap?.profile?.followers_count ?? 0)
   return {
-    views: add(ig?.views, fb?.views),
-    interactions: add(ig?.interactions, fb?.engagements),
-    platforms,
+    views: views.value,
+    interactions: interactions.value,
+    from: { views: views.from, interactions: interactions.from },
     followers: { instagram: igFollowers || undefined, facebook: fb?.followers },
   }
 }
 
+/** True when a total adds both Instagram and Facebook. */
+export const bothIn = (t: SocialTotals | undefined, k: 'views' | 'interactions') =>
+  !!t && t.from[k].includes('Instagram') && t.from[k].includes('Facebook')
+
 const SHORT: Record<string, string> = { Instagram: 'IG', Facebook: 'FB' }
 
 /** "Instagram + Facebook · 90 days" (or "IG + FB · 90 days" for narrow tiles) — the small print under a total. */
-export const totalsLabel = (t: SocialTotals, short = false) =>
-  `${t.platforms.map(p => (short ? SHORT[p] ?? p : p)).join(' + ')} · 90 days`
+export const totalsLabel = (t: SocialTotals, k: 'views' | 'interactions', short = false) =>
+  `${t.from[k].map(p => (short ? SHORT[p] ?? p : p)).join(' + ')} · 90 days`

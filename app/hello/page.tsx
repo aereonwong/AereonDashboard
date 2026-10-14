@@ -178,8 +178,8 @@ export default async function Hello() {
           <h1 className="hl-name hl-in" style={step()}>Aereon Wong</h1>
           <p className="hl-tag hl-in" style={step()}>{cfg.tagline}</p>
           <dl className="hl-stats hl-in" style={step()}>
-            {t.views ? <div><dt>Views</dt><dd>{compact(t.views)}</dd><small>{totalsLabel(t, true)}</small></div> : null}
-            {t.interactions ? <div><dt>Interactions</dt><dd>{compact(t.interactions)}</dd><small>{totalsLabel(t, true)}</small></div> : null}
+            {t.views ? <div><dt>Views</dt><dd>{compact(t.views)}</dd><small>{totalsLabel(t, 'views', true)}</small></div> : null}
+            {t.interactions ? <div><dt>Interactions</dt><dd>{compact(t.interactions)}</dd><small>{totalsLabel(t, 'interactions', true)}</small></div> : null}
             {total ? <div><dt>Followers</dt><dd>{compact(total)}</dd><small>{channels.length} platforms</small></div> : null}
           </dl>
         </header>

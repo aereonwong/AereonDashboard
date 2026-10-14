@@ -105,7 +105,6 @@ async function LandingBody({
   // and interactions add up; reach never would. A platform over a week stale drops out.
   const channels = socials(t.followers.instagram, t.followers.facebook)
   const followers = combined(channels)
-  const span = totalsLabel(t)
 
   const invoices = toInvoices(rows)
   const text = invoices.map(i => `${i.project} ${i.client}`).join(' ')
@@ -157,13 +156,13 @@ async function LandingBody({
             {t.views ? (
               <div className="land-stat">
                 <div className="v">{compact(t.views)}</div>
-                <div className="l">Views · {span}</div>
+                <div className="l">Views · {totalsLabel(t, 'views')}</div>
               </div>
             ) : null}
             {t.interactions ? (
               <div className="land-stat">
                 <div className="v">{compact(t.interactions)}</div>
-                <div className="l">Interactions · {span}</div>
+                <div className="l">Interactions · {totalsLabel(t, 'interactions')}</div>
               </div>
             ) : null}
           </div>
