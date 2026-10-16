@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import type { Lab } from '@/lib/v3/content-lab'
 import {
   ANGLES,
@@ -27,10 +27,17 @@ import {
   type Range,
 } from '@/lib/v3/lab-math'
 import { compact, longDate, num, shortDate } from '../fmt'
+import ScopedPanel from '../ScopedPanel'
+import '../filterbar.css'
 import '../lab.css'
 
-// 👉 v3 Instagram, Content Lab view: what to post next, read from THIS YEAR's posts only
-// (from 1 January, Malaysia time — Aereon's choice on 10 Oct 2026; lib/v3/content-lab.ts labSince).
+// 👉 v3 Instagram — the one Instagram page since 16 Oct 2026 (the Studio and Content Lab views
+// merged at Aereon's request). Post figures read THIS YEAR's posts only (from 1 January, Malaysia
+// time — Aereon's choice on 10 Oct 2026; lib/v3/content-lab.ts labSince).
+//
+// The server page (Instagram.tsx) hands in the account-wide sections as ready-made slots —
+// Growth above the filter bar, post lifespan and Audience below — each marked "ignores filters".
+// Filter rules for every v3 page: docs/FILTER-BAR.md.
 //
 // One filter bar scopes the page (timeline · format · angle · hook). A panel that IS one of
 // those filters (the hook board, the angle grid) shows all its own options and highlights
@@ -182,31 +189,29 @@ function PostTip({ p, typical }: { p: LabPost; typical: number }) {
   )
 }
 
-/** Which filters a panel follows, said in its corner so no number is a mystery. */
-function Scope({ children }: { children: ReactNode }) {
-  return <span className="lab-scope">{children}</span>
-}
-
-function Panel({ id, title, note, scope, span, children }: { id: string; title: string; note?: string; scope: ReactNode; span: number; children: ReactNode }) {
-  return (
-    <section className={`v3-panel v3-span-${span} lab-panel`} aria-labelledby={`lab-${id}`}>
-      <div className="lab-panel-head">
-        <div>
-          <h2 className="v3-panel-title" id={`lab-${id}`}>
-            {title}
-          </h2>
-          {note ? <p className="v3-panel-note">{note}</p> : null}
-        </div>
-        <Scope>{scope}</Scope>
-      </div>
-      {children}
-    </section>
-  )
-}
+/** Each panel says in its corner which filters it follows (ScopedPanel, docs/FILTER-BAR.md). */
+const Panel = (props: Omit<ComponentProps<typeof ScopedPanel>, 'className'>) => <ScopedPanel {...props} className="lab-panel" />
 
 // ------------------------------------------------------------------ the page
 
-export default function ContentLab({ lab, username }: { lab: Lab; username: string }) {
+/** A post's cover image, from the latest snapshot (its ~40 newest posts; the URLs expire,
+ *  so only the snapshot's fresh ones are used). crop = letterbox bands to trim, as fractions. */
+export type Cover = { src: string; crop?: { t: number; b: number } }
+
+type Slots = {
+  /** Covers by media id — older posts have none and show a format tile instead. */
+  covers?: Record<string, Cover>
+  /** Refresh button, beside the headline. */
+  actions?: ReactNode
+  /** Account growth — above the filter bar, never filtered. */
+  growth?: ReactNode
+  /** Extra Timing panel(s) that ignore the filters (post lifespan). */
+  timing?: ReactNode
+  /** The Audience chapter — account-wide. */
+  audience?: ReactNode
+}
+
+export default function ContentLab({ lab, username, actions, growth, timing, audience, covers = {} }: { lab: Lab; username: string } & Slots) {
   const today = lab.today || (lab.newest ? mytDay(lab.newest) : '')
   const since = lab.since || today.slice(0, 4) + '-01-01'
   const ranges = useMemo(() => [...presets(today, since), ...months(today, since)], [today, since])
@@ -237,13 +242,16 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
 
   if (!lab.posts.length) {
     return (
-      <div>
+      <div className="lab">
         <header className="v3-head">
-          <h1 className="v3-title">Content Lab</h1>
+          <h1 className="v3-title">Instagram</h1>
+          {actions}
         </header>
-        <section className="v3-panel">
-          <p className="v3-empty">The Content Lab reads this year's posts from your stored Instagram archive. It has nothing to show in demo mode, or before the first refresh of the year.</p>
+        {growth}
+        <section className="v3-panel" style={{ marginBottom: 'var(--space-5)' }}>
+          <p className="v3-empty">The post analysis reads this year's posts from your stored Instagram archive. It has nothing to show in demo mode, or before the first refresh of the year.</p>
         </section>
+        {audience ? <div className="v3-grid">{audience}</div> : null}
       </div>
     )
   }
@@ -254,19 +262,22 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
       <header className="v3-head lab-head">
         <div>
           <p className="lab-eyebrow">
-            Content Lab · @{username} · {rangeLabel}
+            Instagram · @{username} · {rangeLabel}
           </p>
           <h1 className="lab-title">{v ? <Kinetic text={v.lead} /> : <Kinetic text="What travels, and why" />}</h1>
           <p className="v3-lede">
             {v ? v.detail : 'Too few posts in this slice to call a winner — widen the timeline.'} Numbers as of {lab.read ? longDate(lab.read) : 'the last refresh'}.
           </p>
         </div>
+        {actions}
       </header>
 
+      {growth}
+
       {/* ------------------------------------------------ the filters: one row, above everything */}
-      <div className="lab-filters" role="toolbar" aria-label="Filter every panel">
-        <div className="lab-fgroup">
-          <span className="lab-flabel">Timeline</span>
+      <div className="v3-fbar" role="toolbar" aria-label="Filter every panel">
+        <div className="v3-fbar-group">
+          <span className="v3-fbar-label">Timeline</span>
           <div className="v3-seg">
             {ranges.filter(r => !isMonth(r.key)).map(r => (
               <button
@@ -283,7 +294,7 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
             ))}
           </div>
           <select
-            className="lab-select"
+            className="v3-fbar-select"
             aria-label="One month"
             value={!zoom && isMonth(preset) ? preset : ''}
             onChange={e => {
@@ -300,13 +311,13 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
             ))}
           </select>
           {zoom ? (
-            <button type="button" className="lab-chip-on" onClick={() => setZoom(null)} aria-label={`Clear ${zoom.label}`}>
+            <button type="button" className="v3-fbar-chip" onClick={() => setZoom(null)} aria-label={`Clear ${zoom.label}`}>
               {zoom.label} ✕
             </button>
           ) : null}
         </div>
-        <div className="lab-fgroup">
-          <span className="lab-flabel">Format</span>
+        <div className="v3-fbar-group">
+          <span className="v3-fbar-label">Format</span>
           <div className="v3-seg">
             <button type="button" aria-pressed={!format} onClick={() => setFormat('')}>
               All
@@ -318,11 +329,11 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
             ))}
           </div>
         </div>
-        <div className="lab-fgroup">
-          <label className="lab-flabel" htmlFor="lab-angle">
+        <div className="v3-fbar-group">
+          <label className="v3-fbar-label" htmlFor="lab-angle">
             Angle
           </label>
-          <select id="lab-angle" className="lab-select" value={angle} onChange={e => setAngle(e.target.value as AngleKey | '')}>
+          <select id="lab-angle" className="v3-fbar-select" value={angle} onChange={e => setAngle(e.target.value as AngleKey | '')}>
             <option value="">Every angle</option>
             {ANGLES.map(a => (
               <option key={a.key} value={a.key}>
@@ -330,10 +341,10 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
               </option>
             ))}
           </select>
-          <label className="lab-flabel" htmlFor="lab-hook">
+          <label className="v3-fbar-label" htmlFor="lab-hook">
             Hook
           </label>
-          <select id="lab-hook" className="lab-select" value={hook} onChange={e => setHook(e.target.value as HookKey | '')}>
+          <select id="lab-hook" className="v3-fbar-select" value={hook} onChange={e => setHook(e.target.value as HookKey | '')}>
             <option value="">Every hook</option>
             {HOOKS.map(h => (
               <option key={h.key} value={h.key}>
@@ -342,12 +353,12 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
             ))}
           </select>
         </div>
-        <div className="lab-fcount" aria-live="polite">
+        <div className="v3-fbar-count" aria-live="polite">
           <b className="num">{num(posts.length)}</b> posts
           {any ? (
             <button
               type="button"
-              className="lab-reset"
+              className="v3-fbar-reset"
               onClick={() => {
                 setPreset(DEFAULT)
                 setZoom(null)
@@ -426,6 +437,9 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
         <Panel id="brand" span={5} title="Where the brand goes" note="Brand or partner named in the hook, further down, or not at all" scope="Ignores angle">
           <BrandPlacement posts={slice(lab.posts, f, ['angle'])} tips={tips} />
         </Panel>
+        <Panel id="did" span={12} title="What people did" note="Per 100 accounts reached · every post in the slice pooled, so big posts weigh more" scope="All filters">
+          <PeopleDid posts={posts} />
+        </Panel>
 
         <div className="v3-chapter v3-span-12">
           <h2 className="v3-chapter-title">Timing</h2>
@@ -437,16 +451,54 @@ export default function ContentLab({ lab, username }: { lab: Lab; username: stri
         <Panel id="pareto" span={5} title="How few posts carry the reach" note="Share of combined reach from the top posts" scope="All filters">
           <Pareto posts={posts} tips={tips} />
         </Panel>
+        {timing}
+
+        {audience}
 
         <div className="v3-chapter v3-span-12">
           <h2 className="v3-chapter-title">The posts</h2>
           <p className="v3-chapter-note">The hook line is the headline — read them side by side.</p>
         </div>
         <Panel id="list" span={12} title="Ranked" scope="All filters">
-          <Ranked posts={posts} typical={p.typical} />
+          <Ranked posts={posts} typical={p.typical} covers={covers} />
         </Panel>
       </div>
       <TipLayer tip={tips.tip} />
+    </div>
+  )
+}
+
+// ------------------------------------------------------------------ what people did
+
+/** Shares, saves, comments and likes per 100 reached. Each rate only counts posts where
+ *  Instagram returned that figure, so a missing number never reads as zero. */
+function PeopleDid({ posts }: { posts: LabPost[] }) {
+  const per100 = (pick: (p: LabPost) => number | null) => {
+    let hits = 0
+    let reach = 0
+    for (const p of posts) {
+      const v = pick(p)
+      if (v === null || !p.reach) continue
+      hits += v
+      reach += p.reach
+    }
+    return reach ? { rate: (hits / reach) * 100, total: hits } : null
+  }
+  const rows = [
+    { label: 'shares', v: per100(p => p.shares), note: 'the strongest signal to the algorithm' },
+    { label: 'saves', v: per100(p => p.saves), note: '' },
+    { label: 'comments', v: per100(p => p.comments), note: '' },
+    { label: 'likes', v: per100(p => p.likes), note: '' },
+  ]
+  return (
+    <div className="v3-attn">
+      {rows.map(r => (
+        <div key={r.label}>
+          <div className="v3-attn-v num">{r.v ? (r.v.rate >= 10 ? r.v.rate.toFixed(0) : r.v.rate.toFixed(1)) : '—'}</div>
+          <div className="v3-attn-l">{r.label}</div>
+          <div className="v3-attn-n">{r.v ? `${num(r.v.total)} in all${r.note ? ` — ${r.note}` : ''}` : 'Not returned by Instagram'}</div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -1233,9 +1285,82 @@ const SORTS = [
   { key: 'quiet', label: 'Quietest', by: (p: LabPost) => -p.reach },
 ] as const
 
-function Ranked({ posts, typical }: { posts: LabPost[]; typical: number }) {
+/** A cover for any of your posts, resolved by the server (app/api/instagram/cover) from its shortcode. */
+const mediaUrl = (link: string | null) => {
+  const code = link?.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1]
+  return code ? `/api/instagram/cover?code=${code}` : null
+}
+
+/** The small cover: the snapshot's own image when it has one (crop-aware), else Instagram's public
+ *  cover (via the server), else a plain format tile if that fails to load. */
+function Thumb({ post, cover }: { post: LabPost; cover?: Cover }) {
+  const [failed, setFailed] = useState(false)
+  const src = cover?.src ?? mediaUrl(post.link)
+  if (!src || failed) return <span className="lab-cover-none">{fmtLabel(post.format)}</span>
+  const c = cover?.crop
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+      style={c ? { top: `${(-c.t / (1 - c.t - c.b)) * 100}%`, height: `${(1 / (1 - c.t - c.b)) * 100}%` } : undefined}
+    />
+  )
+}
+
+const embedUrl = (link: string | null) => (link ? `${link.replace(/\/?$/, '/')}embed/` : null)
+
+/** Instagram's own player for one post, from its stored permalink (which never expires). */
+function Preview({ post, onClose }: { post: LabPost; onClose: () => void }) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null
+    closeRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      opener?.focus()
+    }
+  }, [onClose])
+  const src = embedUrl(post.link)
+  return (
+    <div className="v3-player" role="dialog" aria-modal="true" aria-label="Instagram post" onClick={onClose}>
+      <div className="v3-player-box" onClick={e => e.stopPropagation()}>
+        <div className="v3-player-bar">
+          <span className="num">
+            {num(post.reach)} reach · {n0(post.shares)} shares · {n0(post.saves)} saves
+            {post.watchSec !== null ? ` · ${post.watchSec.toFixed(1)}s avg watch` : ''}
+          </span>
+          <button ref={closeRef} type="button" className="v3-player-close" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        {src ? (
+          <iframe src={src} title="Instagram post" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy" />
+        ) : (
+          <p className="v3-empty">This post has no link stored, so it cannot be previewed here.</p>
+        )}
+        {post.link ? (
+          <div className="v3-player-bar">
+            <a href={post.link} target="_blank" rel="noreferrer">
+              Open on Instagram ↗
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function Ranked({ posts, typical, covers }: { posts: LabPost[]; typical: number; covers: Record<string, Cover> }) {
   const [sort, setSort] = useState<(typeof SORTS)[number]['key']>('reach')
   const [more, setMore] = useState(false)
+  const [open, setOpen] = useState<LabPost | null>(null)
+  const close = useCallback(() => setOpen(null), [])
   const by = SORTS.find(s => s.key === sort)!.by
   const list = [...posts].sort((a, b) => by(b) - by(a)).slice(0, more ? 30 : 9)
   return (
@@ -1254,9 +1379,15 @@ function Ranked({ posts, typical }: { posts: LabPost[]; typical: number }) {
           const lift = typical ? p.reach / typical : 0
           const h = hookMeta(p.hookType)
           return (
-            <li key={p.id} style={{ ['--i' as string]: i }}>
+            <li key={p.id} className="lab-post-item" style={{ ['--i' as string]: i }}>
+              <button type="button" className="lab-cover" onClick={() => setOpen(p)} aria-label={`Preview post ${i + 1}: ${p.hook || fmtLabel(p.format)}`}>
+                <Thumb post={p} cover={covers[p.id]} />
+                <span className="lab-cover-rank num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="lab-cover-play" aria-hidden="true">
+                  {p.format === 'reel' ? '▶' : '⤢'}
+                </span>
+              </button>
               <a className="lab-post" href={p.link ?? undefined} target="_blank" rel="noreferrer">
-                <span className="lab-post-rank num">{String(i + 1).padStart(2, '0')}</span>
                 <span className="lab-post-hook">{p.hook || '(no caption)'}</span>
                 <span className="lab-post-tags">
                   <span className="lab-tag">
@@ -1291,6 +1422,7 @@ function Ranked({ posts, typical }: { posts: LabPost[]; typical: number }) {
           )
         })}
       </ol>
+      {open ? <Preview post={open} onClose={close} /> : null}
       {posts.length > 9 ? (
         <button type="button" className="v3-btn lab-more" onClick={() => setMore(!more)}>
           {more ? 'Show fewer' : `Show ${Math.min(30, posts.length)}`}

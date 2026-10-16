@@ -126,13 +126,18 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
   `composio dev playground-execute` against the project) fills history: page figures from Aug 2024, posts from 1 Jan 2025.
 - Combined figures add platforms, so someone on both counts twice — the UI says so. Empty in demo mode.
 
-**Instagram Content Lab** (10 Oct 2026, `app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
-read in `lib/v3/content-lab.ts`): the second view of the v3 Instagram page, chosen per device in Settings
-(cookie `cfo-ig=lab`; default `studio`). Reads THIS YEAR's posts only (from 1 Jan, Malaysia time — Aereon's
-call) with each post's latest `ig_post_metrics` reading, and filters them in the browser: one sticky bar for
-timeline (opens on the last 90 days — or the year so far when that is shorter; also year / 30 days / a month, or click a bar), format, angle, hook. Only "Reach over time" keeps the whole year, as context, with the slice highlighted. Hook = the caption's first line,
-classified by `HOOKS` (first match wins); angle by `angleOf`; brand placement by `brandOf`. Each panel names the
-filters it ignores. Typical = median; hit = 2× the slice's typical. Empty in demo mode.
+**Instagram — one page since 16 Oct 2026** (`app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
+read in `lib/v3/content-lab.ts`; the Studio/Lab view switch and `cfo-ig` cookie are gone). Top to bottom: verdict headline,
+Growth (account-wide, Studio panels, ignores filters), the sticky filter bar, the post analysis, Timing, Audience, the ranked posts.
+Post figures read THIS YEAR's posts only (from 1 Jan, Malaysia time — Aereon's call) with each post's latest
+`ig_post_metrics` reading, filtered in the browser: timeline (opens on the last 90 days — or the year so far when that
+is shorter; also year / 30 days / a month, or click a bar), format, angle, hook. Only "Reach over time" keeps the whole
+year, as context. Hook = the caption's first line, classified by `HOOKS` (first match wins); angle by `angleOf`; brand
+placement by `brandOf`. Typical = median; hit = 2× the slice's typical. Post panels are empty in demo mode.
+Ranked posts show a small cover: the snapshot's own image for its ~40 newest posts, else
+`/api/instagram/cover?code=<shortcode>` (signed-in only, shortcodes in `ig_posts` only, nothing stored, no Composio call),
+else a format tile; tapping a cover plays the post in Instagram's embed player.
+**Every filtered page follows `docs/FILTER-BAR.md`** (one sticky bar, a scope chip on every panel).
 
 **Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings

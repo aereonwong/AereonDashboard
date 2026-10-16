@@ -42,43 +42,9 @@ html[data-theme="dark"] .lab {
 @keyframes lab-rise { from { opacity: 0; transform: translateY(0.45em) rotate(2deg); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 .lab-head .v3-lede { max-width: 68ch; margin-top: var(--space-3); }
 
-/* ---------------------------------------------------------------- filter bar: one row, sticky */
-
-.lab-filters {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5);
-  margin: 0 0 var(--space-5); padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--film) 86%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px);
-}
-.lab-fgroup { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-.lab-flabel { font: 500 var(--t-xs)/1 var(--f-num); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-.lab-select {
-  appearance: none; font: inherit; font-size: var(--t-sm); color: var(--ink);
-  padding: 6px 28px 6px 10px; border-radius: var(--radius); border: 1px solid var(--line-2);
-  background: var(--film) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2371717A' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;
-  cursor: pointer;
-}
-.lab-select:focus-visible, .lab-filters button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.lab-chip-on {
-  font: inherit; font-size: var(--t-sm); padding: 5px 10px; border-radius: 999px; cursor: pointer;
-  border: 0; background: var(--accent); color: var(--on-accent); animation: lab-pop 360ms var(--lab-spring) both;
-}
-@keyframes lab-pop { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
-.lab-fcount { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); font-size: var(--t-sm); color: var(--ink-2); }
-.lab-fcount b { font-size: var(--t-lg); color: var(--ink); }
-.lab-reset { font: inherit; font-size: var(--t-sm); color: var(--accent); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-
 /* ---------------------------------------------------------------- panels */
 
 .lab-panel { position: relative; }
-.lab-panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-4); }
-.lab-panel-head > div { flex: 1 1 14rem; min-width: 0; }
-.lab-scope {
-  flex: none; font: 500 10.5px/1 var(--f-num); letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--ink-3); padding: 5px 8px; border: 1px dashed var(--line-2); border-radius: 999px; white-space: nowrap;
-}
 .lab-panel-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
 .lab-callout { margin: 0 0 var(--space-4); font-size: var(--t-md); color: var(--ink-2); }
 .lab-callout b { color: var(--ink); font-size: var(--t-lg); }
@@ -254,14 +220,27 @@ html[data-theme="dark"] .lab {
 
 .lab-posts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); }
 .lab-posts li { animation: lab-in 520ms var(--ease) both; animation-delay: calc(var(--i) * 40ms); }
-.lab-post {
-  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: var(--space-3); row-gap: var(--space-2);
-  height: 100%; padding: var(--space-4); border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px);
-  color: var(--ink); text-decoration: none; background: var(--film);
+.lab-post-item {
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: var(--space-3); align-items: start;
+  padding: var(--space-3); border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px); background: var(--film);
   transition: transform 260ms var(--ease), border-color 260ms var(--ease), box-shadow 260ms var(--ease);
 }
-.lab-post:hover, .lab-post:focus-visible { transform: translateY(-3px); border-color: var(--line-2); box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.45); outline: none; }
-.lab-post-rank { grid-row: 1 / 4; font: italic 400 2rem/1 var(--f-serif), Georgia, serif; color: var(--ink-3); }
+.lab-post-item:hover, .lab-post-item:focus-within { transform: translateY(-3px); border-color: var(--line-2); box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.45); }
+.lab-post { display: grid; row-gap: var(--space-2); min-width: 0; color: var(--ink); text-decoration: none; outline: none; }
+.lab-post:focus-visible .lab-post-hook { text-decoration: underline; text-underline-offset: 3px; }
+/* The post's cover, small: 4:5 like Instagram's grid. Tap to play it in Instagram's own player. */
+.lab-cover {
+  position: relative; display: block; width: 76px; aspect-ratio: 4 / 5; padding: 0; overflow: hidden; cursor: pointer;
+  border: 0; border-radius: var(--radius); background: linear-gradient(160deg, var(--film-2), var(--film));
+}
+.lab-cover img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+.lab-cover:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lab-cover-none { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--t-xs); color: var(--ink-3); }
+.lab-cover-rank { position: absolute; top: 4px; left: 4px; font: 500 10.5px/1 var(--f-num); padding: 3px 5px; border-radius: 4px; background: rgba(0, 0, 0, 0.62); color: #fff; }
+.lab-cover-play {
+  position: absolute; right: 4px; bottom: 4px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 10px; background: rgba(255, 255, 255, 0.92); color: #000;
+}
 .lab-post-hook { font-weight: 600; line-height: 1.35; }
 .lab-post-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .lab-tag { display: inline-flex; align-items: center; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink-2); }
@@ -279,10 +258,7 @@ html[data-theme="dark"] .lab {
   .lab-draw { stroke-dashoffset: 0; }
 }
 
-/* On a phone the filter bar is half a screen tall: it scrolls with the page instead of pinning. */
 @media (max-width: 720px) {
-  .lab-filters { position: static; gap: var(--space-2) var(--space-3); }
-  .lab-fcount { margin-left: 0; }
   /* A segmented row wider than the phone scrolls inside itself, never the page. */
   .lab .v3-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .lab .v3-seg button { flex: none; }
