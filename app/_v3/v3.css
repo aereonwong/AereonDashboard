@@ -1086,6 +1086,14 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-mix-key { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--t-xs); color: var(--ink-2); margin-top: var(--space-2); }
 .v3-mix-key i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 
+/* A panel that waits for "Show amounts" (privacy mode, lib/privacy.ts). */
+.v3-locked {
+  margin: 0; min-height: 160px; display: grid; place-content: center; text-align: center; gap: 4px;
+  padding: var(--space-5); border-radius: var(--radius); color: var(--ink-3); font-size: var(--t-sm);
+  background: repeating-linear-gradient(135deg, transparent 0 10px, color-mix(in srgb, var(--ink) 3%, transparent) 10px 20px);
+}
+.v3-locked b { color: var(--ink-2); font-weight: 600; }
+
 /* Invoice sizes and new-vs-returning: column pairs and stacks. */
 .v3-sizes, .v3-cohort { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(48px, 1fr); gap: var(--space-2); overflow-x: auto; }
 .v3-sizes-col, .v3-cohort-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }

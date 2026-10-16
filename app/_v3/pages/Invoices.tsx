@@ -1,4 +1,5 @@
 import type { Rec } from '@/lib/records'
+import { moneyHidden } from '@/lib/privacy'
 import { buildSummary } from '@/lib/v3/summary'
 import { paySpeed, seasons } from '@/lib/v3/insights'
 import { RANGES, narrow, type Filters } from '@/lib/v3/filters'
@@ -130,7 +131,15 @@ export default async function Invoices({ rows, filters }: { rows: Rec[]; filters
               Invoice sizes
             </h2>
           </div>
-          <Sizes sum={s} />
+          {(await moneyHidden()) ? (
+            // Sizes are fixed money bands ("Under 1K"): with disguised amounts they would be wrong,
+            // and right ones would give the real sizes away. So the panel waits for Show amounts.
+            <p className="v3-locked" data-money-locked="">
+              <b>Hidden with amounts.</b> Invoice sizes are bands of real ringgit, so they show when amounts do.
+            </p>
+          ) : (
+            <Sizes sum={s} />
+          )}
         </section>
 
         <section className="v3-panel v3-span-6" aria-labelledby="t-cohort">

@@ -1,4 +1,5 @@
 import type { Rec } from '@/lib/records'
+import { moneyHidden } from '@/lib/privacy'
 import { buildRelationships, type ClientSort } from '@/lib/v3/ledger'
 import { QUIET_MONTHS } from '@/lib/v3/catalog'
 import { withParam, type Filters } from '@/lib/v3/filters'
@@ -25,7 +26,7 @@ const SEG_NOTE = {
   drifted: 'smaller, gone quiet',
 } as const
 
-export default function Clients({ rows, filters, sp }: { rows: Rec[]; filters: Filters; sp: Params }) {
+export default async function Clients({ rows, filters, sp }: { rows: Rec[]; filters: Filters; sp: Params }) {
   const raw = one(sp.sort) as ClientSort | undefined
   const sort: ClientSort = raw && SORTS.includes(raw) ? raw : 'value'
   const q = one(sp.q) ?? ''
@@ -118,7 +119,7 @@ export default function Clients({ rows, filters, sp }: { rows: Rec[]; filters: F
             </h2>
             <p className="v3-panel-note">Up is worth more · right is longer since the last job</p>
           </div>
-          <RelationshipMap list={list} median={median} />
+          <RelationshipMap list={list} median={median} disguised={await moneyHidden()} />
         </section>
 
         <section className="v3-panel v3-span-4" aria-labelledby="t-repitch">

@@ -3,9 +3,8 @@
 import { useEffect } from 'react'
 import { hideIfExpired, setShown, touch } from './money-privacy'
 
-// Privacy mode on screen. The server already sends zeros while amounts are hidden
-// (lib/privacy.ts) — this draws them as "RM *****" so the page reads as hidden rather
-// than as RM 0, makes any masked figure (and any money edit control, data-money-edit)
+// Privacy mode on screen. The server already disguises amounts while hidden
+// (lib/privacy.ts) — this draws them as "RM *****" so no disguised figure is read as real, makes any masked figure (and any money edit control, data-money-edit)
 // a way to show amounts, and while shown, keeps the 5-minute idle clock running.
 // It works on the rendered page rather than on each formatter, so v1, v2, v3,
 // charts, tooltips and any page added later are covered.
@@ -28,10 +27,11 @@ const ATTR_SEL = '[title],[aria-label],[placeholder]'
 const SKIP = 'script,style,noscript,textarea,input,select,[data-money-off]'
 const SKIP_ATTRS = 'script,style,noscript,[data-money-off]' // an input's placeholder can hold money
 
-export default function MoneyMask({ shown }: { shown: boolean }) {
+export default function MoneyMask({ shown, canReveal }: { shown: boolean; canReveal: boolean }) {
   useEffect(() => {
     const root = document.documentElement
     root.setAttribute('data-privacy', shown ? 'shown' : 'hidden')
+    root.toggleAttribute('data-privacy-owner', canReveal)
     root.setAttribute('data-mask-ready', '')
 
     // Shown: activity keeps the reveal cookie alive; once it lapses, reload hidden.
@@ -111,11 +111,20 @@ export default function MoneyMask({ shown }: { shown: boolean }) {
     obs.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] })
 
     // A click on any masked figure, or on a control that edits money (its form would
-    // hold the server's zeros), shows amounts first. A button or link that merely sits
-    // inside a figure's wrapper works as usual.
+    // hold disguised figures), shows amounts first — for the owner. Anyone else can't
+    // show amounts, so for them only a money form's submit is stopped (the server
+    // refuses it too). A button or link that merely sits inside a figure's wrapper
+    // works as usual.
     const onClick = (e: Event) => {
       const target = e.target instanceof Element ? e.target : null
       if (!target || target.closest('.money-toggle')) return
+      if (!canReveal) {
+        if (e.type === 'submit' && target.closest('[data-money-edit]')) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+        return
+      }
       const edit = target.closest('[data-money-edit]')
       const hit = target.closest('[data-mask-hit]')
       if (!edit && !hit) return
@@ -131,7 +140,7 @@ export default function MoneyMask({ shown }: { shown: boolean }) {
       if (e.target instanceof Element && e.target.closest('[data-money-edit] :is(input, textarea, select)')) onClick(e)
     }
     // Another tab may have shown amounts, so the server would accept this form — but it was
-    // drawn hidden and holds zeros. Never let it submit; redraw with the real figures first.
+    // drawn hidden and holds disguised figures. Never let it submit; redraw with the real figures first.
     const onSubmit = (e: SubmitEvent) => {
       if (e.target instanceof Element && e.target.closest('[data-money-edit]')) onClick(e)
     }
@@ -145,12 +154,13 @@ export default function MoneyMask({ shown }: { shown: boolean }) {
       document.removeEventListener('focusin', onFocus, true)
       document.removeEventListener('submit', onSubmit, true)
     }
-  }, [shown])
+  }, [shown, canReveal])
 
   useEffect(
     () => () => {
       document.documentElement.removeAttribute('data-mask-ready')
       document.documentElement.removeAttribute('data-privacy')
+      document.documentElement.removeAttribute('data-privacy-owner')
     },
     [],
   )

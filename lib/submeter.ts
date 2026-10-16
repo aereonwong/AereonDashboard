@@ -2,7 +2,7 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { demoMode } from './records'
 import { demoSubmeter } from './demo-data'
-import { moneyHidden, scrubFields, zeroFields } from './privacy'
+import { moneyFactor, moneyHidden, scrubFields, disguiseFields } from './privacy'
 import type { Bill, Reading } from './submeter-math'
 
 // 👉 Property → Sub-meter. Two tables from supabase/submeter.sql (readings, TNB bills); every figure on
@@ -12,15 +12,17 @@ import type { Bill, Reading } from './submeter-math'
 // tenantReady is false while the tenant_name column (added 4 Oct 2026) is missing: re-running the SQL adds it.
 // paidReady is the same for paid_on (added 4 Oct 2026, later the same day).
 // kindReady is the same for kind (move-in / move-out, added 5 Oct 2026).
-export type SubmeterRead = { ready: false } | { ready: true; tenantReady: boolean; paidReady: boolean; kindReady: boolean; readings: Reading[]; bills: Bill[] }
+// disguised: privacy mode is on (lib/privacy.ts) — rates and bill amounts are scaled, so code constants in RM (FLAT_RATE) must not be compared with them or printed.
+export type SubmeterRead = { ready: false } | { ready: true; tenantReady: boolean; paidReady: boolean; kindReady: boolean; readings: Reading[]; bills: Bill[]; disguised?: boolean }
 
 const num = (v: unknown) => (v == null ? null : Number(v)) // numeric columns arrive as strings
 
-// While amounts are hidden (lib/privacy.ts) the rate per kWh and the bill amounts come back as zero.
+// While amounts are hidden (lib/privacy.ts) the rate per kWh and the bill amounts come back disguised.
 export async function readSubmeter(): Promise<SubmeterRead> {
   const read = await readRaw()
   if (!read.ready || !(await moneyHidden())) return read
-  return { ...read, readings: scrubFields(zeroFields(read.readings, ['rate']), ['note']), bills: scrubFields(zeroFields(read.bills, ['amount']), ['note']) }
+  const k = await moneyFactor()
+  return { ...read, disguised: true, readings: scrubFields(disguiseFields(read.readings, ['rate'], k), ['note']), bills: scrubFields(disguiseFields(read.bills, ['amount'], k), ['note']) }
 }
 
 async function readRaw(): Promise<SubmeterRead> {

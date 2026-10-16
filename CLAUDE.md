@@ -67,16 +67,21 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   tables first; only ask Instagram again when a refresh is actually needed. Reach and accounts_engaged
   are unique per window — never add windows' reach together.
   "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
-- **Privacy mode — money is hidden by default, on the SERVER** (13–16 Oct 2026, `lib/privacy.ts`): while hidden,
-  `getRecords()`, `readProperty()`, `readSubmeter()` and the paid-reach read return every amount as 0 (and money in
-  free text blanked), so no real figure reaches the browser — not in the HTML, not in DevTools. Only signed-in app
-  requests are gated: `proxy.ts` adds the `x-cfo-money: gate` header; the bot, the crons and public pages never carry
-  it and always read real figures. "Show amounts" sets cookie `cfo-reveal` (expiry ms, pushed forward by activity,
-  5 min idle) and reloads. Money-saving actions (invoice/quote save & edit, property, sub-meter) and the invoice PDF
-  routes refuse while hidden, because a form drawn while hidden holds zeros. On screen, `MoneyMask.tsx` draws the
-  zeros as `RM *****` (a bare money number needs `data-money`; `data-money-off` exempts), a click on any figure or on a
-  `data-money-edit` control shows amounts, and `PrivacyNote.tsx` explains on money pages that value-based charts and
-  rankings are blank while hidden. Any NEW loader that reads money must zero it when `moneyHidden()` is true.
+- **Privacy mode — real money is hidden by default, on the SERVER** (13–17 Oct 2026, `lib/privacy.ts`): while hidden,
+  `getRecords()`, `readProperty()`, `readSubmeter()`, the paid-reach read and `/approvals` multiply every amount by one
+  secret factor (0.35–0.95, fixed per signed-in person: HMAC of who under the session secret, so reloads can't average it away) and blank money in free text, so no real figure reaches the browser —
+  not in the HTML, not in DevTools — while charts, shares, rankings, growth and sentences stay true. Limit: proportions
+  are real, so knowing one exact amount would reveal that page's factor. Panels built on fixed money bands (Invoice
+  sizes, "Under 1K") show a `.v3-locked` card while hidden — any NEW absolute-threshold panel must do the same.
+  **Only the owner can show amounts** (`canRevealMoney()`: role owner — passcode, ADMIN_EMAILS, open door); for admins
+  and viewers the reveal cookie is ignored, the switch is locked, and money saves are refused.
+  Only signed-in app requests are gated: `proxy.ts` adds `x-cfo-money: gate`; the bot, crons and public pages never
+  carry it and read real figures. The switch is **"Show amounts"** (`MoneyToggle.tsx`): off/grey by default, green when
+  on; it sets cookie `cfo-reveal` (expiry ms, pushed forward by activity, 5 min idle) and reloads. Money-saving actions
+  and the invoice PDF routes refuse while hidden (a form drawn hidden holds disguised figures). On screen `MoneyMask.tsx`
+  draws amounts as `RM *****` (bare money numbers need `data-money`; `data-money-off` exempts); for the owner a click
+  on a figure or a `data-money-edit` control shows amounts. Any NEW loader that reads money must disguise it when
+  `moneyHidden()` is true.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
 
