@@ -23,6 +23,8 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 - Hosting: Vercel project `aereondashboard` (Hobby; renamed from cashflowos-aereon, same project ID)
   · Supabase project `cashflowos-aereon` (free, Singapore — its URL/ref never changes)
 - Telegram bot: @aereon_cashflow_bot — answers only Aereon (owner id in env)
+  **Paused since 16 Oct 2026** (Anthropic credits ran out): `/api/telegram` answers 200 and does nothing
+  unless env `TELEGRAM_BOT=on` — set it in Vercel and redeploy to resume.
 
 ## Shape of the code
 
