@@ -16,6 +16,7 @@ import { signedIn as isSignedIn } from '@/lib/auth'
 import { jsonLd, EMAIL } from '@/lib/agent-site'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import LandingTracker from '@/app/_components/LandingTracker'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,7 +80,7 @@ async function LandingBody({
     const inv = toInvoices(recs)
     const kinds = [...new Set(inv.map(i => i.kind))]
     const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
-    return <Reel audience={audience} kinds={kinds} since={since} totals={totals} />
+    return <><LandingTracker version="reel" /><Reel audience={audience} kinds={kinds} since={since} totals={totals} /></>
   }
   if (site.landing === 'kit' || preview) {
     const [audience, recs, totals] = await Promise.all([readAudience(), getRecords(), socialTotals()])
@@ -89,8 +90,10 @@ async function LandingBody({
     // Which kit: a signed-in preview can ask for either; visitors get the saved one.
     const kit = preview && (sp.kit === 'v1' || sp.kit === 'v2') ? sp.kit : site.kit
     // Kit v2 is drawn in Studio Standard only — Aereon's chosen look (2 Oct 2026).
-    if (kit === 'v2') return <MediaKit2 audience={audience} kinds={kinds} since={since} totals={totals} />
+    if (kit === 'v2') return <><LandingTracker version="kit-v2" /><MediaKit2 audience={audience} kinds={kinds} since={since} totals={totals} /></>
     return (
+      <>
+      <LandingTracker version="kit-v1" />
       <MediaKit
         audience={audience}
         brands={[]}
@@ -98,6 +101,7 @@ async function LandingBody({
         since={since}
         totals={totals}
       />
+      </>
     )
   }
 
@@ -113,6 +117,7 @@ async function LandingBody({
 
   return (
     <div className="land">
+      <LandingTracker version="classic" />
       <div className="land-photo" aria-hidden="true" />
       <div className="land-scrim" aria-hidden="true" />
       <div className="land-inner">
@@ -120,7 +125,7 @@ async function LandingBody({
           <span className="land-mark">
             <span className="dotmark" aria-hidden="true" /> Aereon Wong
           </span>
-          <a className="land-enter" href="/dashboard">
+          <a className="land-enter" href="/dashboard" data-t="enter-top">
             Enter dashboard
             <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
@@ -201,14 +206,14 @@ async function LandingBody({
               </svg>
               @aereonwong
             </a>
-            <a className="land-btn ghost" href={`mailto:${EMAIL}?subject=Collaboration`}>
+            <a className="land-btn ghost" href={`mailto:${EMAIL}?subject=Collaboration`} data-t="mail-cta">
               <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="14" rx="3" />
                 <path d="m3.5 7 8.5 6 8.5-6" />
               </svg>
               Work with me
             </a>
-            <a className="land-btn ghost" href="/dashboard">
+            <a className="land-btn ghost" href="/dashboard" data-t="enter-cta">
               <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="4" y="11" width="4" height="9" rx="1" />
                 <rect x="10" y="6" width="4" height="14" rx="1" />
