@@ -2,6 +2,7 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { demoMode } from './records'
 import { demoSubmeter } from './demo-data'
+import { moneyHidden, scrubFields, zeroFields } from './privacy'
 import type { Bill, Reading } from './submeter-math'
 
 // 👉 Property → Sub-meter. Two tables from supabase/submeter.sql (readings, TNB bills); every figure on
@@ -15,7 +16,14 @@ export type SubmeterRead = { ready: false } | { ready: true; tenantReady: boolea
 
 const num = (v: unknown) => (v == null ? null : Number(v)) // numeric columns arrive as strings
 
+// While amounts are hidden (lib/privacy.ts) the rate per kWh and the bill amounts come back as zero.
 export async function readSubmeter(): Promise<SubmeterRead> {
+  const read = await readRaw()
+  if (!read.ready || !(await moneyHidden())) return read
+  return { ...read, readings: scrubFields(zeroFields(read.readings, ['rate']), ['note']), bills: scrubFields(zeroFields(read.bills, ['amount']), ['note']) }
+}
+
+async function readRaw(): Promise<SubmeterRead> {
   if (await demoMode()) return { ready: true, tenantReady: true, paidReady: true, kindReady: true, ...demoSubmeter() }
   if (!supabaseConfigured) return { ready: false }
   const [readings, bills] = await Promise.all([

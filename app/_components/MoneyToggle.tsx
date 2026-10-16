@@ -1,13 +1,14 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
-import { isShown, serverShown, setShown, subscribe } from './money-privacy'
+import { useState } from 'react'
+import { setShown } from './money-privacy'
 
 // The privacy switch. "row" sits in the v3 rail and the classic sidebar: eye,
 // label and a switch, the way a banking app offers "Hide balances". "icon" is
 // the phone version, pinned to the end of the v3 top bar.
-export default function MoneyToggle({ variant = 'row' }: { variant?: 'row' | 'icon' }) {
-  const shown = useSyncExternalStore(subscribe, isShown, serverShown)
+// `shown` comes from the server (lib/privacy.ts), which drew this page with or without amounts.
+export default function MoneyToggle({ shown, variant = 'row' }: { shown: boolean; variant?: 'row' | 'icon' }) {
+  const [busy, setBusy] = useState(false)
   const label = shown ? 'Hide amounts' : 'Show amounts'
   return (
     <button
@@ -18,7 +19,12 @@ export default function MoneyToggle({ variant = 'row' }: { variant?: 'row' | 'ic
       title={shown ? 'Amounts are showing. They hide again after 5 minutes idle.' : 'Amounts are hidden. Show them all.'}
       className={`money-toggle money-toggle--${variant}`}
       data-shown={shown ? '' : undefined}
-      onClick={() => setShown(!shown)}
+      aria-busy={busy || undefined}
+      disabled={busy}
+      onClick={() => {
+        setBusy(true)
+        setShown(!shown) // reloads: the server redraws the page with or without amounts
+      }}
     >
       <Eye open={shown} />
       {variant === 'row' ? (

@@ -29,7 +29,7 @@ export function CostForm({
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `cost-${propertyId}-${initial?.id ?? 'new'}`
   return (
-    <form data-edit=""
+    <form data-edit="" data-money-edit=""
       className="v3-prop-form"
       id={fid}
       action={form => {
@@ -142,7 +142,7 @@ export function TermForm({
   const money = (v: number | null | undefined) => v ?? ''
   const listId = `tn-${propertyId}-${initial?.id ?? 'new'}`
   return (
-    <form data-edit=""
+    <form data-edit="" data-money-edit=""
       className="v3-prop-form"
       action={form => {
         setMsg(null)

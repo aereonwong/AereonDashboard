@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { MARKDOWN_PATHS, isKnownPrivatePath, isPublicPath, markdownFor, notFoundHtml, notFoundMarkdown, wantsMarkdown } from '@/lib/agent-site'
 import { SESSION_COOKIE, isValidSession, openDoor, sessionSecret } from '@/lib/session'
+import { GATE_HEADER } from '@/lib/privacy-header'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // The passcode gate. In Next 16 this file is called `proxy.ts` (the old name
@@ -33,6 +34,16 @@ function notFound(req: NextRequest) {
   })
 }
 
+// Signed-in app requests go through marked, so lib/privacy.ts knows this is a page that
+// must not receive real money figures while "Hide amounts" is on. Set here (never trusted
+// from the browser: this overwrites whatever came in); public pages, the bot and the crons
+// never carry it and keep reading real figures.
+function gated(req: NextRequest) {
+  const headers = new Headers(req.headers)
+  headers.set(GATE_HEADER, 'gate')
+  return NextResponse.next({ request: { headers } })
+}
+
 export function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
 
@@ -45,11 +56,11 @@ export function proxy(req: NextRequest) {
   if (isPublicPath(path)) return NextResponse.next()
   if (!isKnownPrivatePath(path)) return notFound(req)    // nothing lives here → honest 404
 
-  if (openDoor()) return NextResponse.next()        // no lock installed (not on production) → open door
+  if (openDoor()) return gated(req)        // no lock installed (not on production) → open door
   const secret = sessionSecret()
 
   const session = req.cookies.get(SESSION_COOKIE)?.value
-  if (isValidSession(session, secret)) return NextResponse.next()   // signed by us → allow
+  if (isValidSession(session, secret)) return gated(req)   // signed by us → allow
 
   const url = req.nextUrl.clone()
   url.pathname = '/login'

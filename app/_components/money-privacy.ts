@@ -1,56 +1,39 @@
 'use client'
 
-// Privacy mode, the one switch behind every money figure: hidden (the default,
-// for every role) or shown. MoneyMask reads it to mask the page; MoneyToggle
-// and a click on any masked figure write it. Like a banking session, "shown"
-// lasts for this browser tab only and falls back to hidden after IDLE_MS
-// without a click, key, scroll or touch — page loads count as activity.
+import { REVEAL_COOKIE } from '@/lib/privacy-header'
+
+// Privacy mode in the browser. The SERVER decides what a page holds (lib/privacy.ts):
+// while hidden it sends zeros, so this side only flips the reveal cookie and reloads.
+// The cookie holds an expiry time; any click, key, scroll or touch pushes it 5 minutes
+// ahead, and once it lapses the next check (every 15 s, on tab return, on back/forward)
+// reloads the page hidden — the banking "hides after 5 idle minutes" rule.
 
 export const IDLE_MS = 5 * 60_000
-const KEY = 'cfo-money-until' // sessionStorage: shown until this time (ms)
+const COOKIE_RE = new RegExp(`(?:^|;\\s*)${REVEAL_COOKIE}=(\\d+)`)
 
-let shown: boolean | null = null
-const subs = new Set<() => void>()
+const until = () => Number(document.cookie.match(COOKIE_RE)?.[1] ?? 0)
 
-function stored() {
-  try {
-    return Number(sessionStorage.getItem(KEY)) > Date.now()
-  } catch {
-    return false
-  }
+function write(ms: number | null) {
+  const secure = location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = ms
+    ? `${REVEAL_COOKIE}=${ms}; Path=/; Max-Age=${IDLE_MS / 1000}; SameSite=Strict${secure}`
+    : `${REVEAL_COOKIE}=; Path=/; Max-Age=0; SameSite=Strict${secure}`
 }
 
-export const isShown = () => (shown ??= stored())
-export const serverShown = () => false
-
-/** Timers freeze while a laptop sleeps or a tab is suspended — check the clock itself. */
-export function hideIfExpired() {
-  if (shown && !stored()) setShown(false)
-}
-
-/** Activity while shown: push the auto-hide back. */
-export function touch() {
-  if (!shown) return
-  if (!stored()) return setShown(false) // the first click after a long sleep must not extend it
-  try {
-    sessionStorage.setItem(KEY, String(Date.now() + IDLE_MS))
-  } catch {}
-}
-
+/** Show or hide every amount: the server redraws the page with or without them. */
 export function setShown(next: boolean) {
-  if (next === isShown()) return
-  shown = next
-  try {
-    if (next) sessionStorage.setItem(KEY, String(Date.now() + IDLE_MS))
-    else sessionStorage.removeItem(KEY)
-  } catch {}
-  document.documentElement.setAttribute('data-privacy', next ? 'shown' : 'hidden')
-  subs.forEach(f => f())
+  write(next ? Date.now() + IDLE_MS : null)
+  document.documentElement.setAttribute('data-privacy', 'switching')
+  location.reload()
 }
 
-export function subscribe(f: () => void) {
-  subs.add(f)
-  return () => {
-    subs.delete(f)
-  }
+/** Activity while shown: push the auto-hide back (at most every 30 s). */
+export function touch() {
+  const left = until() - Date.now()
+  if (left > 0 && left < IDLE_MS - 30_000) write(Date.now() + IDLE_MS)
+}
+
+/** A page drawn with amounts whose time has run out (idle, laptop asleep) reloads hidden. */
+export function hideIfExpired() {
+  if (until() <= Date.now()) setShown(false)
 }

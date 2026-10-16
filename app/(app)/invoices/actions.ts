@@ -10,6 +10,7 @@ import type { DocKind } from '@/lib/invoice-render'
 import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
 import { loadEditable, withRowDates, applyEdit, undoLastEdit, rowKind } from '@/lib/invoice-edit'
+import { moneyLocked } from '@/lib/privacy'
 
 // 👉 The dashboard's invoice buttons. Each goes database → app → (Canva or
 // Drive only when the action needs it) → database. No model is involved.
@@ -56,6 +57,8 @@ function refresh() {
 }
 
 async function guard(): Promise<Fail | null> {
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return fail(locked)
   if (await demoMode()) return fail('Demo data is on — turn it off in Settings to create or file real invoices.')
   if (!supabaseConfigured) return fail('Database not configured')
   return null

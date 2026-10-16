@@ -7,23 +7,25 @@ import { readVersion } from '@/lib/v3/version'
 import V3Shell from '@/app/_v3/Shell'
 import MoneyMask from '@/app/_components/MoneyMask'
 import MoneyToggle from '@/app/_components/MoneyToggle'
+import PrivacyNote from '@/app/_components/PrivacyNote'
 import { redirect } from 'next/navigation'
 import { canEdit, signedIn, sessionUser } from '@/lib/auth'
+import { moneyHidden } from '@/lib/privacy'
 
 // The dashboard chrome: sidebar on desktop, bottom bar on phones. Everything
 // inside app/(app)/ gets it; the landing page and /login do not.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // Locked or removed in Users? Out they go (the cookie alone is still valid).
   if (!(await signedIn())) redirect('/login?error=revoked')
-  const [pending, demo, { version }, who, editor] = await Promise.all([getPendingCount(), demoMode(), readVersion(), sessionUser(), canEdit()])
+  const [pending, demo, { version }, who, editor, hidden] = await Promise.all([getPendingCount(), demoMode(), readVersion(), sessionUser(), canEdit(), moneyHidden()])
   // v3 is a whole-app version with its own chrome; v1 and v2 share the classic one.
   if (version === 'v3') {
     return (
       <>
-        <V3Shell pending={pending} demo={demo} who={who} viewOnly={!editor}>
+        <V3Shell pending={pending} demo={demo} who={who} viewOnly={!editor} amountsShown={!hidden}>
           {children}
         </V3Shell>
-        <MoneyMask />
+        <MoneyMask shown={!hidden} />
       </>
     )
   }
@@ -34,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <a className="brand" href="/">
             <span className="logo" aria-hidden="true">A</span> Aereon Dashboard
           </a>
-          <MoneyToggle />
+          <MoneyToggle shown={!hidden} />
           <Nav pendingCount={pending} />
           <p className="hint">
             Tech &amp; travel creator HQ — invoices, clients, Instagram and your AI agents.
@@ -49,6 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </aside>
         <main className="main">
           <ConnStatus />
+          <PrivacyNote shown={!hidden} />
           {demo ? (
             <div className="banner warn">
               <b>Demo data is on.</b> Every money, invoice, client and pipeline tab is showing an invented
@@ -60,7 +63,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
       <BottomNav />
-      <MoneyMask />
+      <MoneyMask shown={!hidden} />
     </>
   )
 }

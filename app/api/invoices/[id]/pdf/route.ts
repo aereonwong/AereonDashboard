@@ -4,6 +4,7 @@ import { driveOf, driveDownloadUrl } from '@/lib/invoice-drive'
 import { designIdOf, exportPdfUrl } from '@/lib/invoice-canva'
 import { composioReady } from '@/lib/composio-exec'
 import { signedIn } from '@/lib/auth'
+import { moneyHidden } from '@/lib/privacy'
 
 // 👉 Download PDF. The cheapest route that works, in order:
 //   1. The invoice is already in Google Drive → redirect to that file. No API call.
@@ -17,6 +18,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   // Second lock behind proxy.ts — this route spends or switches modes.
   if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
+  // Amounts hidden (lib/privacy.ts): the PDF is the invoice's figures in full, so it waits for "Show amounts".
+  if (await moneyHidden()) return new NextResponse('Amounts are hidden. Turn off "Hide amounts" in the sidebar, then open the PDF again.', { status: 403 })
   const id = Number((await params).id)
   if (!supabaseConfigured || !Number.isFinite(id)) return new NextResponse('Not found', { status: 404 })
 

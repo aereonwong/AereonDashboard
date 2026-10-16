@@ -1,5 +1,6 @@
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode, isIssued } from '@/lib/records'
+import { moneyHidden, scrubText } from '@/lib/privacy'
 import type { LinkedInvoice, MetricRow } from './ig-insights'
 
 // 👉 What the Instagram page reads beyond the audience: every post's stored readings
@@ -18,6 +19,7 @@ export async function readIgExtras(): Promise<IgExtras> {
   if (!supabaseConfigured) return { metrics: [], linked: [], reachById: {} }
   // Demo mode shows invented records only: real client names and amounts never appear in it.
   const demo = await demoMode()
+  const hidden = await moneyHidden() // amounts hidden: invoice amounts come back as zero (lib/privacy.ts)
   const since = new Date(Date.now() - 120 * 86_400_000).toISOString()
   // Supabase returns at most 1,000 rows a request, and each refresh adds about 40, so the
   // readings are paged — a silent cut would drop the NEWEST rows and make every curve stale.
@@ -54,8 +56,8 @@ export async function readIgExtras(): Promise<IgExtras> {
       id: Number(row.id),
       no: String(row.meta?.invoice_no ?? ''),
       client: String(row.meta?.customer ?? '—'),
-      job: String(row.meta?.job ?? row.title ?? ''),
-      amount: Number(row.amount ?? 0),
+      job: hidden ? scrubText(String(row.meta?.job ?? row.title ?? '')) : String(row.meta?.job ?? row.title ?? ''),
+      amount: hidden ? 0 : Number(row.amount ?? 0),
       currency: String(row.meta?.currency || 'MYR'),
       date: String(row.meta?.invoice_date ?? '').slice(0, 10),
       documented: isIssued({ status: String(row.status ?? ''), meta: row.meta }),

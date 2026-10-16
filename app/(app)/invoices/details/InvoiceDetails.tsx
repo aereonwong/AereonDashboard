@@ -311,7 +311,7 @@ export default function InvoiceDetails({
         <div className="idt-bulk" role="group" aria-label="Confirm older invoices as paid">
           <span>Already paid? Mark every unpaid invoice issued up to</span>
           <input type="date" value={upTo} max={options.today} onChange={e => setUpTo(e.target.value)} aria-label="Issued on or before" />
-          <button data-edit=""
+          <button data-edit="" data-money-edit=""
             type="button"
             className="idt-paybtn"
             disabled={!!locked || !upTo || !bulk.count}
@@ -461,7 +461,7 @@ export default function InvoiceDetails({
                           </span>
                         )
                       ) : (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className={`idt-act ${r.drive === 'failed' ? 'bad' : 'go'}${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready || !r.hasDesign}
@@ -481,7 +481,7 @@ export default function InvoiceDetails({
                         </button>
                       )}
                       {r.drive === 'uploaded' ? (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className={`idt-act${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready || !r.hasDesign}
@@ -518,7 +518,7 @@ export default function InvoiceDetails({
                   <td>
                     <div className="idt-acts">
                       {/* Work on the record … */}
-                      <button data-edit=""
+                      <button data-edit="" data-money-edit=""
                         type="button"
                         className={`idt-act${r.igPosts.length ? ' linked' : ''}`}
                         disabled={isBusy || !!locked}
@@ -530,7 +530,7 @@ export default function InvoiceDetails({
                         {r.igPosts.length ? <span className="idt-act-count">{r.igPosts.length}</span> : null}
                       </button>
 
-                      <button data-edit=""
+                      <button data-edit="" data-money-edit=""
                         type="button"
                         className="idt-act"
                         disabled={isBusy || !!locked || !ready || !r.edit || !r.designId}
@@ -546,7 +546,7 @@ export default function InvoiceDetails({
                       </button>
 
                       {r.undo ? (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className={`idt-act${busy.has(r.id) ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready}

@@ -1,6 +1,7 @@
 import { supabase, supabaseConfigured } from './supabase'
 import { cookies } from 'next/headers'
 import { demoRecords } from './demo-data'
+import { moneyHidden, scrubRecords } from './privacy'
 
 // One row of the business spine. The whole app reads this single table.
 // `meta` is a free-form bag of extra fields each tab can use (a lead's next
@@ -39,7 +40,13 @@ export async function demoMode(): Promise<boolean> {
   }
 }
 
+// While amounts are hidden (lib/privacy.ts) every row comes back with its money zeroed.
 export async function getRecords(): Promise<Rec[]> {
+  const rows = await readRecords()
+  return (await moneyHidden()) ? scrubRecords(rows) : rows
+}
+
+async function readRecords(): Promise<Rec[]> {
   if (await demoMode()) return demoRecords()
   // Before Supabase is wired (placeholder env), skip the fetch entirely — a bad
   // or unreachable URL otherwise hangs ~7s per request before failing. The
