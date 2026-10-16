@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { SESSION_COOKIE, isValidSession, sessionSecret } from '@/lib/session'
-import { isTrackedPath, HELLO_TAP_CAP, DAILY_ROW_CAP, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
+import { isTrackedPath, HELLO_TAP_CAP, LANDING_EVENT_CAP, DAILY_ROW_CAP, isBot, parseUa, klDay, visitorHash, referrerHost, clip } from '@/lib/site-visits'
 
 // 👉 Page-view beacon for the PUBLIC pages (app/_components/Tracker.tsx posts here). Public on
 // purpose — a visitor has no session — so it only ever INSERTS one small row (and answers nothing back).
 // It answers 204 whatever happens: a tracker must never break or slow a page.
 //
-// Also logs taps on /hello (lib/site-visits.ts HELLO_EVENT) the same way, one row per tap.
+// Also logs taps on /hello (lib/site-visits.ts HELLO_EVENT) and what visitors do on the landing
+// page (LANDING_EVENT: version seen, scroll, time, language, taps) the same way, one row each.
 // Not counted: the signed-in owner (valid session cookie), bots, browsers sending Do Not Track
 // or Global Privacy Control, and any path that is not a public page. No IP is stored.
 
@@ -42,11 +43,13 @@ export async function POST(req: NextRequest) {
     const { count } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
       .eq('visitor_hash', hash).eq('path', path).gte('ts', since)
     if (count) return done()
-    if (path.startsWith('/hello/')) {
+    const events = path.startsWith('/hello/') ? { like: '/hello/%', cap: HELLO_TAP_CAP }
+      : path.startsWith('/land/') ? { like: '/land/%', cap: LANDING_EVENT_CAP } : null
+    if (events) {
       // Tap events have open-ended ids, so cap each visitor's total, not just per path.
       const { count: taps } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })
-        .eq('visitor_hash', hash).like('path', '/hello/%').gte('ts', since)
-      if ((taps ?? 0) >= HELLO_TAP_CAP) return done()
+        .eq('visitor_hash', hash).like('path', events.like).gte('ts', since)
+      if ((taps ?? 0) >= events.cap) return done()
     }
 
     const { count: today } = await supabase.from('site_visits').select('id', { count: 'exact', head: true })

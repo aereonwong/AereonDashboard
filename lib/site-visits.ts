@@ -18,7 +18,19 @@ export const HELLO_TAP_CAP = 20
  *  flood (a script rotating X-Forwarded-For gets a fresh visitor hash each time). */
 export const DAILY_ROW_CAP = 5000
 
-export const isTrackedPath = (path: string) => TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path)
+/** What visitors do on the landing page (/), logged as pseudo-paths beside the page views:
+ *  /land/view/<version> = which landing they saw (classic, media kit v1/v2, reel),
+ *  /land/scroll/<pct>   = scrolled at least that far down,
+ *  /land/time/<mark>    = stayed at least that long with the page visible,
+ *  /land/lang/<xx>      = the browser's first language,
+ *  /land/out/<id>       = a link or button used (lib/landing-taps.ts names them). */
+export const LANDING_EVENT =
+  /^\/land\/(view\/(classic|kit-v1|kit-v2|reel)|scroll\/(25|50|75|100)|time\/(10s|30s|1m|3m|10m)|lang\/[a-z]{2}|out\/[a-z0-9-]{1,40})$/
+/** Most /land rows one visitor may add per 10 minutes: a view, 4 scroll and 5 time marks, a language, then taps. */
+export const LANDING_EVENT_CAP = 30
+
+export const isTrackedPath = (path: string) =>
+  TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path) || LANDING_EVENT.test(path)
 
 const BOT = /bot|crawl|spider|slurp|preview|fetch|monitor|headless|lighthouse|curl|wget|python|axios|node-fetch|go-http|java\/|httpclient|vercel|facebookexternalhit|whatsapp|telegram|discord|slack/i
 

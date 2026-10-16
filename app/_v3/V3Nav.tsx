@@ -30,6 +30,7 @@ export const V3_NAV: NavGroup[] = [
       { href: '/facebook', label: 'Facebook', icon: 'facebook' },
       { href: '/news', label: 'News', icon: 'news' },
       { href: '/links', label: 'Link page', icon: 'share' },
+      { href: '/analytics', label: 'Site analytics', icon: 'chart' },
     ],
   },
   {

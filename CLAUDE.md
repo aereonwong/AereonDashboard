@@ -153,6 +153,16 @@ connected platform — `socialTotals()` in `lib/social-totals.ts` (today Instagr
 source there). Labels never name platforms or explain double counting (Aereon's call). Views/interactions = 90 days;
 reach = each platform's best (or latest) month of unique people, added across platforms, never across windows.
 
+## Site analytics (16 Oct 2026)
+
+`/analytics` (Social group): who visits the public pages and what they do — two views, **Landing** (`/`) and
+**Link page** (`/hello`), 7/30/90 days. `/links` is setup only. All from `site_visits` via `/api/track` (no IP, daily
+visitor hash, owner and bots never counted). The landing logs `/land/…` events (`LANDING_EVENT` in `lib/site-visits.ts`)
+from `app/_components/LandingTracker.tsx`: version seen, scroll 25–100%, visible time 10s–10m, browser language, and
+every tap — named from `data-t` or the link's target by `lib/landing-taps.ts`, so all landing versions are covered.
+Maths `lib/landing-insights.ts` (tested), read `lib/site-stats.ts`. Many "desktop Chrome" landing views come from
+data-centre cities (Council Bluffs, Ashburn, Boardman) — likely crawlers that run JS.
+
 ## Showcase (5 Oct 2026)
 
 Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `npm run ig:archive`). Full rules: `docs/SHOWCASE.md` — read before touching the classifier or tiles.

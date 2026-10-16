@@ -24,6 +24,7 @@ const MORE: MoreTab[] = [
   { href: '/facebook', label: 'Facebook', ico: '📘' },
   { href: '/news', label: 'News', ico: '📰' },
   { href: '/links', label: 'Link page', ico: '🔗' },
+  { href: '/analytics', label: 'Site analytics', ico: '📈' },
   { href: '/cash-in', label: 'Cash In', ico: '💰' },
   { href: '/leads', label: 'Leads', ico: '🧲' },
   { href: '/customers', label: 'Customers', ico: '🧑‍🤝‍🧑' },

@@ -101,18 +101,29 @@ export function sourceOf(r: Pick<VisitRow, 'browser' | 'utm_source' | 'referrer_
 const region = (() => {
   try { return new Intl.DisplayNames(['en'], { type: 'region' }) } catch { return null }
 })()
-const countryName = (code: string) => {
+export const countryName = (code: string) => {
   try { return region?.of(code.toUpperCase()) ?? code } catch { return code }
 }
 
-const byCount = (a: Count, b: Count) => b.count - a.count || a.label.localeCompare(b.label)
-function top(m: Map<string, number>, n: number, label = (k: string) => k): Count[] {
+export const byCount = (a: Count, b: Count) => b.count - a.count || a.label.localeCompare(b.label)
+export function top(m: Map<string, number>, n: number, label = (k: string) => k): Count[] {
   const all = [...m].map(([id, count]) => ({ id, label: label(id), count })).sort(byCount)
   if (all.length <= n) return all
   const rest = all.slice(n - 1).reduce((t, c) => t + c.count, 0)
   return [...all.slice(0, n - 1), { id: '_other', label: 'Everything else', count: rest }]
 }
-const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1)
+export const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1)
+
+/** Every day in the range, zeros included, oldest first. */
+export function daySeries(daily: Map<string, Set<string>>, days: number, today: string) {
+  const series: { day: string; visitors: number }[] = []
+  const end = new Date(`${today}T00:00:00Z`)
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(end.getTime() - i * 86_400_000).toISOString().slice(0, 10)
+    series.push({ day: d, visitors: daily.get(d)?.size ?? 0 })
+  }
+  return series
+}
 
 export function analyseHello(rows: VisitRow[], cfg: HelloConfig, days: number, today: string, socials: SocialName[] = []): HelloInsights {
   const key = (r: VisitRow) => `${r.day}|${r.visitor_hash}`
@@ -157,13 +168,7 @@ export function analyseHello(rows: VisitRow[], cfg: HelloConfig, days: number, t
     }
   }
 
-  // Every day in the range, zeros included, oldest first.
-  const series: { day: string; visitors: number }[] = []
-  const end = new Date(`${today}T00:00:00Z`)
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(end.getTime() - i * 86_400_000).toISOString().slice(0, 10)
-    series.push({ day: d, visitors: daily.get(d)?.size ?? 0 })
-  }
+  const series = daySeries(daily, days, today)
 
   const sections = Object.keys(SECTION).map(id => {
     const o = openedBy.get(id) ?? new Set<string>()

@@ -21,8 +21,8 @@ Stored as one `records` row (`doc` / `setting` / title `hello`) like the site se
 `lib/hello-config.ts` cleans every save and read (http(s)/mailto only; one id space across both lists).
 **Tap tracking:** elements with `data-t` (`tap/<section>`, `out/<link id | mail-* | social-* | code-* | copy-email>`)
 send a beacon via `app/hello/TapTracker.tsx` to `/api/track`, logged in `site_visits` as `/hello/tap/…` / `/hello/out/…`
-(`HELLO_EVENT` in `lib/site-visits.ts`; same no-IP, no-owner, no-bot, 10-minute de-dupe rules). The Link page tab shows
-insights (`lib/hello-stats.ts` reads, `lib/hello-insights.ts` is the tested maths): 7/30/90-day switch, visitors (daily
+(`HELLO_EVENT` in `lib/site-visits.ts`; same no-IP, no-owner, no-bot, 10-minute de-dupe rules). Since 16 Oct 2026 the Link page tab
+is setup only; insights live on **Site analytics** (`/analytics?page=hello`, `app/(app)/analytics/`), which shows (`lib/hello-stats.ts` reads, `lib/hello-insights.ts` is the tested maths): 7/30/90-day switch, visitors (daily
 hash, so one person on two days counts twice), funnel (opened a section / started an email / opened a promo / went
 to a social), per-section opened → acted, taps, sources (in-app browser from `parseUa` — Instagram, Threads, Facebook,
 TikTok, Xiaohongshu, LINE — split by Aereon's own `utm_source` tag, e.g. "Instagram · bio" (the app's own `ig` tag doesn't
