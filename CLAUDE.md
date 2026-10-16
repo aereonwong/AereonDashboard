@@ -136,6 +136,13 @@ filters it ignores. Typical = median; hit = 2× the slice's typical. Empty in de
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
+## Public proof numbers (16 Oct 2026)
+
+Landing (reel + classic), both media kits, `/hello` and its share card show ONE overall figure per stat across every
+connected platform — `socialTotals()` in `lib/social-totals.ts` (today Instagram + Facebook; a new platform is one more
+source there). Labels never name platforms or explain double counting (Aereon's call). Views/interactions = 90 days;
+reach = each platform's best (or latest) month of unique people, added across platforms, never across windows.
+
 ## Showcase (5 Oct 2026)
 
 Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `npm run ig:archive`). Full rules: `docs/SHOWCASE.md` — read before touching the classifier or tiles.

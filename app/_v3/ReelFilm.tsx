@@ -33,12 +33,9 @@ export type ReelData = {
   followers: number
   reach: number
   views: number
-  /** Instagram's total of likes, comments, saves and shares over `period` days. */
+  /** Overall figures across every platform (lib/social-totals.ts): views and interactions
+   *  over 90 days, reach in each platform's best month. */
   interactions: number
-  /** 90 = views and interactions over 90 days, reach = best 30-day window; 30 = the last 30 days. */
-  period: 30 | 90
-  /** True when followers, views and interactions add Facebook to Instagram (reach stays Instagram's). */
-  withFb?: boolean
   posts: ReelPost[]
   /** The Work chapter's line — the showcase spans two years, the fallback only recent posts. */
   workTitle?: string
@@ -214,12 +211,12 @@ export default function ReelFilm({ data }: { data: ReelData }) {
     }
   }, [ready, apply, play, stop])
 
-  const { followers, reach, views, interactions, period, posts, brands, withFb } = data
+  const { followers, reach, views, interactions, posts, brands } = data
   const stats = [
-    followers ? { v: followers, l: 'Combined followers', u: 'n' } : null,
-    reach ? { v: reach, l: period === 90 ? 'Instagram reach · best 30 days' : 'Instagram reach · 30 days', u: 'n' } : null,
-    views ? { v: views, l: `Views · ${period} days`, u: 'n' } : null,
-    interactions ? { v: interactions, l: `Interactions · ${period} days`, u: 'n' } : null,
+    followers ? { v: followers, l: 'Followers', u: 'n' } : null,
+    reach ? { v: reach, l: 'Reach · best month', u: 'n' } : null,
+    views ? { v: views, l: 'Views · 90 days', u: 'n' } : null,
+    interactions ? { v: interactions, l: 'Interactions · 90 days', u: 'n' } : null,
   ].filter(Boolean) as { v: number; l: string; u: string }[]
 
   return (
@@ -295,7 +292,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
         {/* ---------------------------------------------- 3 · reach */}
         <Scene i={2} className="rf-reach">
           <p className="rf-kicker">
-            <Words text={reach || views ? `Last ${period} days on ${withFb ? 'Instagram + Facebook' : 'Instagram'}` : 'Across my socials'} from={9.2} step={0.06} />
+            <Words text={reach || views ? 'Last 90 days across my socials' : 'Across my socials'} from={9.2} step={0.06} />
           </p>
           <div className="rf-stats">
             {stats.map((s, i) => (
@@ -309,11 +306,7 @@ export default function ReelFilm({ data }: { data: ReelData }) {
           </div>
           {reach || views || interactions ? (
             <p className="rf-a rf-fine" style={at('rf-fade', 12.6, 0.6)}>
-              {withFb
-                ? 'Views and interactions add Instagram and the Facebook Page (its post engagements) over 90 days; followers add every platform, so someone on two counts twice. Reach is Instagram’s best 30-day window, as people are counted per window.'
-                : period === 90
-                  ? 'Instagram’s own account figures. Views and interactions over 90 days; reach is the best 30-day window, as Instagram counts people per window.'
-                  : 'Reach, views and interactions are Instagram’s own 30-day account figures.'}
+              Overall figures across my social platforms, from each platform’s own analytics. Views and interactions over 90 days; reach in the best month.
             </p>
           ) : null}
         </Scene>

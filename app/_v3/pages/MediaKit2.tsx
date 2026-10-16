@@ -9,6 +9,8 @@ import { compact, longDate } from '../fmt'
 import { KIT_BRANDS, logoSize } from '@/lib/v3/brands'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { socials, combined } from '@/lib/socials'
+import type { SocialTotals } from '@/lib/social-totals'
 import { EMAIL } from '@/lib/agent-site'
 
 // 👉 The public creator media kit, version 2. Reworked 3 Oct 2026 to the Front
@@ -57,14 +59,16 @@ function ShareList({ items, max = 4, precise }: { items: Share[]; max?: number; 
   )
 }
 
-export default function MediaKit2({ audience, kinds, since }: { audience: Audience; kinds: WorkKind[]; since: string }) {
+export default function MediaKit2({ audience, kinds, since, totals }: { audience: Audience; kinds: WorkKind[]; since: string; totals: SocialTotals }) {
   const { view } = audience
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
-  // Instagram's own 30-day account figures — only while fresh (the cron refreshes
-  // daily); an old row would show a stale "30 days", so the tiles are left out.
+  // Instagram's own account figures — only while fresh (the cron refreshes daily).
   const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
-  const reach = fresh ? (view?.totals.reach ?? 0) : 0
-  const views = fresh ? (view?.totals.views ?? 0) : 0
+  // Overall figures across every platform (lib/social-totals.ts): reach in each platform's
+  // best month, views over 90 days. Stale platforms drop out.
+  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook))
+  const reach = totals.bestReach ?? 0
+  const views = totals.views ?? 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
   const posts = audience.best.slice(0, 10) // two rows of five
   const updated = view?.capturedAt ?? audience.snap?.captured_at
@@ -121,22 +125,22 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
           </div>
 
           <dl className="k3-stats">
-            {audience.followers ? (
+            {followers ? (
               <div className="k3-stat">
-                <dd className="num">{compact(audience.followers)}</dd>
+                <dd className="num">{compact(followers)}</dd>
                 <dt>Followers</dt>
               </div>
             ) : null}
             {reach ? (
               <div className="k3-stat">
                 <dd className="num">{compact(reach)}</dd>
-                <dt>Reached · 30 days</dt>
+                <dt>Reach · best month</dt>
               </div>
             ) : null}
             {views ? (
               <div className="k3-stat">
                 <dd className="num">{compact(views)}</dd>
-                <dt>Views · 30 days</dt>
+                <dt>Views · 90 days</dt>
               </div>
             ) : null}
             {newPct !== null ? (
@@ -153,7 +157,7 @@ export default function MediaKit2({ audience, kinds, since }: { audience: Audien
           <h2 className="k3-h2" id="k3-social">
             Find me on
           </h2>
-          <SocialLinks igFollowers={audience.followers} />
+          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} />
         </section>
 
         {/* ------------------------------------------------ audience */}

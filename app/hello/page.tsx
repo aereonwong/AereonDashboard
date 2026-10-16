@@ -14,7 +14,7 @@ import type { Metadata, Viewport } from 'next'
 import { readHello } from '@/lib/hello'
 import { briefMailto, collabMailto, type HelloAffiliate } from '@/lib/hello-config'
 import { socials, combined } from '@/lib/socials'
-import { socialTotals, totalsLabel } from '@/lib/social-totals'
+import { socialTotals } from '@/lib/social-totals'
 import { EMAIL } from '@/lib/agent-site'
 import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
@@ -74,9 +74,9 @@ function AffiliateList({ items, note }: { items: HelloAffiliate[]; note: string 
 }
 
 export default async function Hello() {
-  // Instagram + Facebook over the last 90 days, from the stored history (refreshed by the daily
-  // cron), never a live call. Views and interactions add up; reach would not. A platform whose
-  // figures are over a week old drops out of the totals (lib/social-totals.ts).
+  // Overall figures across every platform over the last 90 days, from the stored history
+  // (refreshed by the daily cron), never a live call. A platform whose figures are over a
+  // week old drops out of the totals (lib/social-totals.ts).
   const [cfg, t] = await Promise.all([readHello(), socialTotals()])
   const channels = socials(t.followers.instagram, t.followers.facebook)
   const total = combined(channels)
@@ -178,8 +178,8 @@ export default async function Hello() {
           <h1 className="hl-name hl-in" style={step()}>Aereon Wong</h1>
           <p className="hl-tag hl-in" style={step()}>{cfg.tagline}</p>
           <dl className="hl-stats hl-in" style={step()}>
-            {t.views ? <div><dt>Views</dt><dd>{compact(t.views)}</dd><small>{totalsLabel(t, 'views', true)}</small></div> : null}
-            {t.interactions ? <div><dt>Interactions</dt><dd>{compact(t.interactions)}</dd><small>{totalsLabel(t, 'interactions', true)}</small></div> : null}
+            {t.views ? <div><dt>Views</dt><dd>{compact(t.views)}</dd><small>All socials · 90 days</small></div> : null}
+            {t.interactions ? <div><dt>Interactions</dt><dd>{compact(t.interactions)}</dd><small>All socials · 90 days</small></div> : null}
             {total ? <div><dt>Followers</dt><dd>{compact(total)}</dd><small>{channels.length} platforms</small></div> : null}
           </dl>
         </header>
