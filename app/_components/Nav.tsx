@@ -24,7 +24,10 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
     { href: '/facebook', label: 'Facebook', icon: 'facebook' },
     { href: '/news', label: 'News', icon: 'news' },
     { href: '/links', label: 'Link page', icon: 'share' },
-    { href: '/analytics', label: 'Site analytics', icon: 'chart' },
+  ] },
+  { label: 'Site analytics', tabs: [
+    { href: '/analytics/landing', label: 'Landing page', icon: 'chart' },
+    { href: '/analytics/link', label: 'Link page', icon: 'share' },
   ] },
   { label: 'Money', tabs: [
     { href: '/cash-in', label: 'Cash In', icon: 'cash-in' },

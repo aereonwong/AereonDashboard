@@ -1,6 +1,6 @@
 // 👉 Link page — sets up the public /hello page (the link in the Instagram bio): the line
 // under the name, the sections, links and affiliates. What visitors open and tap is on the
-// Site analytics tab (/analytics?page=hello). Socials come from lib/socials.ts
+// Site analytics group (/analytics/link). Socials come from lib/socials.ts
 // and the email from lib/agent-site.ts, so they are shown here but not edited.
 import { readHello } from '@/lib/hello'
 import { readVersion } from '@/lib/v3/version'
@@ -23,10 +23,10 @@ export default async function Links() {
           <h1 className="v3-title">Link page</h1>
           <p className="v3-lede">
             The page behind the link in your Instagram bio: <a href="/hello" target="_blank" rel="noopener">aereonwong.com/hello</a>.
-            Set it up here; who visits and what they tap is on Site analytics.
+            Set it up here; who visits and what they tap is under Site analytics → Link page.
           </p>
         </div>
-        <a className="v3-btn" href="/analytics?page=hello">Visitor analytics</a>
+        <a className="v3-btn" href="/analytics/link">Visitor analytics</a>
       </header>
       <div className="v3-grid">
         <LinksEditor

@@ -155,8 +155,8 @@ reach = each platform's best (or latest) month of unique people, added across pl
 
 ## Site analytics (16 Oct 2026)
 
-`/analytics` (Social group): who visits the public pages and what they do — two views, **Landing** (`/`) and
-**Link page** (`/hello`), 7/30/90 days. `/links` is setup only. All from `site_visits` via `/api/track` (no IP, daily
+**Site analytics** is its own nav group (after Social): who visits the public pages and what they do —
+`/analytics/landing` (Landing page, `/`) and `/analytics/link` (Link page, `/hello`), 7/30/90 days; `/analytics` redirects. `/links` is setup only. All from `site_visits` via `/api/track` (no IP, daily
 visitor hash, owner and bots never counted). The landing logs `/land/…` events (`LANDING_EVENT` in `lib/site-visits.ts`)
 from `app/_components/LandingTracker.tsx`: version seen, scroll 25–100%, visible time 10s–10m, browser language, and
 every tap — named from `data-t` or the link's target by `lib/landing-taps.ts`, so all landing versions are covered.
