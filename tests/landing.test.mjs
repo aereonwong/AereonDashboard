@@ -69,3 +69,40 @@ test('landing insights: funnel, scroll and time reached, versions, sign-in', asy
   assert.equal(r.daily.at(-1).visitors, 2)
   assert.equal(r.sources.find(s => s.label === 'Instagram').count, 1)
 })
+
+test('bot filter: only visitors who did something (or came from an app) count, from CHECKS_FROM on', async () => {
+  const { analyseLanding } = await import('../lib/landing-insights.ts')
+  const { analyseHello, CHECKS_FROM } = await import('../lib/hello-insights.ts')
+  const { cleanHello } = await import('../lib/hello-config.ts')
+  const d = '2026-10-20'
+  assert.ok(d >= CHECKS_FROM)
+  const rows = [
+    // a person: scrolled
+    { path: '/', day: d, visitor_hash: 'p', browser: 'Safari', city: 'Kuala Lumpur', country: 'MY' },
+    { path: '/land/view/classic', day: d, visitor_hash: 'p', browser: 'Safari' },
+    { path: '/land/scroll/25', day: d, visitor_hash: 'p', browser: 'Safari' },
+    // a crawler running JS: view + language, nothing else
+    { path: '/', day: d, visitor_hash: 'b', browser: 'Chrome', city: 'Council Bluffs', country: 'US' },
+    { path: '/land/view/classic', day: d, visitor_hash: 'b', browser: 'Chrome' },
+    { path: '/land/lang/en', day: d, visitor_hash: 'b', browser: 'Chrome' },
+    // no script at all
+    { path: '/', day: d, visitor_hash: 'c', browser: 'Chrome' },
+    // opened inside Instagram, left at once: still a person
+    { path: '/', day: d, visitor_hash: 'i', browser: 'Instagram app' },
+    // before the filter began: counted as logged
+    { path: '/', day: '2026-10-15', visitor_hash: 'old', browser: 'Chrome' },
+  ]
+  const r = analyseLanding(rows, 7, d)
+  assert.equal(r.visitors, 3)   // p, i, and 'old' (before the filter began)
+  assert.equal(r.visits, 3)
+  assert.deepEqual(r.bots, { visitors: 2, views: 2 })
+  assert.ok(!r.cities.some(c => c.label.startsWith('Council Bluffs')))
+
+  const h = analyseHello([
+    { path: '/hello', day: d, visitor_hash: 'x', browser: 'Chrome' },
+    { path: '/hello/time/10s', day: d, visitor_hash: 'x', browser: 'Chrome' },
+    { path: '/hello', day: d, visitor_hash: 'y', browser: 'Chrome' },
+  ], cleanHello({}), 7, d)
+  assert.equal(h.visitors, 1)
+  assert.deepEqual(h.bots, { visitors: 1, views: 1 })
+})

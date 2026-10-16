@@ -13,9 +13,12 @@ export type VisitRow = {
   country?: string | null; city?: string | null; device?: string | null; browser?: string | null
 }
 export type Count = { id: string; label: string; count: number }
+export type Bots = { visitors: number; views: number }
 export type SectionFunnel = { id: string; label: string; opened: number; acted: number }
 export type HelloInsights = {
   days: number
+  /** Left out as bots or instant bounces (splitBots). */
+  bots: Bots
   visits: number
   visitors: number
   opened: number
@@ -98,6 +101,29 @@ export function sourceOf(r: Pick<VisitRow, 'browser' | 'utm_source' | 'referrer_
   return HOSTS.find(([re]) => re.test(h))?.[1] ?? h
 }
 
+/** First Malaysian day the bot filter applies. Scroll and time signals began on 16 Oct 2026 (part way
+ *  through the day), so earlier days are counted as logged. */
+export const CHECKS_FROM = '2026-10-17'
+/** Doing any of these proves a person: tapping, opening a section, scrolling, staying 10s+ on screen. */
+const ENGAGED = /^\/(land|hello)\/(out|tap|scroll|time)\//
+
+/** Splits rows into people and the rest. A visitor (one daily hash) counts when they did something
+ *  (ENGAGED) or opened the page inside an app (Instagram, Facebook… — crawlers don't); everyone else
+ *  — crawlers that run scripts, previews, people who left within seconds — is only counted in `bots`.
+ *  `isView` names the page-view rows, so `bots.views` counts those. */
+export function splitBots<R extends VisitRow>(rows: R[], isView: (path: string) => boolean): { rows: R[]; bots: Bots } {
+  const key = (r: VisitRow) => `${r.day}|${r.visitor_hash}`
+  const real = new Set<string>()
+  for (const r of rows) if (r.day < CHECKS_FROM || ENGAGED.test(r.path) || (r.browser && APPS[r.browser])) real.add(key(r))
+  const kept: R[] = [], botKeys = new Set<string>()
+  let views = 0
+  for (const r of rows) {
+    if (real.has(key(r))) { kept.push(r); continue }
+    if (isView(r.path)) { views++; botKeys.add(key(r)) }
+  }
+  return { rows: kept, bots: { visitors: botKeys.size, views } }
+}
+
 const region = (() => {
   try { return new Intl.DisplayNames(['en'], { type: 'region' }) } catch { return null }
 })()
@@ -125,7 +151,8 @@ export function daySeries(daily: Map<string, Set<string>>, days: number, today: 
   return series
 }
 
-export function analyseHello(rows: VisitRow[], cfg: HelloConfig, days: number, today: string, socials: SocialName[] = []): HelloInsights {
+export function analyseHello(all: VisitRow[], cfg: HelloConfig, days: number, today: string, socials: SocialName[] = []): HelloInsights {
+  const { rows, bots } = splitBots(all, p => p === '/hello')
   const key = (r: VisitRow) => `${r.day}|${r.visitor_hash}`
   const visitors = new Set<string>()
   const openedBy = new Map<string, Set<string>>()     // section → visitor keys
@@ -177,7 +204,7 @@ export function analyseHello(rows: VisitRow[], cfg: HelloConfig, days: number, t
   }).filter(s => s.opened)
 
   return {
-    days, visits, visitors: visitors.size,
+    days, bots, visits, visitors: visitors.size,
     opened: opened.size, emailed: emailed.size, promo: promo.size, social: social.size,
     daily: series,
     sections: sections.sort((a, b) => b.opened - a.opened),

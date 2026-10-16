@@ -1,6 +1,6 @@
 // Small server-rendered pieces shared by both Site analytics pages (Landing page, Link page).
 // Styles are the lk-* rules in app/(app)/links/links.css.
-import type { Count } from '@/lib/hello-insights'
+import { CHECKS_FROM, type Bots, type Count } from '@/lib/hello-insights'
 import { RANGES } from '@/lib/hello-stats'
 import { readVersion } from '@/lib/v3/version'
 import { v3Fonts } from '@/app/_v3/fonts'
@@ -98,4 +98,18 @@ export async function Frame({ title, lede, base, days, children }: { title: stri
     </div>
   )
   return version === 'v3' ? page : <div className={`v3 ${v3Fonts}`} data-world="canon">{page}</div>
+}
+
+/** What the bot filter left out (splitBots in lib/hello-insights.ts), under the KPIs. */
+export function BotNote({ bots }: { bots: Bots }) {
+  const from = new Date(`${CHECKS_FROM}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  return (
+    <p className="v3-span-12 v3-panel-note lk-tip">
+      {bots.visitors
+        ? <>Left out as bots or instant bounces: <b>{fmt(bots.visitors)}</b> visitor{bots.visitors === 1 ? '' : 's'} ({fmt(bots.views)} page view{bots.views === 1 ? '' : 's'}) who did nothing. </>
+        : <>No bots or instant bounces left out in this range. </>}
+      A visitor counts when they scroll, stay 10 seconds with the page on screen, tap something, or open it inside an
+      app like Instagram. Checked from {from}; earlier days are counted as logged.
+    </p>
+  )
 }

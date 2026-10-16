@@ -9,11 +9,13 @@ export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '
 
 /** Taps on the /hello link page, logged as pseudo-paths beside the page views:
  *  /hello/tap/<section> = a "What brings you here?" section opened,
- *  /hello/out/<id>      = a link, email button, social icon or copy button used.
+ *  /hello/out/<id>      = a link, email button, social icon or copy button used,
+ *  /hello/scroll/<pct>, /hello/time/<mark> = scrolled / stayed that far (since 16 Oct 2026, as on the landing).
  *  Only lowercase ids, so nothing a visitor types can land in the log. */
-export const HELLO_EVENT = /^\/hello\/(tap\/(collab|shoot|drone|deals|gear)|out\/[a-z0-9-]{1,40})$/
-/** Most /hello tap rows one visitor may add per 10 minutes — made-up ids can't flood the log. */
-export const HELLO_TAP_CAP = 20
+export const HELLO_EVENT =
+  /^\/hello\/(tap\/(collab|shoot|drone|deals|gear)|out\/[a-z0-9-]{1,40}|scroll\/(25|50|75|100)|time\/(10s|30s|1m|3m|10m))$/
+/** Most /hello rows one visitor may add per 10 minutes (taps plus 4 scroll and 5 time marks) — made-up ids can't flood the log. */
+export const HELLO_TAP_CAP = 30
 /** Rows per Malaysian day, all visitors together. Real traffic is in the tens; this only stops a
  *  flood (a script rotating X-Forwarded-For gets a fresh visitor hash each time). */
 export const DAILY_ROW_CAP = 5000

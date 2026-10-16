@@ -2,7 +2,7 @@
 // time on page, language, version seen). Read by lib/site-stats.ts, maths in lib/landing-insights.ts,
 // logged by app/_components/LandingTracker.tsx through app/api/track. No IP is stored.
 import { readLandingStats } from '@/lib/site-stats'
-import { Bars, Panel, Kpis, Daily, Reached, Frame, rangeOf, fmt, pct } from '../parts'
+import { Bars, Panel, Kpis, BotNote, Daily, Reached, Frame, rangeOf, fmt, pct } from '../parts'
 import '@/app/_v3/v3.css'
 import '../../links/links.css'
 
@@ -20,6 +20,7 @@ async function LandingView({ days }: { days: number }) {
         { n: st.social, l: 'Went to a social', s: `${pct(st.social, st.visitors)} of visitors` },
         { n: st.entered, l: 'Headed to the dashboard', s: `${fmt(st.signIn)} opened sign-in` },
       ]} />
+      <BotNote bots={st.bots} />
       <Daily daily={st.daily} days={days} />
 
       <Panel id="an-l-out" title="What they tapped" note="Every link and button · % of page views">

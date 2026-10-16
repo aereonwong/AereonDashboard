@@ -20,6 +20,7 @@ import { GLYPH } from '@/app/_components/SocialLinks'
 import CopyText from './CopyText'
 import Chooser, { type Audience } from './Chooser'
 import TapTracker from './TapTracker'
+import { EngagementTracker } from '@/app/_components/LandingTracker'
 import './hello.css'
 
 export const dynamic = 'force-dynamic'
@@ -196,6 +197,7 @@ export default async function Hello() {
 
         <Chooser audiences={audiences} style={step()} />
         <TapTracker />
+        <EngagementTracker base="/hello" />
 
       </div>
     </main>
