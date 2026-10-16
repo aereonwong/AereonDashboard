@@ -2,6 +2,7 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { demoMode } from './records'
 import { demoProperty } from './demo-data'
+import { moneyHidden, scrubFields, zeroFields } from './privacy'
 import type { Cost, Tenancy } from './tenancy-math'
 import { computeLoan, validate, type BankRate, type DataIssue, type Loan, type LoanMonth, type LoanMonthRow, type Warning } from './property-math'
 
@@ -17,7 +18,7 @@ const num = (v: unknown) => (v == null ? null : Number(v)) // numeric columns ar
 
 export async function readProperty(): Promise<PropertyRead> {
   const demo = await demoMode()
-  if (demo) return { ready: true, demo, tenancyReady: true, ...build(demoProperty()) }
+  if (demo) return { ready: true, demo, tenancyReady: true, ...build(await hide(demoProperty())) }
   if (!supabaseConfigured) return { ready: false }
 
   const [loans, months, rates, issues, tenancies, costs, upgrade1, upgrade2] = await Promise.all([
@@ -40,7 +41,7 @@ export async function readProperty(): Promise<PropertyRead> {
     ready: true,
     demo,
     tenancyReady,
-    ...build({
+    ...build(await hide({
       loans: (loans.data ?? []).map(l => ({ ...l, spread: Number(l.spread), loan_amount: num(l.loan_amount) }) as Loan),
       months: (months.data ?? []).map(m => ({
         ...m,
@@ -53,11 +54,27 @@ export async function readProperty(): Promise<PropertyRead> {
       issues: (issues.data ?? []) as DataIssue[],
       tenancies: tenancies.error ? [] : (tenancies.data ?? []).map(t => ({ ...t, monthly_rent: num(t.monthly_rent), advance_rent: num(t.advance_rent), security_deposit: num(t.security_deposit), utility_deposit: num(t.utility_deposit), access_card_deposit: num(t.access_card_deposit), deposit_refunded: num(t.deposit_refunded) }) as Tenancy),
       costs: costs.error ? [] : (costs.data ?? []).map(c => ({ ...c, amount: Number(c.amount) }) as Cost),
-    }),
+    })),
   }
 }
 
-function build(d: { loans: Loan[]; months: LoanMonthRow[]; rates: BankRate[]; issues: DataIssue[]; tenancies: Tenancy[]; costs: Cost[] }) {
+type Input = { loans: Loan[]; months: LoanMonthRow[]; rates: BankRate[]; issues: DataIssue[]; tenancies: Tenancy[]; costs: Cost[] }
+
+// Amounts hidden (lib/privacy.ts): zero every money column BEFORE the maths, so the page's
+// balances, interest and warnings are all worked out from zeros. Rates and dates stay real.
+async function hide(d: Input): Promise<Input> {
+  if (!(await moneyHidden())) return d
+  return {
+    loans: scrubFields(zeroFields(d.loans, ['loan_amount']), ['notes']),
+    months: scrubFields(zeroFields(d.months, ['opening_balance', 'outstanding_balance', 'instalment', 'interest_charged']), ['note']),
+    rates: d.rates,
+    issues: scrubFields(d.issues, ['current_value', 'suggested_value', 'explanation', 'resolution']),
+    tenancies: scrubFields(zeroFields(d.tenancies, ['monthly_rent', 'advance_rent', 'security_deposit', 'utility_deposit', 'access_card_deposit', 'deposit_refunded']), ['notes']),
+    costs: scrubFields(zeroFields(d.costs, ['amount']), ['description']),
+  }
+}
+
+function build(d: Input) {
   return {
     rates: d.rates,
     loans: d.loans.map(loan => {

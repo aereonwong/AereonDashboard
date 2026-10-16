@@ -1,5 +1,6 @@
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { rm } from '@/lib/records'
+import { moneyHidden, scrubAmounts, scrubDeep } from '@/lib/privacy'
 import Empty from '@/app/_components/Empty'
 import ApproveButtons from '@/app/_components/ApproveButtons'
 
@@ -99,7 +100,10 @@ async function getHistory(): Promise<HistItem[]> {
 }
 
 export default async function Approvals() {
-  const [pending, history] = await Promise.all([getPending(), getHistory()])
+  const [rawPending, rawHistory, hidden] = await Promise.all([getPending(), getHistory(), moneyHidden()])
+  // Amounts hidden (lib/privacy.ts): proposals and the feed come straight from the agent tables, so blank their money here.
+  const pending = hidden ? rawPending.map(p => ({ ...p, payload: scrubDeep(p.payload) })) : rawPending
+  const history = hidden ? rawHistory.map(h => ({ ...h, note: scrubAmounts(h.note) ?? h.note })) : rawHistory
   const live = pending.filter(p => !p.expired)
 
   return (

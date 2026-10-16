@@ -2,6 +2,7 @@ import './v3.css'
 import { v3Fonts } from './fonts'
 import { V3Nav, V3MobileBar } from './V3Nav'
 import MoneyToggle from '@/app/_components/MoneyToggle'
+import PrivacyNote from '@/app/_components/PrivacyNote'
 
 // The v3 chrome: its own backdrop, rail and mobile bar, wrapping whatever page
 // is open. Pages outside v3's six keep their v2 content, drawn inside this frame.
@@ -10,6 +11,7 @@ export default function Shell({
   demo,
   who,
   viewOnly = false,
+  amountsShown,
   children,
 }: {
   pending: number
@@ -17,12 +19,14 @@ export default function Shell({
   who: string | null
   /** Viewer role: edit controls (marked data-edit) are hidden. The server refuses them anyway. */
   viewOnly?: boolean
+  /** Privacy mode (lib/privacy.ts): did the server draw this page with real amounts? */
+  amountsShown: boolean
   children: React.ReactNode
 }) {
   return (
     <div className={`v3 ${v3Fonts}`} data-world="canon" data-view-only={viewOnly ? '' : undefined}>
       <div className="v3-backdrop" aria-hidden="true" />
-      <V3MobileBar />
+      <V3MobileBar amountsShown={amountsShown} />
       <div className="v3-app">
         <aside className="v3-rail">
           <a className="v3-brand" href="/">
@@ -32,7 +36,7 @@ export default function Shell({
               <span className="v3-brand-sub">v3 · Studio Standard</span>
             </span>
           </a>
-          <MoneyToggle />
+          <MoneyToggle shown={amountsShown} />
           <V3Nav pending={pending} />
           <div className="v3-rail-foot">
             <a href="/settings">Switch version</a>
@@ -45,6 +49,7 @@ export default function Shell({
           </div>
         </aside>
         <main className="v3-main">
+          <PrivacyNote shown={amountsShown} />
           {demo ? (
             <p className="v3-empty" role="status">
               <b>Demo data is on.</b> Money, invoice and client pages are showing an invented business. Turn it

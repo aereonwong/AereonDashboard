@@ -305,7 +305,7 @@ export default function Quotations({
                   </td>
                   <td>
                     <div className="idt-acts">
-                      <button data-edit=""
+                      <button data-edit="" data-money-edit=""
                         type="button"
                         className="idt-btn idt-convert"
                         disabled={isBusy || !!locked || !ready}
@@ -321,7 +321,7 @@ export default function Quotations({
                         <Icon name="invoice" /> {r.status === 'won' ? 'Invoice again' : 'Convert'}
                       </button>
 
-                      <button data-edit=""
+                      <button data-edit="" data-money-edit=""
                         type="button"
                         className="idt-act"
                         disabled={isBusy || !!locked}
@@ -333,7 +333,7 @@ export default function Quotations({
                       </button>
 
                       {r.status === 'won' ? (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className="idt-act"
                           disabled={isBusy || !!locked}
@@ -367,7 +367,7 @@ export default function Quotations({
                           <Icon name="close" />
                         </button>
                       ) : (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className={`idt-act${r.status === 'lost' ? ' bad' : ''}`}
                           disabled={isBusy || !!locked}
@@ -382,7 +382,7 @@ export default function Quotations({
                         </button>
                       )}
 
-                      <button data-edit=""
+                      <button data-edit="" data-money-edit=""
                         type="button"
                         className="idt-act"
                         disabled={isBusy || !!locked || !ready || !r.edit || !r.designId}
@@ -395,7 +395,7 @@ export default function Quotations({
                         <Icon name="edit" />
                       </button>
                       {r.undo ? (
-                        <button data-edit=""
+                        <button data-edit="" data-money-edit=""
                           type="button"
                           className={`idt-act${isBusy ? ' busy' : ''}`}
                           disabled={isBusy || !!locked || !ready}

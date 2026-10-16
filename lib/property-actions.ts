@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireSession } from '@/lib/auth'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode } from '@/lib/records'
+import { moneyLocked } from '@/lib/privacy'
 import { addMonth } from '@/lib/property-math'
 
 // 👉 Property tab writes. The monthly job is one figure: the outstanding balance on the statement.
@@ -21,6 +22,8 @@ const money = (v: FormDataEntryValue | null): number | null | 'bad' => {
 
 export async function recordLoanMonth(form: FormData): Promise<Result> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on — switch it off in Settings to record real figures.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
 
@@ -79,6 +82,8 @@ export async function recordLoanMonth(form: FormData): Promise<Result> {
 
 export async function setIssueStatus(id: number, status: 'open' | 'fixed' | 'ignored'): Promise<Result> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   if (!['open', 'fixed', 'ignored'].includes(status) || !Number.isInteger(id)) return { ok: false, error: 'Bad request' }
@@ -94,6 +99,8 @@ const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Dat
 
 async function guard(propertyId: string): Promise<Result | null> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on — switch it off in Settings to record real figures.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data: loan } = await supabase.from('property_loan').select('id').eq('id', propertyId).maybeSingle()
@@ -141,6 +148,8 @@ export async function addPropertyCost(form: FormData): Promise<Result> {
 
 export async function deletePropertyCost(id: number): Promise<Result> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }
@@ -181,6 +190,8 @@ export async function addTenancyTerm(form: FormData): Promise<Result> {
 
 export async function deleteTenancyTerm(id: number): Promise<Result> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   if (!Number.isInteger(id) || id < 1) return { ok: false, error: 'Bad request' }

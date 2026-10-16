@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireSession } from '@/lib/auth'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode } from '@/lib/records'
+import { moneyLocked } from '@/lib/privacy'
 
 // 👉 Sub-meter writes. Entering a reading or a bill that already exists for the same unit/date (or bill
 // date) replaces it, which is how a mistake is corrected. Rows are deleted from the tables on the page.
@@ -22,6 +23,8 @@ const missing = 'Run supabase/submeter.sql first (the Sub-meter page shows the o
 
 async function guard(propertyId: string): Promise<Result | null> {
   await requireSession()
+  const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
+  if (locked) return { ok: false, error: locked }
   if (await demoMode()) return { ok: false, error: 'Demo data is on — switch it off in Settings to record real figures.' }
   if (!supabaseConfigured) return { ok: false, error: 'Database not configured' }
   const { data: loan } = await supabase.from('property_loan').select('id').eq('id', propertyId).maybeSingle()

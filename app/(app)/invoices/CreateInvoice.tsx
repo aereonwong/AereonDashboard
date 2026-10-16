@@ -242,7 +242,7 @@ export default function CreateInvoice({
   return (
     <>
       {edit || fromQuote ? null : (
-        <button data-edit="" type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
+        <button data-edit="" data-money-edit="" type="button" className="idt-create" onClick={open} disabled={disabled} title={disabled ? disabledReason : undefined}>
           <Icon name="plus" /> Create {doc}
         </button>
       )}

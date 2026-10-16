@@ -3,6 +3,7 @@ import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { designIdOf, exportPdfUrl } from '@/lib/invoice-canva'
 import { composioReady } from '@/lib/composio-exec'
 import { signedIn } from '@/lib/auth'
+import { moneyHidden } from '@/lib/privacy'
 
 // 👉 Preview. Always a fresh export from the Canva design (never the Drive copy,
 // which an accountant may have moved or replaced), shown inline in the browser.
@@ -17,6 +18,8 @@ export const maxDuration = 60
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   // Second lock behind proxy.ts — this streams a full invoice PDF.
   if (!(await signedIn())) return Response.json({ ok: false, error: 'Not signed in' }, { status: 401 })
+  // Amounts hidden (lib/privacy.ts): the PDF is the invoice's figures in full, so it waits for "Show amounts".
+  if (await moneyHidden()) return new NextResponse('Amounts are hidden. Turn off "Hide amounts" in the sidebar, then open the PDF again.', { status: 403 })
   const id = Number((await params).id)
   if (!supabaseConfigured || !Number.isFinite(id)) return new NextResponse('Not found', { status: 404 })
 
