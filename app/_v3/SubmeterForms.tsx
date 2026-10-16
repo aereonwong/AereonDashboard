@@ -11,7 +11,7 @@ import { dmy, today } from './pages/property/shared'
 type Msg = { ok: boolean; text: string } | null
 
 /** One meter per unit, each billed to a tenant (preset to whoever the unit's last reading was billed to). */
-export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }: { propertyId: string; units: { unit: string; tenant: string | null; empty: boolean }[]; tenants: string[]; rate: number; tagging: boolean; kinds: boolean }) {
+export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }: { propertyId: string; units: { unit: string; tenant: string | null; empty: boolean }[]; tenants: string[]; rate: number | null; tagging: boolean; kinds: boolean }) {
   const [pending, start] = useTransition()
   const [msg, setMsg] = useState<Msg>(null)
   const fid = `reading-${propertyId}`
@@ -40,7 +40,7 @@ export function ReadingForm({ propertyId, units, tenants, rate, tagging, kinds }
         <summary>Rate and note</summary>
         <label>
           <span>Rate charged for this usage (RM per kWh)</span>
-          <input className="v3-select num" name="rate" inputMode="decimal" autoComplete="off" defaultValue={rate} required />
+          <input className="v3-select num" name="rate" inputMode="decimal" autoComplete="off" defaultValue={rate ?? ''} required />
         </label>
         <label>
           <span>Note</span>

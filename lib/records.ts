@@ -1,7 +1,7 @@
 import { supabase, supabaseConfigured } from './supabase'
 import { cookies } from 'next/headers'
 import { demoRecords } from './demo-data'
-import { moneyHidden, scrubRecords } from './privacy'
+import { moneyFactor, moneyHidden, scrubRecords } from './privacy'
 
 // One row of the business spine. The whole app reads this single table.
 // `meta` is a free-form bag of extra fields each tab can use (a lead's next
@@ -40,10 +40,10 @@ export async function demoMode(): Promise<boolean> {
   }
 }
 
-// While amounts are hidden (lib/privacy.ts) every row comes back with its money zeroed.
+// While amounts are hidden (lib/privacy.ts) every row comes back with its money disguised.
 export async function getRecords(): Promise<Rec[]> {
   const rows = await readRecords()
-  return (await moneyHidden()) ? scrubRecords(rows) : rows
+  return (await moneyHidden()) ? scrubRecords(rows, await moneyFactor()) : rows
 }
 
 async function readRecords(): Promise<Rec[]> {

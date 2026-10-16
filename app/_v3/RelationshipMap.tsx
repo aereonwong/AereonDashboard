@@ -21,7 +21,8 @@ const QUAD: Record<Relationship['quadrant'], string> = {
   drifted: 'Drifted',
 }
 
-export default function RelationshipMap({ list, median }: { list: Relationship[]; median: number }) {
+// disguised: privacy mode is on (lib/privacy.ts) — the RM gridlines are real ringgit, so they would sit wrong against disguised dots and give the factor away; none are drawn.
+export default function RelationshipMap({ list, median, disguised = false }: { list: Relationship[]; median: number; disguised?: boolean }) {
   const [hover, setHover] = useState<Relationship | null>(null)
   if (!list.length) return <p className="v3-empty">No clients in this range.</p>
 
@@ -35,7 +36,7 @@ export default function RelationshipMap({ list, median }: { list: Relationship[]
   const x = (m: number) => r1(PAD.l + (m / maxQ) * (W - PAD.l - PAD.r))
   const y = (v: number) => r1(H - PAD.b - ((Math.log10(Math.max(100, v)) - lo) / Math.max(0.1, hi - lo)) * (H - PAD.t - PAD.b))
   const r = (jobs: number) => r1(4 + Math.sqrt(jobs) * 3)
-  const ticks = [500, 1000, 5000, 10000, 50000, 100000].filter(v => Math.log10(v) >= lo - 0.1 && Math.log10(v) <= hi + 0.1)
+  const ticks = disguised ? [] : [500, 1000, 5000, 10000, 50000, 100000].filter(v => Math.log10(v) >= lo - 0.1 && Math.log10(v) <= hi + 0.1)
 
   return (
     <div style={{ position: 'relative' }}>

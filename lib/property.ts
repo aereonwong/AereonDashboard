@@ -2,7 +2,7 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { demoMode } from './records'
 import { demoProperty } from './demo-data'
-import { moneyHidden, scrubFields, zeroFields } from './privacy'
+import { moneyFactor, moneyHidden, scrubFields, disguiseFields } from './privacy'
 import type { Cost, Tenancy } from './tenancy-math'
 import { computeLoan, validate, type BankRate, type DataIssue, type Loan, type LoanMonth, type LoanMonthRow, type Warning } from './property-math'
 
@@ -18,7 +18,7 @@ const num = (v: unknown) => (v == null ? null : Number(v)) // numeric columns ar
 
 export async function readProperty(): Promise<PropertyRead> {
   const demo = await demoMode()
-  if (demo) return { ready: true, demo, tenancyReady: true, ...build(await hide(demoProperty())) }
+  if (demo) return { ready: true, demo, tenancyReady: true, ...build(...(await hide(demoProperty()))) }
   if (!supabaseConfigured) return { ready: false }
 
   const [loans, months, rates, issues, tenancies, costs, upgrade1, upgrade2] = await Promise.all([
@@ -41,7 +41,7 @@ export async function readProperty(): Promise<PropertyRead> {
     ready: true,
     demo,
     tenancyReady,
-    ...build(await hide({
+    ...build(...(await hide({
       loans: (loans.data ?? []).map(l => ({ ...l, spread: Number(l.spread), loan_amount: num(l.loan_amount) }) as Loan),
       months: (months.data ?? []).map(m => ({
         ...m,
@@ -54,31 +54,32 @@ export async function readProperty(): Promise<PropertyRead> {
       issues: (issues.data ?? []) as DataIssue[],
       tenancies: tenancies.error ? [] : (tenancies.data ?? []).map(t => ({ ...t, monthly_rent: num(t.monthly_rent), advance_rent: num(t.advance_rent), security_deposit: num(t.security_deposit), utility_deposit: num(t.utility_deposit), access_card_deposit: num(t.access_card_deposit), deposit_refunded: num(t.deposit_refunded) }) as Tenancy),
       costs: costs.error ? [] : (costs.data ?? []).map(c => ({ ...c, amount: Number(c.amount) }) as Cost),
-    })),
+    }))),
   }
 }
 
 type Input = { loans: Loan[]; months: LoanMonthRow[]; rates: BankRate[]; issues: DataIssue[]; tenancies: Tenancy[]; costs: Cost[] }
 
-// Amounts hidden (lib/privacy.ts): zero every money column BEFORE the maths, so the page's
-// balances, interest and warnings are all worked out from zeros. Rates and dates stay real.
-async function hide(d: Input): Promise<Input> {
-  if (!(await moneyHidden())) return d
-  return {
-    loans: scrubFields(zeroFields(d.loans, ['loan_amount']), ['notes']),
-    months: scrubFields(zeroFields(d.months, ['opening_balance', 'outstanding_balance', 'instalment', 'interest_charged']), ['note']),
+// Amounts hidden (lib/privacy.ts): disguise every money column BEFORE the maths (one secret factor),
+// so balances, interest and warnings are worked out from disguised figures. Rates and dates stay real.
+async function hide(d: Input): Promise<[Input, number]> {
+  if (!(await moneyHidden())) return [d, 1]
+  const k = await moneyFactor()
+  return [{
+    loans: scrubFields(disguiseFields(d.loans, ['loan_amount'], k), ['notes']),
+    months: scrubFields(disguiseFields(d.months, ['opening_balance', 'outstanding_balance', 'instalment', 'interest_charged'], k), ['note']),
     rates: d.rates,
     issues: scrubFields(d.issues, ['current_value', 'suggested_value', 'explanation', 'resolution']),
-    tenancies: scrubFields(zeroFields(d.tenancies, ['monthly_rent', 'advance_rent', 'security_deposit', 'utility_deposit', 'access_card_deposit', 'deposit_refunded']), ['notes']),
-    costs: scrubFields(zeroFields(d.costs, ['amount']), ['description']),
-  }
+    tenancies: scrubFields(disguiseFields(d.tenancies, ['monthly_rent', 'advance_rent', 'security_deposit', 'utility_deposit', 'access_card_deposit', 'deposit_refunded'], k), ['notes']),
+    costs: scrubFields(disguiseFields(d.costs, ['amount'], k), ['description']),
+  }, k]
 }
 
-function build(d: Input) {
+function build(d: Input, unit = 1) {
   return {
     rates: d.rates,
     loans: d.loans.map(loan => {
-      const months = computeLoan(loan, d.months.filter(m => m.property_id === loan.id), d.rates)
+      const months = computeLoan(loan, d.months.filter(m => m.property_id === loan.id), d.rates, unit)
       return { loan, months, warnings: validate(months), issues: d.issues.filter(i => i.property_id === loan.id),
         tenancies: d.tenancies.filter(t => t.property_id === loan.id), costs: d.costs.filter(c => c.property_id === loan.id) }
     }),

@@ -15,8 +15,8 @@ const short = (name: string) => name.replace(/,? (Sdn\.? ?Bhd\.?|Pte\.? ?Ltd\.?|
 const monthName = (iso: string) =>
   new Date(`${iso}-01T00:00:00Z`).toLocaleString('en-MY', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-export default function DashboardV2({ rows, snap, ig = null }: { rows: Rec[]; snap: IgSnapshot | null; ig?: AudienceView | null }) {
-  const p = operatingPicture(rows)
+export default function DashboardV2({ rows, snap, ig = null, unit = 1 }: { rows: Rec[]; snap: IgSnapshot | null; ig?: AudienceView | null; unit?: number }) {
+  const p = operatingPicture(rows, new Date(), unit) // unit: privacy mode's disguise factor (lib/privacy.ts)
   const { kpis, revenue, prior, count, priorCount } = p
 
   const growth = prior ? ((revenue - prior) / prior) * 100 : null

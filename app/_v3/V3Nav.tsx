@@ -106,7 +106,7 @@ export function V3Nav({ pending }: { pending: number }) {
   )
 }
 
-export function V3MobileBar({ amountsShown }: { amountsShown: boolean }) {
+export function V3MobileBar({ amountsShown, canReveal }: { amountsShown: boolean; canReveal: boolean }) {
   const path = usePathname() ?? ''
   const items = V3_NAV.filter(g => !g.folded).flatMap(g => g.items)
   return (
@@ -116,7 +116,7 @@ export function V3MobileBar({ amountsShown }: { amountsShown: boolean }) {
           {it.label}
         </a>
       ))}
-      <MoneyToggle shown={amountsShown} variant="icon" />
+      <MoneyToggle shown={amountsShown} canReveal={canReveal} variant="icon" />
     </nav>
   )
 }

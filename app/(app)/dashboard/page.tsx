@@ -15,6 +15,7 @@ import { readAudience } from '@/lib/v3/audience'
 import { readPostReach } from '@/lib/v3/ig-extras'
 import { readFacebook } from '@/lib/facebook'
 import { demoMode } from '@/lib/records'
+import { moneyFactor, moneyHidden } from '@/lib/privacy'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,6 +64,6 @@ export default async function Dashboard({
   return which === 'v1' ? (
     <DashboardV1 rows={rows} snap={snap} waiting={waiting} />
   ) : (
-    <DashboardV2 rows={rows} snap={snap} ig={ig} />
+    <DashboardV2 rows={rows} snap={snap} ig={ig} unit={(await moneyHidden()) ? await moneyFactor() : 1} />
   )
 }

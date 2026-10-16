@@ -481,10 +481,12 @@ export type Signal = {
  * only fires when the data actually crosses the threshold — an empty list here
  * means there is genuinely nothing demanding attention, and the page says so.
  */
-export function signals(book: Book): Signal[] {
+// `unit` is 1, or privacy mode's disguise factor while amounts are hidden (lib/privacy.ts):
+// fixed RM thresholds are multiplied by it so they keep comparing like with like.
+export function signals(book: Book, unit = 1): Signal[] {
   const out: Signal[] = []
   const h = headline(book)
-  const quiet = dormant(book)
+  const quiet = dormant(book, 12, 5000 * unit)
   const cells = rhythm(book, 24)
   const rmFmt = (n: number) => `RM ${Math.round(n).toLocaleString('en-MY')}`
 
@@ -560,15 +562,15 @@ export function signals(book: Book): Signal[] {
 
 // ------------------------------------------------------------------ everything
 
-export function operatingPicture(rows: Rec[], now = new Date()) {
+export function operatingPicture(rows: Rec[], now = new Date(), unit = 1) {
   const book = openBook(rows, now)
   const h = headline(book)
   return {
     book,
     ...h,
-    signals: signals(book),
+    signals: signals(book, unit),
     movers: movers(book),
-    dormant: dormant(book),
+    dormant: dormant(book, 12, 5000 * unit),
     rhythm: rhythm(book, 24),
     seasonality: seasonality(book),
     clientCount: new Set(book.all.map(i => i.client)).size,

@@ -32,7 +32,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
           <h1 className="v3-title">Sub-meter</h1>
           <p className="v3-lede">
             {sub.ready
-              ? `Electricity read from each unit's meter and billed to its tenant at RM ${sen(FLAT_RATE)} per kWh. Collected from the tenants, so it is not a property cost.${read.demo ? ' Demo data.' : ''}`
+              ? `Electricity read from each unit's meter and billed to its tenant at ${sub.disguised ? 'a flat rate' : `RM ${sen(FLAT_RATE)}`} per kWh. Collected from the tenants, so it is not a property cost.${read.demo ? ' Demo data.' : ''}`
               : 'Electricity for a dual-key unit, billed to each tenant from its split meter.'}
           </p>
         </div>
@@ -64,6 +64,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
               paying={sub.paidReady}
               kinds={sub.kindReady}
               today={today}
+              disguised={!!sub.disguised}
             />
           ))}
         </>
@@ -72,7 +73,7 @@ export default function Submeter({ read, sub, sqlUrl, submeterSql }: { read: Pro
   )
 }
 
-function PropertySubmeter({ id, name, location, readings, bills, tenantNames, tagging, paying, kinds, today }: { id: string; name: string; location: string | null; readings: Reading[]; bills: Bill[]; tenantNames: string[]; tagging: boolean; paying: boolean; kinds: boolean; today: string }) {
+function PropertySubmeter({ id, name, location, readings, bills, tenantNames, tagging, paying, kinds, today, disguised = false }: { id: string; name: string; location: string | null; readings: Reading[]; bills: Bill[]; tenantNames: string[]; tagging: boolean; paying: boolean; kinds: boolean; today: string; disguised?: boolean }) {
   const cs = cycles(bills, readings)
   const segs = segments(readings, cs)
   const pnl = tnbVsTenants(cs, segs)
@@ -89,7 +90,8 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
   // How many unpaid charges sit before each one for the same tenant and unit: offered as "mark these too" in the popup.
   const earlierUnpaid = (s: Segment) => segs.filter(o => o.unit === s.unit && o.tenant === s.tenant && o.to < s.to && !o.paidOn && o.charged != null && o.charged > 0).length
   const perDay = shares.reduce((t, u) => t + u.perDay, 0)
-  const overWorst = leak.worstCost ? FLAT_RATE / leak.worstCost - 1 : null
+  // Not while amounts are disguised: the flat rate is a known constant, so comparing it with a disguised cost is wrong and would give the factor away.
+  const overWorst = leak.worstCost && !disguised ? FLAT_RATE / leak.worstCost - 1 : null
   // Who each unit is billed to now: the tenant on its latest reading; the form starts there.
   const state = unitState(readings)
   const currentTenant = (unit: string) => (state.get(unit)?.kind === 'move_in' ? (state.get(unit)?.tenant ?? null) : (people.find(p => p.unit === unit && p.current)?.tenant ?? null))
@@ -181,7 +183,7 @@ function PropertySubmeter({ id, name, location, readings, bills, tenantNames, ta
           <p className="v3-panel-note" style={{ marginTop: 0 }}>
             Read both on the 12th, the day TNB bills, and take a photo.
           </p>
-          <ReadingForm propertyId={id} units={(units.length ? units : ['Main unit', 'Studio']).map(unit => ({ unit, tenant: currentTenant(unit), empty: state.get(unit)?.kind === 'move_out' }))} tenants={tenants} rate={FLAT_RATE} tagging={tagging} kinds={kinds} />
+          <ReadingForm propertyId={id} units={(units.length ? units : ['Main unit', 'Studio']).map(unit => ({ unit, tenant: currentTenant(unit), empty: state.get(unit)?.kind === 'move_out' }))} tenants={tenants} rate={disguised ? null : FLAT_RATE} tagging={tagging} kinds={kinds} />
           <details className="v3-sub-billform">
             <summary>Add the TNB bill</summary>
             <BillForm propertyId={id} />
