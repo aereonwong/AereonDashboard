@@ -13,7 +13,8 @@ import { fbPageId } from './facebook'
 // and viewers (Facebook) are unique people per window, so within a platform they are never added
 // across windows — only one window per platform goes in, and platforms are then added together,
 // the same as the Dashboard's "Social reach".
-// A platform whose figures are stale or incomplete is left out of that total, never counted as zero.
+// If any platform's figure is stale or incomplete, that total is not shown at all — a partial
+// "overall" figure would undersell, and missing is never counted as zero.
 
 const DAY = 86_400_000
 /** Older than this and a platform's figures are left out, so a stalled refresh never passes off old numbers. */
@@ -79,14 +80,15 @@ async function facebook(): Promise<Source | null> {
   const whole = rows.length === 90 && recent && Date.parse(rows[89].day) === latest - 89 * DAY
   const sum = (k: 'views' | 'engagements') => (whole && rows.every(r => typeof r[k] === 'number') ? rows.reduce((t, r) => t + r[k]!, 0) : null)
   // Viewers are unique per 28-day window: take one window, never add windows together.
-  const windows = ((periods.data ?? []) as { until: string; viewers: number | null }[])
-    .filter(w => typeof w.viewers === 'number' && Date.now() - Date.parse(w.until) < 90 * DAY)
-  const newest = windows[0] && Date.now() - Date.parse(windows[0].until) < STALE ? windows[0].viewers : null
+  // "Best" only looks at windows that lie wholly inside the last 90 days.
+  const all = (periods.data ?? []) as { until: string; viewers: number | null }[]
+  const newest = all[0] && typeof all[0].viewers === 'number' && Date.now() - Date.parse(all[0].until) < STALE ? all[0].viewers : null
+  const windows = all.filter(w => typeof w.viewers === 'number' && Date.now() - Date.parse(w.until) < (90 - 28) * DAY)
   return {
     views: sum('views'),
     interactions: sum('engagements'),
     reach: newest,
-    bestReach: newest === null ? null : Math.max(...windows.map(w => w.viewers!)),
+    bestReach: newest === null || !windows.length ? null : Math.max(...windows.map(w => w.viewers!)),
     followers,
   }
 }
@@ -94,12 +96,14 @@ async function facebook(): Promise<Source | null> {
 /** Every platform added together. Never throws: a missing platform just drops out. */
 export async function socialTotals(): Promise<SocialTotals> {
   const [ig, fb] = await Promise.all([instagram().catch(() => null), facebook().catch(() => null)])
+  // A platform with no stored history at all (never connected) is simply not a source.
   const sources = [ig, fb].filter(Boolean) as Source[]
   const count = { views: 0, interactions: 0, reach: 0, bestReach: 0 }
   const total = (k: Metric) => {
     const have = sources.map(s => s[k]).filter((v): v is number => typeof v === 'number')
     count[k] = have.length
-    return have.length ? have.reduce((t, v) => t + v, 0) : null
+    // Every platform in, or no total: a stalled refresh hides the tile instead of shrinking it.
+    return have.length && have.length === sources.length ? have.reduce((t, v) => t + v, 0) : null
   }
   return {
     views: total('views'),
