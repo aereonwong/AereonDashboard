@@ -976,6 +976,11 @@ a.v3-story-head:hover { text-decoration: underline; }
 
 /* Reach and paid work: two bars a month, each on its own scale. */
 .v3-rvw { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(56px, 88px); justify-content: start; gap: var(--space-2); overflow-x: auto; }
+.v3-rvw-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-4); }
+.v3-rvw-sum { font-size: var(--t-sm); color: var(--ink-2); }
+.v3-rvw-sum b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (min-width: 760px) { .v3-rvw[data-fit] { grid-auto-flow: row; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); overflow-x: visible; } }
+.v3-rvw-col[data-now] .v3-rvw-label { color: var(--ink); font-weight: 600; }
 .v3-rvw-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .v3-rvw-bars { height: 120px; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 4px; border-bottom: 1px solid var(--line); }
 .v3-rvw-bars i { width: 14px; height: calc(var(--h, 0) * 100%); min-height: 2px; border-radius: 3px 3px 0 0; transform-origin: bottom; animation: v3-rise 600ms var(--ease) both; }
