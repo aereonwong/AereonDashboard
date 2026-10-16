@@ -117,6 +117,12 @@ export async function POST(req: Request) {
     return new Response('forbidden', { status: 401 })
   }
 
+  // Paused (16 Oct 2026, Anthropic credits ran out): answer 200 so Telegram stops
+  // retrying, but never reach a Claude call. Set TELEGRAM_BOT=on in Vercel to resume.
+  if (process.env.TELEGRAM_BOT?.trim() !== 'on') {
+    return Response.json({ ok: true, paused: true })
+  }
+
   const update = await req.json().catch(() => ({}))
 
   // 2) Dedupe every update (messages AND button taps) before doing any work.
