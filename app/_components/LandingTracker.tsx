@@ -22,7 +22,46 @@ const send = (path: string) => {
 
 const MARKS: [number, string][] = [[10, '10s'], [30, '30s'], [60, '1m'], [180, '3m'], [600, '10m']]
 
+/** Scroll depth and visible time, sent as <base>/scroll/<pct> and <base>/time/<mark>. These are what
+ *  tell a person from a bot on Site analytics (lib/hello-insights.ts splitBots). */
+function useEngagement(base: '/land' | '/hello') {
+  useEffect(() => {
+    // Deepest point reached, sent once per mark.
+    const scrolled = new Set<number>()
+    const onScroll = () => {
+      const doc = document.documentElement
+      const room = doc.scrollHeight - window.innerHeight
+      if (room <= 0) return   // nothing to scroll: a fit-on-screen page proves nothing
+      const pct = ((window.scrollY + 1) / room) * 100
+      for (const m of [25, 50, 75, 100]) {
+        if (pct >= m - 1 && !scrolled.has(m)) { scrolled.add(m); send(`${base}/scroll/${m}`) }
+      }
+    }
+
+    // Seconds with the tab actually visible — a page left open in the background does not count.
+    let seen = 0, next = 0
+    const tick = window.setInterval(() => {
+      if (document.visibilityState !== 'visible' || next >= MARKS.length) return
+      seen++
+      if (seen >= MARKS[next][0]) send(`${base}/time/${MARKS[next++][1]}`)
+    }, 1000)
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.clearInterval(tick)
+    }
+  }, [base])
+}
+
+/** Scroll and time only — for /hello, whose taps app/hello/TapTracker.tsx already counts. */
+export function EngagementTracker({ base }: { base: '/land' | '/hello' }) {
+  useEngagement(base)
+  return null
+}
+
 export default function LandingTracker({ version }: { version: LandingVersion }) {
+  useEngagement('/land')
   useEffect(() => {
     send(`/land/view/${version}`)
     const lang = (navigator.language || '').slice(0, 2).toLowerCase()
@@ -35,32 +74,8 @@ export default function LandingTracker({ version }: { version: LandingVersion })
       if (id) send(`/land/out/${id}`)
     }
 
-    // Deepest point reached, sent once per mark.
-    const scrolled = new Set<number>()
-    const onScroll = () => {
-      const doc = document.documentElement
-      const room = doc.scrollHeight - window.innerHeight
-      const pct = room <= 0 ? 100 : ((window.scrollY + 1) / room) * 100
-      for (const m of [25, 50, 75, 100]) {
-        if (pct >= m - 1 && !scrolled.has(m)) { scrolled.add(m); send(`/land/scroll/${m}`) }
-      }
-    }
-
-    // Seconds with the tab actually visible — a page left open in the background does not count.
-    let seen = 0, next = 0
-    const tick = window.setInterval(() => {
-      if (document.visibilityState !== 'visible' || next >= MARKS.length) return
-      seen++
-      if (seen >= MARKS[next][0]) send(`/land/time/${MARKS[next++][1]}`)
-    }, 1000)
-
     document.addEventListener('click', onClick, true)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      document.removeEventListener('click', onClick, true)
-      window.removeEventListener('scroll', onScroll)
-      window.clearInterval(tick)
-    }
+    return () => document.removeEventListener('click', onClick, true)
   }, [version])
   return null
 }

@@ -165,8 +165,11 @@ reach = each platform's best (or latest) month of unique people, added across pl
 visitor hash, owner and bots never counted). The landing logs `/land/…` events (`LANDING_EVENT` in `lib/site-visits.ts`)
 from `app/_components/LandingTracker.tsx`: version seen, scroll 25–100%, visible time 10s–10m, browser language, and
 every tap — named from `data-t` or the link's target by `lib/landing-taps.ts`, so all landing versions are covered.
-Maths `lib/landing-insights.ts` (tested), read `lib/site-stats.ts`. Many "desktop Chrome" landing views come from
-data-centre cities (Council Bluffs, Ashburn, Boardman) — likely crawlers that run JS.
+Maths `lib/landing-insights.ts` (tested), read `lib/site-stats.ts`. **Bot filter** (`splitBots` in
+`lib/hello-insights.ts`, both pages, from `CHECKS_FROM` = 17 Oct 2026): a daily visitor counts only if they scrolled,
+stayed 10s+ visible, tapped, or opened the page in an app (Instagram, Facebook…); the rest — crawlers that run JS from
+data-centre cities (Council Bluffs, Ashburn, Boardman) and instant bounces — are shown only as a "left out" count.
+/hello sends the same scroll/time signals (`EngagementTracker`).
 
 ## Showcase (5 Oct 2026)
 

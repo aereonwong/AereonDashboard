@@ -2,12 +2,14 @@
 // Pure (no runtime imports) so it is unit-tested; lib/site-stats.ts reads the rows. A "visitor"
 // is one daily visitor hash, as on the Link page. Rows: '/' = a page view; '/login' = someone
 // opened the sign-in page; '/land/…' = what they did (lib/site-visits.ts LANDING_EVENT).
-import { sourceOf, top, countryName, bump, byCount, daySeries, type Count, type VisitRow } from './hello-insights.ts'
+import { sourceOf, top, countryName, bump, byCount, daySeries, splitBots, type Bots, type Count, type VisitRow } from './hello-insights.ts'
 import { landingTapKind, landingTapLabel } from './landing-taps.ts'
 
 export type Reached = { id: string; label: string; visitors: number }
 export type LandingInsights = {
   days: number
+  /** Left out as bots or instant bounces (splitBots in lib/hello-insights.ts). */
+  bots: Bots
   visits: number
   visitors: number
   tapped: number
@@ -38,7 +40,10 @@ const languageName = (() => {
   return (code: string) => { try { return names?.of(code) ?? code } catch { return code } }
 })()
 
-export function analyseLanding(rows: VisitRow[], days: number, today: string): LandingInsights {
+export function analyseLanding(all: VisitRow[], days: number, today: string): LandingInsights {
+  // '/login' rows are kept whatever: a sign-in page view is its own signal, not a landing visit.
+  const { rows, bots } = splitBots(all.filter(r => r.path !== '/login'), p => p === '/')
+  rows.push(...all.filter(r => r.path === '/login'))
   const key = (r: VisitRow) => `${r.day}|${r.visitor_hash}`
   const visitors = new Set<string>(), signIn = new Set<string>()
   const tapped = new Set<string>(), emailed = new Set<string>(), social = new Set<string>(), entered = new Set<string>()
@@ -84,7 +89,7 @@ export function analyseLanding(rows: VisitRow[], days: number, today: string): L
     marks.map(([id, label]) => ({ id, label, visitors: m.get(id)?.size ?? 0 }))
 
   return {
-    days, visits, visitors: visitors.size,
+    days, bots, visits, visitors: visitors.size,
     tapped: tapped.size, emailed: emailed.size, social: social.size, entered: entered.size, signIn: signIn.size,
     daily: daySeries(daily, days, today),
     clicks: [...clicks].map(([id, count]) => ({ id, label: landingTapLabel(id), count })).sort(byCount),

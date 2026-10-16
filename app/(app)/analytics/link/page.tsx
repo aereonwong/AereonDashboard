@@ -3,7 +3,7 @@
 // tab (/links). No IP is stored.
 import { readHello } from '@/lib/hello'
 import { readHelloStats } from '@/lib/hello-stats'
-import { Bars, Panel, Kpis, Daily, Reached, Frame, rangeOf, fmt, pct } from '../parts'
+import { Bars, Panel, Kpis, BotNote, Daily, Reached, Frame, rangeOf, fmt, pct } from '../parts'
 import '@/app/_v3/v3.css'
 import '../../links/links.css'
 
@@ -21,6 +21,7 @@ async function HelloView({ days }: { days: number }) {
         { n: st.promo, l: 'Opened a promo', s: `${pct(st.promo, st.visitors)} of visitors` },
         { n: st.social, l: 'Went to a social', s: `${pct(st.social, st.visitors)} of visitors` },
       ]} />
+      <BotNote bots={st.bots} />
       <Daily daily={st.daily} days={days} />
 
       <Panel id="an-h-sec" title="What visitors came for" note="Opened each section → then emailed or tapped a link in it">
