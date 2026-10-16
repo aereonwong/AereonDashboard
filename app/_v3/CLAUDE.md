@@ -11,3 +11,7 @@ site-wide in Settings; `/?preview=kit` previews it when signed in.
 What lives where: Dashboard = the daily pulse; Invoice Summary = the deep money analysis
 (`lib/v3/summary.ts`); Invoice Details = the table and its actions; Instagram = audience and content;
 Clients = relationships. Analytics or design changes cover all five together.
+
+**Filters (16 Oct 2026, Aereon's rule):** every page that filters its figures uses ONE sticky filter bar
+above what it filters, and every panel carries a corner chip saying which filters it follows
+(`ScopedPanel`, `filterbar.css`). Read `docs/FILTER-BAR.md` before adding or changing any filter.
