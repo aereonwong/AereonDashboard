@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Icon, { type IconName } from '@/app/_components/Icon'
+import MoneyToggle from '@/app/_components/MoneyToggle'
 
 // v3's navigation. The v2 sidebar spread fourteen tabs over eight groups; for a
 // one-person business v3 folds them into four, leading with the pages opened
@@ -108,6 +109,7 @@ export function V3MobileBar() {
           {it.label}
         </a>
       ))}
+      <MoneyToggle variant="icon" />
     </nav>
   )
 }

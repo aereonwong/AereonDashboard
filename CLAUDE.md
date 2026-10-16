@@ -67,11 +67,13 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   tables first; only ask Instagram again when a refresh is actually needed. Reach and accounts_engaged
   are unique per window — never add windows' reach together.
   "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
-- **Money is masked on screen by default, for every role** (13 Oct 2026, `app/_components/MoneyMask.tsx`,
-  mounted in `app/(app)/layout.tsx`): after hydration it rewrites "RM 1,234" / "USD 2.5K" (and `title` /
-  `aria-label`) to `RM *****`; a click reveals that one figure, the floating "Show amounts" button reveals all
-  until toggled back or reloaded. A bare number that is money (chart ticks like "40K") needs `data-money` on its
-  element; `data-money-off` exempts a subtree. Screen guard only — the server still sends the figures.
+- **Money is masked on screen by default, for every role** (privacy mode, 13–16 Oct 2026): `app/_components/MoneyMask.tsx`
+  (mounted in `app/(app)/layout.tsx`) rewrites "RM 1,234" / "USD 2.5K" (and `title` / `aria-label` / `placeholder`) to
+  `RM *****` after hydration. ONE switch for everything (`money-privacy.ts` store): the "Hide amounts" row
+  (`MoneyToggle.tsx`) in the v3 rail and classic sidebar, the eye on the v3 phone bar, or a click on any masked figure
+  shows ALL amounts. Shown lasts for that browser tab (sessionStorage) and auto-hides after 5 min idle. A bare number
+  that is money (chart ticks like "40K") needs `data-money` on its element; `data-money-off` exempts a subtree.
+  Screen guard only — the server still sends the figures.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
 

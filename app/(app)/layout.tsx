@@ -6,6 +6,7 @@ import { getPendingCount, demoMode } from '@/lib/records'
 import { readVersion } from '@/lib/v3/version'
 import V3Shell from '@/app/_v3/Shell'
 import MoneyMask from '@/app/_components/MoneyMask'
+import MoneyToggle from '@/app/_components/MoneyToggle'
 import { redirect } from 'next/navigation'
 import { canEdit, signedIn, sessionUser } from '@/lib/auth'
 
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <a className="brand" href="/">
             <span className="logo" aria-hidden="true">A</span> Aereon Dashboard
           </a>
+          <MoneyToggle />
           <Nav pendingCount={pending} />
           <p className="hint">
             Tech &amp; travel creator HQ — invoices, clients, Instagram and your AI agents.

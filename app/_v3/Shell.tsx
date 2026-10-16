@@ -1,6 +1,7 @@
 import './v3.css'
 import { v3Fonts } from './fonts'
 import { V3Nav, V3MobileBar } from './V3Nav'
+import MoneyToggle from '@/app/_components/MoneyToggle'
 
 // The v3 chrome: its own backdrop, rail and mobile bar, wrapping whatever page
 // is open. Pages outside v3's six keep their v2 content, drawn inside this frame.
@@ -31,6 +32,7 @@ export default function Shell({
               <span className="v3-brand-sub">v3 · Studio Standard</span>
             </span>
           </a>
+          <MoneyToggle />
           <V3Nav pending={pending} />
           <div className="v3-rail-foot">
             <a href="/settings">Switch version</a>
