@@ -70,5 +70,3 @@
 .lk-table td:last-child { font-weight: 600; }
 .lk-tip code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.95em; }
 
-/* Site analytics (/analytics): the page switch (Landing | Link page) above the range. */
-.an-switches { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-start; justify-content: flex-end; }

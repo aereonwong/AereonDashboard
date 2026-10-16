@@ -1,6 +1,9 @@
-// Small server-rendered pieces shared by both Site analytics views (Landing, Link page).
+// Small server-rendered pieces shared by both Site analytics pages (Landing page, Link page).
 // Styles are the lk-* rules in app/(app)/links/links.css.
 import type { Count } from '@/lib/hello-insights'
+import { RANGES } from '@/lib/hello-stats'
+import { readVersion } from '@/lib/v3/version'
+import { v3Fonts } from '@/app/_v3/fonts'
 
 export const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : '–')
 export const fmt = (n: number) => n.toLocaleString('en-MY')
@@ -66,4 +69,33 @@ export function Daily({ daily, days }: { daily: { day: string; visitors: number 
 /** "Reached" rows (scrolled this far, stayed this long) as bars against all visitors. */
 export function Reached({ rows, of }: { rows: { id: string; label: string; visitors: number }[]; of: number }) {
   return <Bars rows={rows.map(r => ({ id: r.id, label: r.label, count: r.visitors }))} of={of} />
+}
+
+/** The 7/30/90-day choice from ?days= (30 when missing or unknown). */
+export async function rangeOf(searchParams: Promise<Record<string, string | string[] | undefined>>) {
+  const q = await searchParams
+  const asked = Number(Array.isArray(q.days) ? q.days[0] : q.days)
+  return (RANGES as readonly number[]).includes(asked) ? asked : 30
+}
+
+/** Page frame: title, lede, range switch, grid — and the v3 wrapper for the classic layouts. */
+export async function Frame({ title, lede, base, days, children }: { title: string; lede: React.ReactNode; base: string; days: number; children: React.ReactNode }) {
+  const { version } = await readVersion()
+  const page = (
+    <div>
+      <header className="v3-head">
+        <div>
+          <h1 className="v3-title">{title}</h1>
+          <p className="v3-lede">{lede} Your own visits and bots are never counted.</p>
+        </div>
+        <nav className="v3-seg lk-range" aria-label="Range">
+          {RANGES.map(r => (
+            <a key={r} href={`${base}?days=${r}`} aria-current={r === days ? 'page' : undefined} className={r === days ? 'is-on' : ''}>{r} days</a>
+          ))}
+        </nav>
+      </header>
+      <div className="v3-grid">{children}</div>
+    </div>
+  )
+  return version === 'v3' ? page : <div className={`v3 ${v3Fonts}`} data-world="canon">{page}</div>
 }
