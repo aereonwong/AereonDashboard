@@ -2,7 +2,7 @@
 // Aereon and links into the locked dashboard. Numbers come from the newest
 // Instagram snapshot; the brands come from the invoices, so both stay current
 // without anyone editing this file. No client names, amounts or private data.
-import { socialTotals, totalsLabel } from '@/lib/social-totals'
+import { socialTotals } from '@/lib/social-totals'
 import { socials, combined } from '@/lib/socials'
 import { getRecords } from '@/lib/records'
 import { toInvoices } from '@/lib/invoices'
@@ -82,27 +82,28 @@ async function LandingBody({
     return <Reel audience={audience} kinds={kinds} since={since} totals={totals} />
   }
   if (site.landing === 'kit' || preview) {
-    const [audience, recs] = await Promise.all([readAudience(), getRecords()])
+    const [audience, recs, totals] = await Promise.all([readAudience(), getRecords(), socialTotals()])
     const inv = toInvoices(recs)
     const kinds = [...new Set(inv.map(i => i.kind))]
     const since = inv.map(i => i.date).sort()[0]?.slice(0, 4) ?? '2021'
     // Which kit: a signed-in preview can ask for either; visitors get the saved one.
     const kit = preview && (sp.kit === 'v1' || sp.kit === 'v2') ? sp.kit : site.kit
     // Kit v2 is drawn in Studio Standard only — Aereon's chosen look (2 Oct 2026).
-    if (kit === 'v2') return <MediaKit2 audience={audience} kinds={kinds} since={since} />
+    if (kit === 'v2') return <MediaKit2 audience={audience} kinds={kinds} since={since} totals={totals} />
     return (
       <MediaKit
         audience={audience}
         brands={[]}
         kinds={kinds}
         since={since}
+        totals={totals}
       />
     )
   }
 
   const [rows, t] = await Promise.all([getRecords(), socialTotals()])
-  // Instagram + Facebook over 90 days from the stored history (lib/social-totals.ts): views
-  // and interactions add up; reach never would. A platform over a week stale drops out.
+  // Overall figures across every platform over 90 days, from the stored history
+  // (lib/social-totals.ts). A platform over a week stale drops out.
   const channels = socials(t.followers.instagram, t.followers.facebook)
   const followers = combined(channels)
 
@@ -150,19 +151,19 @@ async function LandingBody({
             {followers > 0 ? (
               <div className="land-stat">
                 <div className="v">{compact(followers)}</div>
-                <div className="l">Combined followers</div>
+                <div className="l">Followers</div>
               </div>
             ) : null}
             {t.views ? (
               <div className="land-stat">
                 <div className="v">{compact(t.views)}</div>
-                <div className="l">Views · {totalsLabel(t, 'views')}</div>
+                <div className="l">Views · 90 days</div>
               </div>
             ) : null}
             {t.interactions ? (
               <div className="land-stat">
                 <div className="v">{compact(t.interactions)}</div>
-                <div className="l">Interactions · {totalsLabel(t, 'interactions')}</div>
+                <div className="l">Interactions · 90 days</div>
               </div>
             ) : null}
           </div>

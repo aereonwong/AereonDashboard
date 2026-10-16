@@ -4,6 +4,8 @@ import type { Audience } from '@/lib/v3/audience'
 import type { WorkKind } from '@/lib/invoices'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
+import { socials, combined } from '@/lib/socials'
+import type { SocialTotals } from '@/lib/social-totals'
 import { EMAIL } from '@/lib/agent-site'
 import PostGrid from '../PostGrid'
 import Icon from '@/app/_components/Icon'
@@ -32,21 +34,25 @@ export default function MediaKit({
   brands,
   kinds,
   since,
+  totals,
 }: {
   audience: Audience
   brands: string[]
   kinds: WorkKind[]
   since: string
+  totals: SocialTotals
 }) {
   const s = audience.stats
   const top = audience.best[0]
   const services = kinds.map(k => SERVICES[k]).filter(Boolean) as { title: string; line: string }[]
 
   // Reach as one composed sentence, built only from figures that exist.
-  // Only Instagram's own 30-day account figures (unique people). Summing post
-  // reach would count people twice, so with no account row the line is left out.
+  // Followers and reach are overall figures across every platform (lib/social-totals.ts):
+  // each platform's latest month of unique people, added. Summing post reach would count
+  // people twice, so with no account figures the line is left out.
   const v = audience.view?.totals
-  const reachLine = v?.reach ? compact(v.reach) : null
+  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook))
+  const reachLine = totals.reach ? compact(totals.reach) : null
   const topLine = top?.reach ? compact(top.reach) : null
   const engage = v?.reach && v.accounts_engaged ? `${((v.accounts_engaged / v.reach) * 100).toFixed(1)}%` : null
 
@@ -102,14 +108,14 @@ export default function MediaKit({
             Reach
           </h2>
           <p className="v3-kit-statement">
-            {audience.followers ? (
+            {followers ? (
               <>
-                <b>{compact(audience.followers)}</b> people follow along.{' '}
+                <b>{compact(followers)}</b> people follow along.{' '}
               </>
             ) : null}
             {reachLine ? (
               <>
-                In the last 30 days the work reached <b>{reachLine}</b> accounts
+                In the last month the work reached <b>{reachLine}</b> people
                 {topLine ? (
                   <>
                     {' '}— the best post of the last 3 months alone reached <b>{topLine}</b>
@@ -131,7 +137,7 @@ export default function MediaKit({
           <h2 className="v3-kit-h2" id="k-social">
             Find me on
           </h2>
-          <SocialLinks igFollowers={audience.followers} />
+          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} />
         </section>
 
         {/* ---------------- Best work, playable ---------------- */}

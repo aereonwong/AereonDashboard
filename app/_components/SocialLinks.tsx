@@ -26,7 +26,7 @@ export default function SocialLinks({ igFollowers, fbFollowers, total = true }: 
     <div className="so">
       {total && sum ? (
         <p className="so-total">
-          <b>{compact(sum)}</b> combined followers across {counted} platforms
+          <b>{compact(sum)}</b> followers across {counted} platforms
         </p>
       ) : null}
       <ul className="so-list">
@@ -44,7 +44,7 @@ export default function SocialLinks({ igFollowers, fbFollowers, total = true }: 
       </ul>
       <p className="so-fine">
         {igFollowers || fbFollowers
-          ? `${[igFollowers && 'Instagram', fbFollowers && 'Facebook'].filter(Boolean).join(' and ')} live; other counts as of ${asOf}.`
+          ? `Connected platforms live; others as of ${asOf}.`
           : `Counts as of ${asOf}.`}
       </p>
     </div>
