@@ -1,5 +1,6 @@
 import { RISK_LINE, type PaySpeed, type ClientRisk, type Seasons, type ReachVsWork } from '@/lib/v3/insights'
 import { rmFull, compact, shortDate } from '../fmt'
+import { ReachWorkBars } from './ReachWorkBars'
 
 // 👉 The Dashboard's insight panels (lib/v3/insights.ts does the counting).
 // Each one states a finding in a sentence first, then shows what it rests on.
@@ -244,8 +245,6 @@ export function SeasonsGrid({ s }: { s: Seasons }) {
 export function ReachAndWork({ v, client }: { v: ReachVsWork; client?: string }) {
   if (v.months.length < 2)
     return <p className="v3-empty">Not enough Instagram history yet — this fills in as snapshots build up.</p>
-  const reachPeak = Math.max(1, ...v.months.map(m => m.reach))
-  const rmPeak = Math.max(1, ...v.months.map(m => m.invoiced))
   const lift = v.highNext !== null && v.lowNext ? (v.highNext - v.lowNext) / v.lowNext : null
   return (
     <div className="v3-ins">
@@ -254,7 +253,7 @@ export function ReachAndWork({ v, client }: { v: ReachVsWork; client?: string })
           <>
             In the two months after high-reach months, invoicing averaged <b>{rmFull(v.highNext!)}</b>, against{' '}
             <b>{rmFull(v.lowNext!)}</b> after quieter ones ({lift >= 0 ? '+' : ''}
-            {Math.round(lift * 100)}%), across {v.scored} months. A pattern, not proof that reach causes the work.
+            {Math.round(lift * 100)}%), across all {v.scored} months since {v.months[0].label}. A pattern, not proof that reach causes the work.
           </>
         ) : (
           <>
@@ -263,25 +262,7 @@ export function ReachAndWork({ v, client }: { v: ReachVsWork; client?: string })
           </>
         )}
       </p>
-      <div className="v3-rvw" role="table" aria-label="Reach and invoiced ringgit by month">
-        {v.months.map(m => (
-          <div className="v3-rvw-col" role="row" key={m.key}>
-            <div className="v3-rvw-bars" aria-hidden="true">
-              <i className="reach" style={{ ['--h' as string]: (m.reach / reachPeak).toFixed(3) }} />
-              <i className="rm" style={{ ['--h' as string]: (m.invoiced / rmPeak).toFixed(3) }} />
-            </div>
-            <span role="rowheader" className="v3-rvw-label">
-              {m.label}
-            </span>
-            <span role="cell" className="v3-rvw-num">
-              {m.posts ? compact(m.reach) : '0 posts'}
-            </span>
-            <span role="cell" className="v3-rvw-num rm" data-money>
-              {m.invoiced ? compact(m.invoiced) : '—'}
-            </span>
-          </div>
-        ))}
-      </div>
+      <ReachWorkBars months={v.months} />
       <p className="v3-ins-foot">
         <span className="v3-rvw-key reach" /> Reach of that month&apos;s posts, added up post by post (one person can count
         more than once){' '}
