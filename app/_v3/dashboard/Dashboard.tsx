@@ -12,7 +12,7 @@ import type { MetricRow } from '@/lib/v3/ig-insights'
 import { rmFull, pct, compact, num } from '../fmt'
 import type { Social } from '@/lib/v3/social'
 import { PLATFORM, PLATFORM_NAME } from '@/lib/v3/platforms'
-import { Compare, FollowersChart, MonthsChart, names, signed } from '../SocialOverview'
+import { Compare, FollowersChart, MonthsChart, basisNote, names, signed } from '../SocialOverview'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
 // The daily pulse: deeper money analysis lives on Invoice Summary.
@@ -217,17 +217,18 @@ export default function Dashboard({
                   <div className="v3-kpi-note">{netNote} · someone on two counts twice{staleNote}</div>
                 </div>
                 <div>
-                  <div className="v3-kpi-label">Views, last 30 days&rsquo; posts</div>
+                  <div className="v3-kpi-label">Views, last 30 days</div>
                   <div className="v3-kpi-value num">{t.views !== null ? compact(t.views) : '—'}</div>
                   <div className="v3-kpi-note">
                     {social.platforms.map(f => `${PLATFORM_NAME[f.id]} ${f.views !== null ? compact(f.views) : '—'}`).join(' · ')}
+                    {` · ${basisNote(social)}`}
                     {partialNote}
                   </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Engagement rate</div>
                   <div className="v3-kpi-value num">{t.rate !== null ? `${t.rate.toFixed(1)}%` : '—'}</div>
-                  <div className="v3-kpi-note">interactions per 100 views, same posts</div>
+                  <div className="v3-kpi-note">interactions per 100 views, same count</div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Posting</div>

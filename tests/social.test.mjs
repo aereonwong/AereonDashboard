@@ -114,3 +114,36 @@ test('stored totals: one row per platform plus an "all" row that hides rather th
   assert.equal(stale.fresh, false)
   assert.equal(stale.followers, 116000)
 })
+
+test('a platform’s own account count (Stories, ads) is used where it reports one; posts elsewhere', async () => {
+  const { buildSocial } = await import('../lib/v3/social-math.ts')
+  const s = buildSocial(
+    [
+      src('ig', { reported: { 30: { views: 9000, interactions: 900 } }, posts: [post('ig', 2, 1000, 100), post('ig', 5, 3000, 150)] }),
+      src('tt', { posts: [post('tt', 1, 500, 50)] }),
+    ],
+    30,
+    NOW,
+  )
+  assert.equal(s.by.ig.basis, 'account')
+  assert.equal(s.by.ig.views, 9000) // Instagram's own count, not the 4,000 of its posts
+  assert.equal(s.by.ig.postViews, 4000)
+  assert.equal(s.by.ig.typical, 2000) // the typical post still reads posts
+  assert.equal(s.by.tt.basis, 'posts')
+  assert.equal(s.total.views, 9500)
+  assert.ok(Math.abs(s.total.rate - (950 / 9500) * 100) < 1e-9)
+  // A window the platform should report but couldn't: the total hides rather than shrinks.
+  const gap = buildSocial([src('ig', { reported: { 30: { views: null, interactions: null } } }), src('tt', { posts: [post('tt', 1, 500, 50)] })], 30, NOW)
+  assert.deepEqual(gap.total.partial, ['ig'])
+  // A window it doesn't report at all (12 months on Instagram): its posts stand in.
+  const year = buildSocial([src('ig', { reported: { 30: { views: 9000, interactions: 900 } }, posts: [post('ig', 200, 7000, 70)] })], 365, NOW)
+  assert.equal(year.by.ig.basis, 'posts')
+  assert.equal(year.by.ig.views, 7000)
+})
+
+test('a quiet posts-only platform never hides the overall rate; unread stays a post count', async () => {
+  const { buildSocial } = await import('../lib/v3/social-math.ts')
+  const s = buildSocial([src('ig', { reported: { 30: { views: 9000, interactions: 900 } }, posts: [post('ig', 2, null, null)] }), src('tt')], 30, NOW)
+  assert.ok(Math.abs(s.total.rate - 10) < 1e-9)
+  assert.equal(s.by.ig.unread, 1)
+})
