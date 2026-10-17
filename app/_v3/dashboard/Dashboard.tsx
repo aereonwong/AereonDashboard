@@ -10,8 +10,9 @@ import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
 import { rmFull, pct, compact, num } from '../fmt'
-import { PLATFORM_NAME, type Social } from '@/lib/v3/social'
-import { Compare, FollowersChart, MonthsChart, shown } from '../SocialOverview'
+import type { Social } from '@/lib/v3/social'
+import { PLATFORM, PLATFORM_NAME } from '@/lib/v3/platforms'
+import { Compare, FollowersChart, MonthsChart, names, signed } from '../SocialOverview'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
 // The daily pulse: deeper money analysis lives on Invoice Summary.
@@ -36,21 +37,17 @@ export default function Dashboard({
   const rvw = reachVsWork(rows, filters, postReach(audience.snap?.posts ?? [], metrics), s.today)
   const { stats } = audience
   const up = (s.pacePct ?? 0) >= 0
-  const reach30 = audience.view?.totals.reach ?? 0
-  const newPct = audience.view?.newPeoplePct ?? null
   const trackLine =
     s.pacePct === null
       ? `No ${s.year - 1} invoices to compare against.`
       : `${up ? 'Ahead of' : 'Behind'} ${s.year - 1} by ${rmFull(Math.abs(s.ytd - s.lastYtd))} at this point in the year.`
-  // Social reach in the hero = Instagram + Facebook (TikTok reports no reach). Both current,
-  // or the hero falls back to Instagram alone rather than reading a missing platform as zero.
-  // social.total.people is null unless both windows are current and read — never a missing one as zero.
-  const both = social.total.people !== null && reach30 > 0
-  const fbViewers = social.fb.people
-  const allReach = social.total.people ?? 0
-  const signed = (n: number) => `${n >= 0 ? '+' : ''}${num(n)}`
-  const platforms = shown(social)
-  const and = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}` : (xs[0] ?? ''))
+  // The audience in the hero: followers on every connected platform — the one figure every
+  // platform measures the same way (lib/v3/social.ts). Someone on two counts twice.
+  const t = social.total
+  // A platform whose reading is over a week old still counts, but the note says so.
+  const staleNote = social.stale.length ? ` · ${names(social.stale)} reading over a week old` : ''
+  const partialNote = t.partial.length ? ` · ${names(t.partial)} not read yet, left out` : ''
+  const netNote = t.net30 !== null ? `${signed(t.net30)} in 30 days${t.netOf.length < social.ids.length ? ` (${names(t.netOf)})` : ''}` : 'change shows as history builds'
   const filterNote = [filters.client, filters.kind].filter(Boolean).join(' · ')
 
   return (
@@ -101,24 +98,13 @@ export default function Dashboard({
               {s.owed.length} tracked unpaid, last 120 days{s.untracked ? ` · ${s.untracked} not tracked yet` : ''}
             </div>
           </a>
-          {both ? (
-            <a className="v3-kpi" href="#audience">
-              <div className="v3-kpi-label">Social reach, last month</div>
-              <div className="v3-kpi-value">{compact(allReach)}</div>
-              <div className="v3-kpi-note">
-                Instagram {compact(reach30)} + Facebook {compact(fbViewers ?? 0)} · platform total, someone on both counts twice
-              </div>
-            </a>
-          ) : (
-            <a className="v3-kpi" href="#audience">
-              <div className="v3-kpi-label">{reach30 ? 'Instagram reach, 30 days' : 'Instagram reach per post'}</div>
-              <div className="v3-kpi-value">{reach30 ? compact(reach30) : stats ? compact(stats.reachPerPost) : '—'}</div>
-              <div className="v3-kpi-note">
-                {newPct !== null ? `${Math.round(newPct)}% new people · ` : ''}
-                {compact(audience.followers)} followers
-              </div>
-            </a>
-          )}
+          <a className="v3-kpi" href="#audience">
+            <div className="v3-kpi-label">Followers, every platform</div>
+            <div className="v3-kpi-value">{social.ids.length ? num(t.followers) : '—'}</div>
+            <div className="v3-kpi-note">
+              {social.ids.length ? `${netNote} · ${social.platforms.map(f => `${PLATFORM_NAME[f.id]} ${compact(f.followers)}`).join(' · ')}${staleNote}` : 'No social history yet'}
+            </div>
+          </a>
       </section>
 
       {/* ---------------- The body ---------------- */}
@@ -216,42 +202,37 @@ export default function Dashboard({
             <a className="v3-panel-link" href="/social">
               Overview
             </a>
-            {platforms.map(p => (
-              <a key={p} className="v3-panel-link" href={p === 'ig' ? '/instagram' : p === 'fb' ? '/facebook' : '/tiktok'}>
+            {social.ids.map(p => (
+              <a key={p} className="v3-panel-link" href={PLATFORM[p].href}>
                 {PLATFORM_NAME[p]}
               </a>
             ))}
           </div>
-          {social.hasIg || social.hasFb || social.hasTt ? (
+          {social.ids.length ? (
             <>
               <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
                 <div>
                   <div className="v3-kpi-label">Followers, every platform</div>
-                  <div className="v3-kpi-value num">{num(social.total.followers)}</div>
+                  <div className="v3-kpi-value num">{num(t.followers)}</div>
+                  <div className="v3-kpi-note">{netNote} · someone on two counts twice{staleNote}</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Views, last 30 days&rsquo; posts</div>
+                  <div className="v3-kpi-value num">{t.views !== null ? compact(t.views) : '—'}</div>
                   <div className="v3-kpi-note">
-                    {social.total.net30 !== null
-                      ? `${signed(social.total.net30)} in 30 days${social.total.netOf.length < platforms.length ? ` (${and(social.total.netOf.map(p => PLATFORM_NAME[p]))})` : ''}`
-                      : 'change shows as history builds'}{' '}
-                    · someone on two counts twice
+                    {social.platforms.map(f => `${PLATFORM_NAME[f.id]} ${f.views !== null ? compact(f.views) : '—'}`).join(' · ')}
+                    {partialNote}
                   </div>
                 </div>
                 <div>
-                  <div className="v3-kpi-label">Views, last month</div>
-                  <div className="v3-kpi-value num">{social.total.views !== null ? compact(social.total.views) : '—'}</div>
-                  <div className="v3-kpi-note">
-                    every showing on {and(platforms.map(p => PLATFORM_NAME[p]))}
-                    {social.hasTt ? ' · TikTok: views so far of the videos posted in it' : ''}
-                  </div>
-                </div>
-                <div>
-                  <div className="v3-kpi-label">People reached</div>
-                  <div className="v3-kpi-value num">{social.total.people !== null ? compact(social.total.people) : '—'}</div>
-                  <div className="v3-kpi-note">Instagram 30 days + Facebook 28 days · TikTok reports no reach</div>
+                  <div className="v3-kpi-label">Engagement rate</div>
+                  <div className="v3-kpi-value num">{t.rate !== null ? `${t.rate.toFixed(1)}%` : '—'}</div>
+                  <div className="v3-kpi-note">interactions per 100 views, same posts</div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">Posting</div>
-                  <div className="v3-kpi-value num">{social.total.perWeek.toFixed(1)}/wk</div>
-                  <div className="v3-kpi-note">{platforms.map(p => `${PLATFORM_NAME[p]} ${social[p].perWeek.toFixed(1)}`).join(' · ')}</div>
+                  <div className="v3-kpi-value num">{t.perWeek.toFixed(1)}/wk</div>
+                  <div className="v3-kpi-note">{social.platforms.map(f => `${PLATFORM_NAME[f.id]} ${f.perWeek.toFixed(1)}`).join(' · ')}</div>
                 </div>
               </div>
               <div className="v3-dash-social-charts">
@@ -260,7 +241,7 @@ export default function Dashboard({
                   <MonthsChart s={social} />
                 </div>
                 <div>
-                  <p className="v3-kpi-label">Followers, last 90 days</p>
+                  <p className="v3-kpi-label">Followers gained, last 90 days</p>
                   <FollowersChart s={social} />
                 </div>
               </div>
@@ -270,7 +251,7 @@ export default function Dashboard({
               </a>
             </>
           ) : (
-            <p className="v3-empty">No social history yet. Refresh from the Instagram, Facebook and TikTok pages.</p>
+            <p className="v3-empty">No social history yet. Refresh from each platform&rsquo;s page.</p>
           )}
         </section>
         {stats && !demo ? (
