@@ -97,7 +97,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
   const kindTop = Math.max(1, ...s.kinds.map(k => k.typical))
   const weekTop = Math.max(1, ...s.weeks.map(w => w.ig + w.fb + w.tt))
   const spark = s.daily.map(d => (d.ig ?? 0) + (d.fb ?? 0)).slice(-30)
-  const netNote = total.net30 !== null && total.netOf.length < ps.length ? ` (${and(total.netOf.map(p => PLATFORM_NAME[p]))} — TikTok's shows after 30 days of readings)` : ''
+  const netNote = total.net30 !== null && total.netOf.length < ps.length ? ` (${and(total.netOf.map(p => PLATFORM_NAME[p]))} only)` : ''
 
   return (
     <div>

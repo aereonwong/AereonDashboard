@@ -44,9 +44,10 @@ export default function Dashboard({
       : `${up ? 'Ahead of' : 'Behind'} ${s.year - 1} by ${rmFull(Math.abs(s.ytd - s.lastYtd))} at this point in the year.`
   // Social reach in the hero = Instagram + Facebook (TikTok reports no reach). Both current,
   // or the hero falls back to Instagram alone rather than reading a missing platform as zero.
-  const both = social.hasFb && social.fbFresh && reach30 > 0
+  // social.total.people is null unless both windows are current and read — never a missing one as zero.
+  const both = social.total.people !== null && reach30 > 0
   const fbViewers = social.fb.people
-  const allReach = reach30 + (fbViewers ?? 0)
+  const allReach = social.total.people ?? 0
   const signed = (n: number) => `${n >= 0 ? '+' : ''}${num(n)}`
   const platforms = shown(social)
   const and = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}` : (xs[0] ?? ''))
@@ -237,7 +238,10 @@ export default function Dashboard({
                 <div>
                   <div className="v3-kpi-label">Views, last month</div>
                   <div className="v3-kpi-value num">{social.total.views !== null ? compact(social.total.views) : '—'}</div>
-                  <div className="v3-kpi-note">every showing on {and(platforms.map(p => PLATFORM_NAME[p]))}</div>
+                  <div className="v3-kpi-note">
+                    every showing on {and(platforms.map(p => PLATFORM_NAME[p]))}
+                    {social.hasTt ? ' · TikTok: views so far of the videos posted in it' : ''}
+                  </div>
                 </div>
                 <div>
                   <div className="v3-kpi-label">People reached</div>

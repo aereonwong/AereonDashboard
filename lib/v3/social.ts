@@ -110,7 +110,7 @@ const snapPost = (p: SnapPost): SocialPost => ({
   id: p.id,
   at: p.timestamp,
   title: firstLine(p.caption) || p.type,
-  kind: p.type === 'REELS' ? 'Reel' : 'Photo',
+  kind: p.type === 'REELS' ? 'Reel' : 'Photo', // the snapshot doesn't say carousel; the archive corrects it within days
   people: p.reach ?? null,
   views: p.views ?? null,
   interactions: p.interactions ?? (p.saved != null && p.shares != null ? p.likes + p.comments + p.saved + p.shares : null),
@@ -255,7 +255,8 @@ export function buildSocial(audience: Audience, fb: Facebook, tt: Tiktok, posts:
   const withTt = (n: number | null) => (hasTt ? [ttFresh ? n : null] : [])
   // Follower change: TikTok's needs 30 days of our own readings, so until then the combined
   // change covers the platforms that have one — and says which (netOf).
-  const nets = PLATFORMS.filter(p => p !== 'tt' || hasTt).map(p => ({ p, n: { ig: ig.net30, fb: fbf.net30, tt: ttf.net30 }[p] }))
+  // A stale TikTok reading sits out of the change too, the same as out of the follower total.
+  const nets = PLATFORMS.filter(p => p !== 'tt' || hasTt).map(p => ({ p, n: { ig: ig.net30, fb: fbf.net30, tt: ttFresh ? ttf.net30 : null }[p] }))
   const known = nets.filter(x => x.n !== null)
   const total = {
     followers: ig.followers + fbf.followers + (ttFresh ? ttf.followers : 0),
