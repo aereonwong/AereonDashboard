@@ -1321,7 +1321,7 @@ html[data-privacy='switching'] body > :not(.bg-photo):not(.bg-veil) { opacity: .
   box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45); font-variant-numeric: tabular-nums;
 }
 .chart-tip[hidden] { display: none; }
-.chart-tip-head { color: var(--ink-3, var(--ink-faint, #978C7B)); font-size: 12px; }
+.chart-tip-head { color: var(--ink-2, var(--ink-soft, #5F564B)); font-size: 12px; }
 .chart-tip-head + div { font-weight: 600; }
 :where([data-tip]) { cursor: default; transition: opacity 120ms ease, filter 120ms ease; }
 :where(*:has(> [data-tip-on])) > [data-tip]:not([data-tip-on]) { opacity: 0.5; }
