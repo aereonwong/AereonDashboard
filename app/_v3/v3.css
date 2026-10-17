@@ -1402,6 +1402,25 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-soc-dot, .v3-legend i.v3-soc-dot { display: inline-block; border: 0; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 .v3-soc-dot.ig, .v3-soc-split .ig, .v3-soc-weeks .ig, .v3-soc-bar.ig i { background: var(--accent); }
 .v3-soc-dot.fb, .v3-soc-split .fb, .v3-soc-weeks .fb, .v3[data-world="canon"] .v3-soc-bar.fb i { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-soc-dot.tt, .v3-soc-split .tt, .v3-soc-weeks .tt, .v3[data-world="canon"] .v3-soc-bar.tt i { background: color-mix(in srgb, var(--ink) 45%, transparent); }
+/* PlatformChart: Instagram indigo, Facebook light indigo, TikTok ink — indigo stays the only accent. */
+.v3-plat-chart rect.ig { fill: var(--accent); }
+.v3-plat-chart rect.fb { fill: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-plat-chart rect.tt { fill: color-mix(in srgb, var(--ink) 45%, transparent); }
+.v3-plat-chart g[data-off="true"] rect { opacity: 0.45; }
+.v3-plat-chart g.ig, .v3-plat-chart g.fb, .v3-plat-chart g.tt { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.v3-plat-chart g.ig { stroke: var(--accent); }
+.v3-plat-chart g.fb { stroke: color-mix(in srgb, var(--accent) 65%, transparent); }
+.v3-plat-chart g.tt { stroke: color-mix(in srgb, var(--ink) 50%, transparent); }
+.v3-plat-chart g.ig circle { fill: var(--accent); }
+.v3-plat-chart g.fb circle { fill: color-mix(in srgb, var(--accent) 45%, var(--film)); }
+.v3-plat-chart g.tt circle { fill: color-mix(in srgb, var(--ink) 50%, var(--film)); }
+.v3-plat-cursor { stroke: var(--line-2); stroke-width: 1; }
+@media (prefers-reduced-motion: no-preference) { .v3-plat-chart rect { transition: opacity var(--dur) var(--ease); } }
+.v3-soc-tag.tt { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); }
+/* Side by side only when each chart gets ~460px — narrower and the axis text is unreadable. */
+.v3-dash-social-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: var(--space-6); margin-bottom: var(--space-6); }
+.v3-dash-social-charts .v3-kpi-label { margin-bottom: var(--space-2); }
 .v3-soc-daily .ig { fill: var(--accent); }
 .v3-soc-daily .fb { fill: color-mix(in srgb, var(--accent) 40%, transparent); }
 .v3-soc-daily g[data-on="true"] rect { filter: brightness(1.15); }
@@ -1409,7 +1428,7 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-soc-tag.ig { color: var(--accent); background: var(--accent-soft); }
 .v3-soc-tag.fb { color: var(--ink-2); background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .v3-soc-table { display: grid; font-size: var(--t-md); }
-.v3-soc-tr { display: grid; grid-template-columns: minmax(0, 1.6fr) 1fr 1fr minmax(0, 1.4fr); gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+.v3-soc-tr { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(var(--cols, 2), 1fr) minmax(0, 1.4fr); gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-top: 1px solid var(--line); }
 .v3-soc-tr.head { border-top: 0; padding-top: 0; font-size: var(--t-sm); color: var(--ink-3); }
 .v3-soc-tr [role="rowheader"] small { display: block; font-size: var(--t-sm); color: var(--ink-3); }
 .v3-soc-tr .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 600; }
@@ -1424,8 +1443,8 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-soc-weeks b { font-size: var(--t-sm); }
 .v3-soc-weeks small { font-size: 10px; color: var(--ink-3); white-space: nowrap; }
 @media (max-width: 640px) {
-  .v3-soc-tr { grid-template-columns: minmax(0, 1.4fr) 1fr 1fr; }
-  .v3-soc-tr > :nth-child(4) { grid-column: 1 / -1; }
-  .v3-soc-tr.head > :nth-child(4) { display: none; }
+  .v3-soc-tr { grid-template-columns: minmax(0, 1.3fr) repeat(var(--cols, 2), 1fr); }
+  .v3-soc-tr > :last-child { grid-column: 1 / -1; }
+  .v3-soc-tr.head > :last-child { display: none; }
   .v3-soc-weeks small { display: none; }
 }

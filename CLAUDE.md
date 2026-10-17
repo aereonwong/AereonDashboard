@@ -158,6 +158,14 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
   90 days at their latest reading (TikTok has only lifetime counts per video). TikTok sits out of reach totals.
   Empty in demo mode.
 
+**Social overview — every platform (17 Oct 2026).** `/social` and the v3 Dashboard's "Is my audience growing" band
+share one maths (`buildSocial()` in `lib/v3/social.ts`) and one set of parts (`app/_v3/SocialOverview.tsx`: the
+platform-by-platform table and two charts in `PlatformChart.tsx`). The like-for-like chart is **views by posting month,
+stacked by platform** (views so far of each month's posts — every platform reports per-post views); the other is
+**followers per platform, last 90 days** (lines, fitted axis; each starts when its history does). People reached is
+Instagram + Facebook only. Posts are ranked by lift over their own platform's median (`scoreOf`: reach, or TikTok views).
+`readIgPosts()` adds the daily snapshot's newest posts that the `ig_posts` archive hasn't caught up with.
+
 **Instagram — one page since 16 Oct 2026** (`app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
 read in `lib/v3/content-lab.ts`; the Studio/Lab view switch and `cfo-ig` cookie are gone). Top to bottom: verdict headline,
 Growth (account-wide, Studio panels, ignores filters), the sticky filter bar, the post analysis, Timing, Audience, the ranked posts.
