@@ -11,11 +11,11 @@ import { setShown } from './money-privacy'
 // (`canReveal`); for anyone else it is shown off and locked.
 export default function MoneyToggle({ shown, canReveal, variant = 'row' }: { shown: boolean; canReveal: boolean; variant?: 'row' | 'icon' }) {
   const [busy, setBusy] = useState(false)
-  const hint = !canReveal ? 'Owner only' : shown ? 'Hides after 5 min' : 'Off · tap any figure'
+  const hint = !canReveal ? 'Owner only' : shown ? 'Hides after 30 min' : 'Off · tap any figure'
   const title = !canReveal
     ? 'Only the owner can show amounts.'
     : shown
-      ? 'Amounts are showing. They hide again after 5 minutes idle.'
+      ? 'Amounts are showing. They hide again after 30 minutes idle.'
       : 'Amounts are hidden. Switch on to show them.'
   return (
     <button

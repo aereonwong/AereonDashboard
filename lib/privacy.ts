@@ -20,8 +20,8 @@ export { GATE_HEADER, REVEAL_COOKIE }
 // ("Under 1K") go blank while hidden, because a band would give the real size away.
 //
 // Only the OWNER can show real amounts (canRevealMoney). "Show amounts" (MoneyToggle) sets
-// the REVEAL cookie to an expiry five minutes ahead and reloads; the browser keeps pushing
-// it forward while you work and deletes it when switched off or after 5 idle minutes. A
+// the REVEAL cookie to an expiry 30 minutes ahead and reloads; the browser keeps pushing
+// it forward while you work and deletes it when switched off or after 30 idle minutes. A
 // reveal cookie from an admin or viewer is ignored.
 //
 // Only requests proxy.ts let through as signed-in app pages carry GATE_HEADER, so
