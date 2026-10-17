@@ -50,11 +50,11 @@ export default function MediaKit({
   // Followers and reach are overall figures across every platform (lib/social-totals.ts):
   // each platform's latest month of unique people, added. Summing post reach would count
   // people twice, so with no account figures the line is left out.
-  const v = audience.view?.totals
   const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook, totals.followers.tiktok))
   const reachLine = totals.reach ? compact(totals.reach) : null
   const topLine = top?.reach ? compact(top.reach) : null
-  const engage = v?.reach && v.accounts_engaged ? `${((v.accounts_engaged / v.reach) * 100).toFixed(1)}%` : null
+  // Engagement on every platform alike: interactions per 100 views of the last 30 days' posts (lib/social-totals.ts).
+  const engage = totals.rate !== null ? totals.rate.toFixed(1) : null
 
   return (
     <div className={`v3 v3-kit ${v3Fonts}`} data-world="canon">
@@ -121,12 +121,12 @@ export default function MediaKit({
                     {' '}— the best post of the last 3 months alone reached <b>{topLine}</b>
                   </>
                 ) : null}
+                .
                 {engage ? (
                   <>
-                    , and <b>{engage}</b> of the people it reached engaged
+                    {' '}Every 100 views earn <b>{engage}</b> likes, comments and shares.
                   </>
                 ) : null}
-                .
               </>
             ) : null}
           </p>

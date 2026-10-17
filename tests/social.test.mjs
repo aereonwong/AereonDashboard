@@ -89,3 +89,28 @@ test('followers gained are indexed to each platform’s first reading; months st
   assert.equal(s.months.at(-1).v.ig, 1000)
   assert.equal(s.months[0].v.ig, null) // nothing posted then: a gap, not zero
 })
+
+test('stored totals: one row per platform plus an "all" row that hides rather than undersells', async () => {
+  const { buildSocial, totalsRows } = await import('../lib/v3/social-math.ts')
+  const sources = [
+    src('ig', { followers: 50000, people: { value: 700, window: 30 }, posts: [post('ig', 2, 1000, 100)] }),
+    src('fb', { followers: 30000, people: { value: 300, window: 28 }, posts: [post('fb', 3, 2000, 20)] }),
+    src('tt', { followers: 36000, posts: [post('tt', 1, 500, 50)] }),
+  ]
+  const rows = totalsRows(buildSocial(sources, 90, NOW), { ig: 900, fb: 400 }, '2026-10-17')
+  assert.deepEqual(rows.map(r => r.platform), ['ig', 'fb', 'tt', 'all'])
+  const all = rows.at(-1)
+  assert.equal(all.views, 3500)
+  assert.equal(all.interactions, 170)
+  assert.ok(Math.abs(all.rate - (170 / 3500) * 100) < 1e-9) // same posts on both sides
+  assert.equal(all.people, 1000)
+  assert.equal(all.best_people, 1300) // best windows added across platforms, never across windows
+  assert.equal(rows[2].best_people, null) // TikTok measures no reach
+  assert.equal(all.fresh, true)
+
+  // A stale platform hides the overall totals instead of quietly shrinking them.
+  const stale = totalsRows(buildSocial([...sources.slice(0, 2), { ...sources[2], fresh: false }], 90, NOW), { ig: 900, fb: 400 }, '2026-10-17').at(-1)
+  assert.equal(stale.views, null)
+  assert.equal(stale.fresh, false)
+  assert.equal(stale.followers, 116000)
+})

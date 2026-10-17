@@ -1,5 +1,6 @@
 import { refreshFacebook } from '@/lib/fb-refresh'
 import { canEdit } from '@/lib/auth'
+import { writeSocialTotals } from '@/lib/social-totals'
 
 // 👉 Pulls the last ten days of Facebook Page figures and the last 30 days of
 // posts (with their views) through Composio, into the fb_* history tables.
@@ -12,6 +13,8 @@ export const maxDuration = 300
 export async function POST() {
   if (!(await canEdit())) return Response.json({ ok: false, error: 'Not allowed' }, { status: 403 })
   const r = await refreshFacebook('button')
+  // Fresh figures in → the public pages' stored totals follow straight away.
+  if (r.ok) await writeSocialTotals()
   return r.ok
     ? Response.json({ ok: true, posts: r.posts, days: r.days, warnings: r.warnings })
     : Response.json({ ok: false, error: r.error }, { status: r.status })

@@ -218,3 +218,73 @@ export function buildSocial(input: (Source | null)[], days: number, now = Date.n
 }
 
 export type Social = ReturnType<typeof buildSocial>
+
+// ------------------------------------------------------------
+// The stored totals (supabase/social-totals.sql) — one row per platform per window, plus 'all'
+// ------------------------------------------------------------
+
+export type TotalsRow = {
+  day: string
+  platform: PlatformId | 'all'
+  window_days: number
+  followers: number | null
+  net30: number | null
+  posts: number
+  unread: number
+  views: number | null
+  interactions: number | null
+  /** Interactions per 100 views over posts where both were read — never the two sums divided. */
+  rate: number | null
+  typical: number | null
+  people: number | null
+  best_people: number | null
+  people_window: number | null
+  fresh: boolean
+}
+
+/**
+ * Rows for one Malaysia day from one `buildSocial` result. `best` = each platform's best own
+ * unique-people window inside the last 90 days (Instagram 30-day, Facebook 28-day), where it has one.
+ * The 'all' row follows the public rule: a total that would be missing a platform — stale, or with
+ * posts in the window but none read — is null, never a quietly smaller figure.
+ */
+export function totalsRows(s: Social, best: Partial<Record<PlatformId, number | null>>, day: string): TotalsRow[] {
+  const rows: TotalsRow[] = s.platforms.map(f => ({
+    day,
+    platform: f.id,
+    window_days: s.days,
+    followers: f.followers || null,
+    net30: f.net30,
+    posts: f.posts,
+    unread: f.unread,
+    views: f.views,
+    interactions: f.interactions,
+    rate: f.rate,
+    typical: f.typical ? Math.round(f.typical) : null, // a median of an even count can be .5; stored as a whole view
+    people: f.people ? f.people.value : null,
+    best_people: f.people ? (best[f.id] ?? null) : null,
+    people_window: f.people?.window ?? null,
+    fresh: f.fresh,
+  }))
+  const whole = s.stale.length === 0 && s.total.partial.length === 0
+  const measuring = s.platforms.filter(f => f.people)
+  const bests = measuring.map(f => best[f.id] ?? null)
+  rows.push({
+    day,
+    platform: 'all',
+    window_days: s.days,
+    followers: s.total.followers || null,
+    net30: s.total.net30,
+    posts: s.total.posts,
+    unread: s.total.unread,
+    views: whole ? s.total.views : null,
+    interactions: whole ? s.total.interactions : null,
+    rate: whole ? s.total.rate : null,
+    typical: null,
+    people: whole ? s.total.people : null,
+    best_people: whole && bests.length && bests.every(b => b !== null) ? bests.reduce((t, b) => t! + b!, 0) : null,
+    people_window: null,
+    fresh: whole,
+  })
+  return rows
+}

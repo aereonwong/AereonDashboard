@@ -1,5 +1,6 @@
 import { refreshInstagram } from '@/lib/ig-refresh'
 import { canEdit } from '@/lib/auth'
+import { writeSocialTotals } from '@/lib/social-totals'
 
 // 👉 Pulls your latest Instagram posts + insights through Composio and stores one
 // snapshot row (plus the history rows). Sits BEHIND the app passcode (proxy.ts
@@ -14,6 +15,8 @@ export async function POST() {
   // Second lock behind proxy.ts — a refresh spends Composio calls.
   if (!(await canEdit())) return Response.json({ ok: false, error: 'Not allowed' }, { status: 403 })
   const r = await refreshInstagram('button')
+  // Fresh figures in → the public pages' stored totals follow straight away.
+  if (r.ok) await writeSocialTotals()
   return r.ok
     ? Response.json({ ok: true, posts: r.posts, captured_at: r.captured_at, warnings: r.warnings })
     : Response.json({ ok: false, error: r.error }, { status: r.status })

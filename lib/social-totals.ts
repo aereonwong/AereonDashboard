@@ -1,151 +1,162 @@
 import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
-import { latestAccount, latestSnapshot, ninety } from './instagram'
-import { fbPageId } from './facebook'
+import { fbPageId, readFacebook } from './facebook'
+import { readTiktok } from './tiktok'
+import { readAudience } from './v3/audience'
+import { readIgPosts, igSource, fbSource, ttSource, buildSocial } from './v3/social'
+import { totalsRows, type TotalsRow } from './v3/social-math'
+import type { PlatformId } from './v3/platforms'
 
-// 👉 The public proof numbers (landing page, media kits, /hello and its share card, the reel):
-// every connected platform added into ONE overall figure, from the stored history — never a
-// live call. Today that is Instagram, the Facebook Page and TikTok; a new platform is one more source
-// below, and every page picks it up. The pages show the overall figure only, never a
-// per-platform split (Aereon's call, 16 Oct 2026).
+// 👉 The public proof numbers (landing page, media kits, /hello and its share card, the reel), and the
+// table they come from. Since 18 Oct 2026 every figure here is the SAME maths as /social and the
+// Dashboard (lib/v3/social-math.ts): views and interactions are those of the posts published in the
+// window, each at its latest reading, on every platform alike.
 //
-// Views and interactions are counts, so they add up across days and platforms. Reach (Instagram)
-// and viewers (Facebook) are unique people per window, so within a platform they are never added
-// across windows — only one window per platform goes in, and platforms are then added together,
-// the same as the Dashboard's "Social reach". TikTok's API has no reach at all, so TikTok sits out
-// of the reach totals (a metric a platform doesn't measure is `undefined`, never a zero), and its
-// views/interactions are those of the videos posted in the last 90 days — TikTok only gives each
-// video's lifetime count, and a video earns nearly all of it in its first weeks.
-// If any platform's figure is stale or incomplete, that total is not shown at all — a partial
+//   · writeSocialTotals() computes once and stores one row per platform per window, plus 'all', in
+//     social_totals (supabase/social-totals.sql). It runs after the daily 6am refresh, after any
+//     Refresh button, and from POST /api/social/totals.
+//   · socialTotals() — what the public pages call — reads the newest stored day. Only when there is
+//     none fresh (table not created yet, or the job stalled two days) does it compute on the spot,
+//     without storing, so a page never goes blank.
+//
+// The pages show the overall figure only, never a per-platform split (Aereon's call, 16 Oct 2026).
+// People reached is each platform's own unique count over its own window (Instagram 30 days,
+// Facebook 28), added only across platforms — never across windows. TikTok measures no reach and sits
+// out of it. If any platform is stale or unread, that total is null and the tile hides: a partial
 // "overall" figure would undersell, and missing is never counted as zero.
 
 const DAY = 86_400_000
-/** Older than this and a platform's figures are left out, so a stalled refresh never passes off old numbers. */
 const STALE = 7 * DAY
-
-type Metric = 'views' | 'interactions' | 'reach' | 'bestReach'
-
-/** One platform's figures; null = not known (hides the total), undefined = the platform doesn't measure it (sits out). */
-type Source = Record<Metric, number | null | undefined> & { followers?: number }
+/** Stored totals older than this are recomputed on the spot instead. */
+const STORED_FOR = 2 * DAY
+const mytDay = (t: number) => new Date(t + 8 * 3_600_000).toISOString().slice(0, 10)
 
 export type SocialTotals = {
-  /** Views over the last 90 days. */
+  /** Views over the last 90 days' posts. */
   views: number | null
-  /** Likes, comments, shares, saves (Facebook: post engagements) over the last 90 days. */
+  /** Likes, comments, shares (Instagram adds saves) over the last 90 days' posts. */
   interactions: number | null
+  /** Interactions per 100 views, last 30 days' posts. */
+  rate: number | null
   /** People reached in the latest month (Instagram 30 days, Facebook 28 days). */
   reach: number | null
   /** People reached in each platform's best month of the last 90 days. */
   bestReach: number | null
-  /** How many platforms went into each total. */
-  count: Record<Metric, number>
   /** Live follower counts, swapped into lib/socials.ts in place of the hand-typed ones. */
   followers: { instagram?: number; facebook?: number; tiktok?: number }
+  /** The Malaysia day the figures were computed for, and whether they came from the table. */
+  asOf: string | null
+  stored: boolean
 }
 
-/** Instagram: three back-to-back 30-day windows from the stored account snapshot. */
-async function instagram(): Promise<Source | null> {
-  const [account, snap] = await Promise.all([latestAccount().catch(() => null), latestSnapshot().catch(() => null)])
-  const followers = Number(snap?.profile?.followers_count ?? 0) || undefined
-  const fresh = account && Date.now() - Date.parse(account.captured_at) < STALE
-  if (!fresh) return { views: null, interactions: null, reach: null, bestReach: null, followers }
-  const d90 = ninety(account)
-  return {
-    views: d90?.views ?? null,
-    interactions: d90?.interactions ?? null,
-    reach: typeof account.totals.reach === 'number' ? account.totals.reach : null,
-    bestReach: d90?.peakReach ?? null,
-    followers,
+// lib/socials.ts names platforms by their full key.
+const KEY: Partial<Record<PlatformId, keyof SocialTotals['followers']>> = { ig: 'instagram', fb: 'facebook', tt: 'tiktok' }
+
+/** Facebook's best 28-day unique viewers among windows wholly inside the last 90 days. */
+async function fbBestViewers(now: number): Promise<number | null> {
+  const { data, error } = await supabase
+    .from('fb_page_periods')
+    .select('until, viewers')
+    .eq('page_id', fbPageId())
+    .gte('until', mytDay(now - (90 - 28) * DAY))
+    .order('until', { ascending: false })
+  if (error) return null
+  const vs = (data ?? []).map(w => w.viewers).filter((v): v is number => typeof v === 'number')
+  return vs.length ? Math.max(...vs) : null
+}
+
+/** Every row for today, computed from the stored history — real figures, never demo ones. */
+export async function computeSocialTotals(now = Date.now()): Promise<TotalsRow[]> {
+  const [audience, fb, tt, fbBest] = await Promise.all([readAudience(), readFacebook(true), readTiktok(true), fbBestViewers(now)])
+  const ig = await readIgPosts(audience, 100, true)
+  const sources = [igSource(audience, ig, now), fbSource(fb, now), ttSource(tt, now)]
+  // Instagram's best 30-day window of the last 90, from its three stored windows.
+  const igFresh = !!audience.view && now - Date.parse(audience.view.capturedAt) < STALE
+  const best: Partial<Record<PlatformId, number | null>> = { ig: igFresh ? (audience.view?.d90?.peakReach ?? null) : null, fb: fbBest }
+  const day = mytDay(now)
+  return [30, 90].flatMap(w => totalsRows(buildSocial(sources, w, now), best, day))
+}
+
+/** Compute and store today's rows. Never throws. */
+export async function writeSocialTotals(): Promise<{ ok: true; rows: number } | { ok: false; error: string }> {
+  if (!supabaseConfigured) return { ok: false, error: 'Supabase is not configured' }
+  try {
+    const rows = await computeSocialTotals()
+    // Never trade a good day for a worse one: if a platform read came back empty this time and
+    // today already has a whole total, keep what is stored.
+    // A platform stored before but missing now means its read failed (the readers return empty on
+    // error) — writing would shrink the overall figure rather than hide it, so keep the last good day.
+    const { data: last } = await supabase.from('social_totals').select('day, platform').eq('window_days', 90).neq('platform', 'all').order('day', { ascending: false }).limit(12)
+    const lastDay = last?.[0]?.day
+    const missing = (last ?? []).filter(r => r.day === lastDay && !rows.some(x => x.platform === r.platform)).map(r => r.platform)
+    if (missing.length) return { ok: false, error: `No figures read for ${missing.join(', ')} — kept the last stored day` }
+    const all90 = rows.find(r => r.platform === 'all' && r.window_days === 90)
+    if (all90 && all90.views === null) {
+      const { data } = await supabase.from('social_totals').select('views').eq('day', all90.day).eq('platform', 'all').eq('window_days', 90).maybeSingle()
+      if (data?.views != null) return { ok: true, rows: 0 }
+    }
+    const at = new Date().toISOString()
+    const { error } = await supabase.from('social_totals').upsert(rows.map(r => ({ ...r, computed_at: at })), { onConflict: 'day,platform,window_days' })
+    if (error) return { ok: false, error: error.message }
+    return { ok: true, rows: rows.length }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
 }
 
-type FbRow = { day: string; followers: number | null; views: number | null; engagements: number | null }
-
-/** Facebook Page: the last 90 complete days, and Facebook's own 28-day unique viewers. */
-async function facebook(): Promise<Source | null> {
-  if (!supabaseConfigured) return null
-  // The refresh also stores today, still counting — so the window ends yesterday (Malaysia time).
-  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10)
-  const page = fbPageId()
-  const [daily, periods] = await Promise.all([
-    supabase.from('fb_page_daily').select('day, followers, views, engagements').eq('page_id', page)
-      .lt('day', today).order('day', { ascending: false }).limit(90),
-    supabase.from('fb_page_periods').select('until, viewers').eq('page_id', page)
-      .lt('until', today).order('until', { ascending: false }).limit(90),
-  ])
-  if (daily.error || !daily.data?.length) return null
-  const rows = daily.data as FbRow[]
-  const latest = Date.parse(rows[0].day)
-  const recent = Date.now() - latest < STALE
-  // A stalled refresh must not pass an old count off as live — the hand-typed one stands in.
-  const followers = recent ? (rows.find(r => r.followers)?.followers ?? undefined) : undefined
-  // All 90 days present, the newest within a week, and every day measured — or no Facebook total.
-  const whole = rows.length === 90 && recent && Date.parse(rows[89].day) === latest - 89 * DAY
-  const sum = (k: 'views' | 'engagements') => (whole && rows.every(r => typeof r[k] === 'number') ? rows.reduce((t, r) => t + r[k]!, 0) : null)
-  // Viewers are unique per 28-day window: take one window, never add windows together.
-  // "Best" only looks at windows that lie wholly inside the last 90 days.
-  const all = (periods.data ?? []) as { until: string; viewers: number | null }[]
-  const newest = all[0] && typeof all[0].viewers === 'number' && Date.now() - Date.parse(all[0].until) < STALE ? all[0].viewers : null
-  const windows = all.filter(w => typeof w.viewers === 'number' && Date.now() - Date.parse(w.until) < (90 - 28) * DAY)
+function shape(rows: TotalsRow[], stored: boolean): SocialTotals {
+  const at = (p: PlatformId | 'all', w: number) => rows.find(r => r.platform === p && r.window_days === w)
+  const all90 = at('all', 90)
+  const all30 = at('all', 30)
+  const followers: SocialTotals['followers'] = {}
+  // A platform whose reading is over a week old gives no live count — the hand-typed one stands in.
+  for (const r of rows) {
+    const key = r.platform === 'all' ? undefined : KEY[r.platform]
+    if (key && r.window_days === 90 && r.fresh && r.followers) followers[key] = Number(r.followers)
+  }
+  const n = (v: number | string | null | undefined) => (v === null || v === undefined ? null : Number(v)) // bigint arrives as a string
   return {
-    views: sum('views'),
-    interactions: sum('engagements'),
-    reach: newest,
-    bestReach: newest === null || !windows.length ? null : Math.max(...windows.map(w => w.viewers!)),
+    views: n(all90?.views),
+    interactions: n(all90?.interactions),
+    rate: n(all30?.rate),
+    reach: n(all30?.people),
+    bestReach: n(all90?.best_people),
     followers,
+    asOf: all90?.day ?? null,
+    stored,
   }
 }
 
-type TtVideo = { video_id: string; posted_at: string | null }
-type TtReading = { video_id: string; captured_at: string; views: number | null; likes: number | null; comments: number | null; shares: number | null }
+// The on-the-spot fallback is held for a few minutes, so a stalled job never turns every public
+// page view into a dozen database reads.
+let held: { at: number; v: SocialTotals } | null = null
+const HOLD = 10 * 60_000
 
-/** TikTok: the videos posted in the last 90 days, at their latest reading. No reach on TikTok. */
-async function tiktok(): Promise<Source | null> {
-  if (!supabaseConfigured) return null
-  const account = await supabase.from('tt_account_daily').select('username, day, followers, captured_at').order('day', { ascending: false }).limit(1)
-  if (account.error || !account.data?.length) return null
-  const a = account.data[0] as { username: string; followers: number | null; captured_at: string }
-  const fresh = Date.now() - Date.parse(a.captured_at) < STALE
-  const followers = fresh ? (a.followers ?? undefined) : undefined
-  if (!fresh) return { views: null, interactions: null, reach: undefined, bestReach: undefined, followers }
-  const since = new Date(Date.now() - 90 * DAY).toISOString()
-  const vids = await supabase.from('tt_posts').select('video_id, posted_at').eq('username', a.username).gte('posted_at', since)
-  if (vids.error) return { views: null, interactions: null, reach: undefined, bestReach: undefined, followers }
-  const ids = ((vids.data ?? []) as TtVideo[]).map(v => v.video_id)
-  const reads = ids.length ? await supabase.from('tt_post_latest').select('*').in('video_id', ids) : { data: [], error: null }
-  const rows = (reads.data ?? []) as TtReading[]
-  // Every video read, and read within the week — or no TikTok total.
-  const whole = !reads.error && rows.length === ids.length && rows.every(r => Date.now() - Date.parse(r.captured_at) < STALE)
-  const counted = (r: TtReading) => [r.likes, r.comments, r.shares].every(v => typeof v === 'number')
-  return {
-    views: whole && rows.every(r => typeof r.views === 'number') ? rows.reduce((t, r) => t + r.views!, 0) : null,
-    interactions: whole && rows.every(counted) ? rows.reduce((t, r) => t + r.likes! + r.comments! + r.shares!, 0) : null,
-    reach: undefined,
-    bestReach: undefined,
-    followers,
-  }
-}
+const EMPTY: SocialTotals = { views: null, interactions: null, rate: null, reach: null, bestReach: null, followers: {}, asOf: null, stored: false }
 
-/** Every platform added together. Never throws: a missing platform just drops out. */
+/** The public figures: the newest stored day, or — only if none is fresh — computed on the spot. Never throws. */
 export async function socialTotals(): Promise<SocialTotals> {
-  const [ig, fb, tt] = await Promise.all([instagram().catch(() => null), facebook().catch(() => null), tiktok().catch(() => null)])
-  // A platform with no stored history at all (never connected) is simply not a source.
-  const sources = [ig, fb, tt].filter(Boolean) as Source[]
-  const count = { views: 0, interactions: 0, reach: 0, bestReach: 0 }
-  const total = (k: Metric) => {
-    // A platform that doesn't measure this (TikTok and reach) sits out; one that should but can't say hides the total.
-    const measured = sources.filter(s => s[k] !== undefined)
-    const have = measured.map(s => s[k]).filter((v): v is number => typeof v === 'number')
-    count[k] = have.length
-    // Every platform in, or no total: a stalled refresh hides the tile instead of shrinking it.
-    return have.length && have.length === measured.length ? have.reduce((t, v) => t + v, 0) : null
+  if (!supabaseConfigured) return EMPTY
+  try {
+    const { data, error } = await supabase
+      .from('social_totals')
+      .select('*')
+      .order('day', { ascending: false })
+      .order('computed_at', { ascending: false })
+      .limit(40)
+    const newest = data?.[0] as (TotalsRow & { computed_at: string }) | undefined
+    if (!error && newest && Date.now() - Date.parse(newest.computed_at) < STORED_FOR) {
+      return shape((data as TotalsRow[]).filter(r => r.day === newest.day), true)
+    }
+  } catch {
+    // Table missing (supabase/social-totals.sql not run yet): compute instead.
   }
-  return {
-    views: total('views'),
-    interactions: total('interactions'),
-    reach: total('reach'),
-    bestReach: total('bestReach'),
-    count,
-    followers: { instagram: ig?.followers, facebook: fb?.followers, tiktok: tt?.followers },
+  if (held && Date.now() - held.at < HOLD) return held.v
+  try {
+    const v = shape(await computeSocialTotals(), false)
+    held = { at: Date.now(), v }
+    return v
+  } catch {
+    return EMPTY
   }
 }

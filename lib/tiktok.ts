@@ -37,8 +37,9 @@ async function all<T>(q: () => any, size = 1000): Promise<T[]> {
 }
 
 /** Everything the TikTok page and the Dashboard show. Empty in demo mode or before the first refresh. */
-export async function readTiktok(): Promise<Tiktok> {
-  if (!supabaseConfigured || (await demoMode())) return EMPTY
+/** `real` skips the demo switch — for the stored totals (lib/social-totals.ts), which never show demo figures. */
+export async function readTiktok(real = false): Promise<Tiktok> {
+  if (!supabaseConfigured || (!real && (await demoMode()))) return EMPTY
   try {
     const [daily, posts, latest] = await Promise.all([
       all<TtAccount & { captured_at: string }>(() => supabase.from('tt_account_daily').select('*').order('day', { ascending: true })),
