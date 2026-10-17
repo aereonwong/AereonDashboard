@@ -10,7 +10,6 @@ import { rmFull, compact, money, shortDate } from '../fmt'
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`
 const signed = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%`
 
-/** A small trend line under a figure. Shape only — the figure above it is the number. */
 /** A small trend line. `tips` (one per value) makes each point hoverable — every chart answers the mouse (docs/CHARTS.md). */
 export function Spark({ values, tips }: { values: number[]; tips?: string[] }) {
   if (values.length < 2) return null
