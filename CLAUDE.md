@@ -158,12 +158,24 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
   90 days at their latest reading (TikTok has only lifetime counts per video). TikTok sits out of reach totals.
   Empty in demo mode.
 
-**Social overview — every platform (17 Oct 2026).** `/social` and the v3 Dashboard's "Is my audience growing" band
-share one maths (`buildSocial()` in `lib/v3/social.ts`) and one set of parts (`app/_v3/SocialOverview.tsx`: the
-platform-by-platform table and two charts in `PlatformChart.tsx`). The like-for-like chart is **views by posting month,
-stacked by platform** (views so far of each month's posts — every platform reports per-post views); the other is
-**followers per platform, last 90 days** (lines, fitted axis; each starts when its history does). People reached is
-Instagram + Facebook only. Posts are ranked by lift over their own platform's median (`scoreOf`: reach, or TikTok views).
+**Social overview — every platform (17 Oct 2026, reworked same day for scale).** `/social` and the v3 Dashboard's
+"Is my audience growing" band share one maths (`buildSocial()` in `lib/v3/social-math.ts`, pure + tested in
+`tests/social.test.mjs`) and one set of parts (`app/_v3/SocialOverview.tsx`, charts in `PlatformChart.tsx`).
+- **Platform registry `lib/v3/platforms.ts`** — the only place a platform is named (id, name, href, noun, whether it has
+  its own unique-people figure). YouTube (`yt`), Threads (`th`), Xiaohongshu (`xhs`) are reserved. Adding one = its
+  fetch/refresh/tables + an adapter in `lib/v3/social.ts` returning a `Source` (see `igSource`/`fbSource`/`ttSource`) +
+  its page and nav lines; every table, chart, legend, filter and total picks it up.
+- **One currency: views per post.** Views, interactions, engagement rate (interactions per 100 views), typical post
+  (median views), hits (2× typical) and the post ranking (lift over the platform's own typical) all read the posts
+  PUBLISHED in the window, each at its latest reading — the same on every platform. Account-level figures that
+  platforms define differently (Instagram's include Stories and ads; TikTok has none) stay on each platform's own page.
+- People reached = each platform's own unique window (IG 30d, FB 28d), added only as a platform total and only across
+  platforms that measure it. Unread posts sit out of sums and are counted. A reading over a week old is flagged.
+- Dashboard hero's 4th KPI = followers on every platform (+30-day change, naming which platforms have the history).
+- Charts: views by posting month (stacked), followers GAINED in 90 days (indexed to each platform's first reading —
+  absolute lines tens of thousands apart flatten each other), people reached per day, posts per week.
+- **Colour: one fixed slot per platform** (`--p-ig` … `--p-xhs` in `app/_v3/v3.css`, applied with `data-p`), validated
+  with the dataviz validator in light and dark; never coloured text, never a generated 7th hue.
 `readIgPosts()` adds the daily snapshot's newest posts that the `ig_posts` archive hasn't caught up with.
 
 **Instagram — one page since 16 Oct 2026** (`app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,

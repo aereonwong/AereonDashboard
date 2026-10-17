@@ -1398,36 +1398,49 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-sub-diffbar span[data-tone="neg"] { background: var(--neg); }
 .v3-sub-table tr[data-partial] td { color: var(--ink-3); }
 
-/* ---------------- Social overview (/social): Instagram = accent, Facebook = accent tint ---------------- */
-.v3-soc-dot, .v3-legend i.v3-soc-dot { display: inline-block; border: 0; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-.v3-soc-dot.ig, .v3-soc-split .ig, .v3-soc-weeks .ig, .v3-soc-bar.ig i { background: var(--accent); }
-.v3-soc-dot.fb, .v3-soc-split .fb, .v3-soc-weeks .fb, .v3[data-world="canon"] .v3-soc-bar.fb i { background: color-mix(in srgb, var(--accent) 40%, transparent); }
-.v3-soc-dot.tt, .v3-soc-split .tt, .v3-soc-weeks .tt, .v3[data-world="canon"] .v3-soc-bar.tt i { background: color-mix(in srgb, var(--ink) 45%, transparent); }
-/* PlatformChart: Instagram indigo, Facebook light indigo, TikTok ink — indigo stays the only accent. */
-.v3-plat-chart rect.ig { fill: var(--accent); }
-.v3-plat-chart rect.fb { fill: color-mix(in srgb, var(--accent) 40%, transparent); }
-.v3-plat-chart rect.tt { fill: color-mix(in srgb, var(--ink) 45%, transparent); }
+/* ---------------- Social: one fixed colour per platform (lib/v3/platforms.ts) ----------------
+   Each platform owns a slot, never its rank, so hiding one repaints nothing. Validated as a set
+   (dataviz validator) on #FFFFFF and on #111113 — dark steps are their own, not a flip. Colour is
+   only ever a mark beside text (dot, bar, line); text stays in ink. Reserved: yt, th, xhs. */
+.v3 {
+  --p-ig: #d55181; --p-fb: #2a78d6; --p-tt: #1baf7a; --p-yt: #e34948; --p-th: #6250d6; --p-xhs: #eda100;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .v3 { --p-ig: #d55181; --p-fb: #3987e5; --p-tt: #199e70; --p-yt: #e66767; --p-th: #9085e9; --p-xhs: #c98500; }
+}
+html[data-theme="dark"] .v3 { --p-ig: #d55181; --p-fb: #3987e5; --p-tt: #199e70; --p-yt: #e66767; --p-th: #9085e9; --p-xhs: #c98500; }
+.v3 [data-p="ig"] { --pc: var(--p-ig); }
+.v3 [data-p="fb"] { --pc: var(--p-fb); }
+.v3 [data-p="tt"] { --pc: var(--p-tt); }
+.v3 [data-p="yt"] { --pc: var(--p-yt); }
+.v3 [data-p="th"] { --pc: var(--p-th); }
+.v3 [data-p="xhs"] { --pc: var(--p-xhs); }
+
+.v3-soc-dot, .v3-legend i.v3-soc-dot { display: inline-block; border: 0; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; background: var(--pc, var(--ink-3)); }
+.v3-seg button .v3-soc-dot { width: 8px; height: 8px; margin-right: 5px; vertical-align: 0; }
+.v3-soc-split i, .v3-soc-bar i { background: var(--pc, var(--accent)); }
+.v3 .v3-row-bar.v3-soc-bar[data-p] i { background: var(--pc); }
+/* PlatformChart: stacks keep a 2px surface gap between platforms; lines are 2.5px. */
+.v3-plat-chart rect[data-p] { fill: var(--pc); stroke: var(--film); stroke-width: 1px; }
 .v3-plat-chart g[data-off="true"] rect { opacity: 0.45; }
-.v3-plat-chart g.ig, .v3-plat-chart g.fb, .v3-plat-chart g.tt { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.v3-plat-chart g.ig { stroke: var(--accent); }
-.v3-plat-chart g.fb { stroke: color-mix(in srgb, var(--accent) 65%, transparent); }
-.v3-plat-chart g.tt { stroke: color-mix(in srgb, var(--ink) 50%, transparent); }
-.v3-plat-chart g.ig circle { fill: var(--accent); }
-.v3-plat-chart g.fb circle { fill: color-mix(in srgb, var(--accent) 45%, var(--film)); }
-.v3-plat-chart g.tt circle { fill: color-mix(in srgb, var(--ink) 50%, var(--film)); }
+.v3-plat-chart g.line { fill: none; stroke: var(--pc); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.v3-plat-chart g.line circle { fill: var(--pc); stroke: var(--film); stroke-width: 2; }
+.v3-plat-chart .v3-gridlines line[data-zero] { stroke: var(--line-2); }
 .v3-plat-cursor { stroke: var(--line-2); stroke-width: 1; }
+/* Drawn at real pixel width, so the phone rule that enlarges scaled-down axis text must not apply. */
+.v3-chart.v3-plat-chart .axis text { font-size: 11px; }
 @media (prefers-reduced-motion: no-preference) { .v3-plat-chart rect { transition: opacity var(--dur) var(--ease); } }
-.v3-soc-tag.tt { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); }
 /* Side by side only when each chart gets ~460px — narrower and the axis text is unreadable. */
 .v3-dash-social-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: var(--space-6); margin-bottom: var(--space-6); }
 .v3-dash-social-charts .v3-kpi-label { margin-bottom: var(--space-2); }
-.v3-soc-daily .ig { fill: var(--accent); }
-.v3-soc-daily .fb { fill: color-mix(in srgb, var(--accent) 40%, transparent); }
-.v3-soc-daily g[data-on="true"] rect { filter: brightness(1.15); }
-.v3-soc-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 1px 6px; border-radius: 99px; margin-right: 4px; vertical-align: 1px; }
-.v3-soc-tag.ig { color: var(--accent); background: var(--accent-soft); }
-.v3-soc-tag.fb { color: var(--ink-2); background: color-mix(in srgb, var(--ink) 8%, transparent); }
-.v3-soc-table { display: grid; font-size: var(--t-md); }
+/* A platform tag: ink text, the platform's colour as a dot — never coloured text. */
+.v3-soc-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 1px 7px 1px 6px; border-radius: 99px; margin-right: 4px; vertical-align: 1px; color: var(--ink-2); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.v3-soc-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--pc, var(--ink-3)); }
+.v3-soc-stale { display: block; font-size: var(--t-sm); color: var(--neg); font-weight: 400; }
+.v3-soc-tr [role="columnheader"] a { color: inherit; text-decoration: none; }
+.v3-soc-tr [role="columnheader"] a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.v3-eyebrow { margin: 0 0 var(--space-2); font: 500 var(--t-xs)/1.4 var(--f-num); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.v3-soc-table { display: grid; font-size: var(--t-md); overflow-x: auto; }
 .v3-soc-tr { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(var(--cols, 2), 1fr) minmax(0, 1.4fr); gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-top: 1px solid var(--line); }
 .v3-soc-tr.head { border-top: 0; padding-top: 0; font-size: var(--t-sm); color: var(--ink-3); }
 .v3-soc-tr [role="rowheader"] small { display: block; font-size: var(--t-sm); color: var(--ink-3); }
@@ -1436,15 +1449,8 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-soc-split i { display: block; height: 100%; flex: var(--w) 0 0; min-width: 0; border-radius: 99px; }
 .v3-soc-split small { margin-left: var(--space-2); font-size: var(--t-sm); color: var(--ink-2); font-family: var(--f-num); }
 .v3-soc-split.empty { height: 0; }
-.v3-soc-weeks { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-2); align-items: end; }
-.v3-soc-weeks .col { display: grid; justify-items: center; gap: 4px; min-width: 0; }
-.v3-soc-weeks .stack { height: 120px; width: 100%; max-width: 28px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
-.v3-soc-weeks .stack i { display: block; height: calc(var(--h) * 100%); border-radius: 3px; }
-.v3-soc-weeks b { font-size: var(--t-sm); }
-.v3-soc-weeks small { font-size: 10px; color: var(--ink-3); white-space: nowrap; }
 @media (max-width: 640px) {
-  .v3-soc-tr { grid-template-columns: minmax(0, 1.3fr) repeat(var(--cols, 2), 1fr); }
+  .v3-soc-tr { grid-template-columns: minmax(0, 1.3fr) repeat(var(--cols, 2), 1fr); min-width: calc(120px + var(--cols, 2) * 88px); }
   .v3-soc-tr > :last-child { grid-column: 1 / -1; }
   .v3-soc-tr.head > :last-child { display: none; }
-  .v3-soc-weeks small { display: none; }
 }
