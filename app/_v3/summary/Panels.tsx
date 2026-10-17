@@ -67,7 +67,7 @@ export function PaymentPanel({ s, drive, year, client }: { s: StatusFigures; dri
   return (
     <div className="v3-pay">
       <div className="v3-pay-bar" role="img" aria-label="Ringgit by payment status">
-        {parts.map(p => (p.rm ? <i key={p.id} data-s={p.id} style={{ flexGrow: p.rm }} title={`${p.label}: ${rmFull(p.rm)}`} /> : null))}
+        {parts.map(p => (p.rm ? <i key={p.id} data-s={p.id} style={{ flexGrow: p.rm }} data-tip={`${p.label}\n${rmFull(p.rm)} · ${pctTxt(p.rm / (total || 1))}\n${p.n} invoice${p.n === 1 ? '' : 's'}`} /> : null))}
       </div>
       <div className="v3-pay-legend">
         {parts.map(p => (
@@ -154,7 +154,7 @@ export function MixByYear({ sum }: { sum: Summary }) {
           <span className="v3-mix-bar" role="img" aria-label={`${y.year} work mix`}>
             {order.map((kind, i) => {
               const p = y.parts.find(x => x.kind === kind)!
-              return p.share ? <i key={kind} data-i={i} style={{ flexGrow: p.share }} title={`${kind}: ${pctTxt(p.share)}`} /> : null
+              return p.share ? <i key={kind} data-i={i} style={{ flexGrow: p.share }} data-tip={`${y.year} · ${kind}\n${pctTxt(p.share)} of the year`} /> : null
             })}
           </span>
           <span className="v3-mix-total num" data-money>{y.total ? compact(y.total) : '—'}</span>
@@ -186,7 +186,7 @@ export function Sizes({ sum }: { sum: Summary }) {
       ) : null}
       <div className="v3-sizes" role="table" aria-label="Invoices and ringgit by invoice size">
         {sum.sizes.map(b => (
-          <div className="v3-sizes-col" role="row" key={b.label}>
+          <div className="v3-sizes-col" role="row" key={b.label} data-tip={`${b.label}\n${b.count} invoice${b.count === 1 ? '' : 's'} · ${pctTxt(b.countShare)} of invoices\n${pctTxt(b.totalShare)} of the ringgit`}>
             <div className="v3-sizes-bars" aria-hidden="true">
               <i className="n" style={{ ['--h' as string]: (b.countShare / peak).toFixed(3) }} />
               <i className="rm" style={{ ['--h' as string]: (b.totalShare / peak).toFixed(3) }} />
@@ -228,7 +228,7 @@ export function Cohorts({ sum }: { sum: Summary }) {
       )}
       <div className="v3-cohort" role="table" aria-label="New and returning clients by quarter" style={{ ['--n' as string]: sum.cohorts.length }}>
         {sum.cohorts.map((c, i) => (
-          <div className="v3-cohort-col" role="row" key={c.key} title={`${c.label}: ${rmFull(c.fresh + c.returning)}`}>
+          <div className="v3-cohort-col" role="row" key={c.key} data-tip={`${c.label}\n${rmFull(c.fresh + c.returning)}\nNew ${rmFull(c.fresh)} · returning ${rmFull(c.returning)}`}>
             <div className="v3-cohort-stack" aria-hidden="true" style={{ ['--h' as string]: ((c.fresh + c.returning) / peak).toFixed(3) }}>
               <i className="ret" style={{ flexGrow: c.returning }} />
               <i className="new" style={{ flexGrow: c.fresh }} />

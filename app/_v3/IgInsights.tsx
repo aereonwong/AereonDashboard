@@ -32,7 +32,7 @@ export function FollowFlow({ flow }: { flow: Flow }) {
       {rows.map(r => {
         const lead = [...r.posts].sort((a, b) => (b.reach ?? 0) - (a.reach ?? 0))[0]
         return (
-          <div key={r.day} className="v3-flow-row">
+          <div key={r.day} className="v3-flow-row" data-tip={`${shortDate(r.day)} · ${r.posts.length} post${r.posts.length === 1 ? '' : 's'}\n+${num(r.follows)} followers in 48 hours\n${r.lift >= 1.5 ? `${times(r.lift)} normal` : r.lift < 0.8 ? 'Below normal' : 'About normal'}${r.soFar ? ' · so far' : ''}`}>
             <div className="v3-flow-when">
               <b>{shortDate(r.day)}</b>
               <span>
@@ -97,7 +97,7 @@ export function TimeGrid({ grid }: { grid: TimeGridData }) {
                   data-thin={c.n === 1 || undefined}
                   data-best={best || undefined}
                   style={{ ['--v' as string]: c.n ? (c.median / grid.max).toFixed(3) : 0 }}
-                  title={c.n ? `${w}, ${DAYPARTS[pi].label}: median ${num(c.median)} reached across ${c.n} post${c.n === 1 ? '' : 's'}` : `${w}, ${DAYPARTS[pi].label}: no posts`}
+                  data-tip={c.n ? `${w}, ${DAYPARTS[pi].label}\nMedian ${num(c.median)} reached\n${c.n} post${c.n === 1 ? '' : 's'}` : `${w}, ${DAYPARTS[pi].label}\nNo posts`}
                 >
                   {c.n ? <b className="num">{compact(c.median)}</b> : null}
                   {c.n ? <span>{c.n}</span> : null}
@@ -159,10 +159,10 @@ export function ThemeStrip({ rows, typical, all }: { rows: Theme[]; typical: num
                 key={p.id}
                 className={`v3-subj-dot ${kind(p)}`}
                 style={{ ['--x' as string]: at(p.reach as number).toFixed(4) }}
-                title={`${num(p.reach as number)} reached · ${clip(p.caption || p.type, 60)}`}
+                data-tip={`${clip(p.caption || p.type, 60)}\n${num(p.reach as number)} reached`}
               />
             ))}
-            <i className="v3-subj-med" style={{ ['--x' as string]: at(t.median).toFixed(4) }} title={`Median ${num(t.median)}`} />
+            <i className="v3-subj-med" style={{ ['--x' as string]: at(t.median).toFixed(4) }} data-tip={`${t.label} · median\n${num(t.median)} reached`} />
           </div>
           <div className="v3-subj-num">
             <b className="num">{compact(t.median)}</b>
@@ -203,7 +203,7 @@ export function ReachBeyond({ v }: { v: ReachVsFollowers | null }) {
       </div>
       <div className="v3-bands" role="img" aria-label={v.bands.map(b => `${b.label}: ${b.n} posts`).join(', ')}>
         {v.bands.map((b, i) => (
-          <i key={b.label} style={{ flexGrow: Math.max(b.n, 0.0001) }} data-step={i} data-zero={b.n === 0 || undefined} title={`${b.sub}: ${b.n} posts`} />
+          <i key={b.label} style={{ flexGrow: Math.max(b.n, 0.0001) }} data-step={i} data-zero={b.n === 0 || undefined} data-tip={`${b.sub}\n${b.n} post${b.n === 1 ? '' : 's'} · ${Math.round((b.n / total) * 100)}%`} />
         ))}
       </div>
       <div className="v3-bands-key">
@@ -274,10 +274,10 @@ export function ShelfCurve({ life, readingDays, since }: { life: ShelfLife | nul
         {life.curves.posts.length ? <path className="posts" d={path(life.curves.posts)} /> : null}
         {life.curves.reels.length ? <path className="reels" d={path(life.curves.reels)} /> : null}
         {life.curves.posts.map(c => (
-          <circle key={`p${c.age}`} className="posts" cx={x(c.age)} cy={y(c.frac)} r={3.5}><title>{`Posts, day ${c.age}: ${Math.round(c.frac * 100)}% of final reach (${c.n})`}</title></circle>
+          <circle key={`p${c.age}`} className="posts" cx={x(c.age)} cy={y(c.frac)} r={3.5} data-tip={`Posts · day ${c.age}\n${Math.round(c.frac * 100)}% of final reach\n${c.n} post${c.n === 1 ? '' : 's'}`} />
         ))}
         {life.curves.reels.map(c => (
-          <circle key={`r${c.age}`} className="reels" cx={x(c.age)} cy={y(c.frac)} r={3.5}><title>{`Reels, day ${c.age}: ${Math.round(c.frac * 100)}% of final reach (${c.n})`}</title></circle>
+          <circle key={`r${c.age}`} className="reels" cx={x(c.age)} cy={y(c.frac)} r={3.5} data-tip={`Reels · day ${c.age}\n${Math.round(c.frac * 100)}% of final reach\n${c.n} Reel${c.n === 1 ? '' : 's'}`} />
         ))}
       </svg>
       <div className="v3-legend">
@@ -297,7 +297,7 @@ export function CollabPanel({ view }: { view: CollabView | null }) {
   if (!view) return <p className="v3-empty">Needs more posts with reach.</p>
   const max = Math.max(view.branded.median, view.own.median, 1)
   const row = (label: string, sub: string, n: number, m: number, tone: 'brand' | 'own') => (
-    <div className="v3-collab-row" data-tone={tone}>
+    <div className="v3-collab-row" data-tone={tone} data-tip={`${label}\nMedian ${num(m)} reached\n${n} post${n === 1 ? '' : 's'}`}>
       <div className="v3-collab-label">
         <b>{label}</b>
         <span>{sub}</span>

@@ -51,7 +51,7 @@ export function ReachWorkBars({ months }: { months: ReachMonth[] }) {
         aria-label="Reach and invoiced ringgit by month"
       >
         {shown.map((m, i) => (
-          <div className="v3-rvw-col" role="row" key={m.key} data-now={i === shown.length - 1 ? '' : undefined}>
+          <div className="v3-rvw-col" role="row" key={m.key} data-now={i === shown.length - 1 ? '' : undefined} data-tip={`${m.label}\n${m.posts ? `${compact(m.reach)} reached · ${m.posts} post${m.posts === 1 ? '' : 's'}` : 'No posts'}\n${m.invoiced ? rmFull(m.invoiced) : 'RM 0'} invoiced`}>
             <div className="v3-rvw-bars" aria-hidden="true">
               <i className="reach" style={{ ['--h' as string]: (m.reach / reachPeak).toFixed(3) }} />
               <i className="rm" style={{ ['--h' as string]: (m.invoiced / rmPeak).toFixed(3) }} />

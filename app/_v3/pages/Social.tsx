@@ -24,7 +24,7 @@ function Split({ ig, fb }: { ig: number | null; fb: number | null }) {
   const s = share(ig, fb)
   if (s === null) return <span className="v3-soc-split empty" aria-hidden="true" />
   return (
-    <span className="v3-soc-split" role="img" aria-label={`${Math.round(s * 100)}% Instagram, ${Math.round((1 - s) * 100)}% Facebook`}>
+    <span className="v3-soc-split" data-tip={`Split\n${Math.round(s * 100)}% Instagram · ${Math.round((1 - s) * 100)}% Facebook`} role="img" aria-label={`${Math.round(s * 100)}% Instagram, ${Math.round((1 - s) * 100)}% Facebook`}>
       <i className="ig" style={{ ['--w' as string]: s.toFixed(3) }} />
       <i className="fb" style={{ ['--w' as string]: (1 - s).toFixed(3) }} />
       <small>{Math.round(s * 100)}%</small>
@@ -313,7 +313,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
           </div>
           <div className="v3-soc-weeks" role="img" aria-label={`Posts per week, last 12 weeks: ${s.weeks.map(w => w.ig + w.fb).join(', ')}`}>
             {s.weeks.map(w => (
-              <div key={w.start} className="col" title={`Week of ${shortDate(w.start)}: Instagram ${w.ig}, Facebook ${w.fb}`}>
+              <div key={w.start} className="col" data-tip={`Week of ${shortDate(w.start)}\n${w.ig + w.fb} post${w.ig + w.fb === 1 ? '' : 's'}\nInstagram ${w.ig} · Facebook ${w.fb}`}>
                 <div className="stack">
                   <i className="fb" style={{ ['--h' as string]: (w.fb / weekTop).toFixed(3) }} />
                   <i className="ig" style={{ ['--h' as string]: (w.ig / weekTop).toFixed(3) }} />

@@ -121,9 +121,9 @@ export function ClientRiskCard({ r }: { r: ClientRisk }) {
       <div>
         <div className="v3-risk-bar" aria-hidden="true">
           {r.top.map((c, i) => (
-            <i key={c.client} data-rank={i + 1} style={{ flexGrow: c.share }} title={`${c.client}: ${share(c.share)}`} />
+            <i key={c.client} data-rank={i + 1} style={{ flexGrow: c.share }} data-tip={`${c.client}\n${share(c.share)} of the last 12 months`} />
           ))}
-          <i data-rank="rest" style={{ flexGrow: rest }} />
+          <i data-rank="rest" style={{ flexGrow: rest }} data-tip={`Everyone else\n${share(rest)} of the last 12 months`} />
           <b className="v3-risk-line" style={{ left: `${RISK_LINE * 100}%` }} />
         </div>
         <p className="v3-ins-scale">
@@ -206,7 +206,7 @@ export function SeasonsGrid({ s }: { s: Seasons }) {
                 data-future={c.future ? 'true' : undefined}
                 data-strong={c.total / s.peak >= 0.55 ? 'true' : undefined}
                 style={{ ['--a' as string]: (c.total / s.peak).toFixed(3) }}
-                title={`${row.year} ${s.average[c.month - 1].label}: ${rmFull(c.total)}, ${c.count} invoice${c.count === 1 ? '' : 's'}`}
+                data-tip={`${s.average[c.month - 1].label} ${row.year}\n${rmFull(c.total)}\n${c.count} invoice${c.count === 1 ? '' : 's'}`}
               >
                 {c.future ? '' : c.total ? compact(c.total) : '·'}
               </span>
@@ -222,7 +222,7 @@ export function SeasonsGrid({ s }: { s: Seasons }) {
               Typical
             </span>
             {s.average.map(a => (
-              <span role="cell" key={a.month} className="v3-season-avgcell" data-tone={a.tone} title={`${a.label}: ${rmFull(a.average)} a year on average`}>
+              <span role="cell" key={a.month} className="v3-season-avgcell" data-tone={a.tone} data-tip={`${a.label} · typical\n${rmFull(a.average)} a year on average`}>
                 <i style={{ ['--h' as string]: (a.average / avgPeak).toFixed(3) }} />
               </span>
             ))}

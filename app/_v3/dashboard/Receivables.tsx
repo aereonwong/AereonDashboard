@@ -49,7 +49,7 @@ export default function Receivables({
         <div className="v3-age" aria-label="Owed ringgit by days since issue">
           <div className="v3-age-bar" aria-hidden="true">
             {buckets.map(b =>
-              b.total ? <i key={b.id} data-age={b.id} style={{ flexGrow: b.total }} title={`${b.label}: ${rmFull(b.total)}`} /> : null,
+              b.total ? <i key={b.id} data-age={b.id} style={{ flexGrow: b.total }} data-tip={`${b.label}\n${rmFull(b.total)}\n${b.count} invoice${b.count === 1 ? '' : 's'}`} /> : null,
             )}
           </div>
           <dl className="v3-age-legend">

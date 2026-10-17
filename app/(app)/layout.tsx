@@ -6,6 +6,7 @@ import { getPendingCount, demoMode } from '@/lib/records'
 import { readVersion } from '@/lib/v3/version'
 import V3Shell from '@/app/_v3/Shell'
 import MoneyMask from '@/app/_components/MoneyMask'
+import ChartTips from '@/app/_components/ChartTips'
 import MoneyToggle from '@/app/_components/MoneyToggle'
 import { redirect } from 'next/navigation'
 import { canEdit, signedIn, sessionUser } from '@/lib/auth'
@@ -26,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </V3Shell>
         <MoneyMask shown={!hidden} canReveal={owner} />
+        <ChartTips />
       </>
     )
   }
@@ -63,6 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
       <BottomNav />
       <MoneyMask shown={!hidden} canReveal={owner} />
+      <ChartTips />
     </>
   )
 }
