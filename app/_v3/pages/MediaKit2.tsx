@@ -66,7 +66,7 @@ export default function MediaKit2({ audience, kinds, since, totals }: { audience
   const fresh = !!view && Date.now() - Date.parse(view.capturedAt) <= 7 * 86_400_000
   // Overall figures across every platform (lib/social-totals.ts): reach in each platform's
   // best month, views over 90 days. Stale platforms drop out.
-  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook))
+  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook, totals.followers.tiktok))
   const reach = totals.bestReach ?? 0
   const views = totals.views ?? 0
   const newPct = fresh ? (view?.newPeoplePct ?? null) : null
@@ -157,7 +157,7 @@ export default function MediaKit2({ audience, kinds, since, totals }: { audience
           <h2 className="k3-h2" id="k3-social">
             Find me on
           </h2>
-          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} />
+          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} ttFollowers={totals.followers.tiktok} />
         </section>
 
         {/* ------------------------------------------------ audience */}

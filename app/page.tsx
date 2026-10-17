@@ -108,7 +108,7 @@ async function LandingBody({
   const [rows, t] = await Promise.all([getRecords(), socialTotals()])
   // Overall figures across every platform over 90 days, from the stored history
   // (lib/social-totals.ts). A platform over a week stale drops out.
-  const channels = socials(t.followers.instagram, t.followers.facebook)
+  const channels = socials(t.followers.instagram, t.followers.facebook, t.followers.tiktok)
   const followers = combined(channels)
 
   const invoices = toInvoices(rows)
@@ -175,7 +175,7 @@ async function LandingBody({
 
           <div className="land-work">
             <p className="eyebrow" style={{ marginBottom: 10 }}>Find me on</p>
-            <SocialLinks igFollowers={t.followers.instagram} fbFollowers={t.followers.facebook} />
+            <SocialLinks igFollowers={t.followers.instagram} fbFollowers={t.followers.facebook} ttFollowers={t.followers.tiktok} />
           </div>
 
           {/* Product, car and hotel reviews, events, aerial and travel — not just KLCC. */}

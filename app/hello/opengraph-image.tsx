@@ -25,7 +25,7 @@ export default async function Image() {
   const [bg, face, cfg, t] = await Promise.all([
     dataUri('klcc-sunset.jpg'), dataUri('aereon.jpg'), readHello(), socialTotals(),
   ])
-  const channels = socials(t.followers.instagram, t.followers.facebook)
+  const channels = socials(t.followers.instagram, t.followers.facebook, t.followers.tiktok)
   const stats = [
     t.views ? { n: compact(t.views), l: 'Views · 90 days' } : null,
     t.interactions ? { n: compact(t.interactions), l: 'Interactions · 90 days' } : null,

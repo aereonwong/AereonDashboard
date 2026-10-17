@@ -18,8 +18,8 @@ export const GLYPH: Record<Social['key'], React.ReactNode> = {
   xhs: <><rect x="3" y="4" width="18" height="16" rx="4" /><path d="M7.5 9h9M7.5 12h9M7.5 15h5" /></>,
 }
 
-export default function SocialLinks({ igFollowers, fbFollowers, total = true }: { igFollowers?: number; fbFollowers?: number; total?: boolean }) {
-  const list = socials(igFollowers, fbFollowers)
+export default function SocialLinks({ igFollowers, fbFollowers, ttFollowers, total = true }: { igFollowers?: number; fbFollowers?: number; ttFollowers?: number; total?: boolean }) {
+  const list = socials(igFollowers, fbFollowers, ttFollowers)
   const sum = combined(list)
   const counted = list.filter(s => s.followers).length
   return (
@@ -43,7 +43,7 @@ export default function SocialLinks({ igFollowers, fbFollowers, total = true }: 
         ))}
       </ul>
       <p className="so-fine">
-        {igFollowers || fbFollowers
+        {igFollowers || fbFollowers || ttFollowers
           ? `Connected platforms live; others as of ${asOf}.`
           : `Counts as of ${asOf}.`}
       </p>

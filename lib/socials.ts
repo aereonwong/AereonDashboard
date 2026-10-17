@@ -25,11 +25,12 @@ export const SOCIALS: Social[] = [
   { key: 'youtube', name: 'YouTube', handle: '@AereonWong', url: 'https://www.youtube.com/aereonwong', followers: 3_620 },
 ]
 
-/** The channels with Instagram's and Facebook's live counts swapped in when there are some. */
-export function socials(igFollowers?: number, fbFollowers?: number): Social[] {
+/** The channels with Instagram's, Facebook's and TikTok's live counts swapped in when there are some. */
+export function socials(igFollowers?: number, fbFollowers?: number, ttFollowers?: number): Social[] {
   return SOCIALS.map(s =>
     s.key === 'instagram' && igFollowers ? { ...s, followers: igFollowers }
     : s.key === 'facebook' && fbFollowers ? { ...s, followers: fbFollowers }
+    : s.key === 'tiktok' && ttFollowers ? { ...s, followers: ttFollowers }
     : s,
   )
 }
