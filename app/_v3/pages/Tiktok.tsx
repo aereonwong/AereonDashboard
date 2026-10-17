@@ -1,5 +1,5 @@
 import { analyseTt, change, interactions, lengthOf, LENGTHS, type Tiktok as Tt, type TtPostRow } from '@/lib/tiktok'
-import TtFilters, { TT_DEFAULT_DAYS } from '../TtFilters'
+import TtFilters from '../TtFilters'
 import SeriesChart, { type SeriesPoint } from '../SeriesChart'
 import ScopedPanel from '../ScopedPanel'
 import Refresh from '../Refresh'
@@ -24,6 +24,8 @@ const per1k = (n: number) => (n >= 10 ? n.toFixed(0) : n.toFixed(1))
 const title = (p: TtPostRow) => (p.title ?? '').split('\n')[0].trim() || 'Video'
 const WINDOW_LABEL: Record<string, string> = { '30': 'last 30 days', '90': 'last 90 days', '365': 'last 12 months', all: 'all time' }
 const DAY = 86_400_000
+// The page opens on the last 90 days (TtFilters treats the same value as its default).
+const TT_DEFAULT_DAYS = '90'
 
 function VideoList({ posts, typical, now }: { posts: TtPostRow[]; typical: number; now: number }) {
   if (!posts.length) return <p className="v3-empty">No videos with figures in this slice.</p>

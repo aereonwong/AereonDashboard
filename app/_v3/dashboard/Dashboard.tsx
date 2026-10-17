@@ -66,7 +66,8 @@ export default function Dashboard({
   // TikTok has no reach, so it joins the follower and posting totals only. Its 30-day change
   // comes from our own daily readings and stays null until they reach back 30 days.
   const hasTt = !!tt && tt.daily.length > 0
-  const ttFresh = hasTt && Date.now() - Date.parse(`${tt!.daily.at(-1)!.day}T00:00:00Z`) < 8 * 86_400_000
+  // Same week-old cut-off as the public totals (lib/social-totals.ts).
+  const ttFresh = hasTt && Date.now() - Date.parse(`${tt!.daily.at(-1)!.day}T00:00:00+08:00`) < 7 * 86_400_000
   const ttStats = hasTt ? analyseTt(tt!.posts, 30) : null
   const tt90 = hasTt ? analyseTt(tt!.posts, 90) : null
   const ttNet = hasTt ? change(tt!.daily, 'followers', 30) : null

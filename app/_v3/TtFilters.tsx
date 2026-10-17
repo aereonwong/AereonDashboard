@@ -18,7 +18,8 @@ const LENGTHS = [
   { id: 'mid', label: '30–60s' },
   { id: 'long', label: 'Over 60s' },
 ]
-export const TT_DEFAULT_DAYS = '90'
+// The page's default slice: the last 90 days (also in app/_v3/pages/Tiktok.tsx).
+const TT_DEFAULT_DAYS = '90'
 
 export default function TtFilters({ days, len, count }: { days: string; len: string; count: number }) {
   const router = useRouter()

@@ -21,6 +21,9 @@ export type Tiktok = {
   updated: string | null
 }
 
+// Stored links are re-checked before they reach a page: only plain https is ever rendered.
+const https = (v: string | null) => (v && v.startsWith('https://') ? v : null)
+
 const EMPTY: Tiktok = { daily: [], posts: [], username: null, followers: 0, updated: null }
 
 async function all<T>(q: () => any, size = 1000): Promise<T[]> {
@@ -55,7 +58,7 @@ export async function readTiktok(): Promise<Tiktok> {
         .filter(p => p.username === username)
         .map(p => {
           const m = byId.get(p.video_id)
-          return { ...p, views: m?.views ?? null, likes: m?.likes ?? null, comments: m?.comments ?? null, shares: m?.shares ?? null }
+          return { ...p, share_url: https(p.share_url), embed_link: https(p.embed_link), cover_url: https(p.cover_url), views: m?.views ?? null, likes: m?.likes ?? null, comments: m?.comments ?? null, shares: m?.shares ?? null }
         }),
       username,
       followers: [...mine].reverse().find(d => d.followers)?.followers ?? 0,

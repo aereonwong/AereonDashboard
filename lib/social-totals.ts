@@ -115,10 +115,11 @@ async function tiktok(): Promise<Source | null> {
   const reads = ids.length ? await supabase.from('tt_post_latest').select('*').in('video_id', ids) : { data: [], error: null }
   const rows = (reads.data ?? []) as TtReading[]
   // Every video read, and read within the week — or no TikTok total.
-  const whole = !reads.error && rows.length === ids.length && rows.every(r => typeof r.views === 'number' && Date.now() - Date.parse(r.captured_at) < STALE)
+  const whole = !reads.error && rows.length === ids.length && rows.every(r => Date.now() - Date.parse(r.captured_at) < STALE)
+  const counted = (r: TtReading) => [r.likes, r.comments, r.shares].every(v => typeof v === 'number')
   return {
-    views: whole ? rows.reduce((t, r) => t + r.views!, 0) : null,
-    interactions: whole ? rows.reduce((t, r) => t + (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0), 0) : null,
+    views: whole && rows.every(r => typeof r.views === 'number') ? rows.reduce((t, r) => t + r.views!, 0) : null,
+    interactions: whole && rows.every(counted) ? rows.reduce((t, r) => t + r.likes! + r.comments! + r.shares!, 0) : null,
     reach: undefined,
     bestReach: undefined,
     followers,

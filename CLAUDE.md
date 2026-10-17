@@ -151,7 +151,7 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
 - Fetch in `lib/tt-fetch.ts` (no imports, shared with `scripts/tt-backfill.mjs`), refresh in `lib/tt-refresh.ts`, read +
   maths in `lib/tiktok.ts`. TikTok's envelope: `data.data.{user|videos,cursor,has_more}`, `data.error.code === "ok"`.
   Videos page 20 at a time; `cursor` is a create time in ms.
-- The daily `cron-instagram` refreshes TikTok after Facebook (account + videos of the last 60 days); the Refresh button
+- The daily `cron-instagram` refreshes TikTok after Facebook (account + videos of the last 100 days — the public 90-day total needs every one re-read within the week); the Refresh button
   calls `/api/tiktok/refresh` (signed-in editors, 10-minute cooldown). `npm run tt:backfill` stores every public video.
 - Typical video = MEDIAN views. Followers' 30-day change shows only once our readings reach back 30 days.
 - Public totals (`socialTotals()`): TikTok adds its followers and, for views/interactions, the videos posted in the last

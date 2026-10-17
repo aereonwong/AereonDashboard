@@ -9,6 +9,7 @@
 // project. Safe to run again: it just adds a fresh reading per video.
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { readFile } from 'node:fs/promises'
 import { createClient } from '@supabase/supabase-js'
 import { fetchAccount, fetchVideos, persist } from '../lib/tt-fetch.ts'
 
@@ -39,7 +40,9 @@ const exec = async (slug, args) => {
         ['dev', 'playground-execute', slug, '--user-id', USER, '--project-name', PROJECT, '-d', JSON.stringify(args)],
         { maxBuffer: 1 << 26, env: { ...process.env, NO_COLOR: '1' } },
       )
-      return JSON.parse(stdout.slice(stdout.indexOf('{')))
+      const res = JSON.parse(stdout.slice(stdout.indexOf('{')))
+      // A large answer (a page of 20 videos) is written to a file instead of printed.
+      return res.storedInFile && res.outputFilePath ? { ...res, ...JSON.parse(await readFile(res.outputFilePath, 'utf8')) } : res
     } catch (e) {
       if (attempt >= 2) throw e
       await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))

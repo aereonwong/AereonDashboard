@@ -46,7 +46,9 @@ async function call(exec: Exec, slug: string, args: Record<string, unknown>) {
   if (res && res.successful === false) throw new Error(`${slug}: ${res.error ?? 'failed'}`)
   const code = res?.data?.error?.code
   if (code && code !== 'ok') throw new Error(`${slug}: ${code} ${res?.data?.error?.message ?? ''}`.trim())
-  return res?.data?.data ?? {}
+  // No body at all is a failed call, never "no videos".
+  if (!res?.data?.data || typeof res.data.data !== 'object') throw new Error(`${slug}: empty answer`)
+  return res.data.data
 }
 
 /** Malaysia date (UTC+8 all year). */
@@ -130,7 +132,8 @@ async function upsert(db: Db, table: string, rows: object[], onConflict: string)
 export async function persist(db: Db, { account, posts = [], metrics = [] }: { account?: TtAccount; posts?: TtPost[]; metrics?: TtPostMetric[] }) {
   const now = new Date().toISOString()
   // Upserts: a later reading of the same day or video replaces the earlier one.
-  if (account) await upsert(db, 'tt_account_daily', [{ ...account, captured_at: now }], 'username,day')
+  // A field TikTok left out is left out of the write too, so it never blanks an earlier reading that day.
+  if (account) await upsert(db, 'tt_account_daily', [{ ...Object.fromEntries(Object.entries(account).filter(([, v]) => v !== null)), captured_at: now }], 'username,day')
   await upsert(db, 'tt_posts', posts.map(p => ({ ...p, updated_at: now })), 'video_id')
   await upsert(db, 'tt_post_metrics', metrics, 'video_id,captured_at')
 }
