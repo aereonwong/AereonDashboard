@@ -147,3 +147,15 @@ test('a quiet posts-only platform never hides the overall rate; unread stays a p
   assert.ok(Math.abs(s.total.rate - 10) < 1e-9)
   assert.equal(s.by.ig.unread, 1)
 })
+
+test('the stored picture keeps the top posts overall and per platform, and survives JSON', async () => {
+  const { buildSocial, trimSocial } = await import('../lib/v3/social-math.ts')
+  const many = (id, n) => Array.from({ length: n }, (_, i) => post(id, 1 + (i % 20), 100 + i * 10, 5))
+  const s = buildSocial([src('ig', { posts: many('ig', 30) }), src('tt', { posts: many('tt', 30) })], 30, NOW)
+  const t = JSON.parse(JSON.stringify(trimSocial(s, 10)))
+  assert.ok(t.ranked.length <= 30 && t.ranked.length >= 10)
+  assert.equal(t.ranked.filter(p => p.platform === 'ig').length >= 10, true)
+  assert.equal(t.ranked.filter(p => p.platform === 'tt').length >= 10, true)
+  assert.deepEqual(t.ranked.slice(0, 10).map(p => p.id), s.ranked.slice(0, 10).map(p => p.id))
+  assert.equal(t.total.views, s.total.views)
+})

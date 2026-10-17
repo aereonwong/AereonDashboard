@@ -13,9 +13,7 @@ import { readVersion } from '@/lib/v3/version'
 import { parseFilters } from '@/lib/v3/filters'
 import { readAudience } from '@/lib/v3/audience'
 import { readPostReach } from '@/lib/v3/ig-extras'
-import { readFacebook } from '@/lib/facebook'
-import { readTiktok } from '@/lib/tiktok'
-import { readIgPosts, igSource, fbSource, ttSource, buildSocial } from '@/lib/v3/social'
+import { readSocial } from '@/lib/social-totals'
 import { demoMode } from '@/lib/records'
 import { moneyFactor, moneyHidden } from '@/lib/privacy'
 
@@ -50,9 +48,8 @@ export default async function Dashboard({
 }) {
   const { version } = await readVersion()
   if (version === 'v3') {
-    const [rows, audience, metrics, demo, sp, fb, tt] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readFacebook(), readTiktok()])
-    // The audience band is the Social overview in brief: every platform, last 30 days.
-    const social = buildSocial([igSource(audience, await readIgPosts(audience, 365), Date.now(), demo), fbSource(fb), ttSource(tt)], 30)
+    // The audience band is the Social overview in brief, read from the stored daily picture (30 days).
+    const [rows, audience, metrics, demo, sp, social] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readSocial(30)])
     return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} social={social} />
   }
 

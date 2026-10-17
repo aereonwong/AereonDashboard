@@ -4,7 +4,8 @@ import { fbPageId, readFacebook } from './facebook'
 import { readTiktok } from './tiktok'
 import { readAudience } from './v3/audience'
 import { readIgPosts, igSource, fbSource, ttSource, buildSocial } from './v3/social'
-import { totalsRows, type TotalsRow } from './v3/social-math'
+import { totalsRows, trimSocial, WINDOWS, type Social, type TotalsRow } from './v3/social-math'
+import { demoMode } from './records'
 import type { PlatformId } from './v3/platforms'
 
 // 👉 The public proof numbers (landing page, media kits, /hello and its share card, the reel), and the
@@ -68,21 +69,27 @@ async function fbBestViewers(now: number): Promise<number | null> {
 
 /** Every row for today, computed from the stored history — real figures, never demo ones. */
 export async function computeSocialTotals(now = Date.now()): Promise<TotalsRow[]> {
+  return (await computeSocial(now)).rows
+}
+
+/** Everything stored for today: the totals rows and the full /social picture per window. */
+export async function computeSocial(now = Date.now()): Promise<{ rows: TotalsRow[]; snaps: Record<number, Social> }> {
   const [audience, fb, tt, fbBest] = await Promise.all([readAudience(), readFacebook(true), readTiktok(true), fbBestViewers(now)])
-  const ig = await readIgPosts(audience, 100, true)
+  const ig = await readIgPosts(audience, 365, true)
   const sources = [igSource(audience, ig, now), fbSource(fb, now), ttSource(tt, now)]
   // Instagram's best 30-day window of the last 90, from its three stored windows.
   const igFresh = !!audience.view && now - Date.parse(audience.view.capturedAt) < STALE
   const best: Partial<Record<PlatformId, number | null>> = { ig: igFresh ? (audience.view?.d90?.peakReach ?? null) : null, fb: fbBest }
   const day = mytDay(now)
-  return [30, 90].flatMap(w => totalsRows(buildSocial(sources, w, now), best, day))
+  const snaps = Object.fromEntries(WINDOWS.map(w => [w, buildSocial(sources, w, now)])) as Record<number, Social>
+  return { rows: WINDOWS.flatMap(w => totalsRows(snaps[w], best, day)), snaps }
 }
 
 /** Compute and store today's rows. Never throws. */
 export async function writeSocialTotals(): Promise<{ ok: true; rows: number } | { ok: false; error: string }> {
   if (!supabaseConfigured) return { ok: false, error: 'Supabase is not configured' }
   try {
-    const rows = await computeSocialTotals()
+    const { rows, snaps } = await computeSocial()
     // Never trade a good day for a worse one: if a platform read came back empty this time and
     // today already has a whole total, keep what is stored.
     // A platform stored before but missing now means its read failed (the readers return empty on
@@ -99,7 +106,12 @@ export async function writeSocialTotals(): Promise<{ ok: true; rows: number } | 
     const at = new Date().toISOString()
     const { error } = await supabase.from('social_totals').upsert(rows.map(r => ({ ...r, computed_at: at })), { onConflict: 'day,platform,window_days' })
     if (error) return { ok: false, error: error.message }
-    return { ok: true, rows: rows.length }
+    const day = rows[0]?.day
+    const { error: e2 } = await supabase
+      .from('social_snapshots')
+      .upsert(WINDOWS.map(w => ({ day, window_days: w, data: trimSocial(snaps[w]), computed_at: at })), { onConflict: 'day,window_days' })
+    if (e2) return { ok: false, error: e2.message }
+    return { ok: true, rows: rows.length + WINDOWS.length }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
   }
@@ -160,4 +172,43 @@ export async function socialTotals(): Promise<SocialTotals> {
   } catch {
     return EMPTY
   }
+}
+
+// ------------------------------------------------------------
+// /social and the Dashboard's audience band — the stored picture
+// ------------------------------------------------------------
+
+const heldSocial = new Map<number, { at: number; v: Social }>()
+
+/**
+ * The /social picture for a window (30, 90 or 365 days): the newest stored day from social_snapshots.
+ * Only when none is under 2 days old (table not created, job stalled) is it computed on the spot —
+ * held 10 minutes, not stored. Demo mode never reads the stored (real) figures: it computes from the
+ * demo readers, which are empty.
+ */
+export async function readSocial(days: number): Promise<Social> {
+  const w = (WINDOWS as readonly number[]).includes(days) ? days : 30
+  if (supabaseConfigured && !(await demoMode())) {
+    try {
+      const { data, error } = await supabase
+        .from('social_snapshots')
+        .select('data, computed_at')
+        .eq('window_days', w)
+        .order('day', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (!error && data && Date.now() - Date.parse(data.computed_at) < STORED_FOR) return data.data as Social
+    } catch {
+      // Table missing (supabase/social-snapshots.sql not run yet): compute instead.
+    }
+    const held = heldSocial.get(w)
+    if (held && Date.now() - held.at < HOLD) return held.v
+    const v = trimSocial((await computeSocial()).snaps[w])
+    heldSocial.set(w, { at: Date.now(), v })
+    return v
+  }
+  // Demo (or no database): the demo-aware readers, never the stored real figures.
+  const audience = await readAudience()
+  const [fb, tt, ig] = await Promise.all([readFacebook(), readTiktok(), readIgPosts(audience, 365)])
+  return buildSocial([igSource(audience, ig, Date.now(), await demoMode()), fbSource(fb), ttSource(tt)], w)
 }

@@ -114,7 +114,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
         </div>
       </header>
 
-      <SocialFilters days={String(s.days)} platform={platform} ids={s.ids} count={posts.length} />
+      <SocialFilters days={String(s.days)} platform={platform} ids={s.ids} count={platform ? (s.by[platform]?.posts ?? 0) : total.posts} />
 
       <div className="v3-grid">
         <div className="v3-chapter v3-span-12">
