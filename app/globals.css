@@ -1308,3 +1308,22 @@ html[data-privacy='switching'] body > :not(.bg-photo):not(.bg-veil) { opacity: .
   .money-toggle, .money-toggle-switch, .money-toggle-switch::after { transition: none; }
 }
 @media print { .money-toggle { display: none; } }
+
+/* ---------------------------------------------------------------- chart hover (every chart)
+   Rule (docs/CHARTS.md): every chart answers the mouse. Server-drawn marks carry data-tip;
+   ChartTips.tsx shows this card and sets data-tip-on, and the hovered mark's siblings dim. */
+.chart-tip {
+  /* Same card as the Instagram page's .lab-tip, so every chart's readout looks alike. */
+  position: fixed; z-index: 60; pointer-events: none; max-width: min(320px, calc(100vw - 16px));
+  padding: 8px 12px; border-radius: calc(var(--radius, 10px) + 2px); font-size: 13px; line-height: 1.4;
+  background: color-mix(in srgb, var(--film-2, var(--card, #fff)) 94%, transparent); backdrop-filter: blur(10px);
+  color: var(--ink, #211C16); border: 1px solid var(--line-2, rgba(0, 0, 0, 0.15));
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45); font-variant-numeric: tabular-nums;
+}
+.chart-tip[hidden] { display: none; }
+.chart-tip-head { color: var(--ink-3, var(--ink-faint, #978C7B)); font-size: 12px; }
+.chart-tip-head + div { font-weight: 600; }
+:where([data-tip]) { cursor: default; transition: opacity 120ms ease, filter 120ms ease; }
+:where(*:has(> [data-tip-on])) > [data-tip]:not([data-tip-on]) { opacity: 0.5; }
+[data-tip-on] { filter: brightness(1.12) saturate(1.08); }
+@media (prefers-reduced-motion: reduce) { :where([data-tip]) { transition: none; } }

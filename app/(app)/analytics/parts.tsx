@@ -7,14 +7,16 @@ import { v3Fonts } from '@/app/_v3/fonts'
 
 export const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : '–')
 export const fmt = (n: number) => n.toLocaleString('en-MY')
+/** "2026-10-17" → "Fri, 17 Oct 2026" for hover readouts (the key is already a Malaysia day). */
+const dayLabel = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 export function Bars({ rows, of }: { rows: Count[]; of: number }) {
   const top = Math.max(1, ...rows.map(r => r.count))
   return rows.length ? (
     <ol className="lk-bars">
       {rows.map(r => (
-        <li key={r.id}>
-          <span className="lk-bar-label" title={r.label}>{r.label}</span>
+        <li key={r.id} data-tip={`${r.label}\n${fmt(r.count)} · ${pct(r.count, of)}`}>
+          <span className="lk-bar-label">{r.label}</span>
           <span className="lk-bar-track"><span className="lk-bar-fill" style={{ width: `${(r.count / top) * 100}%` }} /></span>
           <b>{fmt(r.count)}</b>
           <small>{pct(r.count, of)}</small>
@@ -56,7 +58,7 @@ export function Daily({ daily, days }: { daily: { day: string; visitors: number 
     <Panel id="an-day" title="Visitors per day" note={`Last ${days} days · Malaysia time`} span={12}>
       <ol className={`lk-days${days > 30 ? ' lk-days-dense' : ''}`}>
         {daily.map(d => (
-          <li key={d.day} title={`${d.day}: ${d.visitors} visitor${d.visitors === 1 ? '' : 's'}`}>
+          <li key={d.day} data-tip={`${dayLabel(d.day)}\n${fmt(d.visitors)} visitor${d.visitors === 1 ? '' : 's'}`}>
             <span style={{ height: `${(d.visitors / peak) * 100}%` }} />
           </li>
         ))}

@@ -22,8 +22,8 @@ const TAIL = new RegExp(`\\b${CUR}\\s?$`) // "… RM " ending one text node
 const LEAD = new RegExp(`^${AMT}`) //          "1,234" starting the next
 const BARE = /\d[\d,]*(?:\.\d+)?[KkMm]?/g
 const STARS = '*****'
-const ATTRS = ['title', 'aria-label', 'placeholder'] as const
-const ATTR_SEL = '[title],[aria-label],[placeholder]'
+const ATTRS = ['title', 'aria-label', 'placeholder', 'data-tip'] as const
+const ATTR_SEL = '[title],[aria-label],[placeholder],[data-tip]'
 const SKIP = 'script,style,noscript,textarea,input,select,[data-money-off]'
 const SKIP_ATTRS = 'script,style,noscript,[data-money-off]' // an input's placeholder can hold money
 
@@ -78,7 +78,8 @@ export default function MoneyMask({ shown, canReveal }: { shown: boolean; canRev
       for (const a of ATTRS) {
         const v = el.getAttribute(a)
         if (v === null || maskedAttr.get(el)?.get(a) === v) continue
-        const out = bare ? v.replace(BARE, STARS) : v.replace(MONEY, `$1 ${STARS}`)
+        // A chart readout spells its money out ("RM 1,200"), so its year and counts stay readable.
+        const out = bare && a !== 'data-tip' ? v.replace(BARE, STARS) : v.replace(MONEY, `$1 ${STARS}`)
         if (out === v) continue
         if (!maskedAttr.has(el)) maskedAttr.set(el, new Map())
         maskedAttr.get(el)!.set(a, out)

@@ -20,7 +20,7 @@ export default function AudienceBreakdown({ view }: { view: AudienceView }) {
           <h3>Age</h3>
           <div className="v3-k2-age-bars">
             {ages.map((a, i) => (
-              <div key={a.key} className="v3-k2-age" data-top={a.key === view.topAge?.key || undefined}>
+              <div key={a.key} className="v3-k2-age" data-top={a.key === view.topAge?.key || undefined} data-tip={`Age ${a.key}\n${a.pct.toFixed(1)}% of followers`}>
                 <span className="v3-k2-age-v">{Math.round(a.pct)}%</span>
                 <span className="v3-k2-age-track">
                   <i style={{ ['--h' as string]: (a.pct / ageMax).toFixed(3), ['--i' as string]: i }} />
@@ -43,7 +43,7 @@ export default function AudienceBreakdown({ view }: { view: AudienceView }) {
               <b>{pctOf(women.value)}%</b> women
             </span>
           </div>
-          <div className="v3-k2-split" role="img" aria-label={`${pctOf(men.value)}% men, ${pctOf(women.value)}% women, of followers who state it`}>
+          <div className="v3-k2-split" data-tip={`Gender, of followers who state it\n${pctOf(men.value)}% men · ${pctOf(women.value)}% women`} role="img" aria-label={`${pctOf(men.value)}% men, ${pctOf(women.value)}% women, of followers who state it`}>
             <i style={{ ['--w' as string]: (men.value / stated).toFixed(3) }} />
           </div>
           <p className="v3-k2-fine">Of followers who state it</p>
@@ -64,7 +64,7 @@ function Places({ title, items }: { title: string; items: Share[] }) {
       <h3>{title}</h3>
       <ol>
         {items.map((it, i) => (
-          <li key={it.key}>
+          <li key={it.key} data-tip={`${it.label}\n${it.pct.toFixed(1)}% of followers`}>
             <span className="v3-k2-place">{it.label}</span>
             <span className="v3-k2-place-v">{it.pct.toFixed(1)}%</span>
             <span className="v3-k2-place-bar">

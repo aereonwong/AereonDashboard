@@ -293,8 +293,9 @@ html[data-theme="dark"] .v3[data-world="canon"] {
 .v3[data-world="canon"] .v3-legend i:not(.dash) { border-color: var(--accent); }
 .v3-tip {
   position: absolute; pointer-events: none; z-index: 5; padding: var(--space-2) var(--space-3);
-  background: var(--film-2); border: 1px solid var(--line-2); border-radius: var(--radius);
-  font-size: var(--t-sm); white-space: nowrap; box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--film-2) 94%, transparent); backdrop-filter: blur(10px);
+  border: 1px solid var(--line-2); border-radius: calc(var(--radius) + 2px);
+  font-size: var(--t-sm); white-space: nowrap; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
   transform: translate(-50%, calc(-100% - 12px)); transition: opacity 120ms var(--ease);
 }
 .v3-tip b { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
@@ -354,6 +355,10 @@ html[data-theme="dark"] .v3[data-world="canon"] {
 @keyframes v3-grow { from { transform: scaleX(0); } }
 a.v3-row { transition: background var(--dur) var(--ease); margin: 0 calc(var(--space-2) * -1); padding-left: var(--space-2); padding-right: var(--space-2); border-radius: var(--radius); }
 a.v3-row:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+/* Ranked rows with a bar are charts too: hovering one lights it and quiets the rest (docs/CHARTS.md). */
+.v3-row:has(.v3-row-bar):hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.v3-rows:has(> .v3-row:hover) > .v3-row:has(.v3-row-bar):not(:hover) .v3-row-bar i { opacity: 0.45; }
+.v3-row-bar i { transition: opacity 120ms var(--ease); }
 a.v3-row[aria-current="true"] { background: var(--mark-soft); }
 
 /* Owed: length is exact duration — the mark runs precisely its days since issue. */

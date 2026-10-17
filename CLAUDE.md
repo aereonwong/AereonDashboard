@@ -147,6 +147,10 @@ Ranked posts show a small cover: the snapshot's own image for its ~40 newest pos
 else a format tile; tapping a cover plays the post in Instagram's embed player.
 **Every filtered page follows `docs/FILTER-BAR.md`** (one sticky bar, a scope chip on every panel).
 
+**Every chart answers the mouse** (Aereon's rule, 17 Oct 2026): hover a mark → it lights up and a readout says what it is.
+Server-drawn charts just add `data-tip="Heading\nfigure"` (shown by `app/_components/ChartTips.tsx`); client charts keep their
+`.v3-tip`. Read `docs/CHARTS.md` before adding or changing any chart.
+
 **Media kit v2** (`app/_v3/pages/MediaKit2.tsx` + `kit2.css`, 2 Oct 2026): audience-led kit with
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
