@@ -311,3 +311,16 @@ export function totalsRows(s: Social, best: Partial<Record<PlatformId, number | 
   })
   return rows
 }
+
+/** The windows computed and stored each day (social_totals, social_snapshots). */
+export const WINDOWS = [30, 90, 365] as const
+
+/**
+ * A `buildSocial` result trimmed for storage (social_snapshots): the ranked posts keep only what a
+ * page can show — the top `keep` overall and the top `keep` of each platform — everything else whole.
+ */
+export function trimSocial(s: Social, keep = 10): Social {
+  const top = new Set(s.ranked.slice(0, keep))
+  for (const id of s.ids) for (const p of s.ranked.filter(p => p.platform === id).slice(0, keep)) top.add(p)
+  return { ...s, ranked: s.ranked.filter(p => top.has(p)) }
+}

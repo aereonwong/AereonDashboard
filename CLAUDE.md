@@ -209,9 +209,11 @@ connected platform — `socialTotals()` in `lib/social-totals.ts`. Labels never 
 platform's own 90-day count (Stories and ads in; TikTok: its videos of the 90 days); engagement = interactions per 100 views (30 days); reach = each
 platform's own latest month of unique people, best reach = its best month in 90 days — added across platforms, never
 across windows. **Stored, not recomputed:** `writeSocialTotals()` writes one row per platform per window (30, 90) plus
-`all` into `social_totals` (`supabase/social-totals.sql`) after the 6am cron, after any Refresh button, and from
-`POST /api/social/totals` (editors; reads our tables only). The public pages read the newest day; only if none is under
-2 days old do they compute on the spot (not stored). A stale or unread platform makes that `all` total null → tile hides.
+`all` into `social_totals` (`supabase/social-totals.sql`) for 30, 90 and 365 days, and the whole /social picture per
+window into `social_snapshots` (`supabase/social-snapshots.sql`, jsonb of `trimSocial(buildSocial())`) after the 6am cron, after any Refresh button, and from
+`POST /api/social/totals` (editors; reads our tables only). The public pages, /social and the Dashboard's audience band (`readSocial(days)`)
+read the newest stored day — nothing is recalculated on a page load; only if none is under 2 days old do they compute
+on the spot (held 10 minutes, not stored). Demo mode never reads the stored real figures. A stale or unread platform makes that `all` total null → tile hides.
 
 ## Site analytics (16 Oct 2026)
 
