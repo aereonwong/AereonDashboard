@@ -2,6 +2,7 @@ import { refreshInstagram } from '@/lib/ig-refresh'
 import { refreshFacebook } from '@/lib/fb-refresh'
 import { refreshTiktok } from '@/lib/tt-refresh'
 import { safeEqual } from '@/lib/session'
+import { writeSocialTotals } from '@/lib/social-totals'
 
 // 👉 The daily social refresh (vercel.json, 6am MYT): Instagram, then the Facebook
 // Page, then TikTok. It only READS them and writes history rows — no Claude call, no message
@@ -25,12 +26,16 @@ export async function GET(req: Request) {
   const ig = await refreshInstagram('cron')
   const fb = await refreshFacebook('cron')
   const tt = await refreshTiktok('cron')
+  // Then the day's cross-platform totals the public pages read (lib/social-totals.ts) — from
+  // whatever was stored, so one failed platform still leaves today's row, with that total hidden.
+  const totals = await writeSocialTotals()
   const body = {
     ok: ig.ok && fb.ok && tt.ok,
     instagram: ig.ok ? { posts: ig.posts, warnings: ig.warnings } : { error: ig.error },
     facebook: fb.ok ? { posts: fb.posts, days: fb.days, warnings: fb.warnings } : { error: fb.error },
     tiktok: tt.ok ? { posts: tt.posts, followers: tt.followers } : { error: tt.error },
+    totals: totals.ok ? { rows: totals.rows } : { error: totals.error },
   }
   // Red in Vercel's cron log when any failed, so a stalled Facebook or TikTok history shows up.
-  return Response.json(body, { status: !ig.ok ? ig.status : fb.ok && tt.ok ? 200 : 502 })
+  return Response.json(body, { status: !ig.ok ? ig.status : fb.ok && tt.ok && totals.ok ? 200 : 502 })
 }

@@ -46,8 +46,8 @@ const IG_KIND = (type: string | null, mediaType: string | null) =>
 const FB_KIND: Record<string, string> = { VIDEO: 'Video', PHOTO: 'Photo', LINK: 'Link', TEXT: 'Text' }
 
 /** Instagram posts of the last `days` days from the archive (ig_posts), each with its latest stored reading. */
-export async function readIgPosts(audience: Audience, days = 365): Promise<SocialPost[]> {
-  if (!supabaseConfigured || (await demoMode())) return []
+export async function readIgPosts(audience: Audience, days = 365, real = false): Promise<SocialPost[]> {
+  if (!supabaseConfigured || (!real && (await demoMode()))) return []
   const since = new Date(Date.now() - days * DAY).toISOString()
   try {
     const posts: any[] = []

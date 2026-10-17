@@ -7,7 +7,7 @@ Also applies to `lib/hello*.ts`, `lib/socials.ts`, `app/(app)/links/` and `/api/
 The link in Aereon's Instagram bio: `aereonwong.com/hello` (`app/hello/`, public, tracked in `site_visits`).
 Phone-first, one screen: photo band with a CSS-only intro (flight line draws, then blocks rise; off for
 reduced motion), a proof strip (overall views + interactions over 90 days across every connected platform, via `socialTotals()` in
-`lib/social-totals.ts` — a platform over 7 days stale drops out — and followers across all platforms; labels never name
+`lib/social-totals.ts`, read from the stored `social_totals` table; a stale platform hides the total — and followers across all platforms; labels never name
 platforms, "All socials"; Aereon's call, 11/14/16 Oct 2026), social icons from `lib/socials.ts`, then **"What brings you here?"** (`app/hello/Chooser.tsx`):
 tiles for five audiences — `collab`, `shoot` (visiting KL / local business), `drone`, `deals` (attractions &
 promos), `gear` — each opening only its section, addressable as `/hello#<id>` for Stories (CSS `:target` is the

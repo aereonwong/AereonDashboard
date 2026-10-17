@@ -37,8 +37,9 @@ async function all<T>(q: () => any, size = 1000): Promise<T[]> {
 }
 
 /** Everything the Facebook page and the Dashboard show. Empty in demo mode or before the first refresh. */
-export async function readFacebook(): Promise<Facebook> {
-  if (!supabaseConfigured || (await demoMode())) return EMPTY
+/** `real` skips the demo switch — for the stored totals (lib/social-totals.ts), which never show demo figures. */
+export async function readFacebook(real = false): Promise<Facebook> {
+  if (!supabaseConfigured || (!real && (await demoMode()))) return EMPTY
   const page = fbPageId()
   try {
     const [daily, periods, posts, latest] = await Promise.all([

@@ -167,7 +167,7 @@ export const PRIVATE_SEGMENTS = [
 ]
 /** Folders under app/api that exist (public ones above are listed too). */
 export const API_SEGMENTS = [
-  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'facebook', 'instagram', 'invoices', 'login', 'logout', 'telegram', 'tiktok', 'track',
+  'auth', 'cron-daily', 'cron-instagram', 'cron-news', 'demo', 'facebook', 'instagram', 'invoices', 'login', 'logout', 'social', 'telegram', 'tiktok', 'track',
 ]
 
 const under = (path: string, base: string) => path === base || path.startsWith(base + '/')

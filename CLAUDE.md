@@ -199,12 +199,17 @@ Server-drawn charts just add `data-tip="Heading\nfigure"` (shown by `app/_compon
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
-## Public proof numbers (16 Oct 2026)
+## Public proof numbers (16 Oct 2026; one basis + stored since 18 Oct 2026)
 
 Landing (reel + classic), both media kits, `/hello` and its share card show ONE overall figure per stat across every
-connected platform — `socialTotals()` in `lib/social-totals.ts` (today Instagram + Facebook + TikTok; a new platform is one more
-source there; a metric a platform doesn't measure is `undefined` and sits out). Labels never name platforms or explain double counting (Aereon's call). Views/interactions = 90 days;
-reach = each platform's best (or latest) month of unique people, added across platforms, never across windows.
+connected platform — `socialTotals()` in `lib/social-totals.ts`. Labels never name platforms or explain double counting
+(Aereon's call). **Same maths as /social and the Dashboard** (`lib/v3/social-math.ts`): views/interactions = posts
+published in the last 90 days at their latest reading; engagement = interactions per 100 views (30 days); reach = each
+platform's own latest month of unique people, best reach = its best month in 90 days — added across platforms, never
+across windows. **Stored, not recomputed:** `writeSocialTotals()` writes one row per platform per window (30, 90) plus
+`all` into `social_totals` (`supabase/social-totals.sql`) after the 6am cron, after any Refresh button, and from
+`POST /api/social/totals` (editors; reads our tables only). The public pages read the newest day; only if none is under
+2 days old do they compute on the spot (not stored). A stale or unread platform makes that `all` total null → tile hides.
 
 ## Site analytics (16 Oct 2026)
 
