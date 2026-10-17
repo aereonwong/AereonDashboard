@@ -1011,6 +1011,8 @@ a.v3-story-head:hover { text-decoration: underline; }
 .v3-spark { width: 100%; height: 28px; display: block; overflow: visible; }
 .v3-spark polyline { fill: none; stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .v3-spark polygon { fill: var(--accent); opacity: 0.1; }
+.v3-spark .v3-spark-hit { fill: transparent; }
+.v3-spark .v3-spark-hit[data-tip-on] { fill: color-mix(in srgb, var(--accent) 16%, transparent); filter: none; }
 .v3-chip-delta { font-family: var(--f-num); font-size: var(--t-xs); font-weight: 600; padding: 2px 7px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .v3-chip-delta.up { color: color-mix(in srgb, var(--pos) 75%, var(--ink)); background: color-mix(in srgb, var(--pos) 12%, transparent); }
 .v3-chip-delta.down { color: color-mix(in srgb, var(--neg) 80%, var(--ink)); background: color-mix(in srgb, var(--neg) 12%, transparent); }
@@ -1173,7 +1175,8 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-chapter-title::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); margin-right: 10px; vertical-align: 2px; }
 .v3-chapter-note { margin: 0; font-size: var(--t-sm); color: var(--ink-3); }
 .v3-dash-reach { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
-.v3-dash-reach .v3-spark { height: 56px; }
+.v3-dash-reach-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2) var(--space-4); }
+.v3-dash-reach-head b { color: var(--ink); }
 
 /* Clients: the four relationship groups, as filters for the table. */
 .v3-segs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }

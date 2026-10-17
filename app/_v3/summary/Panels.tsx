@@ -11,20 +11,29 @@ const pctTxt = (x: number) => `${Math.round(x * 100)}%`
 const signed = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%`
 
 /** A small trend line under a figure. Shape only — the figure above it is the number. */
-export function Spark({ values }: { values: number[] }) {
+/** A small trend line. `tips` (one per value) makes each point hoverable — every chart answers the mouse (docs/CHARTS.md). */
+export function Spark({ values, tips }: { values: number[]; tips?: string[] }) {
   if (values.length < 2) return null
   const W = 120
   const H = 28
   const max = Math.max(1, ...values)
   const pts = values.map((v, i) => [(i / (values.length - 1)) * W, H - 2 - (v / max) * (H - 4)])
   const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+  const step = W / (values.length - 1)
   return (
     <svg className="v3-spark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
       <polygon points={`0,${H} ${line} ${W},${H}`} />
       <polyline points={line} />
+      {tips
+        ? pts.map(([x], i) => (
+            <rect key={i} className="v3-spark-hit" x={Math.max(0, x - step / 2)} width={Math.min(W, x + step / 2) - Math.max(0, x - step / 2)} y={0} height={H} data-tip={tips[i]} />
+          ))
+        : null}
     </svg>
   )
 }
+
+const monthName = (key: string) => new Date(`${key}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 export function DeltaChip({ d, label }: { d: number | null; label?: string }) {
   if (d === null || !Number.isFinite(d)) return null
@@ -36,7 +45,7 @@ export function DeltaChip({ d, label }: { d: number | null; label?: string }) {
   )
 }
 
-export function KpiCard({ label, value, k, note, prevLabel }: { label: string; value: string; k?: Kpi; note: React.ReactNode; prevLabel?: string }) {
+export function KpiCard({ label, value, k, note, prevLabel, months, money: isMoney }: { label: string; value: string; k?: Kpi; note: React.ReactNode; prevLabel?: string; months?: string[]; money?: boolean }) {
   return (
     <div className="v3-sum-kpi">
       <div className="v3-kpi-label">{label}</div>
@@ -45,7 +54,7 @@ export function KpiCard({ label, value, k, note, prevLabel }: { label: string; v
         {k ? <DeltaChip d={k.delta} label={prevLabel} /> : null}
       </div>
       <div className="v3-kpi-note">{note}</div>
-      {k ? <Spark values={k.spark} /> : null}
+      {k ? <Spark values={k.spark} tips={months?.length === k.spark.length ? k.spark.map((v, i) => `${monthName(months[i])}\n${isMoney ? rmFull(v) : Math.round(v).toLocaleString('en-MY')} ${label.toLowerCase()}`) : undefined} /> : null}
     </div>
   )
 }

@@ -9,7 +9,7 @@ import Receivables from './Receivables'
 import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
-import { Spark } from '../summary/Panels'
+import SeriesChart from '../SeriesChart'
 import { rmFull, pct, compact, num, shortDate } from '../fmt'
 import { analyseFb, followerFlow, type Facebook } from '@/lib/facebook'
 
@@ -38,7 +38,11 @@ export default function Dashboard({
   const up = (s.pacePct ?? 0) >= 0
   // The last 30 calendar days by date — a missed refresh leaves a gap, never stretches the window.
   const since30 = new Date(Date.parse(`${s.today}T00:00:00Z`) - 30 * 86_400_000).toISOString().slice(0, 10)
-  const reachLine = audience.daily.filter(d => d.day >= since30 && d.reach !== undefined).map(d => d.reach!)
+  const reachDays = audience.daily.filter(d => d.day >= since30 && d.reach !== undefined)
+  const reachSorted = reachDays.map(d => d.reach!).sort((a, b) => a - b)
+  const reachTypical = reachSorted.length ? reachSorted[Math.floor((reachSorted.length - 1) / 2)] : 0
+  const reachBest = reachDays.reduce<(typeof reachDays)[number] | null>((b, d) => (!b || d.reach! > b.reach! ? d : b), null)
+  const weekday = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })
   const reach30 = audience.view?.totals.reach ?? 0
   const engaged30 = audience.view?.totals.accounts_engaged
   const engagedPct = reach30 && engaged30 ? (engaged30 / reach30) * 100 : null
@@ -303,10 +307,24 @@ export default function Dashboard({
                   <div className="v3-kpi-note">last post {stats.daysSinceLastPost === 0 ? 'today' : `${stats.daysSinceLastPost} day${stats.daysSinceLastPost === 1 ? '' : 's'} ago`}</div>
                 </div>
               </div>
-              {reachLine.length >= 3 ? (
+              {reachDays.length >= 3 ? (
                 <div className="v3-dash-reach">
-                  <span className="v3-kpi-label">Daily reach, last 30 days</span>
-                  <Spark values={reachLine} />
+                  <div className="v3-dash-reach-head">
+                    <span className="v3-kpi-label">Daily reach, last 30 days</span>
+                    <span className="v3-kpi-note">
+                      Typical day <b className="num">{num(reachTypical)}</b>
+                      {reachBest ? <> · best <b className="num">{num(reachBest.reach!)}</b> on {shortDate(reachBest.day)}</> : null}
+                    </span>
+                  </div>
+                  <SeriesChart
+                    unit="accounts reached"
+                    points={reachDays.map(d => ({
+                      key: d.day,
+                      label: shortDate(d.day),
+                      value: d.reach!,
+                      note: `${weekday(d.day)} · ${d.reach! >= reachTypical * 2 ? `${(d.reach! / Math.max(1, reachTypical)).toFixed(1)}× a typical day` : d.reach! >= reachTypical ? 'above a typical day' : 'below a typical day'}`,
+                    }))}
+                  />
                 </div>
               ) : null}
               <a className="v3-recv-cta" href="/instagram">
