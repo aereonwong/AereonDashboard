@@ -124,7 +124,7 @@ export default function MediaKit({
                 .
                 {engage ? (
                   <>
-                    {' '}Every 100 views earn <b>{engage}</b> likes, comments and shares.
+                    {' '}Every 100 views earn <b>{engage}</b> interactions.
                   </>
                 ) : null}
               </>

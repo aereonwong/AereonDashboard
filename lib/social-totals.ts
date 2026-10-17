@@ -9,8 +9,9 @@ import type { PlatformId } from './v3/platforms'
 
 // 👉 The public proof numbers (landing page, media kits, /hello and its share card, the reel), and the
 // table they come from. Since 18 Oct 2026 every figure here is the SAME maths as /social and the
-// Dashboard (lib/v3/social-math.ts): views and interactions are those of the posts published in the
-// window, each at its latest reading, on every platform alike.
+// Dashboard (lib/v3/social-math.ts): views and interactions are each platform's own count for the
+// window — Instagram's account totals (posts, Reels, Stories, ads), Facebook's Page totals — and,
+// for a platform with no account count (TikTok), the views of the posts published in it.
 //
 //   · writeSocialTotals() computes once and stores one row per platform per window, plus 'all', in
 //     social_totals (supabase/social-totals.sql). It runs after the daily 6am refresh, after any
@@ -32,11 +33,11 @@ const STORED_FOR = 2 * DAY
 const mytDay = (t: number) => new Date(t + 8 * 3_600_000).toISOString().slice(0, 10)
 
 export type SocialTotals = {
-  /** Views over the last 90 days' posts. */
+  /** Views over the last 90 days, each platform's own count (Stories and ads in). */
   views: number | null
-  /** Likes, comments, shares (Instagram adds saves) over the last 90 days' posts. */
+  /** Interactions over the last 90 days, on the same count. */
   interactions: number | null
-  /** Interactions per 100 views, last 30 days' posts. */
+  /** Interactions per 100 views, last 30 days. */
   rate: number | null
   /** People reached in the latest month (Instagram 30 days, Facebook 28 days). */
   reach: number | null

@@ -29,6 +29,13 @@ export type Source = {
   peopleDays: [string, number][] | null
   /** The platform's own unique-people window, or null when the platform doesn't measure people. */
   people: { value: number | null; window: number } | null
+  /**
+   * The platform's OWN count of every view and interaction in a window of N days — Instagram's
+   * account totals (posts, Reels, Stories, ads), Facebook's Page totals. A window the platform
+   * doesn't report is absent, and that platform falls back to its posts for it; a window it
+   * should report but couldn't (stale, gap) is present with nulls, so the total hides.
+   */
+  reported?: Partial<Record<number, { views: number | null; interactions: number | null }>>
   posts: SocialPost[]
 }
 
@@ -62,8 +69,13 @@ export type PlatformFigures = {
   /** Posts published in the window. */
   posts: number
   perWeek: number
-  /** Views so far of the posts published in the window; null when none was read. */
+  /** 'account' = the platform's own count of every view in the window (incl. Stories and ads);
+   *  'posts' = views so far of the posts published in the window (platforms with no account count). */
+  basis: 'account' | 'posts'
+  /** Every view in the window on that basis; null when it couldn't be read. */
   views: number | null
+  /** Views so far of the posts published in the window — what the typical post and ranking use. */
+  postViews: number | null
   /** Posts in the window with no views reading yet. */
   unread: number
   interactions: number | null
@@ -102,6 +114,16 @@ export function buildSocial(input: (Source | null)[], days: number, now = Date.n
     const mine = inWindow.filter(p => p.platform === s.id)
     const viewed = mine.filter(p => p.views !== null)
     const typical = median(viewed.map(p => p.views!))
+    const rep = s.reported?.[days]
+    const fromPosts = {
+      views: sumOf(mine.map(p => p.views)),
+      // Over the same posts as the rate (views and interactions both read), so "N interactions" sits honestly beside it.
+      interactions: sumOf(mine.filter(p => p.views !== null).map(p => p.interactions)),
+      rate: rateOf(mine),
+    }
+    const counted = rep
+      ? { views: rep.views, interactions: rep.interactions, rate: rep.views && rep.interactions !== null ? (rep.interactions / rep.views) * 100 : null }
+      : fromPosts
     return {
       id: s.id,
       fresh: s.fresh,
@@ -109,11 +131,10 @@ export function buildSocial(input: (Source | null)[], days: number, now = Date.n
       net30: s.net30,
       posts: mine.length,
       perWeek: mine.length / (days / 7),
-      views: sumOf(mine.map(p => p.views)),
-      unread: mine.length - viewed.length,
-      // Over the same posts as the rate (views and interactions both read), so "N interactions" sits honestly beside it.
-      interactions: sumOf(mine.filter(p => p.views !== null).map(p => p.interactions)),
-      rate: rateOf(mine),
+      basis: rep ? ('account' as const) : ('posts' as const),
+      ...counted,
+      postViews: fromPosts.views,
+      unread: mine.length - viewed.length, // posts with no views reading — on either basis
       typical,
       hits: typical ? viewed.filter(p => p.views! >= 2 * typical).length : 0,
       lastPost: s.posts.reduce<string | null>((a, p) => (!a || p.at > a ? p.at : a), null),
@@ -133,15 +154,17 @@ export function buildSocial(input: (Source | null)[], days: number, now = Date.n
     netOf: known.map(f => f.id),
     views: sumOf(platforms.map(f => f.views)),
     /** Platforms that posted in the window but have no views read at all — the total leaves them out and says so. */
-    partial: platforms.filter(f => f.posts > 0 && f.views === null).map(f => f.id),
+    partial: platforms.filter(f => f.views === null && (f.basis === 'account' || f.posts > 0)).map(f => f.id),
     interactions: sumOf(platforms.map(f => f.interactions)),
-    rate: rateOf(inWindow),
+    rate: null as number | null,
     unread: platforms.reduce((t, f) => t + f.unread, 0),
     people: measuring.length && measuring.every(f => f.people!.value !== null) ? measuring.reduce((t, f) => t + f.people!.value!, 0) : null,
     peopleOf: measuring.map(f => f.id),
     posts: platforms.reduce((t, f) => t + f.posts, 0),
     perWeek: platforms.reduce((t, f) => t + f.perWeek, 0),
   }
+  // Interactions per 100 views on the same basis as the two figures beside it.
+  if (total.views && total.interactions !== null && platforms.filter(f => f.basis === 'account' || f.posts > 0).every(f => f.views !== null && f.interactions !== null)) total.rate = (total.interactions / total.views) * 100
   const stale = platforms.filter(f => !f.fresh).map(f => f.id)
 
   // Lift: a post's views ÷ its own platform's typical post in the window.

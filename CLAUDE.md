@@ -165,10 +165,12 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
   its own unique-people figure). YouTube (`yt`), Threads (`th`), Xiaohongshu (`xhs`) are reserved. Adding one = its
   fetch/refresh/tables + an adapter in `lib/v3/social.ts` returning a `Source` (see `igSource`/`fbSource`/`ttSource`) +
   its page and nav lines; every table, chart, legend, filter and total picks it up.
-- **One currency: views per post.** Views, interactions, engagement rate (interactions per 100 views), typical post
-  (median views), hits (2× typical) and the post ranking (lift over the platform's own typical) all read the posts
-  PUBLISHED in the window, each at its latest reading — the same on every platform. Account-level figures that
-  platforms define differently (Instagram's include Stories and ads; TikTok has none) stay on each platform's own page.
+- **Views & interactions = each platform's OWN count for the window** (Aereon, 18 Oct 2026: Stories and ads are part
+  of the analytics). `Source.reported[days]`: Instagram's account totals for 30 and 90 days (posts, Reels, Stories,
+  ads); Facebook's Page daily totals added over 30/90/365 whole days. A platform/window with no account count (TikTok
+  always; Instagram for 12 months) uses the views of the posts published in the window — `basis: 'posts'`, and the
+  label says so. Engagement rate = those interactions per 100 views. Typical post (median views), hits (2×) and the
+  ranking (lift over the platform's own typical) always read the posts published in the window.
 - People reached = each platform's own unique window (IG 30d, FB 28d), added only as a platform total and only across
   platforms that measure it. Unread posts sit out of sums and are counted. A reading over a week old is flagged.
 - Dashboard hero's 4th KPI = followers on every platform (+30-day change, naming which platforms have the history).
@@ -203,8 +205,8 @@ beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
 Landing (reel + classic), both media kits, `/hello` and its share card show ONE overall figure per stat across every
 connected platform — `socialTotals()` in `lib/social-totals.ts`. Labels never name platforms or explain double counting
-(Aereon's call). **Same maths as /social and the Dashboard** (`lib/v3/social-math.ts`): views/interactions = posts
-published in the last 90 days at their latest reading; engagement = interactions per 100 views (30 days); reach = each
+(Aereon's call). **Same maths as /social and the Dashboard** (`lib/v3/social-math.ts`): views/interactions = each
+platform's own 90-day count (Stories and ads in; TikTok: its videos of the 90 days); engagement = interactions per 100 views (30 days); reach = each
 platform's own latest month of unique people, best reach = its best month in 90 days — added across platforms, never
 across windows. **Stored, not recomputed:** `writeSocialTotals()` writes one row per platform per window (30, 90) plus
 `all` into `social_totals` (`supabase/social-totals.sql`) after the 6am cron, after any Refresh button, and from

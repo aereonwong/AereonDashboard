@@ -2,7 +2,7 @@ import { PLATFORM, PLATFORM_NAME, isPlatform, type PlatformId } from '@/lib/v3/p
 import type { Social as S, SocialPost } from '@/lib/v3/social'
 import SocialFilters from '../SocialFilters'
 import ScopedPanel from '../ScopedPanel'
-import { Compare, Dot, FollowersChart, MonthsChart, PeopleChart, WeeksChart, names, signed, windowName } from '../SocialOverview'
+import { Compare, Dot, basisNote, FollowersChart, MonthsChart, PeopleChart, WeeksChart, names, signed, windowName } from '../SocialOverview'
 import { KpiCard } from '../summary/Panels'
 import { compact, num, shortDate } from '../fmt'
 
@@ -92,7 +92,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
   const lede = [
     `${num(total.followers)} followers across ${names(s.ids)}`,
     total.net30 !== null ? `${signed(total.net30)} in 30 days` : null,
-    total.views !== null ? `the last ${w}’s posts drew ${compact(total.views)} views${best && s.platforms.length > 1 ? `, most on ${PLATFORM_NAME[best.id]}` : ''}` : null,
+    total.views !== null ? `${compact(total.views)} views in the last ${w}${best && s.platforms.length > 1 ? `, most on ${PLATFORM_NAME[best.id]}` : ''}` : null,
   ].filter(Boolean)
   const inSlice = (p: { platform: PlatformId }) => !platform || p.platform === platform
   const posts = s.ranked.filter(inSlice)
@@ -120,7 +120,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
         <div className="v3-chapter v3-span-12">
           <h2 className="v3-chapter-title">Every platform, side by side</h2>
           <p className="v3-chapter-note">
-            Views, interactions and the typical post are read the same way everywhere: the posts published in the window, each at its latest reading.
+            Views and interactions are each platform&rsquo;s own count for the window — posts, Reels, Stories and ads — where it reports one; the typical post and the rankings read the posts published in it.
             Followers add up as a platform total — someone on two counts twice.
             {s.stale.length ? ` ${names(s.stale)}’s latest reading is over a week old.` : ''}
           </p>
@@ -132,7 +132,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
             value={num(total.followers)}
             note={`${total.net30 !== null ? `${signed(total.net30)} in 30 days${netNote} · ` : ''}${s.platforms.map(f => `${PLATFORM_NAME[f.id]} ${compact(f.followers)}`).join(' · ')}`}
           />
-          <KpiCard label="Views" value={total.views !== null ? compact(total.views) : '—'} note={`so far, of the ${total.posts} posts published in the last ${w}${unreadNote}`} />
+          <KpiCard label="Views" value={total.views !== null ? compact(total.views) : '—'} note={`last ${w} · ${basisNote(s)}${unreadNote}`} />
           <KpiCard
             label="Engagement rate"
             value={total.rate !== null ? `${total.rate.toFixed(1)}%` : '—'}

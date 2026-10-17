@@ -17,6 +17,13 @@ export const ago = (iso: string | null) => {
 export const windowName = (days: number) => (days === 365 ? '12 months' : `${days} days`)
 export const names = (ids: PlatformId[]) => and(ids.map(p => PLATFORM_NAME[p]))
 
+/** What "views" means in this window: each platform's own count (Stories and ads in), except
+ *  platforms with no account count, which give the views of the window's posts. */
+export const basisNote = (s: Social, lead = 'every view each platform counted') => {
+  const posts = s.platforms.filter(f => f.basis === 'posts').map(f => f.id)
+  return `${lead} — posts, Reels, Stories, ads${posts.length ? ` · ${names(posts)}: views so far of the window’s posts` : ''}`
+}
+
 /** A platform's colour swatch. */
 export const Dot = ({ p }: { p: PlatformId }) => <i className="v3-soc-dot" data-p={p} aria-hidden="true" />
 
@@ -46,13 +53,13 @@ export function Compare({ s }: { s: Social }) {
     { label: 'Posts', note: `published in the last ${w}`, cell: f => `${f.posts} · ${f.perWeek.toFixed(1)}/wk`, split: f => f.posts },
     {
       label: 'Views',
-      note: `so far, of the posts published in the last ${w}`,
-      cell: f => (f.views !== null ? compact(f.views) : '—') + (f.unread ? ` (${f.unread} unread)` : ''),
+      note: `last ${w} · ${basisNote(s, 'the platform’s own count')}`,
+      cell: f => (f.views !== null ? compact(f.views) : '—') + (f.basis === 'posts' && f.unread ? ` (${f.unread} unread)` : ''),
       split: f => f.views,
     },
-    { label: 'Typical post', note: 'median views per post', cell: f => (f.typical ? compact(f.typical) : '—') },
-    { label: 'Interactions', note: 'likes, comments, shares (Instagram adds saves)', cell: f => (f.interactions !== null ? compact(f.interactions) : '—'), split: f => f.interactions },
-    { label: 'Engagement rate', note: 'interactions per 100 views', cell: f => (f.rate !== null ? `${f.rate.toFixed(1)}%` : '—') },
+    { label: 'Typical post', note: 'median views per post published in the window', cell: f => (f.typical ? compact(f.typical) : '—') },
+    { label: 'Interactions', note: 'likes, comments, shares, saves, replies · Facebook adds clicks', cell: f => (f.interactions !== null ? compact(f.interactions) : '—'), split: f => f.interactions },
+    { label: 'Engagement rate', note: 'interactions per 100 views, same count', cell: f => (f.rate !== null ? `${f.rate.toFixed(1)}%` : '—') },
     { label: 'Hits', note: 'posts at 2× the typical or more', cell: f => (f.posts ? `${f.hits} of ${f.posts - f.unread}` : '—') },
     {
       label: 'People reached',

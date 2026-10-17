@@ -6,12 +6,10 @@ import { change, type Tiktok } from '@/lib/tiktok'
 
 // 👉 Social — every connected platform on one page (/social) and in the Dashboard's audience band.
 //
-// One currency across platforms: VIEWS PER POST. Every platform reports how many times each
-// post was viewed (Instagram, Facebook, TikTok today; YouTube, Threads, Xiaohongshu too), so
-// views, interactions, engagement rate, the typical post and the post ranking are all read the
-// same way on every platform: the posts PUBLISHED in the window, each at its latest reading.
-// Account-level figures each platform defines differently (Instagram's views include Stories and
-// ads; TikTok has none) are left to the platform's own page.
+// Views and interactions are each platform's OWN count for the window where it reports one —
+// Instagram's account totals (posts, Reels, Stories, ads), Facebook's Page totals — and the views of
+// the posts published in the window where it doesn't (TikTok; Instagram for 12 months). The typical
+// post, hits and the ranking always read posts: every platform reports views per post.
 //
 // The rules that keep every figure honest:
 //   · Counts add up across platforms (followers, views, interactions, posts). Someone on two
@@ -146,6 +144,16 @@ export function igSource(audience: Audience, posts: SocialPost[], now = Date.now
     peopleDays: audience.daily.filter(d => d.reach !== undefined).map(d => [d.day, d.reach!]),
     // A stale account row would be labelled "last 30 days" when it is not.
     people: { value: v && now - Date.parse(v.capturedAt) < STALE ? v.totals.reach : null, window: 30 },
+    // Instagram's own account totals — posts, Reels, Stories and ads — for its 30-day window and the
+    // three back to back (90 days). It keeps nothing exact for 12 months, so that window uses posts.
+    reported: (() => {
+      const ok = !!v && now - Date.parse(v.capturedAt) < STALE
+      const num = (x: unknown) => (typeof x === 'number' ? x : null)
+      return {
+        30: ok ? { views: num(v!.totals.views), interactions: num(v!.totals.total_interactions) } : { views: null, interactions: null },
+        90: ok && v!.d90 ? { views: v!.d90.views, interactions: v!.d90.interactions } : { views: null, interactions: null },
+      }
+    })(),
     posts,
   }
 }
@@ -165,6 +173,10 @@ export function fbSource(fb: Facebook, now = Date.now()): Source | null {
     followerDays: fb.daily.filter(d => d.followers).map(d => [d.day, d.followers!]),
     peopleDays: fb.daily.filter(d => d.viewers != null).map(d => [d.day, d.viewers!]),
     people: { value: windowFresh ? (fb.window?.viewers ?? null) : null, window: 28 },
+    // The Page's own daily totals (every view and engagement), added over the window's days.
+    // Today is still counting, so windows end on the last whole day.
+    // A window must end within 3 days (Facebook lands a day or two late) — an older one isn't "the last N days".
+    reported: Object.fromEntries([30, 90, 365].map(n => [n, fbWindow(fb.daily.filter(d => d.day < mytDay(now)), n, latest >= mytDay(now - 3 * DAY))])),
     posts: fb.posts
       .filter(p => p.posted_at)
       .map(p => ({
@@ -181,6 +193,14 @@ export function fbSource(fb: Facebook, now = Date.now()): Source | null {
         thumb: p.picture ?? null,
       })),
   }
+}
+
+/** Facebook's last `n` reported days added up — every day present and read, or nulls (the total then hides). */
+function fbWindow(daily: Facebook['daily'], n: number, fresh: boolean): { views: number | null; interactions: number | null } {
+  const days = daily.slice(-n)
+  const whole = fresh && days.length === n && Date.parse(days.at(-1)!.day) - Date.parse(days[0].day) === (n - 1) * DAY
+  const add = (k: 'views' | 'engagements') => (whole && days.every(d => typeof d[k] === 'number') ? days.reduce((t, d) => t + d[k]!, 0) : null)
+  return { views: add('views'), interactions: add('engagements') }
 }
 
 export function ttSource(tt: Tiktok, now = Date.now()): Source | null {
