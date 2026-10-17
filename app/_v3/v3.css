@@ -1410,7 +1410,7 @@ html[data-theme="dark"][data-v3accent] .v3[data-world="canon"] { --on-accent: #0
 .v3-plat-chart g[data-off="true"] rect { opacity: 0.45; }
 .v3-plat-chart g.ig, .v3-plat-chart g.fb, .v3-plat-chart g.tt { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 .v3-plat-chart g.ig { stroke: var(--accent); }
-.v3-plat-chart g.fb { stroke: color-mix(in srgb, var(--accent) 45%, transparent); }
+.v3-plat-chart g.fb { stroke: color-mix(in srgb, var(--accent) 65%, transparent); }
 .v3-plat-chart g.tt { stroke: color-mix(in srgb, var(--ink) 50%, transparent); }
 .v3-plat-chart g.ig circle { fill: var(--accent); }
 .v3-plat-chart g.fb circle { fill: color-mix(in srgb, var(--accent) 45%, var(--film)); }
