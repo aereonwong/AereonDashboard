@@ -1,129 +1,48 @@
-import type { Social as S, SocialPost, PlatformFigures } from '@/lib/v3/social'
+import { PLATFORM_NAME, scoreOf, type Social as S, type SocialPost, type Platform } from '@/lib/v3/social'
 import SocialDaily from '../SocialDaily'
 import SocialFilters from '../SocialFilters'
+import ScopedPanel from '../ScopedPanel'
+import { Compare, FollowersChart, MonthsChart, shown } from '../SocialOverview'
 import { KpiCard } from '../summary/Panels'
 import { compact, num, shortDate } from '../fmt'
 
-// 👉 v3 Social — Instagram and Facebook together: where the audience is, how far the
-// work travels on each, and the best posts across both. Maths in lib/v3/social.ts.
-// Combined people-reached figures are PLATFORM TOTALS (someone on both counts twice);
-// posts are ranked by lift over their own platform's typical post.
+// 👉 v3 Social — Instagram, Facebook and TikTok together: where the audience is, how far the
+// work travels on each, and the best posts across all three. Maths in lib/v3/social.ts.
+// Combined people-reached figures are PLATFORM TOTALS (someone on two counts twice) and cover
+// Instagram + Facebook only — TikTok reports no reach. Posts are ranked by lift over their own
+// platform's typical post (people reached; TikTok views).
 
 type Params = Record<string, string | string[] | undefined>
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
-const NAME = { ig: 'Instagram', fb: 'Facebook' } as const
 const signed = (n: number) => `${n >= 0 ? '+' : ''}${num(n)}`
-const ago = (iso: string | null) => {
-  if (!iso) return '—'
-  const d = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000)
-  return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`
-}
-const share = (a: number | null, b: number | null) => (a !== null && b !== null && a + b > 0 ? a / (a + b) : null)
-
-function Split({ ig, fb }: { ig: number | null; fb: number | null }) {
-  const s = share(ig, fb)
-  if (s === null) return <span className="v3-soc-split empty" aria-hidden="true" />
-  return (
-    <span className="v3-soc-split" data-tip={`Split\n${Math.round(s * 100)}% Instagram · ${Math.round((1 - s) * 100)}% Facebook`} role="img" aria-label={`${Math.round(s * 100)}% Instagram, ${Math.round((1 - s) * 100)}% Facebook`}>
-      <i className="ig" style={{ ['--w' as string]: s.toFixed(3) }} />
-      <i className="fb" style={{ ['--w' as string]: (1 - s).toFixed(3) }} />
-      <small>{Math.round(s * 100)}%</small>
-    </span>
-  )
-}
-
-function Compare({ s }: { s: S }) {
-  const { ig, fb } = s
-  const rate = (f: PlatformFigures) => (f.people && f.interactions !== null ? (f.interactions / f.people) * 100 : null)
-  const rows: { label: string; note?: string; ig: string; fb: string; split?: [number | null, number | null] }[] = [
-    { label: 'Followers', ig: num(ig.followers), fb: num(fb.followers), split: [ig.followers, fb.followers] },
-    {
-      label: 'Change, 30 days',
-      note: 'followed less unfollowed',
-      ig: ig.net30 !== null ? signed(ig.net30) : '—',
-      fb: fb.net30 !== null ? signed(fb.net30) : '—',
-    },
-    {
-      label: 'People reached',
-      note: 'Instagram 30 days · Facebook 28 days',
-      ig: ig.people !== null ? compact(ig.people) : '—',
-      fb: fb.people !== null ? compact(fb.people) : '—',
-      split: [s.igFresh ? ig.people : null, s.fbFresh ? fb.people : null],
-    },
-    { label: 'Views', note: 'every showing', ig: ig.views !== null ? compact(ig.views) : '—', fb: fb.views !== null ? compact(fb.views) : '—', split: [s.igFresh ? ig.views : null, s.fbFresh ? fb.views : null] },
-    {
-      label: 'Interactions',
-      note: 'Facebook adds link clicks',
-      ig: ig.interactions !== null ? compact(ig.interactions) : '—',
-      fb: fb.interactions !== null ? compact(fb.interactions) : '—',
-      split: [s.igFresh ? ig.interactions : null, s.fbFresh ? fb.interactions : null],
-    },
-    {
-      label: 'Interactions per 100 reached',
-      ig: rate(ig) !== null ? rate(ig)!.toFixed(1) : '—',
-      fb: rate(fb) !== null ? rate(fb)!.toFixed(1) : '—',
-    },
-    { label: 'Typical post', note: `median people per post, ${s.days} days`, ig: ig.typical ? compact(ig.typical) : '—', fb: fb.typical ? compact(fb.typical) : '—' },
-    { label: 'Posts a week', note: `${s.days} days`, ig: ig.perWeek.toFixed(1), fb: fb.perWeek.toFixed(1), split: [ig.posts, fb.posts] },
-    { label: 'Last post', ig: ago(ig.lastPost), fb: ago(fb.lastPost) },
-  ]
-  return (
-    <div className="v3-soc-table" role="table" aria-label="Instagram against Facebook">
-      <div className="v3-soc-tr head" role="row">
-        <span role="columnheader" />
-        <span role="columnheader">
-          <i className="v3-soc-dot ig" aria-hidden="true" />
-          Instagram
-        </span>
-        <span role="columnheader">
-          <i className="v3-soc-dot fb" aria-hidden="true" />
-          Facebook
-        </span>
-        <span role="columnheader">Instagram share</span>
-      </div>
-      {rows.map(r => (
-        <div key={r.label} className="v3-soc-tr" role="row">
-          <span role="rowheader">
-            {r.label}
-            {r.note ? <small>{r.note}</small> : null}
-          </span>
-          <span role="cell" className="num">
-            {r.ig}
-          </span>
-          <span role="cell" className="num">
-            {r.fb}
-          </span>
-          <span role="cell">{r.split ? <Split ig={r.split[0]} fb={r.split[1]} /> : null}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
+const ALL: Platform[] = ['ig', 'fb', 'tt']
+const and = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}` : (xs[0] ?? ''))
 
 function PostList({ posts }: { posts: (SocialPost & { lift: number })[] }) {
-  if (!posts.length) return <p className="v3-empty">No posts with reach figures in this window.</p>
+  if (!posts.length) return <p className="v3-empty">No posts with figures in this window.</p>
   return (
     <div className="v3-fb-posts">
       {posts.map(p => {
         const body = (
           <>
             {p.thumb ? (
-              // Instagram and Facebook CDN links expire; a broken one just shows the grey frame behind it.
+              // Instagram, Facebook and TikTok CDN links expire; a broken one just shows the grey frame behind it.
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.thumb} alt="" loading="lazy" />
+              <img src={p.thumb} alt="" loading="lazy" referrerPolicy="no-referrer" />
             ) : (
               <span className="ph" aria-hidden="true" />
             )}
             <div style={{ minWidth: 0 }}>
               <div className="t">{p.title}</div>
               <div className="s">
-                <span className={`v3-soc-tag ${p.platform}`}>{NAME[p.platform]}</span> {p.kind} · {shortDate(p.at)} · {p.interactions !== null ? `${num(p.interactions)} interactions` : 'interactions not read'}
+                <span className={`v3-soc-tag ${p.platform}`}>{PLATFORM_NAME[p.platform]}</span> {p.kind} · {shortDate(p.at)} ·{' '}
+                {p.interactions !== null ? `${num(p.interactions)} interactions` : 'interactions not read'}
               </div>
             </div>
             <div className="v">
-              {compact(p.people ?? 0)}
+              {compact(scoreOf(p) ?? 0)}
               <small>
-                {p.platform === 'ig' ? 'reached' : 'viewers'} · {p.lift >= 1 ? `${p.lift.toFixed(1)}×` : `${Math.round(p.lift * 100)}% of`} typical
+                {p.platform === 'ig' ? 'reached' : p.platform === 'fb' ? 'viewers' : 'views'} · {p.lift >= 1 ? `${p.lift.toFixed(1)}×` : `${Math.round(p.lift * 100)}% of`} typical
               </small>
             </div>
           </>
@@ -144,10 +63,12 @@ function PostList({ posts }: { posts: (SocialPost & { lift: number })[] }) {
 }
 
 export default function Social({ s, sp }: { s: S; sp: Params }) {
-  const platform = ['ig', 'fb'].includes(one(sp.p) ?? '') ? one(sp.p)! : ''
-  const { ig, fb, total } = s
+  const platform = ALL.includes(one(sp.p) as Platform) ? (one(sp.p) as Platform) : ''
+  const { total } = s
+  const ps = shown(s)
+  const names = ps.map(p => PLATFORM_NAME[p])
 
-  if (!s.hasIg && !s.hasFb) {
+  if (!s.hasIg && !s.hasFb && !s.hasTt) {
     return (
       <div>
         <header className="v3-head">
@@ -155,23 +76,28 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
         </header>
         <section className="v3-panel">
           <p className="v3-empty">
-            No Instagram or Facebook history yet. Refresh from the <a href="/instagram">Instagram</a> and <a href="/facebook">Facebook</a> pages.
+            No social history yet. Refresh from the <a href="/instagram">Instagram</a>, <a href="/facebook">Facebook</a> and <a href="/tiktok">TikTok</a> pages.
           </p>
         </section>
       </div>
     )
   }
 
-  const igShare = share(s.igFresh ? ig.people : null, s.fbFresh ? fb.people : null)
+  const stale = [
+    s.hasIg && !s.igFresh ? 'Instagram' : null,
+    s.hasFb && !s.fbFresh ? 'Facebook' : null,
+    s.hasTt && !s.ttFresh ? 'TikTok' : null,
+  ].filter(Boolean) as string[]
   const lede = [
-    total.people !== null ? `${compact(total.people)} reached across both in the last month` : null,
-    igShare !== null ? `${Math.round(igShare * 100)}% of it on Instagram` : null,
-    `${num(total.followers)} followers in all`,
+    `${num(total.followers)} followers across ${and(names)}`,
+    total.net30 !== null ? `${signed(total.net30)} in 30 days` : null,
+    total.views !== null ? `${compact(total.views)} views in the last month` : null,
   ].filter(Boolean)
   const posts = platform ? s.ranked.filter(p => p.platform === platform) : s.ranked
   const kindTop = Math.max(1, ...s.kinds.map(k => k.typical))
-  const weekTop = Math.max(1, ...s.weeks.map(w => w.ig + w.fb))
+  const weekTop = Math.max(1, ...s.weeks.map(w => w.ig + w.fb + w.tt))
   const spark = s.daily.map(d => (d.ig ?? 0) + (d.fb ?? 0)).slice(-30)
+  const netNote = total.net30 !== null && total.netOf.length < ps.length ? ` (${and(total.netOf.map(p => PLATFORM_NAME[p]))} — TikTok's shows after 30 days of readings)` : ''
 
   return (
     <div>
@@ -184,27 +110,26 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
 
       <div className="v3-grid">
         <div className="v3-chapter v3-span-12">
-          <h2 className="v3-chapter-title">Both platforms</h2>
+          <h2 className="v3-chapter-title">All platforms</h2>
           <p className="v3-chapter-note">
-            Added together. People reached is a platform total — someone who follows or sees you on both counts twice.
-            {s.hasFb && !s.fbFresh ? ' Facebook’s figures are over a week old, so they are left out of the totals until the next refresh.' : ''}
-            {s.hasIg && !s.igFresh ? ' Instagram’s account figures are over a week old, so they are left out of the totals until the next refresh.' : ''}
+            Added together. Followers and people reached are platform totals — someone who follows or sees you on two counts twice.
+            {stale.length ? ` ${and(stale)}’s figures are over a week old, so they are left out of the totals until the next refresh.` : ''}
           </p>
         </div>
 
-        <section className="v3-panel v3-span-12 v3-sum-band" aria-label="Both platforms, last month">
+        <section className="v3-panel v3-span-12 v3-sum-band" aria-label="All platforms, last month">
           <KpiCard
             label="Followers"
             value={num(total.followers)}
-            note={`${total.net30 !== null ? `${signed(total.net30)} in 30 days · ` : ''}Instagram ${compact(ig.followers)} · Facebook ${compact(fb.followers)}`}
+            note={`${total.net30 !== null ? `${signed(total.net30)} in 30 days${netNote} · ` : ''}${ps.map(p => `${PLATFORM_NAME[p]} ${compact(s[p].followers)}`).join(' · ')}`}
           />
           <KpiCard
             label="People reached"
             value={total.people !== null ? compact(total.people) : '—'}
             k={{ value: total.people ?? 0, prev: null, delta: null, spark }}
-            note="Instagram 30 days + Facebook 28 days"
+            note="Instagram 30 days + Facebook 28 days · TikTok reports no reach"
           />
-          <KpiCard label="Views" value={total.views !== null ? compact(total.views) : '—'} note="every showing, both platforms" />
+          <KpiCard label="Views" value={total.views !== null ? compact(total.views) : '—'} note={`every showing, last month${s.hasTt ? ' · TikTok: videos posted in it' : ''}`} />
           <KpiCard
             label="Interactions"
             value={total.interactions !== null ? compact(total.interactions) : '—'}
@@ -213,31 +138,37 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
           <KpiCard
             label="Posting"
             value={`${total.perWeek.toFixed(1)}/wk`}
-            note={`Instagram ${ig.perWeek.toFixed(1)} · Facebook ${fb.perWeek.toFixed(1)} · ${s.days} days · a cross-post counts on each`}
+            note={`${ps.map(p => `${PLATFORM_NAME[p]} ${s[p].perWeek.toFixed(1)}`).join(' · ')} · ${s.days} days · a cross-post counts on each`}
           />
         </section>
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-soc-vs">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-soc-vs">
-              Instagram against Facebook
+              Platform by platform
             </h2>
-            <a className="v3-panel-link" href="/instagram">
-              Instagram
-            </a>
-            <a className="v3-panel-link" href="/facebook">
-              Facebook
-            </a>
+            {ps.map(p => (
+              <a key={p} className="v3-panel-link" href={p === 'ig' ? '/instagram' : p === 'fb' ? '/facebook' : '/tiktok'}>
+                {PLATFORM_NAME[p]}
+              </a>
+            ))}
           </div>
           <Compare s={s} />
         </section>
+
+        <ScopedPanel id="soc-months" span={6} title="Views by posting month" note="Views so far of what was posted each month · last 12 months · the newest month is still climbing" scope="Account-wide · ignores filters">
+          <MonthsChart s={s} />
+        </ScopedPanel>
+        <ScopedPanel id="soc-followers" span={6} title="Followers" note="Last 90 days · each line starts when its history does" scope="Account-wide · ignores filters">
+          <FollowersChart s={s} />
+        </ScopedPanel>
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-soc-daily">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-soc-daily">
               People reached, day by day
             </h2>
-            <p className="v3-panel-note">Last 90 days · each platform&rsquo;s own daily count, stacked</p>
+            <p className="v3-panel-note">Last 90 days · Instagram and Facebook&rsquo;s own daily counts, stacked · TikTok reports no reach</p>
           </div>
           <SocialDaily days={s.daily} />
           <div className="v3-legend">
@@ -257,17 +188,16 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
           <p className="v3-chapter-note">Posts of the window below. Each post is judged against its own platform&rsquo;s typical post.</p>
         </div>
         <div className="v3-span-12">
-          <SocialFilters days={String(s.days)} platform={platform} />
+          <SocialFilters days={String(s.days)} platform={platform} tiktok={s.hasTt} />
         </div>
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-soc-top">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-soc-top">
-              Best posts{platform ? `, ${NAME[platform as 'ig' | 'fb']}` : ', both platforms'}
+              Best posts{platform ? `, ${PLATFORM_NAME[platform]}` : ', every platform'}
             </h2>
             <p className="v3-panel-note">
-              Ranked by how far each beat its platform&rsquo;s typical post · Instagram typical {ig.typical ? compact(ig.typical) : '—'}, Facebook{' '}
-              {fb.typical ? compact(fb.typical) : '—'}
+              Ranked by how far each beat its platform&rsquo;s typical post · typical {ps.map(p => `${PLATFORM_NAME[p]} ${s[p].typical ? compact(s[p].typical) : '—'}`).join(', ')}
             </p>
           </div>
           <PostList posts={posts.slice(0, 10)} />
@@ -278,7 +208,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
             <h2 className="v3-panel-title" id="t-soc-kind">
               What travels furthest
             </h2>
-            <p className="v3-panel-note">Typical people per post, by platform and format · ignores the platform switch</p>
+            <p className="v3-panel-note">Typical per post, by platform and format · people reached (TikTok: views) · ignores the platform switch</p>
           </div>
           {s.kinds.length ? (
             <div className="v3-rows">
@@ -286,7 +216,7 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
                 <div key={`${k.platform}-${k.kind}`} className="v3-row">
                   <div className="v3-row-main">
                     <div className="v3-row-title">
-                      <span className={`v3-soc-tag ${k.platform}`}>{NAME[k.platform]}</span> {k.kind}
+                      <span className={`v3-soc-tag ${k.platform}`}>{PLATFORM_NAME[k.platform]}</span> {k.kind}
                     </div>
                     <div className="v3-row-sub">
                       {k.count} post{k.count === 1 ? '' : 's'}
@@ -311,27 +241,29 @@ export default function Social({ s, sp }: { s: S; sp: Params }) {
             </h2>
             <p className="v3-panel-note">Last 12 weeks, Monday to Sunday · a cross-post counts on each</p>
           </div>
-          <div className="v3-soc-weeks" role="img" aria-label={`Posts per week, last 12 weeks: ${s.weeks.map(w => w.ig + w.fb).join(', ')}`}>
-            {s.weeks.map(w => (
-              <div key={w.start} className="col" data-tip={`Week of ${shortDate(w.start)}\n${w.ig + w.fb} post${w.ig + w.fb === 1 ? '' : 's'}\nInstagram ${w.ig} · Facebook ${w.fb}`}>
-                <div className="stack">
-                  <i className="fb" style={{ ['--h' as string]: (w.fb / weekTop).toFixed(3) }} />
-                  <i className="ig" style={{ ['--h' as string]: (w.ig / weekTop).toFixed(3) }} />
+          <div className="v3-soc-weeks" role="img" aria-label={`Posts per week, last 12 weeks: ${s.weeks.map(w => w.ig + w.fb + w.tt).join(', ')}`}>
+            {s.weeks.map(w => {
+              const n = w.ig + w.fb + w.tt
+              return (
+                <div key={w.start} className="col" data-tip={`Week of ${shortDate(w.start)}\n${n} post${n === 1 ? '' : 's'}\n${ps.map(p => `${PLATFORM_NAME[p]} ${w[p]}`).join(' · ')}`}>
+                  <div className="stack">
+                    {ps.includes('tt') ? <i className="tt" style={{ ['--h' as string]: (w.tt / weekTop).toFixed(3) }} /> : null}
+                    <i className="fb" style={{ ['--h' as string]: (w.fb / weekTop).toFixed(3) }} />
+                    <i className="ig" style={{ ['--h' as string]: (w.ig / weekTop).toFixed(3) }} />
+                  </div>
+                  <b className="num">{n}</b>
+                  <small>{shortDate(w.start)}</small>
                 </div>
-                <b className="num">{w.ig + w.fb}</b>
-                <small>{shortDate(w.start)}</small>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div className="v3-legend">
-            <span>
-              <i className="v3-soc-dot ig" aria-hidden="true" />
-              Instagram
-            </span>
-            <span>
-              <i className="v3-soc-dot fb" aria-hidden="true" />
-              Facebook
-            </span>
+            {ps.map(p => (
+              <span key={p}>
+                <i className={`v3-soc-dot ${p}`} aria-hidden="true" />
+                {PLATFORM_NAME[p]}
+              </span>
+            ))}
           </div>
         </section>
       </div>

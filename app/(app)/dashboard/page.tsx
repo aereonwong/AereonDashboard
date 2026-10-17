@@ -15,6 +15,7 @@ import { readAudience } from '@/lib/v3/audience'
 import { readPostReach } from '@/lib/v3/ig-extras'
 import { readFacebook } from '@/lib/facebook'
 import { readTiktok } from '@/lib/tiktok'
+import { readIgPosts, fbPosts, ttPosts, buildSocial } from '@/lib/v3/social'
 import { demoMode } from '@/lib/records'
 import { moneyFactor, moneyHidden } from '@/lib/privacy'
 
@@ -50,7 +51,9 @@ export default async function Dashboard({
   const { version } = await readVersion()
   if (version === 'v3') {
     const [rows, audience, metrics, demo, sp, fb, tt] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readFacebook(), readTiktok()])
-    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} fb={fb} tt={tt} />
+    // The audience band is the Social overview in brief: every platform, last 30 days.
+    const social = buildSocial(audience, fb, tt, [...(await readIgPosts(audience, 365)), ...fbPosts(fb), ...ttPosts(tt)], 30)
+    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} social={social} />
   }
 
   const [rows, snap, waiting, which, account] = await Promise.all([

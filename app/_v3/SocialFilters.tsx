@@ -10,12 +10,13 @@ const WINDOWS = [
   { id: '365', label: '12 months' },
 ]
 const PLATFORMS = [
-  { id: '', label: 'Both' },
+  { id: '', label: 'All' },
   { id: 'ig', label: 'Instagram' },
   { id: 'fb', label: 'Facebook' },
+  { id: 'tt', label: 'TikTok' },
 ]
 
-export default function SocialFilters({ days, platform }: { days: string; platform: string }) {
+export default function SocialFilters({ days, platform, tiktok = false }: { days: string; platform: string; tiktok?: boolean }) {
   const router = useRouter()
   const path = usePathname()
   const params = useSearchParams()
@@ -38,7 +39,7 @@ export default function SocialFilters({ days, platform }: { days: string; platfo
       </div>
       <span className="v3-divider" aria-hidden="true" />
       <div className="v3-seg" role="group" aria-label="Platform">
-        {PLATFORMS.map(t => (
+        {PLATFORMS.filter(t => t.id !== 'tt' || tiktok).map(t => (
           <button key={t.id || 'both'} type="button" aria-pressed={platform === t.id} onClick={() => set('p', t.id)}>
             {t.label}
           </button>
