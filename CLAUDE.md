@@ -79,7 +79,7 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   and viewers the reveal cookie is ignored, the switch is locked, and money saves are refused.
   Only signed-in app requests are gated: `proxy.ts` adds `x-cfo-money: gate`; the bot, crons and public pages never
   carry it and read real figures. The switch is **"Show amounts"** (`MoneyToggle.tsx`): off/grey by default, green when
-  on; it sets cookie `cfo-reveal` (expiry ms, pushed forward by activity, 5 min idle) and reloads. Money-saving actions
+  on; it sets cookie `cfo-reveal` (expiry ms, pushed forward by activity incl. mouse movement, 30 min idle) and reloads. Money-saving actions
   and the invoice PDF routes refuse while hidden (a form drawn hidden holds disguised figures). On screen `MoneyMask.tsx`
   draws amounts as `RM *****` (bare money numbers need `data-money`; `data-money-off` exempts); for the owner a click
   on a figure or a `data-money-edit` control shows amounts. Any NEW loader that reads money must disguise it when

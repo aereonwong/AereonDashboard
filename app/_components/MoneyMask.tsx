@@ -36,7 +36,7 @@ export default function MoneyMask({ shown, canReveal }: { shown: boolean; canRev
 
     // Shown: activity keeps the reveal cookie alive; once it lapses, reload hidden.
     if (shown) {
-      const activity = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
+      const activity = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'] as const
       for (const ev of activity) window.addEventListener(ev, touch, { passive: true })
       const tick = window.setInterval(hideIfExpired, 15_000)
       document.addEventListener('visibilitychange', hideIfExpired)
@@ -169,7 +169,7 @@ export default function MoneyMask({ shown, canReveal }: { shown: boolean; canRev
     <>
       {shown ? null : <span data-money-guard hidden />}
       <span className="money-live" role="status" aria-live="polite">
-        {shown ? 'Amounts are showing. They hide again after 5 minutes idle.' : ''}
+        {shown ? 'Amounts are showing. They hide again after 30 minutes idle.' : ''}
       </span>
     </>
   )
