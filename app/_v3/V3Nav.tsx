@@ -28,6 +28,7 @@ export const V3_NAV: NavGroup[] = [
       { href: '/social', label: 'Overview', icon: 'chart' },
       { href: '/instagram', label: 'Instagram', icon: 'instagram' },
       { href: '/facebook', label: 'Facebook', icon: 'facebook' },
+      { href: '/tiktok', label: 'TikTok', icon: 'tiktok' },
       { href: '/news', label: 'News', icon: 'news' },
       { href: '/links', label: 'Link page', icon: 'share' },
     ],

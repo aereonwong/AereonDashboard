@@ -5,14 +5,17 @@ import { fbPageId } from './facebook'
 
 // 👉 The public proof numbers (landing page, media kits, /hello and its share card, the reel):
 // every connected platform added into ONE overall figure, from the stored history — never a
-// live call. Today that is Instagram and the Facebook Page; a new platform is one more source
+// live call. Today that is Instagram, the Facebook Page and TikTok; a new platform is one more source
 // below, and every page picks it up. The pages show the overall figure only, never a
 // per-platform split (Aereon's call, 16 Oct 2026).
 //
 // Views and interactions are counts, so they add up across days and platforms. Reach (Instagram)
 // and viewers (Facebook) are unique people per window, so within a platform they are never added
 // across windows — only one window per platform goes in, and platforms are then added together,
-// the same as the Dashboard's "Social reach".
+// the same as the Dashboard's "Social reach". TikTok's API has no reach at all, so TikTok sits out
+// of the reach totals (a metric a platform doesn't measure is `undefined`, never a zero), and its
+// views/interactions are those of the videos posted in the last 90 days — TikTok only gives each
+// video's lifetime count, and a video earns nearly all of it in its first weeks.
 // If any platform's figure is stale or incomplete, that total is not shown at all — a partial
 // "overall" figure would undersell, and missing is never counted as zero.
 
@@ -22,8 +25,8 @@ const STALE = 7 * DAY
 
 type Metric = 'views' | 'interactions' | 'reach' | 'bestReach'
 
-/** One platform's figures; null = not known (left out of the total). */
-type Source = Record<Metric, number | null> & { followers?: number }
+/** One platform's figures; null = not known (hides the total), undefined = the platform doesn't measure it (sits out). */
+type Source = Record<Metric, number | null | undefined> & { followers?: number }
 
 export type SocialTotals = {
   /** Views over the last 90 days. */
@@ -37,7 +40,7 @@ export type SocialTotals = {
   /** How many platforms went into each total. */
   count: Record<Metric, number>
   /** Live follower counts, swapped into lib/socials.ts in place of the hand-typed ones. */
-  followers: { instagram?: number; facebook?: number }
+  followers: { instagram?: number; facebook?: number; tiktok?: number }
 }
 
 /** Instagram: three back-to-back 30-day windows from the stored account snapshot. */
@@ -93,17 +96,48 @@ async function facebook(): Promise<Source | null> {
   }
 }
 
+type TtVideo = { video_id: string; posted_at: string | null }
+type TtReading = { video_id: string; captured_at: string; views: number | null; likes: number | null; comments: number | null; shares: number | null }
+
+/** TikTok: the videos posted in the last 90 days, at their latest reading. No reach on TikTok. */
+async function tiktok(): Promise<Source | null> {
+  if (!supabaseConfigured) return null
+  const account = await supabase.from('tt_account_daily').select('username, day, followers, captured_at').order('day', { ascending: false }).limit(1)
+  if (account.error || !account.data?.length) return null
+  const a = account.data[0] as { username: string; followers: number | null; captured_at: string }
+  const fresh = Date.now() - Date.parse(a.captured_at) < STALE
+  const followers = fresh ? (a.followers ?? undefined) : undefined
+  if (!fresh) return { views: null, interactions: null, reach: undefined, bestReach: undefined, followers }
+  const since = new Date(Date.now() - 90 * DAY).toISOString()
+  const vids = await supabase.from('tt_posts').select('video_id, posted_at').eq('username', a.username).gte('posted_at', since)
+  if (vids.error) return { views: null, interactions: null, reach: undefined, bestReach: undefined, followers }
+  const ids = ((vids.data ?? []) as TtVideo[]).map(v => v.video_id)
+  const reads = ids.length ? await supabase.from('tt_post_latest').select('*').in('video_id', ids) : { data: [], error: null }
+  const rows = (reads.data ?? []) as TtReading[]
+  // Every video read, and read within the week — or no TikTok total.
+  const whole = !reads.error && rows.length === ids.length && rows.every(r => typeof r.views === 'number' && Date.now() - Date.parse(r.captured_at) < STALE)
+  return {
+    views: whole ? rows.reduce((t, r) => t + r.views!, 0) : null,
+    interactions: whole ? rows.reduce((t, r) => t + (r.likes ?? 0) + (r.comments ?? 0) + (r.shares ?? 0), 0) : null,
+    reach: undefined,
+    bestReach: undefined,
+    followers,
+  }
+}
+
 /** Every platform added together. Never throws: a missing platform just drops out. */
 export async function socialTotals(): Promise<SocialTotals> {
-  const [ig, fb] = await Promise.all([instagram().catch(() => null), facebook().catch(() => null)])
+  const [ig, fb, tt] = await Promise.all([instagram().catch(() => null), facebook().catch(() => null), tiktok().catch(() => null)])
   // A platform with no stored history at all (never connected) is simply not a source.
-  const sources = [ig, fb].filter(Boolean) as Source[]
+  const sources = [ig, fb, tt].filter(Boolean) as Source[]
   const count = { views: 0, interactions: 0, reach: 0, bestReach: 0 }
   const total = (k: Metric) => {
-    const have = sources.map(s => s[k]).filter((v): v is number => typeof v === 'number')
+    // A platform that doesn't measure this (TikTok and reach) sits out; one that should but can't say hides the total.
+    const measured = sources.filter(s => s[k] !== undefined)
+    const have = measured.map(s => s[k]).filter((v): v is number => typeof v === 'number')
     count[k] = have.length
     // Every platform in, or no total: a stalled refresh hides the tile instead of shrinking it.
-    return have.length && have.length === sources.length ? have.reduce((t, v) => t + v, 0) : null
+    return have.length && have.length === measured.length ? have.reduce((t, v) => t + v, 0) : null
   }
   return {
     views: total('views'),
@@ -111,6 +145,6 @@ export async function socialTotals(): Promise<SocialTotals> {
     reach: total('reach'),
     bestReach: total('bestReach'),
     count,
-    followers: { instagram: ig?.followers, facebook: fb?.followers },
+    followers: { instagram: ig?.followers, facebook: fb?.followers, tiktok: tt?.followers },
   }
 }

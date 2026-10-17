@@ -51,7 +51,7 @@ export default function MediaKit({
   // each platform's latest month of unique people, added. Summing post reach would count
   // people twice, so with no account figures the line is left out.
   const v = audience.view?.totals
-  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook))
+  const followers = combined(socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook, totals.followers.tiktok))
   const reachLine = totals.reach ? compact(totals.reach) : null
   const topLine = top?.reach ? compact(top.reach) : null
   const engage = v?.reach && v.accounts_engaged ? `${((v.accounts_engaged / v.reach) * 100).toFixed(1)}%` : null
@@ -137,7 +137,7 @@ export default function MediaKit({
           <h2 className="v3-kit-h2" id="k-social">
             Find me on
           </h2>
-          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} />
+          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} ttFollowers={totals.followers.tiktok} />
         </section>
 
         {/* ---------------- Best work, playable ---------------- */}

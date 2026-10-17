@@ -12,6 +12,7 @@ import type { MetricRow } from '@/lib/v3/ig-insights'
 import { Spark } from '../summary/Panels'
 import { rmFull, pct, compact, num, shortDate } from '../fmt'
 import { analyseFb, followerFlow, type Facebook } from '@/lib/facebook'
+import { analyseTt, change, type Tiktok } from '@/lib/tiktok'
 
 // 👉 Dashboard v3 — the creator studio, led by the three questions in PRODUCT.md.
 // The daily pulse: deeper money analysis lives on Invoice Summary.
@@ -23,6 +24,7 @@ export default function Dashboard({
   metrics = [],
   demo = false,
   fb,
+  tt,
 }: {
   rows: Rec[]
   filters: Filters
@@ -30,6 +32,7 @@ export default function Dashboard({
   metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
   fb?: Facebook // the Facebook Page's stored history — empty until the first refresh
+  tt?: Tiktok // TikTok's stored history — empty until the first refresh
 }) {
   const s = buildStudio(rows, filters)
   const risk = clientRisk(rows, filters, s.today)
@@ -60,8 +63,17 @@ export default function Dashboard({
   const fbStats = hasFb ? analyseFb(fb!.posts, 30) : null
   const fbViewers = fb?.window?.viewers ?? null
   const fbEngPer100 = fb?.window?.engagements && fbViewers ? (fb.window.engagements / fbViewers) * 100 : null
-  const allFollowers = audience.followers + (hasFb ? fb!.followers : 0)
-  const allNet = netFollows !== null && fbFlow ? netFollows + fbFlow.net : null
+  // TikTok has no reach, so it joins the follower and posting totals only. Its 30-day change
+  // comes from our own daily readings and stays null until they reach back 30 days.
+  const hasTt = !!tt && tt.daily.length > 0
+  const ttFresh = hasTt && Date.now() - Date.parse(`${tt!.daily.at(-1)!.day}T00:00:00Z`) < 8 * 86_400_000
+  const ttStats = hasTt ? analyseTt(tt!.posts, 30) : null
+  const tt90 = hasTt ? analyseTt(tt!.posts, 90) : null
+  const ttNet = hasTt ? change(tt!.daily, 'followers', 30) : null
+  const ttFollowers = ttFresh ? tt!.followers : 0
+  const allFollowers = audience.followers + (hasFb ? fb!.followers : 0) + ttFollowers
+  // The combined change needs every counted platform's change, or it would read low.
+  const allNet = netFollows !== null && fbFlow && (!ttFresh || ttNet) ? netFollows + fbFlow.net + (ttFresh ? ttNet!.net : 0) : null
   const allReach = reach30 + (fbViewers ?? 0)
   const filterNote = [filters.client, filters.kind].filter(Boolean).join(' · ')
 
@@ -233,17 +245,23 @@ export default function Dashboard({
                 Facebook
               </a>
             ) : null}
+            {hasTt ? (
+              <a className="v3-panel-link" href="/tiktok">
+                TikTok
+              </a>
+            ) : null}
           </div>
           {both ? (
             <>
-              <p className="v3-kpi-label" style={{ marginBottom: 'var(--space-3)' }}>Instagram + Facebook</p>
+              <p className="v3-kpi-label" style={{ marginBottom: 'var(--space-3)' }}>Instagram + Facebook{ttFresh ? ' + TikTok' : ''}</p>
               <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
                 <div>
-                  <div className="v3-kpi-label">Followers, both</div>
+                  <div className="v3-kpi-label">Followers, {ttFresh ? 'all three' : 'both'}</div>
                   <div className="v3-kpi-value num">{num(allFollowers)}</div>
                   <div className="v3-kpi-note">
                     {allNet !== null ? `${allNet >= 0 ? '+' : ''}${num(allNet)} in the last 30 days · ` : ''}
                     {Math.round((fb!.followers / Math.max(1, allFollowers)) * 100)}% on Facebook
+                    {ttFresh ? ` · ${Math.round((ttFollowers / Math.max(1, allFollowers)) * 100)}% on TikTok` : ''}
                   </div>
                 </div>
                 <div>
@@ -257,10 +275,11 @@ export default function Dashboard({
                   <div className="v3-kpi-note">of that reach was on Facebook</div>
                 </div>
                 <div>
-                  <div className="v3-kpi-label">Posting, both</div>
-                  <div className="v3-kpi-value num">{((stats?.postsPerWeek ?? 0) + (fbStats?.postsPerWeek ?? 0)).toFixed(1)}/wk</div>
+                  <div className="v3-kpi-label">Posting, {ttFresh ? 'all three' : 'both'}</div>
+                  <div className="v3-kpi-value num">{((stats?.postsPerWeek ?? 0) + (fbStats?.postsPerWeek ?? 0) + (ttFresh ? (ttStats?.postsPerWeek ?? 0) : 0)).toFixed(1)}/wk</div>
                   <div className="v3-kpi-note">
-                    Instagram {(stats?.postsPerWeek ?? 0).toFixed(1)} · Facebook {(fbStats?.postsPerWeek ?? 0).toFixed(1)} · a cross-post counts on each
+                    Instagram {(stats?.postsPerWeek ?? 0).toFixed(1)} · Facebook {(fbStats?.postsPerWeek ?? 0).toFixed(1)}
+                    {ttFresh ? ` · TikTok ${(ttStats?.postsPerWeek ?? 0).toFixed(1)}` : ''} · a cross-post counts on each
                   </div>
                 </div>
               </div>
@@ -345,6 +364,41 @@ export default function Dashboard({
               </div>
               <a className="v3-recv-cta" href="/facebook">
                 Viewers, top posts and growth on Facebook<span aria-hidden="true"> →</span>
+              </a>
+            </>
+          ) : null}
+          {hasTt && ttStats && tt90 ? (
+            <>
+              <p className="v3-kpi-label" style={{ margin: 'var(--space-6) 0 var(--space-3)' }}>TikTok</p>
+              <div className="v3-kpis" style={{ marginBottom: 'var(--space-5)' }}>
+                <div>
+                  <div className="v3-kpi-label">Followers</div>
+                  <div className="v3-kpi-value num">{num(tt!.followers)}</div>
+                  <div className="v3-kpi-note">
+                    {ttNet ? `${ttNet.net >= 0 ? '+' : ''}${num(ttNet.net)} in the last 30 days` : `tracked since ${shortDate(tt!.daily[0].day)}`}
+                    {ttFresh ? '' : ' · reading over a week old'}
+                  </div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Views</div>
+                  <div className="v3-kpi-value num">{compact(ttStats.totals.views)}</div>
+                  <div className="v3-kpi-note">so far, videos posted in the last 30 days · TikTok gives no reach</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Typical video</div>
+                  <div className="v3-kpi-value num">{compact(tt90.typical)}</div>
+                  <div className="v3-kpi-note">median views, last 90 days · {tt90.read} videos</div>
+                </div>
+                <div>
+                  <div className="v3-kpi-label">Posting</div>
+                  <div className="v3-kpi-value num">{ttStats.postsPerWeek.toFixed(1)}/wk</div>
+                  <div className="v3-kpi-note">
+                    {ttStats.daysSinceLast === null ? 'no videos stored' : `last video ${ttStats.daysSinceLast === 0 ? 'today' : `${ttStats.daysSinceLast} day${ttStats.daysSinceLast === 1 ? '' : 's'} ago`}`}
+                  </div>
+                </div>
+              </div>
+              <a className="v3-recv-cta" href="/tiktok">
+                Followers, top videos and what works on TikTok<span aria-hidden="true"> →</span>
               </a>
             </>
           ) : null}

@@ -22,6 +22,7 @@ const MORE: MoreTab[] = [
   { href: '/social', label: 'Social overview', ico: '📊' },
   { href: '/instagram', label: 'Instagram', ico: '📸' },
   { href: '/facebook', label: 'Facebook', ico: '📘' },
+  { href: '/tiktok', label: 'TikTok', ico: '🎵' },
   { href: '/news', label: 'News', ico: '📰' },
   { href: '/links', label: 'Link page', ico: '🔗' },
   { href: '/analytics/landing', label: 'Landing analytics', ico: '📈' },

@@ -98,7 +98,7 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 ## Scheduled
 
 - **`cron-instagram` runs daily at 6:00am MYT** (`0 22 * * *` UTC) — the only cron. It only reads
-  Instagram and the Facebook Page through Composio and writes history rows; no Claude call, no message.
+  Instagram, the Facebook Page and TikTok through Composio and writes history rows; no Claude call, no message.
 - **`cron-daily` is no longer scheduled** — Aereon removed the 8:30am job on 27 Sep 2026. The
   route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
   it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
@@ -136,6 +136,28 @@ Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top
   `composio dev playground-execute` against the project) fills history: page figures from Aug 2024, posts from 1 Jan 2025.
 - Combined figures add platforms, so someone on both counts twice — the UI says so. Empty in demo mode.
 
+## TikTok — @aereon.wong (added 17 Oct 2026)
+
+`/tiktok` (v3 Social group after Facebook; classic layouts get it in a v3 frame) and a TikTok block in the v3 Dashboard's
+"Is my audience growing" band (TikTok joins the combined followers and posting figures, never reach).
+- Connection: Aereon's own TikTok developer app "Aereon Dashboard" in **Sandbox** (target user aereon.wong; scopes
+  user.info.basic/profile/stats + video.list) → Composio project custom auth config `tiktok-dashboard`, user `aereon`.
+  If calls start failing, check the sandbox target user first.
+- What TikTok gives: account totals today (followers, following, likes, video_count) and each PUBLIC video's lifetime
+  views/likes/comments/shares. **No reach, watch time, audience or day-by-day history** — history is our own readings.
+- Tables (`supabase/tiktok.sql`): `tt_account_daily` (one row per Malaysia day), `tt_posts`, `tt_post_metrics`
+  (+ view `tt_post_latest`). `cover_url` is a TikTok CDN link that expires within about a day — a convenience only,
+  refreshed for recent videos; older videos show the grey frame.
+- Fetch in `lib/tt-fetch.ts` (no imports, shared with `scripts/tt-backfill.mjs`), refresh in `lib/tt-refresh.ts`, read +
+  maths in `lib/tiktok.ts`. TikTok's envelope: `data.data.{user|videos,cursor,has_more}`, `data.error.code === "ok"`.
+  Videos page 20 at a time; `cursor` is a create time in ms.
+- The daily `cron-instagram` refreshes TikTok after Facebook (account + videos of the last 60 days); the Refresh button
+  calls `/api/tiktok/refresh` (signed-in editors, 10-minute cooldown). `npm run tt:backfill` stores every public video.
+- Typical video = MEDIAN views. Followers' 30-day change shows only once our readings reach back 30 days.
+- Public totals (`socialTotals()`): TikTok adds its followers and, for views/interactions, the videos posted in the last
+  90 days at their latest reading (TikTok has only lifetime counts per video). TikTok sits out of reach totals.
+  Empty in demo mode.
+
 **Instagram — one page since 16 Oct 2026** (`app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
 read in `lib/v3/content-lab.ts`; the Studio/Lab view switch and `cfo-ig` cookie are gone). Top to bottom: verdict headline,
 Growth (account-wide, Studio panels, ignores filters), the sticky filter bar, the post analysis, Timing, Audience, the ranked posts.
@@ -160,8 +182,8 @@ beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 ## Public proof numbers (16 Oct 2026)
 
 Landing (reel + classic), both media kits, `/hello` and its share card show ONE overall figure per stat across every
-connected platform — `socialTotals()` in `lib/social-totals.ts` (today Instagram + Facebook; a new platform is one more
-source there). Labels never name platforms or explain double counting (Aereon's call). Views/interactions = 90 days;
+connected platform — `socialTotals()` in `lib/social-totals.ts` (today Instagram + Facebook + TikTok; a new platform is one more
+source there; a metric a platform doesn't measure is `undefined` and sits out). Labels never name platforms or explain double counting (Aereon's call). Views/interactions = 90 days;
 reach = each platform's best (or latest) month of unique people, added across platforms, never across windows.
 
 ## Site analytics (16 Oct 2026)

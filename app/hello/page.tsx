@@ -79,7 +79,7 @@ export default async function Hello() {
   // (refreshed by the daily cron), never a live call. A platform whose figures are over a
   // week old drops out of the totals (lib/social-totals.ts).
   const [cfg, t] = await Promise.all([readHello(), socialTotals()])
-  const channels = socials(t.followers.instagram, t.followers.facebook)
+  const channels = socials(t.followers.instagram, t.followers.facebook, t.followers.tiktok)
   const total = combined(channels)
   const links = cfg.links.filter(l => l.on)
   const deals = cfg.affiliates.filter(a => a.on && a.kind === 'deal')

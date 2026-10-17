@@ -44,7 +44,7 @@ export default function Reel({ audience, kinds, since, totals }: { audience: Aud
   const reach = totals.bestReach ?? 0
   const views = totals.views ?? 0
   const interactions = totals.interactions ?? 0
-  const channels = socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook)
+  const channels = socials(totals.followers.instagram ?? audience.followers, totals.followers.facebook, totals.followers.tiktok)
   const followers = combined(channels)
   // Two years of work, one tile per kind (lib/showcase.ts) — lately the feed is
   // mostly KLCC. The recent best posts are only the fallback.
@@ -156,7 +156,7 @@ export default function Reel({ audience, kinds, since, totals }: { audience: Aud
           <h2 id="rl-social" className="rl-h2 rl-sec">
             Find me on
           </h2>
-          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} />
+          <SocialLinks igFollowers={totals.followers.instagram ?? audience.followers} fbFollowers={totals.followers.facebook} ttFollowers={totals.followers.tiktok} />
         </section>
 
         {view && (view.countries.length || view.ages.length || women || men) ? (
