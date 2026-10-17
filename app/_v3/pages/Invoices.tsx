@@ -29,6 +29,7 @@ export default async function Invoices({ rows, filters }: { rows: Rec[]; filters
   const today = todayISO()
   const paid = paidReach(rows, filters, await latestReach(linkedPostIds(rows, filters)).catch(() => ({})))
   const s = buildSummary(rows, filters, today)
+  const sparkMonths = s.months.map(m => m.key)
   const speed = paySpeed(rows, filters)
   const season = seasons(rows, filters, today)
   const rangeLabel = RANGES.find(r => r.id === filters.range)?.label ?? ''
@@ -65,13 +66,14 @@ export default async function Invoices({ rows, filters }: { rows: Rec[]; filters
 
       <div className="v3-grid">
         <section className="v3-panel v3-span-12 v3-sum-band" aria-label="Headline figures">
-          <KpiCard label="Invoiced" value={rmFull(s.invoiced.value)} k={s.invoiced} prevLabel={prevLabel} note={s.invoiced.prev !== null ? `${rmFull(s.invoiced.prev)} the period before` : 'ringgit, the whole range'} />
-          <KpiCard label="Invoices" value={String(s.count.value)} k={s.count} prevLabel={prevLabel} note={s.count.prev !== null ? `${s.count.prev} the period before` : 'ringgit invoices'} />
-          <KpiCard label="Average invoice" value={rmFull(s.average.value)} k={s.average} prevLabel={prevLabel} note={`median ${rmFull(s.medianInvoice)}`} />
+          <KpiCard label="Invoiced" value={rmFull(s.invoiced.value)} k={s.invoiced} months={sparkMonths} money prevLabel={prevLabel} note={s.invoiced.prev !== null ? `${rmFull(s.invoiced.prev)} the period before` : 'ringgit, the whole range'} />
+          <KpiCard label="Invoices" value={String(s.count.value)} k={s.count} months={sparkMonths} prevLabel={prevLabel} note={s.count.prev !== null ? `${s.count.prev} the period before` : 'ringgit invoices'} />
+          <KpiCard label="Average invoice" value={rmFull(s.average.value)} k={s.average} months={sparkMonths} money prevLabel={prevLabel} note={`median ${rmFull(s.medianInvoice)}`} />
           <KpiCard
             label="Clients"
             value={String(s.clients.value)}
             k={s.clients}
+            months={sparkMonths}
             prevLabel={prevLabel}
             note={s.newClients ? `${s.newClients.count} new to you` : 'every client on record'}
           />

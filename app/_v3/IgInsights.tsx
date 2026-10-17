@@ -220,9 +220,7 @@ export function ReachBeyond({ v }: { v: ReachVsFollowers | null }) {
             {maxW >= 100 ? <line className="ref" x1={0} x2={W} y1={py(100)} y2={py(100)} /> : null}
             <polyline points={v.weeks.map((w, i) => `${px(i)},${py(w.pct)}`).join(' ')} />
             {v.weeks.map((w, i) => (
-              <circle key={w.label} cx={px(i)} cy={py(w.pct)} r={4}>
-                <title>{`${w.label}: ${Math.round(w.pct)}% (${w.n} posts)`}</title>
-              </circle>
+              <circle key={w.label} cx={px(i)} cy={py(w.pct)} r={4} data-tip={`Week of ${w.label}\nTypical post reached ${Math.round(w.pct)}% of followers\n${w.n} post${w.n === 1 ? '' : 's'}`} />
             ))}
           </svg>
           <figcaption>Typical post each week{maxW >= 100 ? ' · dashed line = your whole audience' : ''}</figcaption>
