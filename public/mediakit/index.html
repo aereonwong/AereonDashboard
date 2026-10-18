@@ -395,7 +395,10 @@ if (!only) (() => {
     } catch { /* tracking must never break the page */ }
   };
   const q = new URLSearchParams(location.search);
-  send('/mediakit', { utm_source: q.get('utm_source'), utm_medium: q.get('utm_medium'), utm_campaign: q.get('utm_campaign') });
+  // ?r=<code> is a private share link made on Site analytics → Media kit; the brand behind it is
+  // only in the dashboard. It rides in the utm_source column.
+  const r = (q.get('r') || '').toLowerCase();
+  send('/mediakit', { utm_source: /^[a-z2-9]{6}$/.test(r) ? r : q.get('utm_source'), utm_medium: q.get('utm_medium'), utm_campaign: q.get('utm_campaign') });
   const lang = (navigator.language || '').slice(0, 2).toLowerCase();
   if (/^[a-z]{2}$/.test(lang)) send('/kit/lang/' + lang);
 

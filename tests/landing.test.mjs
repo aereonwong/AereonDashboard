@@ -153,3 +153,36 @@ test('media kit insights: slides reached, funnel, bots left out', async () => {
   assert.equal(kitTapLabel('pdf'), 'Downloaded the PDF')
   assert.equal(kitTapLabel('social-instagram'), 'Profile: Instagram')
 })
+
+test('media kit share links: random codes, clean rows, per-link results under the brand name', async () => {
+  const { newCode, cleanKitLinks, CODE, kitUrl } = await import('../lib/kit-links-config.ts')
+  const { webcrypto } = await import('node:crypto')
+  const rand = n => webcrypto.getRandomValues(new Uint8Array(n))
+  const taken = new Set()
+  for (let i = 0; i < 200; i++) { const c = newCode(taken, rand); assert.match(c, CODE); assert.ok(!taken.has(c)); taken.add(c) }
+  assert.ok(!CODE.test('abc0e1') && !CODE.test('ABCDEF') && !CODE.test('abcde'))
+  assert.equal(kitUrl('k7q2xm'), 'https://aereonwong.com/mediakit?r=k7q2xm')
+  const c = cleanKitLinks({ links: [
+    { code: 'k7q2xm', brand: '  Samsung   MY ', note: 'x', created: '2026-10-19T01:00' },
+    { code: 'k7q2xm', brand: 'dupe', created: '2026-10-20' },
+    { code: 'BAD', brand: 'nope' }, { code: 'abcdef', brand: '' }, null,
+    { code: 'mnpqrs', brand: 'Honor', created: '2026-10-20' },
+  ] })
+  assert.deepEqual(c.links.map(l => [l.code, l.brand, l.created]), [['mnpqrs', 'Honor', '2026-10-20'], ['k7q2xm', 'Samsung MY', '2026-10-19']])
+  assert.deepEqual(cleanKitLinks(null), { links: [] })
+
+  const { analyseKit } = await import('../lib/kit-insights.ts')
+  const d = '2026-10-19'
+  const rows = [
+    { path: '/mediakit', day: d, visitor_hash: 'a', browser: 'Chrome', utm_source: 'k7q2xm' },
+    { path: '/kit/scroll/100', day: d, visitor_hash: 'a' },
+    { path: '/kit/slide/9', day: d, visitor_hash: 'a' },
+    { path: '/kit/out/pdf', day: d, visitor_hash: 'a' },
+    { path: '/mediakit', day: d, visitor_hash: 'b', browser: 'Chrome', utm_source: 'zzzzzz' },
+    { path: '/kit/scroll/25', day: d, visitor_hash: 'b' },
+  ]
+  const r = analyseKit(rows, 7, d, { k7q2xm: 'Samsung MY' })
+  assert.deepEqual(r.tags, [{ code: 'k7q2xm', visitors: 1, views: 1, finished: 1, work: 0, pdf: 1, emailed: 0 }])
+  assert.ok(r.sources.some(s => s.label === 'Tag: Samsung MY'))
+  assert.ok(!r.sources.some(s => s.label.includes('k7q2xm')))
+})

@@ -240,6 +240,11 @@ Linked from the nav (Social → Media kit), every landing version's top bar (`ki
 **Analytics:** the page's own inline script sends `/mediakit` + `/kit/…` beacons (`KIT_EVENT` in `lib/site-visits.ts`:
 slides seen, scroll, time, language, taps — `work-<post>`, `pdf`, `mail`, socials); read on Site analytics →
 Media kit (`/analytics/mediakit`, maths `lib/kit-insights.ts`, tested). Keep `KIT_SLIDES` in step with the deck.
+**Private share links (19 Oct 2026):** on that page Aereon types a brand and gets `aereonwong.com/mediakit?r=<6 random
+chars>` (`lib/kit-links-config.ts`: no 0/o/1/l/i). Code → brand lives only in one `records` row (doc / setting /
+title `kit-links`; read `lib/kit-links.ts`, saved by `lib/kit-links-actions.ts`, owner/admin only). The deck sends the
+code in the `utm_source` column; `analyseKit(…, names)` swaps it for the brand under sources and counts each link's
+visitors / reached Contact / posts / PDF / email. Brand names must never reach the public page.
 
 ## Showcase (5 Oct 2026)
 

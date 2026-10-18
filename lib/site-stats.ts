@@ -19,12 +19,12 @@ export async function readLandingStats(days: number = 30): Promise<LandingInsigh
   return analyseLanding(data as VisitRow[], days, klDay())
 }
 
-export async function readKitStats(days: number = 30): Promise<KitInsights | null> {
+export async function readKitStats(days: number = 30, names: Record<string, string> = {}): Promise<KitInsights | null> {
   if (!supabaseConfigured) return null
   const since = klDay(new Date(Date.now() - (days - 1) * 86_400_000))
   const { data, error } = await supabase.from('site_visits')
     .select('path, day, visitor_hash, referrer_host, utm_source, country, city, device, browser')
     .or('path.eq./mediakit,path.like./kit/%').gte('day', since).limit(50_000)
   if (error || !data) return null
-  return analyseKit(data as VisitRow[], days, klDay())
+  return analyseKit(data as VisitRow[], days, klDay(), names)
 }

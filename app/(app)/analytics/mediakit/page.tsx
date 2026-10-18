@@ -3,17 +3,27 @@
 // lib/kit-insights.ts, logged by the deck's own inline script (public/mediakit/index.html) through
 // app/api/track. No IP is stored.
 import { readKitStats } from '@/lib/site-stats'
+import { readKitLinks } from '@/lib/kit-links'
+import KitLinks from './KitLinks'
 import { Bars, Panel, Kpis, BotNote, Daily, Reached, Frame, rangeOf, fmt, pct } from '../parts'
 import '@/app/_v3/v3.css'
 import '../../links/links.css'
+import './kit.css'
 
 export const dynamic = 'force-dynamic'
 
 async function KitView({ days }: { days: number }) {
-  const st = await readKitStats(days)
-  if (!st) return <p className="v3-empty v3-span-12">No visit log yet.</p>
+  const { links } = await readKitLinks()
+  const st = await readKitStats(days, Object.fromEntries(links.map(l => [l.code, l.brand])))
+  const shareLinks = (
+    <Panel id="an-k-links" title="Share links" note="One private link per brand · the brand is never in the link" span={12}>
+      <KitLinks days={days} rows={links.map(l => ({ ...l, stats: st?.tags.find(t => t.code === l.code) ?? null }))} />
+    </Panel>
+  )
+  if (!st) return <>{shareLinks}<p className="v3-empty v3-span-12">No visit log yet.</p></>
   return (
     <>
+      {shareLinks}
       <Kpis label={`Media kit, last ${days} days`} items={[
         { n: st.visitors, l: 'Visitors', s: `${fmt(st.visits)} page views` },
         { n: st.finished, l: 'Reached Contact', s: `${pct(st.finished, st.visitors)} saw the last slide` },
@@ -50,8 +60,8 @@ async function KitView({ days }: { days: number }) {
         <div style={{ marginTop: 'var(--space-4)' }}><Bars rows={st.browsers} of={st.visits} /></div>
       </Panel>
       <p className="v3-span-12 v3-panel-note lk-tip">
-        Tracked from 18 Oct 2026. Tag the link for each pitch and it gets its own line under Where they came from:{' '}
-        <code>aereonwong.com/mediakit?utm_source=brandname</code>.
+        Tracked from 18 Oct 2026. Send each brand its own share link (top of this page): visits from it show under
+        Where they came from as that brand, and only here.
       </p>
     </>
   )
