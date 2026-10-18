@@ -209,7 +209,7 @@ export default function Reel({ audience, kinds, since, totals }: { audience: Aud
                 <li key={p.id}>
                   <a href={p.permalink} target="_blank" rel="noopener noreferrer" aria-label={`Open on Instagram: ${p.label}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.thumb} alt="" loading="lazy" style={p.crop ? { transform: `scale(${p.crop})` } : undefined} />
+                    <img src={p.thumb} alt={p.label} loading="lazy" style={p.crop ? { transform: `scale(${p.crop})` } : undefined} />
                     <span>
                       {p.showReach === false ? (
                         p.label

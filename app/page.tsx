@@ -13,7 +13,7 @@ import MediaKit from '@/app/_v3/pages/MediaKit'
 import MediaKit2 from '@/app/_v3/pages/MediaKit2'
 import Reel from '@/app/_v3/pages/Reel'
 import { signedIn as isSignedIn } from '@/lib/auth'
-import { jsonLd, EMAIL } from '@/lib/agent-site'
+import { jsonLd, EMAIL, OG_IMAGE, SITE_NAME } from '@/lib/agent-site'
 import ShowcaseGrid, { showcase } from '@/app/_components/ShowcaseGrid'
 import SocialLinks from '@/app/_components/SocialLinks'
 import LandingTracker from '@/app/_components/LandingTracker'
@@ -31,17 +31,24 @@ const BRAND_WORDS = [
   'Merdeka 118', 'PlayStation', 'MOVA', 'Kaadas', 'Etiqa', 'Tetra Pak',
 ]
 
-// When the media kit is on, links shared with brands preview as a creator page.
-export async function generateMetadata(): Promise<Metadata> {
-  const site = await readSite()
-  return site.landing === 'kit' || site.landing === 'reel'
-    ? {
-        alternates: { canonical: '/' },
-        title: 'Aereon Wong — Tech and Travel Content Creator',
-        description:
-          'Kuala Lumpur travel and tech content creator and drone pilot. Aerial films, launch campaigns, hotels and tourism.',
-      }
-    : { alternates: { canonical: '/' } }
+// What search results and shared links show for the home page — the same for every
+// landing version, so Google never sees the dashboard's own title here.
+const TITLE = 'Aereon Wong — Tech & Travel Content Creator, Kuala Lumpur'
+const DESCRIPTION =
+  'Aereon Wong is a Kuala Lumpur tech and travel content creator, drone pilot and photographer. ' +
+  'Product and car reviews, aerial films, launch campaigns, hotels and tourism across Malaysia and beyond.'
+
+export const metadata: Metadata = {
+  title: { absolute: TITLE },
+  description: DESCRIPTION,
+  alternates: { canonical: '/' },
+  robots: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+  // Next replaces (not merges) the layout's openGraph/twitter, so the image is repeated here.
+  openGraph: {
+    title: TITLE, description: DESCRIPTION, url: '/', locale: 'en_MY', type: 'profile', siteName: SITE_NAME,
+    images: [{ url: OG_IMAGE.path, width: OG_IMAGE.width, height: OG_IMAGE.height, alt: 'Kuala Lumpur skyline at sunset, shot by Aereon Wong' }],
+  },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION, images: [OG_IMAGE.path] },
 }
 
 // JSON-LD (Person + Organization + WebSite) so machines can read who this is. The `<`

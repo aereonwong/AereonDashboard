@@ -20,7 +20,7 @@ export default function ShowcaseGrid({ items = showcase.items, limit = 10 }: { i
         <li key={p.id}>
           <a href={p.permalink} target="_blank" rel="noopener noreferrer" aria-label={`${p.label} — open on Instagram: ${p.caption.slice(0, 80)}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.cover} alt="" loading="lazy" />
+            <img src={p.cover} alt={p.label} loading="lazy" />
             <span className="sc-label">{p.label}</span>
             {p.showReach && (p.views ?? p.reach) ? (
               <span className="sc-reach">

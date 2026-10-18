@@ -9,6 +9,21 @@ export const SITE_NAME = 'Aereon Wong'
 export const COMPANY = 'SY Creative Production Sdn. Bhd.'
 export const EMAIL = 'collab@aereonwong.com'
 export const INSTAGRAM = 'https://www.instagram.com/aereonwong/'
+/** Every public profile, for JSON-LD `sameAs` — tells search engines these accounts are one person.
+ *  Mirrors the URLs in lib/socials.ts (kept here because this file takes no imports). */
+export const PROFILES = [
+  INSTAGRAM,
+  'https://www.tiktok.com/@aereon.wong',
+  'https://www.facebook.com/AereonAdventure/',
+  'https://www.threads.com/@aereonwong',
+  'https://www.youtube.com/aereonwong',
+  'https://www.xiaohongshu.com/user/profile/63c313b40000000026011ec3',
+]
+/** What search engines should tie the name to. */
+export const TOPICS = [
+  'Content creation', 'Travel', 'Consumer technology', 'Product reviews', 'Car reviews',
+  'Drone photography', 'Aerial videography', 'Photography', 'Videography', 'Kuala Lumpur', 'Malaysia',
+]
 export const OG_IMAGE = { path: '/img/klcc-sunset.jpg', width: 2000, height: 1332 }
 export const SUMMARY =
   'Aereon Wong is a tech and travel content creator, drone pilot and photographer in Kuala Lumpur, Malaysia. ' +
@@ -26,7 +41,7 @@ export type PublicPage = {
 
 export const HOME = {
   path: '/',
-  updated: '2026-10-08',
+  updated: '2026-10-19',
   title: 'Aereon Wong — tech & travel, shot from the sky',
   sections: [
     {
@@ -309,7 +324,9 @@ export function jsonLd() {
         description: SUMMARY,
         email: EMAIL,
         address,
-        sameAs: [INSTAGRAM],
+        alternateName: '@aereonwong',
+        knowsAbout: TOPICS,
+        sameAs: PROFILES,
         worksFor: { '@id': `${SITE_URL}/#organization` },
       },
       {
@@ -352,5 +369,6 @@ export function sitemapEntries() {
     { url: SITE_URL + '/', lastModified: HOME.updated },
     ...PAGES.map(p => ({ url: SITE_URL + p.path, lastModified: p.updated })),
     { url: SITE_URL + '/mediakit', lastModified: KIT_UPDATED },   // static deck in public/mediakit
+    { url: SITE_URL + '/hello', lastModified: HOME.updated },     // link page (Instagram bio)
   ]
 }
