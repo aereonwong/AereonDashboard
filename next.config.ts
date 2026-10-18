@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: '/mediakit', destination: '/mediakit/index.html' }]
   },
+  // One address for search engines: www is sent to the bare domain, so Google never splits
+  // the site's ranking between two copies.
+  async redirects() {
+    return [{ source: '/:path*', has: [{ type: 'host', value: 'www.aereonwong.com' }], destination: 'https://aereonwong.com/:path*', permanent: true }]
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },

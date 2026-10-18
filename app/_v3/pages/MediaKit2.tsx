@@ -224,7 +224,7 @@ export default function MediaKit2({ audience, kinds, since, totals }: { audience
                     <span className="k3-post-fallback">{p.caption.slice(0, 90)}</span>
                     {p.thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.thumb} alt="" loading="lazy" />
+                      <img src={p.thumb} alt={p.caption.split("\n")[0].slice(0, 100)} loading="lazy" />
                     ) : null}
                     {(p.views ?? p.reach) !== undefined ? (
                       <span className="k3-post-reach">

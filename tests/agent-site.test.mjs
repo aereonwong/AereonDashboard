@@ -69,7 +69,8 @@ test('llms.txt follows the format and has when-to-use guidance', () => {
 
 test('JSON-LD: Person, Organization with contactPoint + PostalAddress', () => {
   const g = jsonLd()['@graph']
-  assert.ok(g.some(n => n['@type'] === 'Person'))
+  const person = g.find(n => n['@type'] === 'Person')
+  assert.ok(person.sameAs.length >= 6 && person.sameAs.every(u => u.startsWith('https://')))
   const org = g.find(n => n['@type'] === 'Organization')
   assert.equal(org.address['@type'], 'PostalAddress')
   assert.ok(org.contactPoint.email && org.contactPoint.contactType)
@@ -78,7 +79,8 @@ test('JSON-LD: Person, Organization with contactPoint + PostalAddress', () => {
 
 test('sitemap lists every public page with lastmod; robots names the agents asked about', () => {
   const s = sitemapEntries()
-  assert.equal(s.length, PAGES.length + 2)
+  assert.equal(s.length, PAGES.length + 3)
+  assert.ok(s.some(e => e.url.endsWith('/hello')))
   assert.ok(s.every(e => e.url.startsWith('https://aereonwong.com') && /^\d{4}-\d\d-\d\d$/.test(e.lastModified)))
   for (const a of ['ChatGPT-User', 'ClaudeBot', 'Google-Extended', 'ora-agent', 'DeepSeekBot']) assert.ok(AI_AGENTS.includes(a), a)
 })
