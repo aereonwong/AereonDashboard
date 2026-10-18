@@ -6,7 +6,7 @@ export type IconName =
   | 'instagram' | 'facebook' | 'tiktok' | 'content' | 'tasks' | 'approvals' | 'robot' | 'vault' | 'settings'
   | 'chart' | 'calendar' | 'trend' | 'eye' | 'heart' | 'share' | 'bookmark' | 'sparkle'
   | 'clock' | 'users' | 'pie' | 'refresh' | 'camera' | 'wallet' | 'home'
-  | 'news' | 'play' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
+  | 'news' | 'play' | 'mic' | 'filter' | 'close' | 'check' | 'search' | 'external' | 'chevron'
   | 'drive' | 'upload' | 'download' | 'design' | 'plus' | 'alert' | 'undo' | 'edit'
 
 const P: Record<IconName, React.ReactNode> = {
@@ -43,6 +43,7 @@ const P: Record<IconName, React.ReactNode> = {
   wallet: <><rect x="3" y="6" width="18" height="13" rx="3" /><path d="M3 10h18" /><circle cx="17" cy="14" r="1.3" /></>,
   news: <><path d="M5 4h11a2 2 0 0 1 2 2v13a1 1 0 0 0 2 0V9" /><path d="M5 4v15a2 2 0 0 0 2 2h13" /><path d="M8.5 8.5h6M8.5 12h6M8.5 15.5h3.5" /></>,
   play: <><path d="M8 5.5v13l10.5-6.5L8 5.5Z" /></>,
+  mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0" /><path d="M12 17.5V21" /></>,
   filter: <><path d="M4 5h16l-6.2 7.3V19l-3.6-1.8v-4.9L4 5Z" /></>,
   close: <><path d="M6 6l12 12M18 6 6 18" /></>,
   check: <><path d="m5 12.5 4.5 4.5L19 7" /></>,

@@ -20,6 +20,7 @@ export const V3_NAV: NavGroup[] = [
       { href: '/invoices/details', label: 'Invoice Details', icon: 'tasks' },
       { href: '/invoices/quotes', label: 'Quotations', icon: 'design' },
       { href: '/clients', label: 'Clients', icon: 'clients' },
+      { href: '/voice', label: 'Voice-over', icon: 'mic' },
     ],
   },
   {
