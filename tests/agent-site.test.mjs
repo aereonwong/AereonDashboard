@@ -78,7 +78,7 @@ test('JSON-LD: Person, Organization with contactPoint + PostalAddress', () => {
 
 test('sitemap lists every public page with lastmod; robots names the agents asked about', () => {
   const s = sitemapEntries()
-  assert.equal(s.length, PAGES.length + 1)
+  assert.equal(s.length, PAGES.length + 2)
   assert.ok(s.every(e => e.url.startsWith('https://aereonwong.com') && /^\d{4}-\d\d-\d\d$/.test(e.lastModified)))
   for (const a of ['ChatGPT-User', 'ClaudeBot', 'Google-Extended', 'ora-agent', 'DeepSeekBot']) assert.ok(AI_AGENTS.includes(a), a)
 })

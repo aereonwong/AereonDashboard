@@ -82,7 +82,7 @@ export default function Reel({ audience, kinds, since, totals }: { audience: Aud
           <span className="rl-dot" aria-hidden="true" /> Aereon Wong
         </span>
         <nav aria-label="Contact">
-          <a href="#kit">Media kit</a>
+          <a href="/mediakit" data-t="kit-top">Media kit</a>
           <a href={IG} target="_blank" rel="noopener noreferrer">
             Instagram
           </a>

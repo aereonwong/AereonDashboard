@@ -1,4 +1,4 @@
-// Small server-rendered pieces shared by both Site analytics pages (Landing page, Link page).
+// Small server-rendered pieces shared by the Site analytics pages (Landing page, Link page, Media kit).
 // Styles are the lk-* rules in app/(app)/links/links.css.
 import { CHECKS_FROM, type Bots, type Count } from '@/lib/hello-insights'
 import { RANGES } from '@/lib/hello-stats'

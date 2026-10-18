@@ -63,6 +63,7 @@ export default function MediaKit({
         <header className="v3-kit-top">
           <span className="v3-kit-mark">Aereon Wong</span>
           <nav className="v3-kit-nav" aria-label="Contact">
+            <a href="/mediakit" data-t="kit-top">Media kit</a>
             <a href={IG} target="_blank" rel="noopener noreferrer">
               Instagram
             </a>

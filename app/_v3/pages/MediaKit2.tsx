@@ -86,6 +86,7 @@ export default function MediaKit2({ audience, kinds, since, totals }: { audience
             <span className="k3-dot" aria-hidden="true" /> Aereon Wong
           </span>
           <nav className="k3-links" aria-label="Contact">
+            <a href="/mediakit" data-t="kit-top">Media kit</a>
             <a href={IG} target="_blank" rel="noopener noreferrer">
               Instagram
             </a>

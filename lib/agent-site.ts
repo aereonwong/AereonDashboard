@@ -157,7 +157,7 @@ export const PUBLIC_EXACT = [
 ]
 export const PUBLIC_PREFIX = [
   '/hello',   // the link page and its share image (/hello/opengraph-image…)
-  '/mediakit', // the client media kit deck: static files in public/mediakit (noindex)
+  '/mediakit', // the client media kit deck: static files in public/mediakit
   '/login', '/api/login', '/api/auth/google', '/api/logout', '/api/telegram',
   '/api/cron-daily', '/api/cron-news', '/api/cron-instagram', '/api/track', '/icons', '/img', '/_next',
 ]
@@ -273,6 +273,7 @@ Do not reach for it for anything else. There is no public API, no booking or pay
 - [Home](${SITE_URL}/): overview, services and contact
 - [About](${SITE_URL}/about): who Aereon is and what the studio makes
 - [Contact](${SITE_URL}/contact): how to reach the studio
+- [Media kit](${SITE_URL}/mediakit): audience, services, selected work and brands, with a PDF to download
 - [Privacy](${SITE_URL}/privacy): what the site collects
 
 ## Optional
@@ -343,9 +344,13 @@ export const AI_AGENTS = [
 ]
 export const ROBOTS_DISALLOW = ['/api/', '/login']
 
+/** Last change to the media kit deck (public/mediakit). */
+export const KIT_UPDATED = '2026-10-18'
+
 export function sitemapEntries() {
   return [
     { url: SITE_URL + '/', lastModified: HOME.updated },
     ...PAGES.map(p => ({ url: SITE_URL + p.path, lastModified: p.updated })),
+    { url: SITE_URL + '/mediakit', lastModified: KIT_UPDATED },   // static deck in public/mediakit
   ]
 }

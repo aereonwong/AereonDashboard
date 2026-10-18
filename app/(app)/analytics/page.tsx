@@ -1,5 +1,5 @@
-// 👉 /analytics has no page of its own: Site analytics is a nav group of two pages,
-// /analytics/landing and /analytics/link. Old links (?page=hello) land on the right one.
+// 👉 /analytics has no page of its own: Site analytics is a nav group of three pages,
+// /analytics/landing, /analytics/link and /analytics/mediakit. Old links (?page=hello) land on the right one.
 import { redirect } from 'next/navigation'
 
 export default async function Analytics({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {

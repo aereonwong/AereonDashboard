@@ -25,10 +25,12 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
     { href: '/tiktok', label: 'TikTok', icon: 'tiktok' },
     { href: '/news', label: 'News', icon: 'news' },
     { href: '/links', label: 'Link page', icon: 'share' },
+    { href: '/mediakit', label: 'Media kit', icon: 'design' },
   ] },
   { label: 'Site analytics', tabs: [
     { href: '/analytics/landing', label: 'Landing page', icon: 'chart' },
     { href: '/analytics/link', label: 'Link page', icon: 'share' },
+    { href: '/analytics/mediakit', label: 'Media kit', icon: 'design' },
   ] },
   { label: 'Money', tabs: [
     { href: '/cash-in', label: 'Cash In', icon: 'cash-in' },

@@ -39,7 +39,7 @@ export function landingTapId(href: string | null, dataT: string | null, origin: 
 
 const FIXED: Record<string, string> = {
   enter: 'Opened the dashboard', 'enter-top': 'Enter dashboard (top bar)', 'enter-cta': 'Dashboard button',
-  mail: 'Email', 'mail-cta': 'Work with me (email)', phone: 'Phone call',
+  mail: 'Email', 'mail-cta': 'Work with me (email)', phone: 'Phone call', 'kit-cta': 'Media kit button', 'kit-top': 'Media kit (top bar)', 'page-mediakit': 'Media kit',
 }
 
 /** A readable name for a logged tap id. */

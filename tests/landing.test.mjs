@@ -106,3 +106,50 @@ test('bot filter: only visitors who did something (or came from an app) count, f
   assert.equal(h.visitors, 1)
   assert.deepEqual(h.bots, { visitors: 1, views: 1 })
 })
+
+test('media kit: only well-formed /kit events are tracked', async () => {
+  const { isTrackedPath } = await import('../lib/site-visits.ts')
+  for (const p of ['/mediakit', '/kit/slide/1', '/kit/slide/9', '/kit/scroll/50', '/kit/time/3m', '/kit/lang/zh', '/kit/out/pdf', '/kit/out/work-samsung-s25-fe'])
+    assert.ok(isTrackedPath(p), p)
+  for (const p of ['/kit', '/kit/slide/0', '/kit/slide/10', '/kit/scroll/60', '/kit/out/Pdf', '/kit/out/a/b', '/kit/out/' + 'a'.repeat(41), '/mediakit/x'])
+    assert.ok(!isTrackedPath(p), p)
+})
+
+test('media kit insights: slides reached, funnel, bots left out', async () => {
+  const { analyseKit, kitTapLabel } = await import('../lib/kit-insights.ts')
+  const d = '2026-10-19'
+  const rows = [
+    { path: '/mediakit', day: d, visitor_hash: 'a', browser: 'Chrome', country: 'SG', city: 'Singapore', device: 'desktop', utm_source: 'pitch' },
+    { path: '/kit/slide/1', day: d, visitor_hash: 'a' },
+    { path: '/kit/slide/2', day: d, visitor_hash: 'a' },
+    { path: '/kit/slide/9', day: d, visitor_hash: 'a' },
+    { path: '/kit/scroll/100', day: d, visitor_hash: 'a' },
+    { path: '/kit/time/30s', day: d, visitor_hash: 'a' },
+    { path: '/kit/out/work-samsung-s25-fe', day: d, visitor_hash: 'a' },
+    { path: '/kit/out/pdf', day: d, visitor_hash: 'a' },
+    { path: '/kit/out/mail', day: d, visitor_hash: 'a' },
+    { path: '/mediakit', day: d, visitor_hash: 'b', browser: 'Instagram app', device: 'mobile' },
+    { path: '/kit/slide/1', day: d, visitor_hash: 'b' },
+    { path: '/kit/out/social-instagram', day: d, visitor_hash: 'b' },
+    { path: '/mediakit', day: d, visitor_hash: 'bot', browser: 'Chrome' },
+    { path: '/kit/slide/1', day: d, visitor_hash: 'bot' },
+    { path: '/', day: d, visitor_hash: 'c' },
+  ]
+  const r = analyseKit(rows, 7, d)
+  assert.equal(r.visits, 2)
+  assert.equal(r.visitors, 2)
+  assert.deepEqual(r.bots, { visitors: 1, views: 1 })
+  assert.equal(r.finished, 1)
+  assert.equal(r.work, 1)
+  assert.equal(r.pdf, 1)
+  assert.equal(r.emailed, 1)
+  assert.equal(r.social, 1)
+  assert.equal(r.slides[0].visitors, 2)
+  assert.equal(r.slides[0].label, '1. Cover')
+  assert.equal(r.slides.length, 9)
+  assert.equal(r.time.find(t => t.id === '30s').visitors, 1)
+  assert.equal(r.daily.at(-1).visitors, 2)
+  assert.equal(kitTapLabel('work-samsung-s25-fe'), 'Work: Samsung s25 fe')
+  assert.equal(kitTapLabel('pdf'), 'Downloaded the PDF')
+  assert.equal(kitTapLabel('social-instagram'), 'Profile: Instagram')
+})
