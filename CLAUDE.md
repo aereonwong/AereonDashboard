@@ -215,6 +215,17 @@ window into `social_snapshots` (`supabase/social-snapshots.sql`, jsonb of `trimS
 read the newest stored day — nothing is recalculated on a page load; only if none is under 2 days old do they compute
 on the spot (held 10 minutes, not stored). Demo mode never reads the stored real figures. A stale or unread platform makes that `all` total null → tile hides.
 
+## Voice-over (19 Oct 2026)
+
+`/voice` (v3 Studio group): a script in Aereon's cloned voice. The BROWSER calls VoiceStudio on Aereon's Mac
+(`http://127.0.0.1:3900`, `/health`, `/profiles`, `/generate`) — no server route, nothing stored, works only on that
+Mac in Chrome with the VoiceStudio app open. VoiceStudio answers only origins in `OMNIVOICE_ALLOWED_ORIGINS`
+(set with `launchctl setenv` before the app starts; keep its defaults `localhost:3901`, `tauri://…`, `app://voicestudio`
+in the list). Recipe, tuned by ear, in `lib/voice-recipe.ts` (tested): profile `11673efe` "Aereon Wong v3", first
+sentence = intro at speed 0.88, rest at 0.92, 32 steps, no `instruct` (VoiceStudio 0.5.6 rejects moods for clones);
+parts are trimmed, volume-matched to the body and joined with a 0.22 s gap in the browser. To test locally, run the
+app on port 3901 — VoiceStudio trusts that origin by default.
+
 ## Site analytics (16 Oct 2026)
 
 **Site analytics** is its own nav group (after Social): who visits the public pages and what they do —

@@ -24,7 +24,7 @@ test('public vs private vs unknown', () => {
     assert.ok(isPublicPath(p), p)
   for (const p of ['/login-admin', '/api/auth', '/dashboard', '/api/demo', '/about/x', '/imgs-private', '/mediakit-admin'])
     assert.ok(!isPublicPath(p), p)
-  assert.ok(isKnownPrivatePath('/dashboard') && isKnownPrivatePath('/clients/abc') && isKnownPrivatePath('/api/demo'))
+  assert.ok(isKnownPrivatePath('/dashboard') && isKnownPrivatePath('/clients/abc') && isKnownPrivatePath('/api/demo') && isKnownPrivatePath('/voice'))
   for (const p of ['/', '/nope', '/api/nope', '/api', '/Dashboard']) assert.ok(!isKnownPrivatePath(p), p)
 })
 
