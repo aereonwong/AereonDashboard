@@ -157,6 +157,7 @@ export const PUBLIC_EXACT = [
 ]
 export const PUBLIC_PREFIX = [
   '/hello',   // the link page and its share image (/hello/opengraph-image…)
+  '/mediakit', // the client media kit deck: static files in public/mediakit (noindex)
   '/login', '/api/login', '/api/auth/google', '/api/logout', '/api/telegram',
   '/api/cron-daily', '/api/cron-news', '/api/cron-instagram', '/api/track', '/icons', '/img', '/_next',
 ]

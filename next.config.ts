@@ -22,6 +22,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   turbopack: { root: here },
   poweredByHeader: false,
+  // The client media kit is a static deck in public/mediakit; serve its page at /mediakit.
+  async rewrites() {
+    return [{ source: '/mediakit', destination: '/mediakit/index.html' }]
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },

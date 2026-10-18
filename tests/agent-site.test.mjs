@@ -20,9 +20,9 @@ test('every public page has a route file', () => {
 })
 
 test('public vs private vs unknown', () => {
-  for (const p of ['/', '/about', '/login', '/api/telegram', '/api/auth/google/callback', '/robots.txt', '/llms.txt', '/sitemap.xml', '/manifest.webmanifest'])
+  for (const p of ['/', '/about', '/login', '/api/telegram', '/api/auth/google/callback', '/robots.txt', '/llms.txt', '/sitemap.xml', '/manifest.webmanifest', '/mediakit', '/mediakit/img/posts/x.jpg'])
     assert.ok(isPublicPath(p), p)
-  for (const p of ['/login-admin', '/api/auth', '/dashboard', '/api/demo', '/about/x', '/imgs-private'])
+  for (const p of ['/login-admin', '/api/auth', '/dashboard', '/api/demo', '/about/x', '/imgs-private', '/mediakit-admin'])
     assert.ok(!isPublicPath(p), p)
   assert.ok(isKnownPrivatePath('/dashboard') && isKnownPrivatePath('/clients/abc') && isKnownPrivatePath('/api/demo'))
   for (const p of ['/', '/nope', '/api/nope', '/api', '/Dashboard']) assert.ok(!isKnownPrivatePath(p), p)

@@ -228,6 +228,13 @@ stayed 10s+ visible, tapped, or opened the page in an app (Instagram, Facebook�
 data-centre cities (Council Bluffs, Ashburn, Boardman) and instant bounces — are shown only as a "left out" count.
 /hello sends the same scroll/time signals (`EngagementTracker`).
 
+## Client media kit deck — /mediakit (18 Oct 2026)
+
+Public, unlisted (noindex) 9-slide deck at `aereonwong.com/mediakit`: static files in `public/mediakit/` (index.html,
+images, the PDF), served by a rewrite in `next.config.ts` and listed in `PUBLIC_PREFIX` (`lib/agent-site.ts`). Built
+by hand outside the app (HTML → Chrome PDF), so its figures are a dated snapshot, not live; per-platform follower
+numbers are shown here on purpose (Aereon's call for the client deck). To update: edit `index.html`, re-export the PDF.
+
 ## Showcase (5 Oct 2026)
 
 Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `npm run ig:archive`). Full rules: `docs/SHOWCASE.md` — read before touching the classifier or tiles.
