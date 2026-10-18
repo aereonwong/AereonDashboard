@@ -31,6 +31,7 @@ export const V3_NAV: NavGroup[] = [
       { href: '/tiktok', label: 'TikTok', icon: 'tiktok' },
       { href: '/news', label: 'News', icon: 'news' },
       { href: '/links', label: 'Link page', icon: 'share' },
+      { href: '/mediakit', label: 'Media kit', icon: 'design' },
     ],
   },
   {
@@ -38,6 +39,7 @@ export const V3_NAV: NavGroup[] = [
     items: [
       { href: '/analytics/landing', label: 'Landing page', icon: 'chart' },
       { href: '/analytics/link', label: 'Link page', icon: 'share' },
+      { href: '/analytics/mediakit', label: 'Media kit', icon: 'design' },
     ],
   },
   {

@@ -105,7 +105,7 @@ export function sourceOf(r: Pick<VisitRow, 'browser' | 'utm_source' | 'referrer_
  *  through the day), so earlier days are counted as logged. */
 export const CHECKS_FROM = '2026-10-17'
 /** Doing any of these proves a person: tapping, opening a section, scrolling, staying 10s+ on screen. */
-const ENGAGED = /^\/(land|hello)\/(out|tap|scroll|time)\//
+const ENGAGED = /^\/(land|hello|kit)\/(out|tap|scroll|time)\//
 
 /** Splits rows into people and the rest. A visitor (one daily hash) counts when they did something
  *  (ENGAGED) or opened the page inside an app (Instagram, Facebook… — crawlers don't); everyone else

@@ -230,10 +230,16 @@ data-centre cities (Council Bluffs, Ashburn, Boardman) and instant bounces — a
 
 ## Client media kit deck — /mediakit (18 Oct 2026)
 
-Public, unlisted (noindex) 9-slide deck at `aereonwong.com/mediakit`: static files in `public/mediakit/` (index.html,
-images, the PDF), served by a rewrite in `next.config.ts` and listed in `PUBLIC_PREFIX` (`lib/agent-site.ts`). Built
-by hand outside the app (HTML → Chrome PDF), so its figures are a dated snapshot, not live; per-platform follower
+Public and searchable (in the sitemap and llms.txt; Aereon's call, 18 Oct) 9-slide deck at `aereonwong.com/mediakit`:
+static files in `public/mediakit/` (index.html, images, `og.jpg` share card, the PDF), served by a rewrite in
+`next.config.ts` and listed in `PUBLIC_PREFIX` (`lib/agent-site.ts`; bump `KIT_UPDATED` there when the deck changes).
+Built by hand outside the app (HTML → Chrome PDF), so its figures are a dated snapshot, not live; per-platform follower
 numbers are shown here on purpose (Aereon's call for the client deck). To update: edit `index.html`, re-export the PDF.
+Linked from the nav (Social → Media kit), every landing version's top bar (`kit-top`; the classic CTA row has `kit-cta`) and /hello's "Media Kit" link
+(id `kit`, a stored link edited on /links, pointed at `/mediakit?utm_source=hello` on 18 Oct).
+**Analytics:** the page's own inline script sends `/mediakit` + `/kit/…` beacons (`KIT_EVENT` in `lib/site-visits.ts`:
+slides seen, scroll, time, language, taps — `work-<post>`, `pdf`, `mail`, socials); read on Site analytics →
+Media kit (`/analytics/mediakit`, maths `lib/kit-insights.ts`, tested). Keep `KIT_SLIDES` in step with the deck.
 
 ## Showcase (5 Oct 2026)
 

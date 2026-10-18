@@ -213,6 +213,13 @@ async function LandingBody({
               </svg>
               Work with me
             </a>
+            <a className="land-btn ghost" href="/mediakit" data-t="kit-cta">
+              <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="13" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              Media kit
+            </a>
             <a className="land-btn ghost" href="/dashboard" data-t="enter-cta">
               <svg className="ico-svg" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="4" y="11" width="4" height="9" rx="1" />

@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 // includes the day, so it counts unique visitors per day and cannot follow anyone further.
 
 /** Only these public pages are logged. Anything else is ignored, so private paths never land here. */
-export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '/login']
+export const TRACKED_PATHS = ['/', '/about', '/contact', '/privacy', '/hello', '/login', '/mediakit']
 
 /** Taps on the /hello link page, logged as pseudo-paths beside the page views:
  *  /hello/tap/<section> = a "What brings you here?" section opened,
@@ -31,8 +31,17 @@ export const LANDING_EVENT =
 /** Most /land rows one visitor may add per 10 minutes: a view, 4 scroll and 5 time marks, a language, then taps. */
 export const LANDING_EVENT_CAP = 30
 
+/** What visitors do on the media kit deck (/mediakit, a static page in public/mediakit), as pseudo-paths:
+ *  /kit/slide/<n>  = slide n (1–9) came on screen,
+ *  /kit/scroll/<pct>, /kit/time/<mark>, /kit/lang/<xx> = as on the landing,
+ *  /kit/out/<id>   = a link used: work-<post>, pdf, mail, phone, social-<app>, … (lib/kit-insights.ts names them). */
+export const KIT_EVENT =
+  /^\/kit\/(slide\/[1-9]|scroll\/(25|50|75|100)|time\/(10s|30s|1m|3m|10m)|lang\/[a-z]{2}|out\/[a-z0-9-]{1,40})$/
+/** Most /kit rows one visitor may add per 10 minutes: 9 slides, 4 scroll and 5 time marks, a language, then taps. */
+export const KIT_EVENT_CAP = 40
+
 export const isTrackedPath = (path: string) =>
-  TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path) || LANDING_EVENT.test(path)
+  TRACKED_PATHS.includes(path) || HELLO_EVENT.test(path) || LANDING_EVENT.test(path) || KIT_EVENT.test(path)
 
 const BOT = /bot|crawl|spider|slurp|preview|fetch|monitor|headless|lighthouse|curl|wget|python|axios|node-fetch|go-http|java\/|httpclient|vercel|facebookexternalhit|whatsapp|telegram|discord|slack/i
 

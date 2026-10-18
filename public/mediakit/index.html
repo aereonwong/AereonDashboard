@@ -4,10 +4,17 @@
 <meta charset="utf-8">
 <base href="/mediakit/">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+<link rel="canonical" href="https://aereonwong.com/mediakit">
 <meta name="description" content="Aereon Wong, tech and travel creator and drone pilot in Kuala Lumpur. Media kit 2026: audience, services, selected work and contact.">
 <meta property="og:title" content="Aereon Wong Media Kit 2026">
 <meta property="og:description" content="Tech, travel and drone content from Kuala Lumpur. Audience, services, selected work and contact.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aereonwong.com/mediakit">
+<meta property="og:image" content="https://aereonwong.com/mediakit/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico">
 <title>Aereon Wong Media Kit 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -285,7 +292,7 @@
   </div>
 </section>
 
-<a class="get" href="Aereon-Wong-Media-Kit-2026.pdf" download><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download PDF</a>
+<a class="get" href="Aereon-Wong-Media-Kit-2026.pdf" download data-t="pdf"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download PDF</a>
 <script>
 const SOC = [
   ['ig','Instagram','@aereonwong','https://www.instagram.com/aereonwong/','53.8K'],
@@ -349,7 +356,7 @@ document.getElementById('services').outerHTML = SERVICES.map(s => `
       <div class="tags"><span>${s.extra}</span></div>
     </div>
     <div class="posts" style="grid-template-columns:repeat(${s.posts.length},1fr)">${s.posts.map(p => `
-      <a class="post" href="${ig(p[0])}">
+      <a class="post" href="${ig(p[0])}" data-t="work-${p[2].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 34)}">
         <div class="img" style="background-image:url(img/posts/${p[0]}.jpg)">
           <span class="play"><svg class="i"><use href="#arrow"/></svg></span>
           ${p[1] ? `<span class="views"><span class="num">${p[1]}</span><small>views</small></span>` : ''}
@@ -375,6 +382,74 @@ const only = +new URLSearchParams(location.search).get('s');
 const fit = () => document.documentElement.style.setProperty('--z', Math.min(1, (document.documentElement.clientWidth - (innerWidth < 700 ? 32 : 64)) / 1920));
 if (!only) { fit(); addEventListener('resize', fit); }
 if (only) { document.body.style.cssText = 'padding:0;gap:0;display:block'; document.querySelector('.get')?.remove(); [...document.querySelectorAll('.slide')].forEach((el, i) => { if (i + 1 !== only) el.remove(); }); }
+
+// Anonymous visit beacons for Site analytics (/analytics/mediakit), same rules as the rest of the site:
+// no cookie, no storage, no IP. /api/track drops the signed-in owner, bots and Do Not Track, and only
+// accepts the /kit/… shapes in lib/site-visits.ts (KIT_EVENT). Ids here match lib/landing-taps.ts.
+if (!only) (() => {
+  const send = (path, extra) => {
+    try {
+      const body = JSON.stringify({ path, referrer: document.referrer, ...extra });
+      if (!navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' })))
+        fetch('/api/track', { method: 'POST', body, keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+    } catch { /* tracking must never break the page */ }
+  };
+  const q = new URLSearchParams(location.search);
+  send('/mediakit', { utm_source: q.get('utm_source'), utm_medium: q.get('utm_medium'), utm_campaign: q.get('utm_campaign') });
+  const lang = (navigator.language || '').slice(0, 2).toLowerCase();
+  if (/^[a-z]{2}$/.test(lang)) send('/kit/lang/' + lang);
+
+  // Each slide once, when at least 40% of it is on screen.
+  const slides = [...document.querySelectorAll('.slide')], seen = new Set();
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      const n = slides.indexOf(e.target) + 1;
+      if (e.isIntersecting && n && !seen.has(n)) { seen.add(n); send('/kit/slide/' + n); }
+    }), { threshold: 0.4 });
+    slides.forEach(el => io.observe(el));
+  }
+
+  // Scroll depth and seconds with the tab visible: what tells a person from a bot.
+  const scrolled = new Set();
+  addEventListener('scroll', () => {
+    const room = document.documentElement.scrollHeight - innerHeight;
+    if (room <= 0) return;
+    const pct = ((scrollY + 1) / room) * 100;
+    for (const m of [25, 50, 75, 100]) if (pct >= m - 1 && !scrolled.has(m)) { scrolled.add(m); send('/kit/scroll/' + m); }
+  }, { passive: true });
+  const MARKS = [[10, '10s'], [30, '30s'], [60, '1m'], [180, '3m'], [600, '10m']];
+  let secs = 0, next = 0;
+  const tick = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (next >= MARKS.length) return clearInterval(tick);
+    if (++secs >= MARKS[next][0]) send('/kit/time/' + MARKS[next++][1]);
+  }, 1000);
+
+  // Taps: a link's own data-t wins, else it is named by where it goes.
+  const slug = (s, n = 34) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, n);
+  const SOCIAL = [[/(^|\.)instagram\.com$/, 'instagram'], [/(^|\.)tiktok\.com$/, 'tiktok'], [/(^|\.)facebook\.com$/, 'facebook'],
+    [/(^|\.)threads\.(net|com)$/, 'threads'], [/(^|\.)youtube\.com$|^youtu\.be$/, 'youtube'], [/xiaohongshu\.com$/, 'xhs']];
+  const tapId = el => {
+    const t = el.getAttribute('data-t');
+    if (t) return slug(t, 40);
+    const href = el.getAttribute('href') || '';
+    if (href.startsWith('mailto:')) return 'mail';
+    if (href.startsWith('tel:')) return 'phone';
+    let u; try { u = new URL(href, location.href); } catch { return null; }
+    if (u.origin === location.origin) return 'page-' + (slug(u.pathname.split('/')[1] || '') || 'home');
+    const host = u.hostname.replace(/^www\./, '');
+    const so = SOCIAL.find(([re]) => re.test(host));
+    return so ? (/\/(p|reel|video)\//.test(u.pathname) ? 'post-' : 'social-') + so[1] : 'site-' + slug(host);
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest?.('[data-t], a[href]');
+    const id = el && tapId(el);
+    if (id) send('/kit/out/' + id);
+  }, true);
+
+  // On the web, links to other sites open in a new tab so the deck stays open behind them.
+  document.querySelectorAll('a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+})();
 </script>
 </body>
 </html>
