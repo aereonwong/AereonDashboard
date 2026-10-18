@@ -7,6 +7,8 @@ import { sourceOf, top, countryName, bump, byCount, daySeries, splitBots, type B
 import { landingTapLabel } from './landing-taps.ts'
 
 export type Reached = { id: string; label: string; visitors: number }
+/** One private share link's results (?r=<code>, lib/kit-links-config.ts). */
+export type TagStats = { code: string; visitors: number; views: number; finished: number; work: number; pdf: number; emailed: number }
 export type KitInsights = {
   days: number
   /** Left out as bots or instant bounces (splitBots in lib/hello-insights.ts). */
@@ -30,6 +32,8 @@ export type KitInsights = {
   cities: Count[]
   devices: Count[]
   browsers: Count[]
+  /** Per share-link code, for every code seen in the range. */
+  tags: TagStats[]
 }
 
 /** The deck's slides in order — keep in step with public/mediakit/index.html. */
@@ -62,7 +66,9 @@ export function kitTapKind(id: string): 'work' | 'pdf' | 'email' | 'social' | 'o
   return 'other'
 }
 
-export function analyseKit(all: VisitRow[], days: number, today: string): KitInsights {
+/** `names` maps a share-link code to the brand it was made for, so sources read "Tag: Samsung"
+ *  instead of the code. Codes stay private: the names come from the database, never the page. */
+export function analyseKit(all: VisitRow[], days: number, today: string, names: Record<string, string> = {}): KitInsights {
   const { rows, bots } = splitBots(all.filter(r => r.path === '/mediakit' || r.path.startsWith('/kit/')), p => p === '/mediakit')
   const key = (r: VisitRow) => `${r.day}|${r.visitor_hash}`
   const visitors = new Set<string>()
@@ -73,14 +79,27 @@ export function analyseKit(all: VisitRow[], days: number, today: string): KitIns
   const devices = new Map<string, number>(), browsers = new Map<string, number>()
   const add = (m: Map<string, Set<string>>, id: string, k: string) => { if (!m.has(id)) m.set(id, new Set()); m.get(id)!.add(k) }
   let visits = 0
+  // Each visitor's share-link code, from their page view (the beacons after it carry none).
+  const tagOf = new Map<string, string>()
+  for (const r of rows) if (r.path === '/mediakit' && r.utm_source) tagOf.set(key(r), r.utm_source)
+  const per = new Map<string, { visitors: Set<string>; views: number; finished: Set<string>; work: Set<string>; pdf: Set<string>; emailed: Set<string> }>()
+  const tag = (k: string) => {
+    const c = tagOf.get(k)
+    if (!c || !names[c]) return null
+    if (!per.has(c)) per.set(c, { visitors: new Set(), views: 0, finished: new Set(), work: new Set(), pdf: new Set(), emailed: new Set() })
+    return per.get(c)!
+  }
 
   for (const r of rows) {
     const k = key(r)
     visitors.add(k)
     add(daily, r.day, k)
+    const t = tag(k)
+    t?.visitors.add(k)
     if (r.path === '/mediakit') {
       visits++
-      bump(sources, sourceOf(r))
+      if (t) t.views++
+      bump(sources, sourceOf(r.utm_source && names[r.utm_source] ? { ...r, utm_source: names[r.utm_source] } : r))
       if (r.country) bump(countries, r.country)
       if (r.city) bump(cities, r.country ? `${r.city}, ${r.country}` : r.city)
       bump(devices, r.device ? r.device[0].toUpperCase() + r.device.slice(1) : 'Unknown')
@@ -88,17 +107,17 @@ export function analyseKit(all: VisitRow[], days: number, today: string): KitIns
       continue
     }
     const [, , kind, id] = r.path.split('/')
-    if (kind === 'slide') add(slides, id, k)
+    if (kind === 'slide') { add(slides, id, k); if (t && id === String(KIT_SLIDES.length)) t.finished.add(k) }
     else if (kind === 'time') add(time, id, k)
     else if (kind === 'lang') bump(languages, id)
     else if (kind === 'out' && id) {
       bump(clicks, id)
       tapped.add(k)
-      const t = kitTapKind(id)
-      if (t === 'work') work.add(k)
-      else if (t === 'pdf') pdf.add(k)
-      else if (t === 'email') emailed.add(k)
-      else if (t === 'social') social.add(k)
+      const what = kitTapKind(id)
+      if (what === 'work') { work.add(k); t?.work.add(k) }
+      else if (what === 'pdf') { pdf.add(k); t?.pdf.add(k) }
+      else if (what === 'email') { emailed.add(k); t?.emailed.add(k) }
+      else if (what === 'social') social.add(k)
     }
   }
 
@@ -117,5 +136,8 @@ export function analyseKit(all: VisitRow[], days: number, today: string): KitIns
     cities: top(cities, 8),
     devices: top(devices, 4),
     browsers: top(browsers, 6),
+    tags: [...per].map(([code, v]) => ({
+      code, visitors: v.visitors.size, views: v.views, finished: v.finished.size, work: v.work.size, pdf: v.pdf.size, emailed: v.emailed.size,
+    })),
   }
 }

@@ -1,0 +1,11 @@
+/* Share links panel on Site analytics → Media kit (KitLinks.tsx). */
+.kl-form { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; }
+.kl-table td { vertical-align: top; }
+.kl-table td:first-child b { display: block; }
+.kl-note { display: block; color: var(--ink-3); font-size: var(--t-xs); font-weight: 400; }
+.kl-table td:last-child { font-weight: 400; }
+.kl-actions { display: flex; gap: var(--space-1); justify-content: flex-end; white-space: nowrap; }
+.kl-table code { white-space: nowrap; color: var(--ink-2); }
+.kl-table th, .kl-table td { padding-left: var(--space-4); }
+.kl-table th:first-child, .kl-table td:first-child { padding-left: 0; min-width: 140px; }
+.kl-table th { white-space: nowrap; vertical-align: bottom; }
