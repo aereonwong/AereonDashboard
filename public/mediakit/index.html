@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="/mediakit/">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="description" content="Aereon Wong, tech and travel creator and drone pilot in Kuala Lumpur. Media kit 2026: audience, services, selected work and contact.">
+<meta property="og:title" content="Aereon Wong Media Kit 2026">
+<meta property="og:description" content="Tech, travel and drone content from Kuala Lumpur. Audience, services, selected work and contact.">
+<title>Aereon Wong Media Kit 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  :root {
+    --night: #0B1020; --night-2: #141B33; --night-3: #1C2544;
+    --cream: #F5F1E8; --cream-2: rgba(245,241,232,.78); --cream-3: rgba(245,241,232,.56);
+    --gold: #D9B26F; --gold-soft: rgba(217,178,111,.14); --gold-line: rgba(217,178,111,.38);
+    --dusk: #7FB7D9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #05070E; }
+  body { font-family: Manrope, system-ui, sans-serif; color: var(--cream); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  ::selection { background: var(--gold); color: var(--night); }
+  a { color: inherit; text-decoration: none; }
+  .slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; background: var(--night); page-break-after: always; break-after: page; }
+  @media print { .grain { display: none; } }
+  @media screen {
+    body { display: grid; gap: calc(32px * var(--z, 1)); padding: calc(32px * var(--z, 1)) 0 96px; justify-content: center; }
+    .slide { zoom: var(--z, 1); border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    .get { position: fixed; right: 20px; bottom: 20px; z-index: 5; display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: 999px;
+      background: var(--gold); color: var(--night); font: 700 15px/1 Manrope, system-ui, sans-serif; letter-spacing: .02em; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+    .get:hover { filter: brightness(1.06); }
+    .get:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+    .get svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  }
+  @media print { .get { display: none; } }
+
+  /* shared atmosphere: photo bed + navy wash + gold glow, so no slide is a plain fill */
+  .bed { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .wash { position: absolute; inset: 0; background:
+      radial-gradient(70% 90% at 100% 0%, rgba(217,178,111,.13) 0%, rgba(217,178,111,0) 55%),
+      linear-gradient(180deg, rgba(11,16,32,.84) 0%, rgba(11,16,32,.93) 55%, rgba(11,16,32,.98) 100%); }
+  .grain { position: absolute; inset: 0; opacity: .06; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .inner { position: absolute; inset: 96px 120px 88px; }
+  .foot { position: absolute; left: 120px; right: 120px; bottom: 44px; display: flex; justify-content: space-between; font-size: 17px; color: var(--cream-3); letter-spacing: .04em; }
+  .foot b { color: var(--gold); font-weight: 600; }
+
+  h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 84px; letter-spacing: -0.035em; line-height: .98; }
+  h2 em { font-style: normal; color: var(--gold); }
+  .sub { margin-top: 22px; font-size: 26px; line-height: 1.5; color: var(--cream-2); max-width: 44ch; }
+  .num { font-family: 'Inter Tight', sans-serif; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .lab { font-size: 16px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  svg.i { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* ---------- 1 cover ---------- */
+  .cover .photo { position: absolute; inset: 0 0 0 auto; width: 68%; background: url(img/klcc-merdeka.jpg) center 36% / cover;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.3) 20%, rgba(0,0,0,.78) 40%, #000 58%);
+            mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.3) 20%, rgba(0,0,0,.78) 40%, #000 58%); }
+  .cover .base { position: absolute; inset: 0; background: radial-gradient(110% 90% at 0% 100%, var(--night-2) 0%, var(--night) 62%); }
+  .cover .low { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(11,16,32,.92) 0%, rgba(11,16,32,0) 36%); }
+  .cover .content { position: absolute; left: 120px; top: 132px; bottom: 96px; width: 980px; display: flex; flex-direction: column; }
+  .cover h1 { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 150px; letter-spacing: -0.045em; line-height: .9; white-space: nowrap; }
+  .cover h1 span { color: var(--gold); }
+  .cover .role { margin-top: 34px; font-size: 22px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+  .cover .intro { margin-top: 18px; font-size: 29px; line-height: 1.5; color: var(--cream-2); max-width: 40ch; }
+  .chips { display: flex; flex-wrap: nowrap; gap: 10px; margin-top: 36px; }
+  .chip { display: inline-flex; align-items: center; gap: 11px; padding: 11px 17px 11px 14px; border-radius: 999px; font-size: 19px; white-space: nowrap; font-weight: 600;
+    border: 1px solid var(--gold-line); background: var(--gold-soft); }
+  .chip svg { color: var(--gold); width: 23px; height: 23px; }
+  .cover .stats { margin-top: auto; display: flex; gap: 72px; }
+  .cover .stats .num { font-size: 84px; line-height: 1; }
+  .cover .stats .lab { margin-top: 12px; }
+  .socials { display: flex; gap: 12px; margin-top: 40px; }
+  .socials a { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(245,241,232,.26); background: rgba(11,16,32,.35); }
+  .socials svg { width: 24px; height: 24px; }
+  .portrait { position: absolute; right: 150px; bottom: 120px; width: 250px; height: 250px; border-radius: 50%;
+    background: url(img/aereon.jpg) center 22% / 118%; box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 3px var(--night), 0 0 0 5px var(--gold); }
+  .portrait-cap { position: absolute; right: 150px; bottom: 76px; width: 250px; text-align: center; font-size: 17px; color: var(--cream-3); letter-spacing: .06em; }
+  .kit-tag { position: absolute; right: 150px; top: 132px; font-size: 18px; font-weight: 700; letter-spacing: .2em; color: var(--gold); }
+
+  /* ---------- 2 audience ---------- */
+  .aud .bed { background-image: url(img/klcc-sunset.jpg); }
+  .aud .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; height: 100%; }
+  .platforms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 44px; }
+  .plat { display: block; padding: 22px 24px 24px; border-radius: 18px; background: rgba(20,27,51,.72); border: 1px solid rgba(245,241,232,.12); }
+  .plat .top { display: flex; align-items: center; justify-content: space-between; color: var(--cream-2); font-size: 18px; font-weight: 600; }
+  .plat .top svg { color: var(--gold); width: 30px; height: 30px; }
+  .plat .num { display: block; font-size: 52px; margin-top: 18px; line-height: 1; }
+  .plat .handle { display: block; margin-top: 8px; font-size: 16px; color: var(--cream-3); }
+  .plat .go { width: 18px; height: 18px; color: var(--cream-3); }
+  .total { margin-top: 26px; display: flex; align-items: baseline; gap: 18px; }
+  .total .num { font-size: 120px; line-height: 1; color: var(--gold); }
+  .total span { font-size: 24px; color: var(--cream-2); }
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--gold-line); margin-top: 8px; }
+  .kpi { padding: 26px 0 24px; border-bottom: 1px solid rgba(245,241,232,.12); }
+  .kpi:nth-child(odd) { padding-right: 28px; border-right: 1px solid rgba(245,241,232,.12); }
+  .kpi:nth-child(even) { padding-left: 32px; }
+  .kpi .num { font-size: 62px; line-height: 1; }
+  .kpi p { margin-top: 10px; font-size: 19px; line-height: 1.4; color: var(--cream-2); }
+  .demo { margin-top: 34px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; }
+  .bars li { list-style: none; display: grid; grid-template-columns: 120px 1fr 64px; align-items: center; gap: 14px; font-size: 18px; margin-top: 12px; color: var(--cream-2); }
+  .bars i { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--gold), #B88A45); }
+  .bars i.dim { background: linear-gradient(90deg, rgba(127,183,217,.9), rgba(127,183,217,.6)); }
+  .bars b { font-weight: 700; color: var(--cream); text-align: right; font-variant-numeric: tabular-nums; }
+  .demo h4 { font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-3); font-weight: 700; }
+
+  /* ---------- services ---------- */
+  .svc .bed { filter: saturate(1.1); transform: scale(1.08); }
+  .svc .grid { display: grid; grid-template-columns: 660px 1fr; gap: 80px; height: 100%; }
+  .svc .left { display: flex; flex-direction: column; }
+  .svc .idx { display: flex; align-items: center; gap: 14px; color: var(--gold); font-size: 20px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 26px; }
+  .svc .idx svg { width: 34px; height: 34px; }
+  .brands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: auto; }
+  .brand { height: 124px; border-radius: 16px; background: rgba(245,241,232,.05); border: 1px solid rgba(245,241,232,.11); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px; }
+  .brand .mark { height: 52px; display: flex; align-items: center; justify-content: center; }
+  .brand img { width: 150px; height: 44px; object-fit: contain; filter: brightness(0) invert(94%) sepia(10%) saturate(300%) hue-rotate(5deg); }
+  .brand img.raw { filter: none; height: 38px; }
+  .brand img[src$='mog.png'] { transform: scale(2.6); }
+  .brand img[src$='kltower.png'] { transform: scale(1.3); }
+  .brand img[src$='asus.svg'], .brand img[src$='vivo.svg'] { transform: scale(2.4); }
+  .brand .word { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 25px; letter-spacing: -0.01em; text-align: center; line-height: 1.05; color: var(--cream); }
+  .brand small { height: 18px; line-height: 18px; white-space: nowrap; font-size: 14px; color: var(--cream-3); letter-spacing: .04em; text-align: center; }
+  .posts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-content: center; height: 100%; padding-bottom: 60px; }
+  .post:nth-child(even) { transform: translateY(70px); }
+  .post { display: block; }
+  .post .img { position: relative; aspect-ratio: 9 / 16; border-radius: 18px; background-size: cover; background-position: center; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+  .post .img::after { content: ''; position: absolute; inset: 0; border-radius: 18px; background: linear-gradient(0deg, rgba(5,7,14,.85) 0%, rgba(5,7,14,0) 45%); }
+  .post .views { position: absolute; left: 16px; bottom: 14px; z-index: 1; }
+  .post .views .num { display: block; font-size: 46px; line-height: 1; }
+  .post .views small { display: block; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-top: 4px; }
+  .post .play { position: absolute; right: 14px; top: 14px; z-index: 1; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(11,16,32,.6); border: 1px solid rgba(245,241,232,.3); }
+  .post .play svg { width: 18px; height: 18px; }
+  .post p { margin-top: 16px; font-size: 20px; line-height: 1.35; color: var(--cream-2); }
+  .post p b { color: var(--cream); font-weight: 700; }
+  .tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .tags span { font-size: 17px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(245,241,232,.18); color: var(--cream-2); }
+
+  /* ---------- brand wall ---------- */
+  .wall .bed { background-image: url(img/klcc-merdeka.jpg); background-position: center 40%; }
+  .wall .rows { margin-top: 52px; display: grid; gap: 18px; }
+  .wall .row { display: grid; grid-template-columns: 186px 1fr; align-items: center; gap: 24px; }
+  .wall .row > .lab { color: var(--gold); }
+  .wall .logos { display: flex; flex-wrap: nowrap; gap: 10px; }
+  .wall .brand { width: 155px; height: 150px; gap: 14px; }
+  .wall .brand .mark { height: 48px; }
+  .wall .brand img { width: 118px; height: 36px; }
+  .wall .brand img.raw { height: 30px; }
+  .wall .brand .word { font-size: 20px; }
+  .wall .brand small { font-size: 13px; }
+
+  /* ---------- contact ---------- */
+  .contact .bed { background-image: url(img/klcc-sunset.jpg); background-position: center 60%; filter: none; }
+  .contact .wash { background: linear-gradient(90deg, rgba(11,16,32,.96) 0%, rgba(11,16,32,.9) 42%, rgba(11,16,32,.45) 75%, rgba(11,16,32,.25) 100%), linear-gradient(0deg, rgba(11,16,32,.85), rgba(11,16,32,0) 40%); }
+  .contact h2 { font-size: 120px; }
+  .mail { display: inline-flex; align-items: center; gap: 22px; margin-top: 48px; padding: 26px 36px 26px 30px; border-radius: 999px; background: var(--gold); color: var(--night); font-family: 'Inter Tight'; font-weight: 800; font-size: 46px; letter-spacing: -0.02em; box-shadow: 0 18px 50px rgba(217,178,111,.25); }
+  .mail svg { width: 44px; height: 44px; stroke-width: 2; }
+  .lines { display: flex; gap: 40px; margin-top: 36px; font-size: 26px; color: var(--cream-2); }
+  .lines a, .lines span { display: inline-flex; align-items: center; gap: 12px; }
+  .lines svg { color: var(--gold); }
+  .soclist { display: grid; grid-template-columns: repeat(3, 330px); gap: 14px; margin-top: 56px; }
+  .soclist a { display: flex; align-items: center; gap: 16px; padding: 18px 22px; border-radius: 16px; background: rgba(20,27,51,.7); border: 1px solid rgba(245,241,232,.14); }
+  .soclist svg { color: var(--gold); width: 30px; height: 30px; }
+  .soclist b { display: block; font-size: 20px; }
+  .soclist small { display: block; font-size: 16px; color: var(--cream-3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ig" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></symbol>
+    <symbol id="tt" viewBox="0 0 24 24"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.2 4.4 5 4.6"/></symbol>
+    <symbol id="fb" viewBox="0 0 24 24"><path d="M14.5 21v-7h2.6l.4-3.2h-3V8.9c0-.9.3-1.6 1.6-1.6h1.6V4.5a20 20 0 0 0-2.4-.1c-2.4 0-4 1.4-4 4.1v2.3H8.7V14h2.6v7"/></symbol>
+    <symbol id="th" viewBox="0 0 24 24"><path d="M16.8 11.2c-.4-2.6-2-3.9-4.3-3.9-2.6 0-4.4 2-4.4 4.7s1.8 4.7 4.6 4.7c2.4 0 4-1.4 4-3.4 0-2.1-1.8-3-4-3-1.6 0-2.7.8-2.7 2 0 1 .9 1.8 2.2 1.8 2.5 0 3.3-2 3.3-4.4 0-4.1-2.7-6.7-6.6-6.7C4.9 3 3 6.9 3 12s1.9 9 8 9c3.4 0 5.6-1.4 6.9-3.6"/></symbol>
+    <symbol id="yt" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="m10 9.2 5 2.8-5 2.8Z"/></symbol>
+    <symbol id="xhs" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M7.5 9h9M7.5 12h9M7.5 15h5"/></symbol>
+    <symbol id="tech" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
+    <symbol id="travel" viewBox="0 0 24 24"><path d="M2.5 13.5 21 6l-3.5 13-5.5-4-3 3v-4.5L18 7"/></symbol>
+    <symbol id="drone" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><rect x="9" y="9.5" width="6" height="5" rx="1.5"/><path d="M7 7.5 9 9.5M17 7.5 15 9.5M7 16.5 9 14.5M17 16.5 15 14.5"/></symbol>
+    <symbol id="prod" viewBox="0 0 24 24"><rect x="2.5" y="7" width="13" height="10" rx="2"/><path d="m15.5 10.5 6-3v9l-6-3"/></symbol>
+    <symbol id="event" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="13" rx="2.5"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 6.5 10 4h4l1.5 2.5"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></symbol>
+    <symbol id="play" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5Z"/></symbol>
+    <symbol id="mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
+    <symbol id="phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4Z"/><path d="M8.5 10h.01M12 10h.01M15.5 10h.01"/></symbol>
+    <symbol id="web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  </defs>
+</svg>
+
+<!-- 1 · COVER -->
+<section class="slide cover">
+  <div class="base"></div><div class="photo"></div><div class="low"></div><div class="grain"></div>
+  <div class="kit-tag">MEDIA KIT · 2026</div>
+  <div class="content">
+    <h1>Aereon <span>Wong</span></h1>
+    <div class="role">Tech &amp; Travel Creator</div>
+    <p class="intro">I review tech gear, cars and lifestyle products, travel destinations, attractions and hotels, and capture drone visuals, then create buzz around them on my social media.</p>
+    <div class="chips">
+      <span class="chip"><svg class="i"><use href="#tech"/></svg>Tech reviews</span>
+      <span class="chip"><svg class="i"><use href="#travel"/></svg>Travel creator</span>
+      <span class="chip"><svg class="i"><use href="#drone"/></svg>Drone pilot</span>
+      <span class="chip"><svg class="i"><use href="#prod"/></svg>Production</span>
+      <span class="chip"><svg class="i"><use href="#event"/></svg>Events</span>
+    </div>
+    <div class="stats">
+      <div><div class="num">134.9K</div><div class="lab">Followers</div></div>
+      <div><div class="num">53M+</div><div class="lab">Views in 2026</div></div>
+      <div><div class="num">71%</div><div class="lab">Aged 25–44</div></div>
+    </div>
+    <div class="socials" id="cover-socials"></div>
+  </div>
+  <div class="portrait" role="img" aria-label="Aereon Wong"></div>
+  <div class="portrait-cap">Kuala Lumpur, Malaysia</div>
+</section>
+
+<!-- 2 · AUDIENCE -->
+<section class="slide aud">
+  <div class="bed"></div><div class="wash"></div><div class="grain"></div>
+  <div class="inner"><div class="grid">
+    <div>
+      <h2>One audience, <em>six platforms</em></h2>
+      <div class="total"><span class="num">134.9K</span><span>followers in total</span></div>
+      <div class="platforms" id="platforms"></div>
+    </div>
+    <div>
+      <div class="kpis">
+        <div class="kpi"><div class="num">53M+</div><p>Views across all platforms in 2026 (Jan–Oct)</p></div>
+        <div class="kpi"><div class="num">49M</div><p>Views across all platforms in 2025</p></div>
+        <div class="kpi"><div class="num">7.3M</div><p>Instagram views in the last 90 days</p></div>
+        <div class="kpi"><div class="num">511K</div><p>Likes, comments, shares and saves in 90 days</p></div>
+      </div>
+      <div class="demo">
+        <div>
+          <h4>Where followers are</h4>
+          <ul class="bars">
+            <li>Malaysia<i style="width:100%"></i><b>60.6%</b></li>
+            <li>Indonesia<i class="dim" style="width:10%"></i><b>6.0%</b></li>
+            <li>India<i class="dim" style="width:8%"></i><b>4.9%</b></li>
+            <li>Singapore<i class="dim" style="width:5.6%"></i><b>3.4%</b></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Who they are</h4>
+          <ul class="bars">
+            <li>25–34<i style="width:100%"></i><b>38.8%</b></li>
+            <li>35–44<i style="width:82%"></i><b>32.0%</b></li>
+            <li>Men<i class="dim" style="width:100%"></i><b>61%</b></li>
+            <li>Women<i class="dim" style="width:64%"></i><b>39%</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="foot"><span>Instagram Insights, Facebook and TikTok data · October 2026</span><b>aereonwong.com</b></div>
+</section>
+
+<div id="services"></div>
+
+<!-- BRAND WALL -->
+<section class="slide wall">
+  <div class="bed"></div><div class="wash"></div><div class="grain"></div>
+  <div class="inner">
+    <h2>Trusted by <em>brands</em> across Asia</h2>
+    <div class="rows" id="wall"></div>
+  </div>
+  <div class="foot"><span>Selected clients and collaborations, 2024–2026</span><b>aereonwong.com</b></div>
+</section>
+
+<!-- CONTACT -->
+<section class="slide contact">
+  <div class="bed"></div><div class="wash"></div><div class="grain"></div>
+  <div class="inner">
+    <h2>Let's create<br><em>together.</em></h2>
+    <p class="sub">Tell me about your brand, product or destination. Rates and packages on request.</p>
+    <a class="mail" href="mailto:collab@aereonwong.com?subject=Collaboration%20enquiry"><svg class="i"><use href="#mail"/></svg>collab@aereonwong.com</a>
+    <div class="lines">
+      <a href="tel:+60122100827"><svg class="i"><use href="#phone"/></svg>+60 12-210 0827</a>
+      <span><svg class="i"><use href="#chat"/></svg>WeChat @aereon</span>
+      <a href="https://aereonwong.com"><svg class="i"><use href="#web"/></svg>aereonwong.com</a>
+    </div>
+    <div class="soclist" id="soclist"></div>
+  </div>
+</section>
+
+<a class="get" href="Aereon-Wong-Media-Kit-2026.pdf" download><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download PDF</a>
+<script>
+const SOC = [
+  ['ig','Instagram','@aereonwong','https://www.instagram.com/aereonwong/','53.8K'],
+  ['tt','TikTok','@aereon.wong','https://www.tiktok.com/@aereon.wong','36.4K'],
+  ['fb','Facebook','AereonAdventure','https://www.facebook.com/AereonAdventure/','30.4K'],
+  ['th','Threads','@aereonwong','https://www.threads.com/@aereonwong','9.6K'],
+  ['yt','YouTube','@AereonWong','https://www.youtube.com/aereonwong','3.6K'],
+  ['xhs','Xiaohongshu','Aereon Wong','https://www.xiaohongshu.com/user/profile/63c313b40000000026011ec3','1.1K'],
+];
+const use = id => `<svg class="i"><use href="#${id}"/></svg>`;
+document.getElementById('cover-socials').innerHTML = SOC.map(s => `<a href="${s[3]}" aria-label="${s[1]}">${use(s[0])}</a>`).join('');
+document.getElementById('platforms').innerHTML = SOC.map(s => `<a class="plat" href="${s[3]}"><span class="top">${use(s[0])}<svg class="i go"><use href="#arrow"/></svg></span><span class="num">${s[4]}</span><span class="handle">${s[1]} · ${s[2]}</span></a>`).join('');
+document.getElementById('soclist').innerHTML = SOC.map(s => `<a href="${s[3]}">${use(s[0])}<span><b>${s[1]}</b><small>${s[2]}</small></span></a>`).join('');
+
+const ig = c => `https://www.instagram.com/p/${c}/`;
+const brand = b => typeof b === 'string'
+  ? `<div class="brand"><span class="word">${b}</span></div>`
+  : `<div class="brand"><div class="mark">${b.img ? `<img${b.raw ? ' class="raw"' : ''} src="img/brands/${b.img}" alt="${b.n}">` : `<span class="word">${b.n}</span>`}</div><small>${b.c || b.n}</small></div>`;
+
+const SERVICES = [
+  { icon: 'tech', k: 'Tech reviews', h: 'Phones and gear, <em>shot on the streets of KL</em>',
+    p: 'Launch reels, real-world camera tests and side-by-side comparisons, posted to Instagram and synced to TikTok and Facebook.',
+    bed: 'DOswfGSk69c',
+    brands: [{img:'apple.svg',n:'Apple'},{img:'samsung.svg',n:'Samsung'},{img:'huawei.svg',n:'Huawei'},{img:'honor.svg',n:'HONOR'},{img:'google.svg',n:'Google Pixel'},{img:'xiaomi.svg',n:'Xiaomi'}],
+    extra: 'Also: vivo · DJI · Insta360 · Canon · ASUS',
+    posts: [['DOswfGSk69c','244K','Samsung Galaxy S25 FE','Malaysia Day in KL'],['DUSV9BHkwXD','83K','HONOR Magic8 Pro','Places to explore in KL'],['DRO6aaCk7en','34K','Phone tech comparison','Apple vs Google vs Samsung'],['DRHfCEwE145','26K','vivo X300 Pro','Zoom test']] },
+  { icon: 'travel', k: 'Travel creator', h: 'Destinations, attractions <em>and hotels</em>',
+    p: 'Destination guides, hotel stays and attraction reels for tourism boards and travel platforms across Asia and the Middle East.',
+    bed: 'DN-RN5ik1cq',
+    brands: [{img:'tourism-malaysia.svg',n:'Tourism Malaysia'},{n:'Singapore Tourism',c:'Tourism board'},{n:'Brunei Tourism',c:'Tourism board'},{n:'China Tourism',c:'Tourism board'},{n:'Dubai Tourism',c:'Tourism board'},{img:'w-hotels.svg',n:'W Hotels',c:'Hotels'}],
+    extra: 'Also: Shangri-La · Hyatt · Trip.com · Klook · Mandai Wildlife',
+    posts: [['DN-RN5ik1cq','148K','Dubai','Places to explore'],['DZeRAwVk3Ca','52K','Brunei','Through my lens'],['DdDmr8zkzBu','48K','Chongqing','Places to explore'],['DWaURuYEzNp','42K','Singapore','Singapore at night']] },
+  { icon: 'drone', k: 'Drone pilot', h: 'KL from the sky, <em>when it matters most</em>',
+    p: 'Aerial coverage of landmark lightings, drone shows, fireworks and brand activations around KLCC, delivered fast while the moment is trending.',
+    bed: 'DcisOenTazA',
+    brands: [{img:'petronas-towers.svg',n:'KLCC',c:'Petronas Twin Towers'},{img:'adidas.svg',n:'adidas',c:'F1 activation'},{img:'publicbank.svg',n:'Public Bank',c:'60th anniversary'},{img:'kltower.png',n:'KL Tower',c:'Fireworks'},{img:'lazada.svg',n:'Lazada',c:'6.6 drone show'},{img:'tourism-malaysia.svg',n:'Tourism Malaysia',c:'Aerial filming'}],
+    extra: 'Drone shows · fireworks · landmark lightings · aerial stills',
+    posts: [['DcisOenTazA','1.13M','Merdeka countdown','KL skyline'],['DN7TF5Pk_wB','537K','KL Tower fireworks','Merdeka 2025'],['Dd8M5MfTqp6','82K','adidas F1 activation','KLCC, Sept 2026'],['DbuVL9MzG_5','82K','Public Bank 60th','Diamond Jubilee celebration']] },
+  { icon: 'prod', k: 'Production', h: 'Full productions <em>for your own channels</em>',
+    p: 'Concept, shoot and edit for brand-owned content: hotel films, resort stories and on-set production for global entertainment brands.',
+    bed: 'DLpV0UOpbl-',
+    brands: [{img:'w-hotels.svg',n:'W Kuala Lumpur',c:'W Kuala Lumpur'},{img:'playstation.svg',n:'PlayStation',c:"Marvel's Wolverine"},{img:'genting.svg',n:'Genting Highlands',c:'Genting Highlands'}],
+    extra: 'Concept · shoot · edit · photography',
+    posts: [['DLpV0UOpbl-',null,'W Kuala Lumpur','Hotel film'],['DdWhw5SzwFG',null,'PlayStation',"Marvel's Wolverine production"],['DFKBKGlJjjm',null,'Genting Highlands','Resorts World Awana']] },
+  { icon: 'event', k: 'KOL event coverage', h: 'Your event, <em>shouted out live</em>',
+    p: 'On-the-day reels and stories that tell my audience what is happening right now: launches, roadshows, fairs and promotions they can still join.',
+    bed: 'DSxIUr8E9Li',
+    brands: [{img:'celcomdigi.svg',n:'CelcomDigi',c:'Tech Fair'},{img:'asus.svg',n:'ASUS',c:'ExpertBook launch'},{img:'mog.png',n:'MOG',c:'Eyewear roadshow'},{n:'Dining in the Sky',c:'Kuala Lumpur'}],
+    extra: 'Launches · roadshows · fairs · promotions',
+    posts: [['DPBTiviE-FC',null,'CelcomDigi Tech Fair','Shout-out, Sept 2025'],['DPDMOUXE5aB',null,'ASUS ExpertBook','Launch at Shangri-La KL'],['DeMPSrmTFyr',null,'MOG Eyewear','Vision Experience roadshow'],['DSxIUr8E9Li',null,'Dining in the Sky','27 Dec 2025 reel']] },
+];
+document.getElementById('services').outerHTML = SERVICES.map(s => `
+<section class="slide svc">
+  <div class="bed" style="background-image:url(img/bed/${s.bed}.jpg)"></div><div class="wash"></div><div class="grain"></div>
+  <div class="inner"><div class="grid">
+    <div class="left">
+      <div class="idx">${use(s.icon)}${s.k}</div>
+      <h2>${s.h}</h2>
+      <p class="sub">${s.p}</p>
+      <div class="brands">${s.brands.map(brand).join('')}</div>
+      <div class="tags"><span>${s.extra}</span></div>
+    </div>
+    <div class="posts" style="grid-template-columns:repeat(${s.posts.length},1fr)">${s.posts.map(p => `
+      <a class="post" href="${ig(p[0])}">
+        <div class="img" style="background-image:url(img/posts/${p[0]}.jpg)">
+          <span class="play"><svg class="i"><use href="#arrow"/></svg></span>
+          ${p[1] ? `<span class="views"><span class="num">${p[1]}</span><small>views</small></span>` : ''}
+        </div>
+        <p><b>${p[2]}</b><br>${p[3]}</p>
+      </a>`).join('')}
+    </div>
+  </div></div>
+  <div class="foot"><span>Tap any post to open it on Instagram</span><b>aereonwong.com</b></div>
+</section>`).join('');
+
+const WALL = [
+  ['Tech', [{img:'apple.svg',n:'Apple'},{img:'samsung.svg',n:'Samsung'},{img:'huawei.svg',n:'Huawei'},{img:'honor.svg',n:'HONOR'},{img:'google.svg',n:'Google Pixel'},{img:'xiaomi.svg',n:'Xiaomi'},{img:'vivo.svg',n:'vivo'},{img:'dji.svg',n:'DJI'},{img:'insta360.svg',n:'Insta360'}]],
+  ['Travel', [{img:'tourism-malaysia.svg',n:'Tourism Malaysia'},{n:'Singapore Tourism',c:'Tourism board'},{n:'Brunei Tourism',c:'Tourism'},{n:'Dubai Tourism',c:'Tourism'},{img:'w-hotels.svg',n:'W Hotels'},{img:'hyatt.svg',n:'Hyatt'},{img:'tripdotcom.svg',n:'Trip.com'},{img:'klook.svg',n:'Klook'},{img:'mandai.svg',n:'Mandai'}]],
+  ['Auto & lifestyle', [{img:'tesla.svg',n:'Tesla'},{img:'byd.svg',n:'BYD'},{img:'xpeng.svg',n:'XPENG'},{img:'proton.svg',n:'Proton'},{img:'adidas.svg',n:'adidas'},{img:'playstation.svg',n:'PlayStation'},{img:'airasia-move-mono.svg',n:'AirAsia MOVE'},{img:'shopee.svg',n:'Shopee'},{img:'lazada.svg',n:'Lazada'}]],
+  ['Landmarks & events', [{img:'petronas-towers.svg',n:'KLCC'},{img:'genting.svg',n:'Genting'},{img:'kltower.png',n:'KL Tower'},{img:'publicbank.svg',n:'Public Bank'},{img:'celcomdigi.svg',n:'CelcomDigi'},{img:'cimb.svg',n:'CIMB'},{img:'asus.svg',n:'ASUS'},{img:'mog.png',n:'MOG Eyewear'},{n:'Dining in the Sky',c:'Experience'}]],
+];
+document.getElementById('wall').innerHTML = WALL.map(([k, bs]) => `<div class="row"><div class="lab">${k}</div><div class="logos">${bs.map(brand).join('')}</div></div>`).join('');
+
+// ?s=N shows one slide only (used to render previews)
+const only = +new URLSearchParams(location.search).get('s');
+// fit each 1920×1080 slide to the screen width (16px gutter each side on phones)
+const fit = () => document.documentElement.style.setProperty('--z', Math.min(1, (document.documentElement.clientWidth - (innerWidth < 700 ? 32 : 64)) / 1920));
+if (!only) { fit(); addEventListener('resize', fit); }
+if (only) { document.body.style.cssText = 'padding:0;gap:0;display:block'; document.querySelector('.get')?.remove(); [...document.querySelectorAll('.slide')].forEach((el, i) => { if (i + 1 !== only) el.remove(); }); }
+</script>
+</body>
+</html>
