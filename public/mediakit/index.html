@@ -34,12 +34,20 @@
   @media print { .grain { display: none; } }
   @media screen {
     body { display: grid; gap: calc(32px * var(--z, 1)); padding: calc(32px * var(--z, 1)) 0 96px; justify-content: center; }
-    .slide { zoom: var(--z, 1); border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    /* Shrink each 1920×1080 slide like a picture. Not CSS zoom: iPhone Safari re-enlarges text inside a
+       zoomed box, so words spill out of their cards. The negative margins give the grid the scaled size. */
+    .slide { transform: scale(var(--z, 1)); transform-origin: 0 0; border-radius: calc(12px / var(--z, 1));
+      margin: 0 calc(1920px * (var(--z, 1) - 1)) calc(1080px * (var(--z, 1) - 1)) 0; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
     .get { position: fixed; right: 20px; bottom: 20px; z-index: 5; display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border-radius: 999px;
       background: var(--gold); color: var(--night); font: 700 15px/1 Manrope, system-ui, sans-serif; letter-spacing: .02em; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
     .get:hover { filter: brightness(1.06); }
     .get:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
     .get svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  }
+  @media screen and (max-width: 700px) {
+    .get { right: 12px; bottom: 12px; padding: 9px 13px; gap: 7px; font-size: 13px; }
+    .get svg { width: 15px; height: 15px; }
   }
   @media print { .get { display: none; } }
 
