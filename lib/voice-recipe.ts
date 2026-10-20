@@ -145,7 +145,8 @@ export const CHECK = {
 // name); `heard` = how the speech-to-text writes it when it IS said right — it hears a good
 // "Aereon" as "Arian", so that counts. A name not heard as one of these fails the take.
 export const BRANDS: { name: string; say?: string; heard: string[] }[] = [
-  { name: 'Aereon', heard: ['aereon', 'arian', 'arion', 'aerion', 'erion', 'ariane'] },
+  // "Aereon" as written sounded very bad; "Aerion" chosen by ear 20 Oct 2026 (backup "Airy-on").
+  { name: 'Aereon', say: 'Aerion', heard: ['aereon', 'arian', 'arion', 'aerion', 'erion', 'ariane'] },
   { name: 'KLCC', say: 'K-L-C-C', heard: ['klcc', 'k l c c', 'klc c', 'kl cc'] },
   { name: 'Kuala Lumpur', heard: ['kuala lumpur'] },
 ]
