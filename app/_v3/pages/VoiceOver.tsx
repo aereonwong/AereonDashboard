@@ -14,7 +14,8 @@ type Status = 'checking' | 'ready' | 'offline'
 type Profile = { id: string; name: string }
 type Take = { n: number; url: string; seconds: number; checked: boolean; pass: boolean; fails: string[]; heard: string }
 
-const SAMPLE = "Hey guys, Aereon Wong here! Today we're flying the drone over Kuala Lumpur at sunrise... So, let's GO!"
+// Sign-off tested by ear (20 Oct 2026): "Alright, let's go!" or "So let's go!" — never "So... let's go!" or CAPS GO.
+const SAMPLE = "Hey guys, Aereon Wong here! Today we're flying the drone over Kuala Lumpur at sunrise, and the light is unreal. Alright, let's go!"
 
 async function generate(text: string, profileId: string, speed: number, steps: number, signal: AbortSignal) {
   const form = new FormData()
@@ -171,8 +172,8 @@ export default function VoiceOver() {
             <textarea className="v3-input vo-text" rows={7} value={script} onChange={e => setScript(e.target.value)} maxLength={4000} />
           </label>
           <p className="vo-hint">
-            Tone comes from punctuation: <b>,</b> a breath · <b>...</b> a pause · <b>!</b> lifts the energy · CAPS stresses a word (&ldquo;let&apos;s GO!&rdquo;).
-            Write it the way you talk.
+            Tone comes from punctuation: <b>,</b> a breath · <b>...</b> a pause · <b>!</b> lifts the energy · CAPS stresses a word.
+            Write it the way you talk. End on &ldquo;Alright, let&apos;s go!&rdquo; or &ldquo;So let&apos;s go!&rdquo; — no &ldquo;...&rdquo; or CAPS before the sign-off.
           </p>
           {split && parts.body ? (
             <dl className="vo-split">

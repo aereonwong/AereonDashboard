@@ -231,6 +231,7 @@ words/s on lines of 8+ words, no pause over 1.2 s, no clipping. Failed takes fol
 `BRANDS`: `say` = spelling sent to the voice (KLCC → K-L-C-C), `heard` = how speech-to-text writes it when said right
 (it hears a good "Aereon" as "Arian"). Same rules and list as `~/Desktop/VoiceStudio/tools/check.py` + `brands.json`
 (Claude skill `voice-over`) — change both together.
+Sign-off, by ear (20 Oct 2026): "Alright, let's go!" or "So let's go!" — "So... let's go!" and CAPS "GO" sound unnatural.
 
 
 ## Site analytics (16 Oct 2026)
