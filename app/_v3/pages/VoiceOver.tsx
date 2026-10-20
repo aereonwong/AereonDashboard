@@ -1,22 +1,24 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MAX_TAKES, RECIPE, VOICESTUDIO, readWav, splitScript, stitch, writeWav } from '@/lib/voice-recipe'
+import { MAX_TAKES, RECIPE, VOICESTUDIO, judge, readWav, sayAs, splitScript, stitch, writeWav, type Verdict } from '@/lib/voice-recipe'
 
 // 👉 v3 Voice-over: type a script, get it back in Aereon's cloned voice.
 // The browser talks straight to VoiceStudio on this Mac (127.0.0.1:3900) — our server never
 // sees the script or the audio. VoiceStudio only answers sites on its allowed list
 // (OMNIVOICE_ALLOWED_ORIGINS), so on any other computer, or with the app closed, this page
 // says so instead of generating. The recipe (speeds, steps, intro split) is lib/voice-recipe.ts.
+// With "Check each take" on, every part is read back by VoiceStudio's speech-to-text and measured
+// (judge() in the same file); takes that fail are folded away with the reason.
 
 type Status = 'checking' | 'ready' | 'offline'
 type Profile = { id: string; name: string }
-type Take = { n: number; url: string; seconds: number }
+type Take = { n: number; url: string; seconds: number; checked: boolean; pass: boolean; fails: string[]; heard: string }
 
 const SAMPLE = "Hey guys, Aereon Wong here! Today we're flying the drone over Kuala Lumpur at sunrise... So, let's GO!"
 
 async function generate(text: string, profileId: string, speed: number, steps: number, signal: AbortSignal) {
   const form = new FormData()
-  form.set('text', text)
+  form.set('text', sayAs(text))
   form.set('language', RECIPE.language)
   form.set('profile_id', profileId)
   form.set('speed', String(speed))
@@ -24,6 +26,16 @@ async function generate(text: string, profileId: string, speed: number, steps: n
   const r = await fetch(`${VOICESTUDIO}/generate`, { method: 'POST', body: form, signal })
   if (!r.ok) throw new Error(`VoiceStudio said ${r.status}: ${(await r.text()).slice(0, 160)}`)
   return readWav(await r.arrayBuffer())
+}
+
+// VoiceStudio's speech-to-text, on the take we just made — still on this Mac.
+async function transcribe(wav: ArrayBuffer, signal: AbortSignal) {
+  const form = new FormData()
+  form.set('audio', new Blob([wav], { type: 'audio/wav' }), 'take.wav')
+  form.set('language', RECIPE.language)
+  const r = await fetch(`${VOICESTUDIO}/transcribe`, { method: 'POST', body: form, signal })
+  if (!r.ok) throw new Error(`read-back ${r.status}`)
+  return String(((await r.json()) as { text?: string }).text ?? '')
 }
 
 // Local time, e.g. 20261019-0314, so downloads sort in the order they were made.
@@ -38,6 +50,7 @@ export default function VoiceOver() {
   const [profileId, setProfileId] = useState<string>(RECIPE.profileId)
   const [script, setScript] = useState(SAMPLE)
   const [split, setSplit] = useState(true)
+  const [checkTakes, setCheckTakes] = useState(true)
   const [takes, setTakes] = useState(2)
   const [introSpeed, setIntroSpeed] = useState<number>(RECIPE.introSpeed)
   const [bodySpeed, setBodySpeed] = useState<number>(RECIPE.bodySpeed)
@@ -76,15 +89,33 @@ export default function VoiceOver() {
       for (let n = 1; n <= takes; n++) {
         const tag = takes > 1 ? `Take ${n} of ${takes}` : 'Generating'
         setBusy(`${tag} · ${parts.body ? 'intro' : 'script'}…`)
-        const pieces = [await generate(parts.intro, profileId, parts.body ? introSpeed : bodySpeed, steps, ctl.signal)]
-        if (parts.body) {
-          setBusy(`${tag} · body…`)
-          pieces.push(await generate(parts.body, profileId, bodySpeed, steps, ctl.signal))
+        const texts = parts.body ? [parts.intro, parts.body] : [parts.intro]
+        const pieces = []
+        const verdicts: Verdict[] = []
+        let checked = checkTakes
+        for (const [i, text] of texts.entries()) {
+          const what = parts.body ? (i ? 'body' : 'intro') : 'script'
+          if (i) setBusy(`${tag} · ${what}…`)
+          const pcm = await generate(text, profileId, parts.body && !i ? introSpeed : bodySpeed, steps, ctl.signal)
+          pieces.push(pcm)
+          if (!checked) continue
+          setBusy(`${tag} · checking ${what}…`)
+          try {
+            verdicts.push(judge(text, await transcribe(writeWav(pcm), ctl.signal), pcm))
+          } catch (e) {
+            if (ctl.signal.aborted) throw e
+            checked = false // read-back not available — keep the take, unchecked
+          }
         }
         const out = stitch(pieces)
         const url = URL.createObjectURL(new Blob([writeWav(out)], { type: 'audio/wav' }))
         urls.current.push(url)
-        const take = { n, url, seconds: out.samples.length / out.sampleRate }
+        const take = {
+          n, url, seconds: out.samples.length / out.sampleRate, checked,
+          pass: !checked || verdicts.every(v => v.pass),
+          fails: checked ? verdicts.flatMap((v, i) => v.fails.map(f => (texts.length > 1 ? `${i ? 'Body' : 'Intro'}: ${f}` : f))) : [],
+          heard: verdicts.map(v => v.heard).join(' '),
+        }
         setResults(r => [take, ...r])
       }
     } catch (e) {
@@ -97,6 +128,8 @@ export default function VoiceOver() {
       abort.current = null
     }
   }
+
+  const passed = results.filter(t => t.pass), failed = results.filter(t => !t.pass)
 
   return (
     <div>
@@ -172,6 +205,10 @@ export default function VoiceOver() {
               <input type="checkbox" checked={split} onChange={e => setSplit(e.target.checked)} />
               Slower intro (first sentence on its own)
             </label>
+            <label className="vo-check">
+              <input type="checkbox" checked={checkTakes} onChange={e => setCheckTakes(e.target.checked)} />
+              Check each take (read back, keep passes)
+            </label>
             <details className="vo-more">
               <summary>Fine-tune</summary>
               <div className="vo-nums">
@@ -203,21 +240,41 @@ export default function VoiceOver() {
             <p className="v3-panel-note">Kept until you leave this page — download the ones you want</p>
           </div>
           {results.length ? (
-            <ul className="vo-takes">
-              {results.map(t => (
-                <li key={t.url}>
-                  <b>Take {t.n}</b>
-                  <audio controls src={t.url} preload="metadata" />
-                  <span className="vo-meta">{t.seconds.toFixed(1)} s</span>
-                  <a className="v3-btn" href={t.url} download={`aereon-voiceover-${stamp()}-take${t.n}.wav`}>Download</a>
-                </li>
-              ))}
-            </ul>
+            <>
+              {passed.length ? (
+                <ul className="vo-takes">{passed.map(t => <TakeRow key={t.url} t={t} />)}</ul>
+              ) : (
+                <p className="v3-empty">No take passed the check — try again, or reword the line (commas, spelling).</p>
+              )}
+              {failed.length ? (
+                <details className="vo-more vo-failed">
+                  <summary>Didn&apos;t pass ({failed.length})</summary>
+                  <ul className="vo-takes">{failed.map(t => <TakeRow key={t.url} t={t} />)}</ul>
+                </details>
+              ) : null}
+            </>
           ) : (
             <p className="v3-empty">Nothing yet. A 10-second line takes about a minute at quality settings.</p>
           )}
         </section>
       </div>
     </div>
+  )
+}
+
+function TakeRow({ t }: { t: Take }) {
+  return (
+    <li>
+      <b>Take {t.n}</b>
+      <audio controls src={t.url} preload="metadata" />
+      <span className="vo-meta">{t.seconds.toFixed(1)} s</span>
+      <a className="v3-btn" href={t.url} download={`aereon-voiceover-${stamp()}-take${t.n}.wav`}>Download</a>
+      {t.checked ? (
+        <p className="vo-verdict">
+          <span className={t.pass ? 'is-pass' : 'is-fail'}>{t.pass ? 'Passed' : t.fails.join(' · ')}</span>
+          <span className="vo-heard">Heard: &ldquo;{t.heard}&rdquo;</span>
+        </p>
+      ) : null}
+    </li>
   )
 }
