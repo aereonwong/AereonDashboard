@@ -127,3 +127,94 @@ export function stitch(parts: Pcm[], gap: number = RECIPE.gap): Pcm {
   })
   return { samples: out, sampleRate }
 }
+
+// ---------------------------------------------------------------- auto-check (20 Oct 2026)
+// Every part of a take is read back by VoiceStudio's speech-to-text and measured. A take
+// passes only when all of CHECK holds, so Aereon listens to passes only. Same rules as
+// ~/Desktop/VoiceStudio/tools/check.py. Numbers can't tell whether it SOUNDS like Aereon.
+
+export const CHECK = {
+  match: 0.85, // share of script words heard back
+  pace: [2.2, 4.5] as const, // words a second of speech — good takes measured 3.1–3.7 (20 Oct 2026)
+  paceMinWords: 8, // shorter lines swing too much on one long name to judge pace
+  pause: 1.2, // longest silence inside a part, seconds
+  peak: -0.5, // loudest sample, dBFS — above this it clips
+}
+
+// Names the voice must say right. `say` = how to spell it for the voice (sent instead of the
+// name); `heard` = how the speech-to-text writes it when it IS said right — it hears a good
+// "Aereon" as "Arian", so that counts. A name not heard as one of these fails the take.
+export const BRANDS: { name: string; say?: string; heard: string[] }[] = [
+  { name: 'Aereon', heard: ['aereon', 'arian', 'arion', 'aerion', 'erion', 'ariane'] },
+  { name: 'KLCC', say: 'K-L-C-C', heard: ['klcc', 'k l c c', 'klc c', 'kl cc'] },
+  { name: 'Kuala Lumpur', heard: ['kuala lumpur'] },
+]
+
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const word = (s: string) => new RegExp(`(?<![\\p{L}\\p{N}])${esc(s)}(?![\\p{L}\\p{N}])`, 'giu')
+
+// The text the voice is given: brand names swapped for their spoken spelling.
+export function sayAs(text: string, brands = BRANDS): string {
+  return brands.reduce((t, b) => (b.say ? t.replace(word(b.name), b.say) : t), text)
+}
+
+const NUMS = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty'.split(' ')
+
+// Lower-case words with each brand (any of its spellings) folded into one token.
+export function wordsOf(text: string, brands = BRANDS): string[] {
+  let t = ` ${text.toLowerCase()} `
+  brands.forEach((b, i) => {
+    for (const s of [b.name.toLowerCase(), ...(b.say ? [b.say.toLowerCase()] : []), ...b.heard].sort((x, y) => y.length - x.length))
+      t = t.replace(word(s), ` brand${i} `)
+  })
+  return (t.match(/[\p{L}\p{N}']+/gu) ?? []).map(w => (/^\d+$/.test(w) && +w <= 20 ? NUMS[+w] : w.replace(/'/g, '')))
+}
+
+// 2 × (words in common, in order) ÷ (both lengths) — difflib's ratio, via longest common subsequence.
+export function matchRatio(a: string[], b: string[]): number {
+  if (!a.length && !b.length) return 1
+  let prev = new Array(b.length + 1).fill(0)
+  for (const x of a) {
+    const row = [0]
+    for (let j = 0; j < b.length; j++) row.push(x === b[j] ? prev[j] + 1 : Math.max(prev[j + 1], row[j]))
+    prev = row
+  }
+  return (2 * prev[b.length]) / (a.length + b.length)
+}
+
+// Speech length (silence off both ends), longest pause inside, loudest peak — 10 ms windows, -35 dB.
+export function measure({ samples, sampleRate }: Pcm) {
+  const win = Math.max(1, Math.round(sampleRate / 100))
+  const floor = 10 ** (-35 / 20)
+  const loud: boolean[] = []
+  for (let i = 0; i < samples.length; i += win) loud.push(rms(samples.subarray(i, i + win)) > floor)
+  const first = loud.indexOf(true), last = loud.lastIndexOf(true)
+  let longest = 0, run = 0
+  for (let i = first; first >= 0 && i <= last; i++) { run = loud[i] ? 0 : run + 1; longest = Math.max(longest, run) }
+  let peak = 0
+  for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]))
+  return {
+    seconds: samples.length / sampleRate,
+    speech: first < 0 ? 0 : ((last - first + 1) * win) / sampleRate,
+    longestPause: (longest * win) / sampleRate,
+    peakDb: peak > 0 ? 20 * Math.log10(peak) : -Infinity,
+  }
+}
+
+export type Verdict = { pass: boolean; fails: string[]; match: number; pace: number; heard: string }
+
+export function judge(script: string, heard: string, pcm: Pcm, brands = BRANDS): Verdict {
+  const want = wordsOf(script, brands), got = wordsOf(heard, brands)
+  const m = measure(pcm)
+  const match = matchRatio(want, got)
+  const pace = m.speech > 0 ? script.trim().split(/\s+/).length / m.speech : 0
+  const count = (list: string[], t: string) => list.filter(w => w === t).length
+  const missed = brands.filter((_, i) => count(want, `brand${i}`) > count(got, `brand${i}`)).map(b => b.name)
+  const fails: string[] = []
+  if (match < CHECK.match) fails.push(`only ${Math.round(match * 100)}% of words heard back`)
+  if (missed.length) fails.push(`${missed.join(', ')} said wrong`)
+  if (want.length >= CHECK.paceMinWords && (pace < CHECK.pace[0] || pace > CHECK.pace[1])) fails.push(`pace ${pace.toFixed(1)} words/s`)
+  if (m.longestPause > CHECK.pause) fails.push(`${m.longestPause.toFixed(1)} s pause`)
+  if (m.peakDb > CHECK.peak) fails.push('clipping')
+  return { pass: !fails.length, fails, match, pace, heard }
+}

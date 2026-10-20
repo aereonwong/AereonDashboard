@@ -38,3 +38,10 @@
   .vo-takes li > a { justify-self: start; }
   .vo-split div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
+
+/* Auto-check verdict under each take; failed takes fold into "Didn't pass". */
+.vo-verdict { grid-column: 1 / -1; margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); font-size: var(--t-xs); color: var(--ink-3); }
+.vo-verdict .is-pass { color: var(--pos); font-weight: 600; }
+.vo-verdict .is-fail { color: var(--neg); }
+.vo-heard { min-width: 0; overflow-wrap: anywhere; }
+.vo-failed { margin-top: var(--space-4); }

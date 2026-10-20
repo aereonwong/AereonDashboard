@@ -45,3 +45,39 @@ test('stitch matches each part to the body\'s level and adds the gap', () => {
   assert.ok(Math.abs(rms(introPart) / rms(body.samples) - 1) < 0.05, 'intro level matches body')
   assert.throws(() => stitch([intro, { samples: tone(1, 0.2), sampleRate: 44100 }]))
 })
+
+import { judge, matchRatio, measure, sayAs, wordsOf } from '../lib/voice-recipe.ts'
+
+test('brands are spelled for the voice and folded when read back', () => {
+  assert.equal(sayAs('Over KLCC and klcc park'), 'Over K-L-C-C and K-L-C-C park')
+  assert.equal(sayAs('KLCCX stays'), 'KLCCX stays')
+  assert.deepEqual(wordsOf('Hey guys, Arian Wong here.'), wordsOf('Hey guys, Aereon Wong here!'))
+  assert.deepEqual(wordsOf('over K-L-C-C'), wordsOf('over KLCC'))
+  assert.deepEqual(wordsOf('3 drones'), ['three', 'drones'])
+})
+
+test('match ratio follows difflib', () => {
+  assert.equal(matchRatio(['a', 'b'], ['a', 'b']), 1)
+  assert.equal(matchRatio(['a', 'b', 'c', 'd'], ['a', 'x', 'c', 'd']), 0.75)
+  assert.equal(matchRatio([], []), 1)
+})
+
+test('measure finds speech length and the longest inner pause', () => {
+  const m = measure({ samples: cat(new Float32Array(SR / 2), tone(1, 0.3), new Float32Array(SR * 1.5), tone(1, 0.3), new Float32Array(SR / 4)), sampleRate: SR })
+  assert.ok(Math.abs(m.speech - 3.5) < 0.05, `speech ${m.speech}`)
+  assert.ok(Math.abs(m.longestPause - 1.5) < 0.05, `pause ${m.longestPause}`)
+  assert.ok(m.peakDb < -10 && m.peakDb > -11)
+})
+
+test('a take with the name misheard fails; a good one passes', () => {
+  const pcm = { samples: tone(1.8, 0.3), sampleRate: SR }
+  const ok = judge('Hey guys, Aereon Wong here!', 'Hey guys, Arian Wong here.', pcm)
+  assert.equal(ok.pass, true, ok.fails.join())
+  const bad = judge('Hey guys, Aereon Wong here!', 'Hey guys, everyone wrong here.', pcm)
+  assert.equal(bad.pass, false)
+  assert.ok(bad.fails.some(f => f.includes('Aereon said wrong')))
+  assert.ok(judge('Hey guys, Aereon Wong here!', 'Hey guys, Arian Wong here.', { samples: tone(1.8, 1), sampleRate: SR }).fails.includes('clipping'))
+  assert.equal(judge('Hey guys, Aereon Wong here!', 'Hey guys, Arian Wong here.', { samples: tone(1.1, 0.3), sampleRate: SR }).pass, true, 'short line: pace not judged')
+  const long = 'Today we are flying the drone over the towers at sunrise'
+  assert.ok(judge(long, long, { samples: tone(1.5, 0.3), sampleRate: SR }).fails.some(f => f.startsWith('pace')))
+})
