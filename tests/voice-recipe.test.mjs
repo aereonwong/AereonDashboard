@@ -51,6 +51,7 @@ import { judge, matchRatio, measure, sayAs, wordsOf } from '../lib/voice-recipe.
 test('brands are spelled for the voice and folded when read back', () => {
   assert.equal(sayAs('Over KLCC and klcc park'), 'Over K-L-C-C and K-L-C-C park')
   assert.equal(sayAs('KLCCX stays'), 'KLCCX stays')
+  assert.equal(sayAs('Hey guys, Aereon Wong here!'), 'Hey guys, Aerion Wong here!')
   assert.deepEqual(wordsOf('Hey guys, Arian Wong here.'), wordsOf('Hey guys, Aereon Wong here!'))
   assert.deepEqual(wordsOf('over K-L-C-C'), wordsOf('over KLCC'))
   assert.deepEqual(wordsOf('3 drones'), ['three', 'drones'])
