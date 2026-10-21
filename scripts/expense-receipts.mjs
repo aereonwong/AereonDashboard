@@ -24,6 +24,7 @@ const LIMIT = Number(flag('--limit') ?? 1000)
 const DRY = args.includes('--dry')
 const KIND = flag('--kind')
 const FOLDER_ARG = flag('--folder')
+const REDO = args.includes('--redo') // print and file again, then move the old file to Drive's trash
 const PICK = flag('--pick') ? new RegExp(flag('--pick'), 'i') : null // which attachment is the receipt, by file name
 if (!VENDOR) {
   console.error('Usage: npm run expense:receipts -- --vendor "<vendor>" [--limit n] [--dry]')
@@ -39,7 +40,7 @@ let q = db.from('expense').select('*').eq('vendor', VENDOR).order('spent_on')
 if (KIND) q = q.eq('kind', KIND)
 const { data: rows, error } = await q
 if (error) throw new Error(error.message)
-const todo = rows.filter(r => r.source_ref?.gmail_id && r.receipt?.status !== 'filed' && r.receipt?.status !== 'waived').slice(0, LIMIT)
+const todo = rows.filter(r => r.source_ref?.gmail_id && (REDO || (r.receipt?.status !== 'filed' && r.receipt?.status !== 'waived'))).slice(0, LIMIT)
 console.log(`${todo.length} of ${rows.length} ${VENDOR} expenses need a receipt → Drive folder ${FOLDER}`)
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -47,7 +48,14 @@ const esc = t => String(t ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&
 /** The email itself, printed to PDF: a small header (subject, from, date) then the message as it arrived. */
 async function printEmail(msg, htmlPath, pdfPath) {
   const head = `<div style="font:12px Arial;color:#444;border-bottom:1px solid #ccc;margin-bottom:12px;padding-bottom:8px"><b>${esc(msg.subject)}</b><br>From: ${esc(msg.sender)}<br>Date: ${esc(msg.messageTimestamp)}<br>To: ${esc(msg.to)}</div>`
-  await writeFile(htmlPath, `<!doctype html><meta charset="utf-8">${head}${msg.messageText}`)
+  // Some senders (AirAsia) keep their real content in the HTML part and only a one-line text part in messageText.
+  const walk = (p, out = []) => {
+    if (p?.body?.data) out.push({ mime: p.mimeType, text: Buffer.from(p.body.data, 'base64url').toString('utf8') })
+    ;(p?.parts ?? []).forEach(x => walk(x, out))
+    return out
+  }
+  const html = walk(msg.payload).find(p => p.mime === 'text/html')?.text
+  await writeFile(htmlPath, `<!doctype html><meta charset="utf-8">${head}${html && html.length > String(msg.messageText ?? '').length ? html : msg.messageText}`)
   await run(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--print-to-pdf=${pdfPath}`, `file://${htmlPath}`], { timeout: 60_000 }).catch(() => {})
   const { size } = await stat(pdfPath).catch(() => ({ size: 0 }))
   if (!size) throw new Error('could not print the email to PDF')
@@ -93,8 +101,10 @@ for (const r of todo) {
     if (!id) throw new Error('Drive did not return a file id')
     const url = String(file?.webViewLink ?? `https://drive.google.com/file/d/${id}/view`)
     const receipt = { status: 'filed', file_id: id, url, name, uploaded_at: new Date().toISOString(), source: 'gmail' }
+    const oldId = REDO && r.receipt?.status === 'filed' ? r.receipt.file_id : null
     const { error: e2 } = await db.from('expense').update({ receipt, updated_at: new Date().toISOString() }).eq('id', r.id)
     if (e2) throw new Error(e2.message)
+    if (oldId && oldId !== id) await exec('GOOGLEDRIVE_TRASH_FILE', { file_id: oldId, fields: 'id,trashed' }).catch(e => console.log(`    (old file not trashed: ${e.message.slice(0, 80)})`))
     done++
     console.log(`  ✓ ${name}`)
   } catch (e) {
