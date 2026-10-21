@@ -1,5 +1,5 @@
 import type { ExpensesRead } from '@/lib/expenses'
-import { KIND_LABEL, summarise } from '@/lib/expenses-math'
+import { KIND_LABEL, foreignText, summarise } from '@/lib/expenses-math'
 import { rmFull } from '../fmt'
 import { plural, today } from '../pages/property/shared'
 import '../expenses.css'
@@ -39,7 +39,11 @@ export default function Spend({ expenses }: { expenses?: ExpensesRead }) {
             <div>
               <div className="v3-kpi-label">Spent so far</div>
               <div className="v3-kpi-value">{rmFull(s.ytd)}</div>
-              <div className="v3-kpi-note">{plural(s.count, 'payment')}</div>
+              <div className="v3-kpi-note">
+                {plural(s.count, 'payment')}
+                {s.foreign.length ? ` · plus ${s.foreign.map(f => foreignText(f.currency, f.total)).join(' + ')} in other currencies` : ''}
+                {s.pending ? ` · ${s.pending} waiting for the RM figure` : ''}
+              </div>
             </div>
             <div>
               <div className="v3-kpi-label">This month</div>

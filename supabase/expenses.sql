@@ -28,10 +28,28 @@ create table if not exists expense (
   constraint expense_rm_or_original check (amount is not null or (currency <> 'MYR' and original_amount is not null))
 );
 
--- The same booking or order can never be filed twice (a Refund may share its order's reference).
-create unique index if not exists expense_vendor_reference_uq on expense (vendor, reference, doc_type) where reference is not null;
+-- The same booking or order can never be filed twice (a Refund may share its order's reference): see the unique index below.
 create index if not exists expense_spent_on_idx on expense (spent_on desc);
 create index if not exists expense_kind_idx on expense (kind);
+
+-- Upgrade for a table created by an earlier version of this file (a no-op on a fresh one): RM amount optional for
+-- foreign-currency rows, an estimate flag, the document type, and a unique key that lets a Refund share its order's reference.
+alter table expense add column if not exists amount_estimated boolean not null default false;
+alter table expense add column if not exists doc_type text not null default 'Receipt';
+alter table expense alter column amount drop not null;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conrelid = 'expense'::regclass and conname = 'expense_doc_type_check') then
+    alter table expense add constraint expense_doc_type_check check (doc_type in ('Invoice','Receipt','Refund'));
+  end if;
+  alter table expense drop constraint if exists expense_amount_check;
+  alter table expense add constraint expense_amount_check check (amount is null or amount >= 0);
+  if not exists (select 1 from pg_constraint where conrelid = 'expense'::regclass and conname = 'expense_rm_or_original') then
+    alter table expense add constraint expense_rm_or_original check (amount is not null or (currency <> 'MYR' and original_amount is not null));
+  end if;
+end $$;
+drop index if exists expense_vendor_reference_uq;
+create unique index if not exists expense_vendor_reference_uq on expense (vendor, reference, doc_type) where reference is not null;
 
 -- Server-side only, like every other table here: RLS on, no policies.
 alter table expense enable row level security;
