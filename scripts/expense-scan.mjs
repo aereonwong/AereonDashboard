@@ -150,9 +150,74 @@ async function googlePlay(msg) {
   }
 }
 
+// ── Flights ─────────────────────────────────────────────────────────────────────────────────────────────────────
+// Trip.com: the E-receipt PDF attached to "Flight Booking Confirmed" has the total. Ctrip (Chinese) confirmations state the
+// total in yuan, kept as CNY. Royal Brunei states the total in the email itself, which is then printed to PDF as the receipt.
+async function pdfText(msg, att) {
+  const dir = await mkdtemp(join(tmpdir(), 'flight-'))
+  try {
+    const got = await exec('GMAIL_GET_ATTACHMENT', { message_id: msg.messageId, attachment_id: att.attachmentId, file_name: 'x.pdf' })
+    const res = await fetch(got.file.s3url)
+    if (!res.ok) throw new Error(`could not download the PDF (${res.status})`)
+    const pdf = join(dir, 'x.pdf')
+    await writeFile(pdf, Buffer.from(await res.arrayBuffer()))
+    return (await run('swift', [fileURLToPath(new URL('./pdf-text.swift', import.meta.url)), pdf], { maxBuffer: 1 << 24 })).stdout
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+}
+
+async function tripFlight(msg) {
+  const att = (msg.attachmentList ?? []).find(a => /e-?receipt/i.test(a.filename ?? ''))
+  if (!att) return { review: `Trip.com flight ${msg.messageId} (${msg.subject.slice(0, 60)}): no E-receipt attached`, ref: msg.messageId }
+  const t = await pdfText(msg, att)
+  const no = t.match(/Booking No\.?\s*(\d{10,})/)?.[1]
+  const total = t.match(/Total[^\n]*?(?:MYR|RM)\s?(-?[\d,]+\.\d{2})/)?.[1]
+  const booked = parseDate(t.match(/Date of Booking:[^\n]*?([A-Za-z]+ \d{1,2}, \d{4})/)?.[1] ?? '')
+  if (!no || !total) return { review: `Trip.com flight ${msg.messageId}: could not read booking no. / total`, ref: msg.messageId }
+  // The E-receipt lists "NAME ticket-no" lines under the passenger heading and "A - B" legs under "Flights".
+  const pax = (t.match(/Passenger & E-ticket No\.?\s*\n([\s\S]*?)\nFlights/i)?.[1] ?? '').split('\n').map(l => clean(l).replace(/\s*[\d-]{8,}$/, '')).filter(Boolean)
+  const others = pax.filter(x => !OWNER.test(x))
+  const legs = (t.match(/\nFlights\s*\n([\s\S]*?)\nPrice Summary/i)?.[1] ?? '').split('\n').map(clean).filter(l => /^[A-Z][A-Za-z .'()]+ - [A-Z][A-Za-z .'()]+$/.test(l))
+  const route = legs.join(', ')
+  const row = {
+    spent_on: booked ?? myDay(msg.messageTimestamp), kind: 'flight', vendor: 'Trip.com', description: route ? `Flight ${route}` : 'Flight', amount: money(total), reference: no,
+    notes: Number(total.replace(/,/g, '')) === 0 ? 'Paid with Trip Coins and promo code — no cash charged' : null, source: 'gmail', source_ref: { gmail_id: msg.messageId, attachment: att.filename },
+  }
+  if (Number(total.replace(/,/g, '')) < 0) return { review: `Trip.com flight ${no}: negative total (a refund?)`, row: undefined }
+  return others.length ? { row, review: `Trip.com flight ${no}: other passengers on it (${others.join('; ')}) — all company?` } : { row }
+}
+
+async function ctrip(msg) {
+  const t = plain(msg.messageText)
+  const order = t.match(/订单\s*(\d{10,})/)?.[1]
+  const total = t.match(/总金额[：:]\s*¥\s*([\d,]+(?:\.\d+)?)/)?.[1]
+  const pnr = t.match(/航司预订号[：:]\s*([A-Z0-9]{5,7})/)?.[1]
+  const route = t.match(/出发[：:]\s*([^\n|‪]+?)\s*[|‪]/)?.[1]
+  const att = (msg.attachmentList ?? []).find(a => /英文|english/i.test(a.filename ?? '')) ?? msg.attachmentList?.[0]
+  if (!order || !total) return { review: `Ctrip ${msg.messageId}: could not read order / total`, ref: msg.messageId }
+  return {
+    row: { spent_on: myDay(msg.messageTimestamp), kind: 'flight', vendor: 'Trip.com', description: `Flight ${route ? clean(route) : ''}`.trim(), amount: null, currency: 'CNY', original_amount: money(total), reference: order, notes: pnr ? `Airline booking ${pnr}` : null, source: 'gmail', source_ref: { gmail_id: msg.messageId, attachment: att?.filename } },
+  }
+}
+
+async function royalBrunei(msg) {
+  const t = plain(msg.messageText)
+  const pnr = t.match(/PNR\)?:\s*([A-Z0-9]{5,7})/)?.[1]
+  const total = t.match(/TOTAL PRICE\s*\n?\s*MYR\s?([\d,]+\.\d{2})/)?.[1]
+  if (!/booking confirmation/i.test(msg.subject)) return { skip: 'not the booking confirmation' }
+  if (!pnr || !total) return { review: `Royal Brunei ${msg.messageId}: could not read PNR / total`, ref: msg.messageId }
+  return {
+    row: { spent_on: myDay(msg.messageTimestamp), kind: 'flight', vendor: 'Royal Brunei Airlines', description: 'Flight Kuala Lumpur - Bandar Seri Begawan', amount: money(total), reference: pnr, source: 'gmail', source_ref: { gmail_id: msg.messageId, render: true } },
+  }
+}
+
 const SOURCES = [
   { id: 'trip-hotel', query: 'from:MY_HTL_NoReply@trip.com subject:"[Booking confirmation]"', parse: tripHotel, prepare: prepareTripHotel },
   { id: 'klia', query: 'from:eticketing@kliaekspres.com subject:"e-Ticket" has:attachment', parse: klia },
+  { id: 'trip-flight', query: '(from:myen_flt_noreply@trip.com OR from:en_flight_noreply@trip.com OR from:my_flt_noreply@trip.com) subject:"Flight Booking Confirmed"', parse: tripFlight },
+  { id: 'ctrip', query: 'from:ia_rsv@trip.com subject:出行确认单', parse: ctrip },
+  { id: 'royal-brunei', query: 'from:noreply@mail.flyroyalbrunei.com subject:"booking confirmation"', parse: royalBrunei },
   { id: 'manychat', query: 'from:noreply@manychat.com subject:"Manychat Invoice"', parse: manychat },
   { id: 'envato', query: 'from:service@intl.paypal.com subject:"Payment to Envato"', parse: envato },
   { id: 'google-play', query: 'from:googleplay-noreply@google.com subject:"Order Receipt"', parse: googlePlay },
