@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Icon from '@/app/_components/Icon'
 import { attachReceipt, deleteExpense, exportMonth, saveExpense, waiveReceipt } from '@/lib/expense-actions'
 import type { MonthExport } from '@/lib/expense-drive'
-import { KINDS, KIND_LABEL, KIND_ONE, receiptState, type Expense, type ExpenseFilters } from '@/lib/expenses-math'
+import { DOC_TYPES, KINDS, KIND_LABEL, KIND_ONE, foreignText, receiptState, type Expense, type ExpenseFilters } from '@/lib/expenses-math'
 import { dmy, monthName, sen, today } from './pages/property/shared'
 import './filterbar.css'
 import './expenses.css'
@@ -69,8 +69,35 @@ export function ExpenseForm({ initial, lists, onDone }: { initial?: Expense; lis
         </datalist>
       </label>
       <label>
-        <span>Amount paid (RM)</span>
-        <input className="v3-select num" name="amount" inputMode="decimal" autoComplete="off" placeholder="e.g. 531.16" defaultValue={initial ? initial.amount : ''} required />
+        <span>Currency charged</span>
+        <input className="v3-select" name="currency" value={currency} onChange={e => setCurrency(e.target.value.toUpperCase())} maxLength={3} autoComplete="off" aria-describedby={`${fid}-cur`} />
+        <small id={`${fid}-cur`} className="v3-panel-note">MYR, or HKD, USD… for a foreign charge</small>
+      </label>
+      {currency !== 'MYR' ? (
+        <label>
+          <span>Amount charged in {currency || 'that currency'}</span>
+          <input className="v3-select num" name="original_amount" inputMode="decimal" autoComplete="off" placeholder="e.g. 78.00" defaultValue={initial?.original_amount ?? ''} required />
+        </label>
+      ) : null}
+      <label>
+        <span>{currency !== 'MYR' ? 'Amount in RM (leave empty until the statement shows it)' : 'Amount paid (RM)'}</span>
+        <input className="v3-select num" name="amount" inputMode="decimal" autoComplete="off" placeholder="e.g. 531.16" defaultValue={initial?.amount ?? ''} required={currency === 'MYR'} />
+      </label>
+      {currency !== 'MYR' ? (
+        <label className="v3-prop-check v3-exp-wide">
+          <input type="checkbox" name="amount_estimated" defaultChecked={initial?.amount_estimated ?? false} />
+          <span>The RM amount is an estimate — flag it until the statement figure replaces it</span>
+        </label>
+      ) : null}
+      <label>
+        <span>Document</span>
+        <select className="v3-select" name="doc_type" defaultValue={initial?.doc_type ?? 'Receipt'}>
+          {DOC_TYPES.map(t => (
+            <option key={t} value={t}>
+              {t === 'Refund' ? 'Refund (money back)' : t}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="v3-exp-wide">
         <span>What it was for</span>
@@ -90,7 +117,7 @@ export function ExpenseForm({ initial, lists, onDone }: { initial?: Expense; lis
         </datalist>
       </label>
       <details className="v3-exp-wide">
-        <summary>More: card, other currency, repeats, notes</summary>
+        <summary>More: card, repeats, notes</summary>
         <div className="v3-exp-more">
           <label>
             <span>Paid with</span>
@@ -109,16 +136,6 @@ export function ExpenseForm({ initial, lists, onDone }: { initial?: Expense; lis
               <option value="yearly">Every year</option>
             </select>
           </label>
-          <label>
-            <span>Currency charged</span>
-            <input className="v3-select" name="currency" value={currency} onChange={e => setCurrency(e.target.value.toUpperCase())} maxLength={3} autoComplete="off" />
-          </label>
-          {currency !== 'MYR' ? (
-            <label>
-              <span>Amount in {currency || 'that currency'}</span>
-              <input className="v3-select num" name="original_amount" inputMode="decimal" autoComplete="off" defaultValue={initial?.original_amount ?? ''} />
-            </label>
-          ) : null}
           <label className="v3-exp-wide">
             <span>Notes</span>
             <input className="v3-select" name="notes" autoComplete="off" maxLength={500} defaultValue={initial?.notes ?? ''} />
@@ -280,13 +297,14 @@ export function ExpenseList({ rows, lists, canDrive }: { rows: Expense[]; lists:
                     <div className="v3-exp-what">
                       <b>{e.vendor}</b>
                       <span className="v3-exp-kind">{KIND_ONE[e.kind]}</span>
+                      {e.doc_type !== 'Receipt' ? <span className="v3-exp-kind">{e.doc_type}</span> : null}
                       {e.recurring ? <span className="v3-exp-kind">{e.recurring === 'monthly' ? 'monthly' : 'yearly'}</span> : null}
                     </div>
                     <div className="v3-panel-note">{[e.description, e.trip, e.reference ? `#${e.reference}` : null].filter(Boolean).join(' · ') || '—'}</div>
                   </td>
-                  <td className="num" data-money>
-                    {sen(e.amount)}
-                    {e.currency !== 'MYR' && e.original_amount != null ? <div className="v3-panel-note">{e.currency} {sen(e.original_amount)}</div> : null}
+                  <td className="num">
+                    {e.amount == null ? <span className="v3-panel-note" title="Waiting for the RM figure from the statement">RM pending</span> : <span data-money>{e.amount_estimated ? '≈ ' : ''}{e.doc_type === 'Refund' ? '− ' : ''}{sen(e.amount)}</span>}
+                    {e.currency !== 'MYR' && e.original_amount != null ? <div className="v3-panel-note"><b>{foreignText(e.currency, e.original_amount)}</b></div> : null}
                   </td>
                   <td>
                     <ReceiptChip e={e} />

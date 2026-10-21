@@ -3,11 +3,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   KINDS, applyExpenseFilters, byKind, byMonth, expensesCsv, monthlyRunRate, needsReceipt, parseExpenseFilters,
-  receiptFilename, receiptState, summarise, topVendors, trips,
+  receiptFilename, receiptState, summarise, topVendors, trips, foreignTotals, foreignText, rmOf, rmPending,
 } from '../lib/expenses-math.ts'
 
 const e = (over = {}) => ({
-  id: 1, spent_on: '2026-10-05', kind: 'hotel', vendor: 'Trip.com', description: null, amount: 100, currency: 'MYR',
+  id: 1, spent_on: '2026-10-05', kind: 'hotel', vendor: 'Trip.com', description: null, amount: 100, amount_estimated: false, doc_type: 'Receipt', currency: 'MYR',
   original_amount: null, paid_with: null, reference: null, trip: null, recurring: null, source: 'manual', source_ref: null,
   receipt: null, notes: null, ...over,
 })
@@ -88,20 +88,40 @@ test('CSV: header, one line per payment, quotes escaped, receipt link or "not ne
   const csv = expensesCsv([e({ description: 'Hotel, "Grand"', amount: 12.5, receipt: { status: 'filed', url: 'https://d/x' } }), e({ id: 2, receipt: { status: 'waived' } })])
   const lines = csv.trim().split('\r\n')
   assert.equal(lines.length, 3)
-  assert.ok(lines[0].startsWith('Date,Kind,Vendor'))
+  assert.ok(lines[0].startsWith('Date,Kind,Type,Vendor'))
   assert.ok(csv.includes('"Hotel, ""Grand"""'))
   assert.ok(csv.includes('https://d/x') && csv.includes('not needed'))
 })
 
-test('receipt file names: YYYYMMDD - item - vendor / order id, safe characters, no amount', () => {
+test('receipt file names: YYYYMMDD - item - vendor / order id - Type, safe characters, no RM amount', () => {
   assert.equal(
     receiptFilename({ spent_on: '2025-12-19', vendor: 'KLIA Ekspres', description: 'KLIA Transit KLIA (T1/T2) → Bandar Tasik Selatan', reference: 'EC1219PU9XP3MUE' }, 'PDF'),
-    '20251219 - KLIA Transit KLIA (T1-T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf',
+    '20251219 - KLIA Transit KLIA (T1-T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE - Receipt.pdf',
   )
-  // the vendor is not repeated when the item already says it
-  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Meta', description: 'Meta Ads — Reel boost', reference: null }, '.jpg'), '20261015 - Meta Ads — Reel boost.jpg')
-  // no description: the vendor is the item
-  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Trip.com', description: null, reference: '1433812397470117' }, 'pdf'), '20261015 - Trip.com - 1433812397470117.pdf')
+  // the vendor is not repeated when the item already says it; type comes from the row
+  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Meta', description: 'Meta Ads — Reel boost', reference: 'INV-9', doc_type: 'Invoice' }, '.jpg'), '20261015 - Meta Ads — Reel boost - INV-9 - Invoice.jpg')
+  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Trip.com', description: null, reference: '1433812397470117', doc_type: 'Refund' }, 'pdf'), '20261015 - Trip.com - 1433812397470117 - Refund.pdf')
+  // a foreign charge with no order id shows its own-currency amount
+  assert.equal(receiptFilename({ spent_on: '2026-06-16', vendor: 'Uber', description: 'Uber Trip HK 0616', reference: null, currency: 'HKD', original_amount: 78 }, 'pdf'), '20260616 - Uber Trip HK 0616 - HK$78.00 - Receipt.pdf')
+})
+
+test('foreign currency: tracked in its own currency, RM may be unknown, refunds are money back', () => {
+  const rows = [
+    e({ id: 1, vendor: 'Uber', kind: 'transport', currency: 'HKD', original_amount: 78, amount: null }),
+    e({ id: 2, vendor: 'Uber', kind: 'transport', currency: 'HKD', original_amount: 22, amount: 15, amount_estimated: true }),
+    e({ id: 3, amount: 100 }),
+    e({ id: 4, amount: 30, doc_type: 'Refund' }),
+  ]
+  assert.deepEqual(foreignTotals(rows), [{ currency: 'HKD', total: 100, count: 2 }])
+  assert.equal(foreignText('HKD', 78), 'HK$78.00')
+  assert.equal(foreignText('THB', 120), 'THB 120.00')
+  assert.equal(rmPending(rows), 1)
+  assert.equal(rmOf(rows[3]), -30)
+  const s = summarise(rows, TODAY)
+  assert.equal(s.ytd, 85) // 15 estimated + 100 - 30 refund; the unknown one adds nothing yet
+  assert.equal(s.pending, 1)
+  assert.equal(s.estimated, 1)
+  assert.deepEqual(s.foreign, [{ currency: 'HKD', total: 100, count: 2 }])
 })
 
 test('CSV: text that starts like a formula is defused, numbers are left alone', () => {

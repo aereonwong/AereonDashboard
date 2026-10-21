@@ -9,9 +9,11 @@ create table if not exists expense (
   kind            text    not null check (kind in ('hotel','flight','transport','subscription','equipment','ads','admin','other')),
   vendor          text    not null,                          -- who was paid: "Trip.com", "KLIA Ekspres", "Meta"
   description     text,                                      -- what it was: hotel name, route, plan, item
-  amount          numeric(12,2) not null check (amount >= 0), -- RM actually paid
-  currency        text    not null default 'MYR',            -- what the vendor charged in
+  amount          numeric(12,2) check (amount is null or amount >= 0),  -- RM actually paid; null = not known yet (a foreign-currency charge waiting for the statement)
+  amount_estimated boolean not null default false,           -- true while `amount` is an estimate, until the statement figure replaces it
+  currency        text    not null default 'MYR',            -- what the vendor charged in (the tracked figure for foreign rows)
   original_amount numeric(12,2),                             -- the amount in that currency, when not RM
+  doc_type        text    not null default 'Receipt' check (doc_type in ('Invoice','Receipt','Refund')),  -- the last word of the receipt's file name; a Refund counts as money back
   paid_with       text,                                      -- which card / account paid ("Visa ending 1234")
   reference       text,                                      -- booking no., order id, invoice no. — stops duplicates
   trip            text,                                      -- optional tag grouping a job or trip ("Bali FAM Oct 2026")
@@ -21,11 +23,13 @@ create table if not exists expense (
   receipt         jsonb,                                     -- the receipt's state; see lib/expenses-math.ts (ReceiptMeta)
   notes           text,
   created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  updated_at      timestamptz not null default now(),
+  -- RM can only be unknown for a foreign-currency row that has its own-currency figure.
+  constraint expense_rm_or_original check (amount is not null or (currency <> 'MYR' and original_amount is not null))
 );
 
--- The same booking or order can never be filed twice.
-create unique index if not exists expense_vendor_reference_uq on expense (vendor, reference) where reference is not null;
+-- The same booking or order can never be filed twice (a Refund may share its order's reference).
+create unique index if not exists expense_vendor_reference_uq on expense (vendor, reference, doc_type) where reference is not null;
 create index if not exists expense_spent_on_idx on expense (spent_on desc);
 create index if not exists expense_kind_idx on expense (kind);
 

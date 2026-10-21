@@ -47,13 +47,18 @@ export type ReceiptMeta = {
   note?: string
 }
 
+export const DOC_TYPES = ['Invoice', 'Receipt', 'Refund'] as const
+export type DocType = (typeof DOC_TYPES)[number]
+
 export type Expense = {
   id: number
   spent_on: string // YYYY-MM-DD
   kind: Kind
   vendor: string
   description: string | null
-  amount: number // RM
+  amount: number | null // RM actually paid; null = not known yet (foreign currency waiting for the statement)
+  amount_estimated: boolean // `amount` is an estimate until the statement figure replaces it
+  doc_type: DocType // the file name's last word; a Refund is money back
   currency: string
   original_amount: number | null
   paid_with: string | null
@@ -84,7 +89,30 @@ export const needsReceipt = (e: Pick<Expense, 'receipt'>, now = Date.now()) => {
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100
-const sum = (rows: Pick<Expense, 'amount'>[]) => r2(rows.reduce((a, e) => a + Number(e.amount || 0), 0))
+type Money = Pick<Expense, 'amount' | 'doc_type'>
+/** The RM an expense adds to the books: a Refund is money back (negative); an unknown amount adds nothing yet. */
+export const rmOf = (e: Money) => (e.doc_type === 'Refund' ? -1 : 1) * Number(e.amount ?? 0)
+const sum = (rows: Money[]) => r2(rows.reduce((a, e) => a + rmOf(e), 0))
+/** Rows still waiting for their RM figure, and rows whose RM figure is only an estimate. */
+export const rmPending = (rows: Pick<Expense, 'amount'>[]) => rows.filter(e => e.amount == null).length
+export const rmEstimated = (rows: Pick<Expense, 'amount' | 'amount_estimated'>[]) => rows.filter(e => e.amount != null && e.amount_estimated).length
+
+/** Money in other currencies, in the currency itself (never converted, never added to RM): HKD 78.00, USD 198.00. */
+export function foreignTotals(rows: Pick<Expense, 'currency' | 'original_amount' | 'doc_type'>[]): { currency: string; total: number; count: number }[] {
+  const map = new Map<string, { total: number; count: number }>()
+  for (const e of rows) {
+    if (e.currency === 'MYR' || e.original_amount == null) continue
+    const cur = map.get(e.currency) ?? { total: 0, count: 0 }
+    cur.total = r2(cur.total + (e.doc_type === 'Refund' ? -1 : 1) * Number(e.original_amount))
+    cur.count++
+    map.set(e.currency, cur)
+  }
+  return [...map.entries()].map(([currency, v]) => ({ currency, ...v })).sort((a, b) => b.count - a.count)
+}
+
+const SYMBOL: Record<string, string> = { HKD: 'HK$', USD: 'US$', SGD: 'S$', AUD: 'A$', EUR: '€', GBP: '£', CNY: 'CN¥', RMB: 'CN¥', JPY: '¥' }
+/** 78 HKD → "HK$78.00"; an unlisted currency keeps its code: "THB 120.00". */
+export const foreignText = (currency: string, n: number) => (SYMBOL[currency] ? `${SYMBOL[currency]}${n.toFixed(2)}` : `${currency} ${n.toFixed(2)}`)
 
 // ── Filters (kept in the URL, like every money page) ────────────────────────
 
@@ -151,7 +179,7 @@ export function byMonth(rows: Expense[], today: string, n = 12): MonthTotal[] {
     const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
     const mine = rows.filter(e => e.spent_on.startsWith(key))
     const kinds: Partial<Record<Kind, number>> = {}
-    for (const e of mine) kinds[e.kind] = r2((kinds[e.kind] ?? 0) + Number(e.amount || 0))
+    for (const e of mine) kinds[e.kind] = r2((kinds[e.kind] ?? 0) + rmOf(e))
     out.push({ month: key, total: sum(mine), byKind: kinds })
   }
   return out
@@ -198,7 +226,7 @@ export function monthlyRunRate(rows: Expense[], today: string): { perMonth: numb
   for (const e of series.values()) {
     const age = (t - Date.parse(e.spent_on)) / 86_400_000
     if (age > (e.recurring === 'monthly' ? 62 : 380)) continue
-    total += e.recurring === 'monthly' ? Number(e.amount) : Number(e.amount) / 12
+    total += e.recurring === 'monthly' ? Number(e.amount ?? 0) : Number(e.amount ?? 0) / 12
     live++
   }
   return { perMonth: r2(total), series: live }
@@ -211,6 +239,9 @@ export type Summary = {
   thisMonth: number
   count: number
   missing: { count: number; amount: number }
+  pending: number // this year's expenses still waiting for their RM figure
+  estimated: number // this year's expenses whose RM figure is an estimate
+  foreign: { currency: string; total: number; count: number }[] // this year, in each currency itself
   kinds: KindTotal[]
   months: MonthTotal[]
   vendors: VendorTotal[]
@@ -233,6 +264,9 @@ export function summarise(rows: Expense[], today: string, now = Date.now()): Sum
     thisMonth: sum(rows.filter(e => e.spent_on.startsWith(today.slice(0, 7)) && e.spent_on <= today)),
     count: thisYear.length,
     missing: { count: owed.length, amount: sum(owed) },
+    pending: rmPending(thisYear),
+    estimated: rmEstimated(thisYear),
+    foreign: foreignTotals(thisYear),
     kinds: byKind(thisYear),
     months: byMonth(rows, today, 12),
     vendors: topVendors(thisYear),
@@ -252,12 +286,13 @@ const cell = (v: unknown, text = true) => {
 
 /** A month (or any slice) as a CSV the accountant can open: one line per payment, receipt link included. */
 export function expensesCsv(rows: Expense[]): string {
-  const head = ['Date', 'Kind', 'Vendor', 'Description', 'Amount (RM)', 'Currency', 'Original amount', 'Reference', 'Trip', 'Paid with', 'Receipt']
+  const head = ['Date', 'Kind', 'Type', 'Vendor', 'Description', 'Amount (RM)', 'RM estimated', 'Currency', 'Original amount', 'Reference', 'Trip', 'Paid with', 'Receipt']
   const lines = newestFirst(rows)
     .reverse()
     .map(e => {
-      const numeric = new Set([4, 6]) // Amount (RM) and Original amount are numbers, never formulas
-      return [e.spent_on, KIND_ONE[e.kind], e.vendor, e.description, e.amount.toFixed(2), e.currency, e.original_amount ?? '', e.reference, e.trip, e.paid_with, e.receipt?.status === 'waived' ? 'not needed' : (e.receipt?.url ?? '')]
+      const numeric = new Set([5, 8]) // Amount (RM) and Original amount are numbers, never formulas
+      const rm = e.amount == null ? '' : ((e.doc_type === 'Refund' ? -1 : 1) * e.amount).toFixed(2)
+      return [e.spent_on, KIND_ONE[e.kind], e.doc_type, e.vendor, e.description, rm, e.amount_estimated ? 'yes' : '', e.currency, e.original_amount ?? '', e.reference, e.trip, e.paid_with, e.receipt?.status === 'waived' ? 'not needed' : (e.receipt?.url ?? '')]
         .map((v, i) => cell(v, !numeric.has(i)))
         .join(',')
     })
@@ -267,14 +302,17 @@ export function expensesCsv(rows: Expense[]): string {
 const clean = (s: string) => s.replace(/→/g, 'to').replace(/\//g, '-').replace(/[\\:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim()
 
 /** The name a receipt gets in Drive (Aereon's format, 21 Oct 2026):
- *    YYYYMMDD - <item / product / service name> - <other info that helps tracking: vendor and order id>
- *    "20251219 - KLIA Transit KLIA (T1/T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf"
+ *    YYYYMMDD - <item / product / service> - <vendor and order id> - <Invoice | Receipt | Refund>
+ *    "20251219 - KLIA Transit KLIA (T1-T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE - Receipt.pdf"
  *  The item is the expense's description (the vendor when there is none). The tracking part is the vendor, unless the
- *  item already says it, then the booking / order / invoice number. The amount is deliberately not in the name. */
-export function receiptFilename(e: Pick<Expense, 'spent_on' | 'vendor' | 'description' | 'reference'>, ext: string): string {
+ *  item already starts with it, then the booking / order / invoice number; with neither, a foreign-currency charge shows
+ *  its own-currency amount ("Uber Trip HK 0616 - HK$78.00 - Receipt"). The RM amount is deliberately not in the name. */
+export function receiptFilename(e: Pick<Expense, 'spent_on' | 'vendor' | 'description' | 'reference'> & Partial<Pick<Expense, 'doc_type' | 'currency' | 'original_amount'>>, ext: string): string {
   const item = clean(e.description ?? '') || clean(e.vendor)
   const vendor = clean(e.vendor)
-  const info = [item.toLowerCase().includes(vendor.toLowerCase()) ? '' : vendor, clean(e.reference ?? '')].filter(Boolean).join(' ')
-  const name = [e.spent_on.replace(/-/g, ''), item.slice(0, 90), info.slice(0, 60)].filter(Boolean).join(' - ')
+  const vendorShown = item.toLowerCase().startsWith(vendor.toLowerCase()) || item.toLowerCase().includes(vendor.toLowerCase())
+  let info = [vendorShown ? '' : vendor, clean(e.reference ?? '')].filter(Boolean).join(' ')
+  if (!info && e.currency && e.currency !== 'MYR' && e.original_amount != null) info = clean(foreignText(e.currency, Number(e.original_amount)).replace('/', '-'))
+  const name = [e.spent_on.replace(/-/g, ''), item.slice(0, 90), info.slice(0, 60), e.doc_type ?? 'Receipt'].filter(Boolean).join(' - ')
   return `${name}.${ext.replace(/^\./, '').toLowerCase() || 'pdf'}`
 }

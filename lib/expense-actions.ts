@@ -9,7 +9,7 @@ import { setSetting } from '@/lib/settings'
 import { fileToDrive, monthExports, trashDriveFile, type MonthExport } from '@/lib/expense-drive'
 import { composioReady } from '@/lib/composio-exec'
 import { toExpense } from '@/lib/expenses'
-import { expensesCsv, isKind, receiptFilename, receiptState, type ReceiptMeta } from '@/lib/expenses-math'
+import { DOC_TYPES, expensesCsv, isKind, receiptFilename, receiptState, type ReceiptMeta } from '@/lib/expenses-math'
 
 // 👉 Expense writes. A form drawn while amounts are hidden holds disguised figures, so saving or exporting money
 // refuses until "Show amounts" is on (moneyLocked). Receipts are filed in Google Drive with no model involved.
@@ -60,7 +60,7 @@ const done = (error: { message: string; code?: string } | null): Result => {
   revalidatePath('/expenses', 'layout')
   revalidatePath('/dashboard')
   if (!error) return { ok: true }
-  if (error.code === '23505') return { ok: false, error: 'That vendor and reference is already recorded — it is the same booking or order.' }
+  if (error.code === '23505') return { ok: false, error: 'That vendor, reference and type is already recorded — it is the same booking or order.' }
   return { ok: false, error: needSql(error.message) }
 }
 
@@ -79,12 +79,17 @@ export async function saveExpense(form: FormData): Promise<Result> {
   const vendor = text(form.get('vendor'), 120)
   if (!vendor) return { ok: false, error: 'Say who was paid' }
   const amount = money(form.get('amount'))
-  if (amount === 'bad' || amount == null) return { ok: false, error: 'Type the amount in RM, e.g. 531.16' }
   const original = money(form.get('original_amount'))
-  if (original === 'bad') return { ok: false, error: 'The original amount must be a number' }
+  if (amount === 'bad') return { ok: false, error: 'The RM amount must be a number, e.g. 531.16' }
+  if (original === 'bad') return { ok: false, error: 'The amount in the other currency must be a number' }
   const currency = (text(form.get('currency'), 3) ?? 'MYR').toUpperCase()
   if (!/^[A-Z]{3}$/.test(currency)) return { ok: false, error: 'Currency is a three-letter code, e.g. MYR or USD' }
-  if (currency !== 'MYR' && original != null && original === amount) return { ok: false, error: `The RM amount is the same as the ${currency} amount — type what the card was charged in RM in the first box.` }
+  // A foreign charge is tracked in its own currency; its RM figure can wait for the statement. Ringgit rows need it.
+  if (currency === 'MYR' && amount == null) return { ok: false, error: 'Type the amount in RM, e.g. 531.16' }
+  if (currency !== 'MYR' && original == null) return { ok: false, error: `Type the amount charged in ${currency}` }
+  if (currency !== 'MYR' && original != null && original === amount) return { ok: false, error: `The RM amount is the same as the ${currency} amount — type what the card was charged in RM, or leave the RM box empty until the statement shows it.` }
+  const docType = String(form.get('doc_type') ?? 'Receipt')
+  if (!(DOC_TYPES as readonly string[]).includes(docType)) return { ok: false, error: 'Pick Invoice, Receipt or Refund' }
   const recurring = String(form.get('recurring') ?? '')
   if (recurring && recurring !== 'monthly' && recurring !== 'yearly') return { ok: false, error: 'Bad request' }
 
@@ -94,6 +99,8 @@ export async function saveExpense(form: FormData): Promise<Result> {
     vendor,
     description: text(form.get('description'), 300),
     amount,
+    amount_estimated: amount != null && form.get('amount_estimated') === 'on',
+    doc_type: docType,
     currency,
     original_amount: currency === 'MYR' ? null : original,
     paid_with: text(form.get('paid_with'), 80),

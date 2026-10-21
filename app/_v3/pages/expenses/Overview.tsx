@@ -1,5 +1,5 @@
 import type { ExpensesRead } from '@/lib/expenses'
-import { KIND_LABEL, needsReceipt, newestFirst, summarise, trips, type Expense } from '@/lib/expenses-math'
+import { KIND_LABEL, foreignText, needsReceipt, newestFirst, rmOf, summarise, trips, type Expense } from '@/lib/expenses-math'
 import { rmFull, pct } from '../../fmt'
 import { dmy, mon, plural, today } from '../property/shared'
 import ExpensesSetup from './Setup'
@@ -73,6 +73,17 @@ export default function Overview({ read, sql, sqlUrl }: { read: ExpensesRead; sq
             {delta !== null ? <span className={`v3-delta ${delta <= 0 ? 'up' : 'down'}`}>{pct(delta)}</span> : null}
           </div>
           <div className="v3-kpi-note">{s.lastYtd !== null ? `vs ${rmFull(s.lastYtd)} by this day in ${Number(s.year) - 1}` : `nothing recorded in ${Number(s.year) - 1} to compare`}</div>
+          {s.foreign.length || s.pending || s.estimated ? (
+            <div className="v3-kpi-note">
+              {[
+                s.foreign.length ? `plus ${s.foreign.map(f => foreignText(f.currency, f.total)).join(' + ')} in other currencies` : '',
+                s.pending ? `${s.pending} still waiting for the RM figure` : '',
+                s.estimated ? `${s.estimated} RM figure${s.estimated === 1 ? '' : 's'} estimated` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </div>
+          ) : null}
         </div>
         <div className="v3-kpi">
           <div className="v3-kpi-label">This month</div>
@@ -210,7 +221,7 @@ export default function Overview({ read, sql, sqlUrl }: { read: ExpensesRead; sq
                       {dmy(e.spent_on)} · {e.description ?? KIND_LABEL[e.kind]}
                     </div>
                   </div>
-                  <div className="v3-row-num">{rmFull(e.amount)}</div>
+                  <div className="v3-row-num">{e.amount == null && e.original_amount != null ? foreignText(e.currency, e.original_amount) : rmFull(rmOf(e))}</div>
                 </a>
               ))}
             </div>

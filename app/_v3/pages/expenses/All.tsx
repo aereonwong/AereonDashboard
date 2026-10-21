@@ -1,6 +1,6 @@
 import type { ExpensesRead } from '@/lib/expenses'
 import type { MonthExport } from '@/lib/expense-drive'
-import { applyExpenseFilters, newestFirst, parseExpenseFilters, type Expense } from '@/lib/expenses-math'
+import { applyExpenseFilters, foreignText, foreignTotals, newestFirst, parseExpenseFilters, rmOf, rmPending, type Expense } from '@/lib/expenses-math'
 import ScopedPanel from '../../ScopedPanel'
 import { ExpenseFilterBar, ExpenseForm, ExpenseList, MonthExportCard } from '../../ExpenseForms'
 import { plural, sen, today } from '../property/shared'
@@ -28,7 +28,9 @@ export default function All({ read, sp, exports, canDrive, sql, sqlUrl }: { read
   const day = today()
   const filters = parseExpenseFilters(sp, day)
   const rows = newestFirst(applyExpenseFilters(read.rows, filters))
-  const total = Math.round(rows.reduce((a, e) => a + e.amount, 0) * 100) / 100
+  const total = Math.round(rows.reduce((a, e) => a + rmOf(e), 0) * 100) / 100
+  const pending = rmPending(rows)
+  const foreign = foreignTotals(rows)
   const lists = {
     vendors: uniq(read.rows.map(e => e.vendor)),
     trips: uniq(read.rows.map(e => e.trip)),
@@ -46,7 +48,15 @@ export default function All({ read, sp, exports, canDrive, sql, sqlUrl }: { read
         <div>
           <h1 className="v3-title">All expenses</h1>
           <p className="v3-lede">
-            {plural(rows.length, 'payment')} · <b className="num">RM {sen(total)}</b> — {slice}.{read.demo ? ' Demo data.' : ''}
+            {plural(rows.length, 'payment')} · <b className="num">RM {sen(total)}</b>
+            {foreign.map(f => (
+              <span key={f.currency}>
+                {' '}
+                + <b className="num">{foreignText(f.currency, f.total)}</b>
+              </span>
+            ))}{' '}
+            — {slice}.{pending ? ` ${plural(pending, 'charge')} waiting for the RM figure.` : ''}
+            {read.demo ? ' Demo data.' : ''}
           </p>
         </div>
       </header>

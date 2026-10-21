@@ -2,7 +2,7 @@ import 'server-only'
 import { supabase, supabaseConfigured } from './supabase'
 import { demoMode } from './records'
 import { moneyFactor, moneyHidden, scrubAmounts, scrubFields, disguiseFields } from './privacy'
-import { isKind, type Expense } from './expenses-math'
+import { DOC_TYPES, isKind, type DocType, type Expense } from './expenses-math'
 import { todayISO } from './today'
 
 // 👉 Expenses (/expenses, /expenses/all): what the company spends, one row per payment, from
@@ -34,7 +34,9 @@ export function toExpense(r: Record<string, any>): Expense {
     kind: isKind(r.kind) ? r.kind : 'other',
     vendor: String(r.vendor ?? ''),
     description: r.description ?? null,
-    amount: Number(r.amount ?? 0),
+    amount: num(r.amount),
+    amount_estimated: !!r.amount_estimated,
+    doc_type: (DOC_TYPES as readonly string[]).includes(r.doc_type) ? (r.doc_type as DocType) : 'Receipt',
     currency: r.currency || 'MYR',
     original_amount: num(r.original_amount),
     paid_with: r.paid_with ?? null,
@@ -70,7 +72,7 @@ function demoExpenses(): Expense[] {
     return d.toISOString().slice(0, 10)
   }
   const filed = { status: 'filed', url: 'https://drive.google.com/', name: 'demo.pdf' } as const
-  const rows: Omit<Expense, 'id' | 'currency' | 'original_amount' | 'source' | 'source_ref' | 'notes' | 'paid_with'>[] = [
+  const rows: Omit<Expense, 'id' | 'currency' | 'original_amount' | 'source' | 'source_ref' | 'notes' | 'paid_with' | 'doc_type' | 'amount_estimated'>[] = [
     { spent_on: day(3), kind: 'flight', vendor: 'Demo Air', description: 'KUL – Penang return', amount: 286, reference: 'D1', trip: 'Demo shoot', recurring: null, receipt: filed },
     { spent_on: day(4), kind: 'hotel', vendor: 'Demo Stays', description: 'Harbour View Hotel, 2 nights', amount: 540, reference: 'D2', trip: 'Demo shoot', recurring: null, receipt: null },
     { spent_on: day(6), kind: 'transport', vendor: 'Demo Rides', description: 'Airport transfer', amount: 75, reference: null, trip: 'Demo shoot', recurring: null, receipt: { status: 'waived' } },
@@ -81,5 +83,5 @@ function demoExpenses(): Expense[] {
     { spent_on: day(70), kind: 'subscription', vendor: 'Demo Cloud', description: 'Storage plan', amount: 49, reference: null, trip: null, recurring: 'monthly', receipt: filed },
     { spent_on: day(100), kind: 'hotel', vendor: 'Demo Stays', description: 'City Inn, 1 night', amount: 230, reference: 'D4', trip: 'Demo city', recurring: null, receipt: filed },
   ]
-  return rows.map((r, i) => ({ ...r, id: i + 1, currency: 'MYR', original_amount: null, source: 'manual', source_ref: null, notes: null, paid_with: null }))
+  return rows.map((r, i) => ({ ...r, id: i + 1, currency: 'MYR', original_amount: null, doc_type: 'Receipt' as const, amount_estimated: false, source: 'manual', source_ref: null, notes: null, paid_with: null }))
 }
