@@ -43,3 +43,6 @@ graphify-out/cost.json
 # Old quotation records read from Canva (client names, amounts) — never commit
 .quote-data/
 scripts/tmp/
+
+# Expenses: Aereon's real company spending and receipts — loaded into Supabase by scripts/expense-*.mjs, never committed (public repo)
+/.expense-data/

@@ -274,6 +274,12 @@ Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `np
 Overview, loans, tenancy, costs, submeter — full rules in `app/(app)/property/CLAUDE.md` (read it before touching `lib/property*`, `lib/tenancy-math.ts`, `lib/submeter*` or `app/_v3/pages/property/`).
 **Privacy (repo is public):** loan balances, property/bank names, spreads, tenant names, rents, fees and deposits live only in Supabase and `.property-data/` — never in code, comments or commit messages. `property_data_issue` fixes need Aereon's approval.
 
+## Expenses (21 Oct 2026)
+
+Company spending (hotels, flights, transport, subscriptions, equipment, ads, admin) with receipts filed in Google Drive — own
+sidebar group, table `expense`, Dashboard "Company spend" panel. Full rules: `app/(app)/expenses/CLAUDE.md` (read before touching
+`lib/expenses*`, `lib/expense-*`, `/expenses` or `scripts/expense-*.mjs`).
+
 ## Sign-in (Google + backup passcode, added 4 Oct 2026)
 
 Front door is **Sign in with Google** (`lib/google-auth.ts`, `app/api/auth/google/**`: OIDC code flow +

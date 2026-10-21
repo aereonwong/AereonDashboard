@@ -6,6 +6,8 @@ import FilterBar from '../FilterBar'
 import PaceChart from './PaceChart'
 import Strip from './Strip'
 import Receivables from './Receivables'
+import Spend from './Spend'
+import type { ExpensesRead } from '@/lib/expenses'
 import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
 import type { MetricRow } from '@/lib/v3/ig-insights'
@@ -24,6 +26,7 @@ export default function Dashboard({
   metrics = [],
   demo = false,
   social,
+  expenses,
 }: {
   rows: Rec[]
   filters: Filters
@@ -31,6 +34,7 @@ export default function Dashboard({
   metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
   social: Social // every platform, last 30 days (lib/v3/social.ts) — the same maths as /social
+  expenses?: ExpensesRead // company spending (lib/expenses.ts); the panel draws nothing until supabase/expenses.sql has run
 }) {
   const s = buildStudio(rows, filters)
   const risk = clientRisk(rows, filters, s.today)
@@ -183,6 +187,8 @@ export default function Dashboard({
               <p className="v3-empty">No clients in this range.</p>
             )}
           </section>
+
+        <Spend expenses={expenses} />
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-strip">
             <div className="v3-panel-head">
