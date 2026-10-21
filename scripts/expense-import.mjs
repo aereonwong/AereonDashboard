@@ -2,7 +2,7 @@
 //   npm run expense:import -- .expense-data/scan-klia.json --dry    # show what would be added; nothing is sent
 //   npm run expense:import -- .expense-data/scan-klia.json          # add them
 //
-// Safe to run twice: a row whose (vendor, reference, doc_type) already exists is left exactly as it is, so edits made on
+// Safe to run twice: a row whose (vendor, reference, doc_type) already exists is skipped and left exactly as it is, so edits made on
 // /expenses/all (a corrected amount, an attached receipt) are never overwritten. Every row must carry a reference
 // (booking / order / invoice number): that is what stops the same payment being filed twice.
 import { readFileSync } from 'node:fs'
@@ -63,11 +63,27 @@ if (!url || !key) {
 }
 const db = createClient(url.trim().replace(/\/+$/, '').replace(/\/rest\/v\d+$/i, ''), key.trim(), { auth: { persistSession: false } })
 
+// The unique key is a partial index (only rows with a reference), which an upsert cannot target: read what is already
+// there for these vendors and insert only the rest. The key still protects against a race.
+const vendors = [...new Set(clean.map(r => r.vendor))]
+const have = new Set()
+for (const v of vendors) {
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from('expense').select('vendor,reference,doc_type').eq('vendor', v).range(from, from + 999)
+    if (error) {
+      console.error(`${error.message}${/does not exist|schema cache/.test(error.message) ? ' — run supabase/expenses.sql first' : ''}`)
+      process.exit(1)
+    }
+    for (const r of data) have.add(`${r.vendor}|${r.reference}|${r.doc_type}`)
+    if (data.length < 1000) break
+  }
+}
+const fresh = clean.filter(r => !have.has(`${r.vendor}|${r.reference}|${r.doc_type}`))
 let added = 0
-for (let i = 0; i < clean.length; i += 50) {
-  const { data, error } = await db.from('expense').upsert(clean.slice(i, i + 50), { onConflict: 'vendor,reference,doc_type', ignoreDuplicates: true }).select('id')
+for (let i = 0; i < fresh.length; i += 50) {
+  const { data, error } = await db.from('expense').insert(fresh.slice(i, i + 50)).select('id')
   if (error) {
-    console.error(`${error.message}${/does not exist|schema cache/.test(error.message) ? ' — run supabase/expenses.sql first' : ''}`)
+    console.error(error.message)
     process.exit(1)
   }
   added += data.length
