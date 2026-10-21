@@ -17,7 +17,9 @@
     "ig:archive": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/ig-archive.mjs",
     "drive:reconcile": "node --env-file-if-exists=.env scripts/drive-reconcile.mjs",
     "property:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/property-import.mjs",
-    "quote:import": "node --env-file-if-exists=.env scripts/quote-import.mjs"
+    "quote:import": "node --env-file-if-exists=.env scripts/quote-import.mjs",
+    "expense:scan": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/expense-scan.mjs",
+    "expense:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-import.mjs"
   },
   "engines": {
     "node": ">=20"

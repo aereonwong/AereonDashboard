@@ -2,8 +2,8 @@
 //   npm run expense:scan                    # every source below
 //   npm run expense:scan -- --only klia     # one source
 //   npm run expense:scan -- --since 2026/01/01
-// Output: .expense-data/scan.json (git-ignored: the repo is public) and a table on screen. Check it, then load it with
-//   npm run expense:import -- .expense-data/scan.json
+// Output: .expense-data/scan-<source>.json (git-ignored: the repo is public) and a table on screen. Check it, then load it with
+//   npm run expense:import -- .expense-data/scan-klia.json
 //
 // Each source is a Gmail search plus a parser that reads the email (or its PDF) and returns one expense row. The amount
 // is what the email says was paid, in RM. Anything the parser cannot read, or that looks wrong (a booking in someone
@@ -145,10 +145,11 @@ for (const r of rows) if (!seen.has(`${r.vendor}|${r.reference}`)) seen.set(`${r
 const unique = [...seen.values()].sort((a, b) => a.spent_on.localeCompare(b.spent_on))
 
 await mkdir(new URL('../.expense-data/', import.meta.url), { recursive: true })
-await writeFile(new URL('../.expense-data/scan.json', import.meta.url), JSON.stringify(unique, null, 2))
+const OUT = `scan-${ONLY ?? 'all'}.json`
+await writeFile(new URL(`../.expense-data/${OUT}`, import.meta.url), JSON.stringify(unique, null, 2))
 
 const f = n => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-console.log(`\n${unique.length} expenses → .expense-data/scan.json\n`)
+console.log(`\n${unique.length} expenses → .expense-data/${OUT}\n`)
 for (const r of unique) console.log(`${r.spent_on}  ${r.kind.padEnd(9)} ${r.vendor.padEnd(14)} ${f(r.amount).padStart(10)}  ${r.description}${r.notes ? `  [${r.notes}]` : ''}`)
 console.log(`\nTotal RM ${f(unique.reduce((a, r) => a + r.amount, 0))}`)
 if (review.length) console.log(`\nNeeds a look (${review.length}):\n  ${review.join('\n  ')}`)
