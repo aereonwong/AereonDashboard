@@ -45,6 +45,7 @@ export function plain(html) {
     .replace(/&gt;/g, '>')
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&quot;/g, '"')
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, '') // Trip.com hides zero-width characters inside numbers
   return text.replace(/[ \t ]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim()
 }
 
