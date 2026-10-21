@@ -1,0 +1,54 @@
+/* v3 Expenses — only what the shared v3 classes (forms, tables, panels, filter bar) do not already cover. */
+
+.v3-exp-form { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+.v3-exp-form .v3-exp-wide { grid-column: 1 / -1; }
+.v3-exp-more { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.v3-exp-more .v3-exp-wide { grid-column: 1 / -1; }
+.v3-exp-form details { align-self: start; }
+@media (max-width: 560px) { .v3-exp-form, .v3-exp-more { grid-template-columns: minmax(0, 1fr); } }
+
+.v3-exp-table td { vertical-align: top; }
+.v3-exp-what { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); }
+.v3-exp-kind { font: 500 10.5px/1 var(--f-num); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); padding: 3px 7px; border: 1px solid var(--line-2); border-radius: 999px; white-space: nowrap; }
+
+.v3-exp-chip { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-xs); font-weight: 600; padding: 4px 9px; border-radius: 999px; white-space: nowrap; text-decoration: none; border: 1px solid var(--line-2); color: var(--ink-2); }
+.v3-exp-chip .ico-svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.v3-exp-chip[data-s="filed"] { color: var(--pos); border-color: color-mix(in srgb, var(--pos) 40%, transparent); background: color-mix(in srgb, var(--pos) 10%, transparent); }
+.v3-exp-chip[data-s="missing"], .v3-exp-chip[data-s="failed"] { color: var(--neg); border-color: color-mix(in srgb, var(--neg) 40%, transparent); background: color-mix(in srgb, var(--neg) 9%, transparent); }
+.v3-exp-chip[data-s="waived"], .v3-exp-chip[data-s="uploading"] { color: var(--ink-3); }
+a.v3-exp-chip:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.v3-exp-edit { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); padding: var(--space-3) 0; }
+@media (max-width: 1100px) { .v3-exp-edit { grid-template-columns: minmax(0, 1fr); } }
+.v3-exp-receipt { display: grid; gap: var(--space-3); align-content: start; min-width: 0; }
+.v3-exp-receipt .v3-btn { justify-content: center; }
+.v3-exp-sub { margin: 0; font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
+.v3-exp-upload { display: grid; gap: var(--space-2); }
+.v3-exp-upload .v3-select { max-width: none; width: 100%; box-sizing: border-box; min-width: 0; }
+
+.v3-exp-export { display: grid; gap: var(--space-3); justify-items: start; }
+.v3-exp-search { min-width: 15rem; background-image: none; padding-right: 10px; }
+.v3-prop-pager { display: flex; align-items: center; justify-content: center; gap: var(--space-4); padding-top: var(--space-4); }
+
+.v3-exp-note { margin: var(--space-4) 0 0; font-size: var(--t-sm); color: var(--ink-3); }
+.v3-exp-flag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); border: 1px solid color-mix(in srgb, var(--neg) 35%, transparent); background: color-mix(in srgb, var(--neg) 7%, transparent); border-radius: var(--radius); font-size: var(--t-sm); }
+.v3-exp-flag b { font-weight: 650; }
+.v3-exp-flag a { margin-left: auto; }
+
+/* Month bars: drawn on the server, hover readout comes from data-tip (docs/CHARTS.md). */
+.v3-exp-bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; height: 200px; margin: 0; padding: 0; list-style: none; }
+.v3-exp-bars li { display: flex; min-width: 0; }
+.v3-exp-bars a { display: grid; grid-template-rows: 1fr auto; gap: 6px; width: 100%; text-decoration: none; color: var(--ink-3); border-radius: var(--radius); }
+.v3-exp-bar { display: flex; align-items: flex-end; min-height: 0; }
+.v3-exp-bar i { display: block; width: 100%; height: calc(var(--h, 0) * 100%); min-height: 3px; background: color-mix(in srgb, var(--accent) 80%, transparent); border-radius: 5px 5px 0 0; transform-origin: bottom; animation: v3-exp-rise 700ms var(--ease) both; }
+@keyframes v3-exp-rise { from { transform: scaleY(0); } }
+.v3-exp-bar-label { font: 500 10.5px/1 var(--f-num); text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+.v3-exp-bars a:hover .v3-exp-bar i, .v3-exp-bars a[data-tip-on] .v3-exp-bar i { background: var(--accent); }
+.v3-exp-bars a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .v3-exp-bar i { animation: none; } }
+
+/* Dashboard → Company spend */
+.v3-exp-spend { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--space-6, 32px); align-items: start; }
+.v3-exp-spend-figures { display: grid; gap: var(--space-4); }
+.v3-exp-spend-figures a { text-decoration: none; color: inherit; }
+@media (max-width: 800px) { .v3-exp-spend { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); } }

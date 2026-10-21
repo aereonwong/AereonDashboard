@@ -179,7 +179,7 @@ export const PUBLIC_PREFIX = [
 /** Top-level folders under app/(app). A new one must be added here; tests/agent-site.test.mjs checks. */
 export const PRIVATE_SEGMENTS = [
   'analytics', 'approvals', 'cash-in', 'cash-out', 'clients', 'content', 'customers', 'dashboard', 'employees',
-  'facebook', 'instagram', 'invoices', 'leads', 'links', 'news', 'property', 'settings', 'social', 'tasks', 'tiktok', 'users', 'vault', 'voice',
+  'expenses', 'facebook', 'instagram', 'invoices', 'leads', 'links', 'news', 'property', 'settings', 'social', 'tasks', 'tiktok', 'users', 'vault', 'voice',
 ]
 /** Folders under app/api that exist (public ones above are listed too). */
 export const API_SEGMENTS = [

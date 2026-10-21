@@ -14,6 +14,7 @@ import { parseFilters } from '@/lib/v3/filters'
 import { readAudience } from '@/lib/v3/audience'
 import { readPostReach } from '@/lib/v3/ig-extras'
 import { readSocial } from '@/lib/social-totals'
+import { readExpenses } from '@/lib/expenses'
 import { demoMode } from '@/lib/records'
 import { moneyFactor, moneyHidden } from '@/lib/privacy'
 
@@ -49,8 +50,8 @@ export default async function Dashboard({
   const { version } = await readVersion()
   if (version === 'v3') {
     // The audience band is the Social overview in brief, read from the stored daily picture (30 days).
-    const [rows, audience, metrics, demo, sp, social] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readSocial(30)])
-    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} social={social} />
+    const [rows, audience, metrics, demo, sp, social, expenses] = await Promise.all([getRecords(), readAudience(), readPostReach(), demoMode(), searchParams, readSocial(30), readExpenses()])
+    return <DashboardV3 rows={rows} filters={parseFilters(sp)} audience={audience} metrics={metrics} demo={demo} social={social} expenses={expenses} />
   }
 
   const [rows, snap, waiting, which, account] = await Promise.all([

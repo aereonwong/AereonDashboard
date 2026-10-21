@@ -24,6 +24,13 @@ export const V3_NAV: NavGroup[] = [
     ],
   },
   {
+    title: 'Expenses',
+    items: [
+      { href: '/expenses', label: 'Overview', icon: 'wallet' },
+      { href: '/expenses/all', label: 'All expenses', icon: 'cash-out' },
+    ],
+  },
+  {
     title: 'Social',
     items: [
       { href: '/social', label: 'Overview', icon: 'chart' },

@@ -35,6 +35,7 @@ export const NAV_GROUPS: { label: string; tabs: { href: string; label: string; i
   { label: 'Money', tabs: [
     { href: '/cash-in', label: 'Cash In', icon: 'cash-in' },
     { href: '/cash-out', label: 'Cash Out', icon: 'cash-out' },
+    { href: '/expenses', label: 'Expenses', icon: 'wallet' },
   ] },
   { label: 'Pipeline', tabs: [
     { href: '/leads', label: 'Leads', icon: 'leads' },

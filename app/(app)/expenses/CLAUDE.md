@@ -1,0 +1,43 @@
+# Expenses
+
+Loaded when working in this folder. Also applies to `lib/expenses*.ts`, `lib/expense-*.ts`, `app/_v3/pages/expenses/`,
+`app/_v3/ExpenseForms.tsx`, `app/_v3/dashboard/Spend.tsx` and `scripts/expense-*.mjs`.
+
+## Expenses (added 21 Oct 2026)
+
+What SY Creative Production spends, one row per payment: hotels, flights, transport, subscriptions, equipment, ads,
+admin fees and other. Own sidebar group **Expenses** (v3): `/expenses` Overview (this year by kind, month and vendor,
+trips, receipts to chase) and `/expenses/all` (add, filter, edit, receipts, month export). The v3 Dashboard has a
+**Company spend** panel (`app/_v3/dashboard/Spend.tsx`) that ignores the filter bar. v1/v2 only get the nav link; the
+pages draw inside a v3 frame there, like Facebook.
+- **Table** `expense` (`supabase/expenses.sql`, run once, safe to repeat; the pages show the SQL until it exists). Not the
+  `records` table: expenses need real columns (kind, vendor, reference, receipt state). `records` `cash_out` stays as it
+  was (Vault / demo / bot's old brief) — expenses do NOT feed the bot's or the morning brief's cash-out figure yet.
+- **Amount is RM actually paid.** A charge in another currency is tracked in ITS OWN currency (`currency` +
+  `original_amount`, shown as e.g. HK$78.00, totalled per currency by `foreignTotals`, never converted or added to RM). Its RM
+  `amount` may be empty ("RM pending") until the statement shows it, or filled and flagged `amount_estimated` (shown "≈");
+  a DB check allows a null RM amount only for a non-MYR row that has its `original_amount`. RM is the only thing ever summed.
+- **`doc_type`** = Invoice / Receipt (default) / Refund, the last word of the receipt's file name. A Refund is money back: it
+  counts negative in every RM and own-currency total (`rmOf`). `(vendor, reference, doc_type)` is unique, so the same booking or order can't be filed twice —
+  importers and scans rely on it (`upsert … onConflict vendor,reference,doc_type`).
+- **Maths** is `lib/expenses-math.ts` (tested in `tests/expenses.test.mjs`): totals, filters, run rate, CSV, file names.
+  Nothing is stored; every figure is worked out each render. Subscription "running cost" = latest charge per plan
+  (vendor + description), yearly ÷ 12, dropped when overdue (62 / 380 days).
+- **Privacy:** `lib/expenses.ts` disguises `amount` and `original_amount` while amounts are hidden (same rule as
+  Property). Saving, deleting and exporting need the owner AND "Show amounts" on (`moneyLocked`); attaching or waiving
+  a receipt only needs a signed-in editor. Demo mode shows invented rows and refuses writes.
+- **Receipts** live in Google Drive, filed like invoices (no model; Composio), all in ONE folder — Aereon's "To Process" folder
+  `1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N` (the old "Expenses Invoice - Payslip" folder was replaced) (default of the `expense_export` setting; change it there, not in code). No sub-folders.
+  **File name = `YYYYMMDD - <item / product / service> - <vendor and order id> - <Invoice|Receipt|Refund>.<ext>`**
+  (`receiptFilename`): the item is the expense's description (vendor if none), the tracking part is the vendor unless the item
+  already says it, then the booking / order / invoice number; with neither, a foreign charge shows its own-currency amount
+  (`Uber Trip HK 0616 - HK$78.00 - Receipt`). No RM amount in the name. Aereon's format, 21 Oct 2026; new kinds of item get reviewed with Aereon
+  before the names are used. `expense.receipt` says where it stands: `filed` (file_id, url) / `uploading` / `failed` /
+  `waived` ("no receipt needed"); no object = missing. Replacing a receipt uploads the new file first, then trashes the old
+  one. Deleting an expense never deletes its Drive file. Upload limit 4 MB (Vercel body limit).
+- **Month export** (`exportMonth`): a CSV of one month, receipt links included, filed in the same Drive folder (`YYYYMM - Monthly expenses.csv`); the
+  last export per month is kept in the `expense_month_exports` setting and a re-export replaces the old CSV.
+- **Filters** follow `docs/FILTER-BAR.md`: one sticky bar in the URL (`year`, `month`, `kind`, `receipt`, `trip`, `q`);
+  opens on the current year. Charts follow `docs/CHARTS.md` (`data-tip`).
+- **Real data is private** (repo is public): `.expense-data/` is git-ignored; hotel names, trips and amounts live only in
+  Supabase. Never put real expenses in code, tests, comments or commit messages.
