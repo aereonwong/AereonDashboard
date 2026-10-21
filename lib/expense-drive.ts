@@ -8,7 +8,7 @@ import { getSetting } from './settings'
 // 👉 Filing expense receipts in Google Drive, the same way invoices are filed: the server hands the file to
 // Drive through Composio (no model in the loop) and records where it landed on the expense row.
 //
-//   One Drive folder (Aereon's "Expenses" folder), every receipt in it, named
+//   One Drive folder (Aereon's "To Process" folder), every receipt in it, named
 //   YYYYMMDD - <item> - <vendor / order id>.pdf   (see receiptFilename in lib/expenses-math.ts)
 //
 // The names sort by date on their own, and the month CSVs sit in the same folder. The folder id lives in the
@@ -16,7 +16,7 @@ import { getSetting } from './settings'
 
 export type ExpenseExportConfig = { driveFolderId: string; driveFolderName: string }
 
-const DEFAULT_CONFIG: ExpenseExportConfig = { driveFolderId: '1ygicuumN8uNIM30WDKr70-INQVVxHrni', driveFolderName: 'Expenses' }
+const DEFAULT_CONFIG: ExpenseExportConfig = { driveFolderId: '1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N', driveFolderName: 'To Process' }
 
 export type Filed = { fileId: string; url: string; name: string }
 

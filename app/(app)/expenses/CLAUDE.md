@@ -22,8 +22,8 @@ pages draw inside a v3 frame there, like Facebook.
 - **Privacy:** `lib/expenses.ts` disguises `amount` and `original_amount` while amounts are hidden (same rule as
   Property). Saving, deleting and exporting need the owner AND "Show amounts" on (`moneyLocked`); attaching or waiving
   a receipt only needs a signed-in editor. Demo mode shows invented rows and refuses writes.
-- **Receipts** live in Google Drive, filed like invoices (no model; Composio), all in ONE folder — Aereon's "Expenses" folder
-  `1ygicuumN8uNIM30WDKr70-INQVVxHrni` (default of the `expense_export` setting; change it there, not in code). No sub-folders.
+- **Receipts** live in Google Drive, filed like invoices (no model; Composio), all in ONE folder — Aereon's "To Process" folder
+  `1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N` (the old "Expenses Invoice - Payslip" folder was replaced) (default of the `expense_export` setting; change it there, not in code). No sub-folders.
   **File name = `YYYYMMDD - <item / product / service> - <vendor and order id>.<ext>`** (`receiptFilename`): the item is the
   expense's description (vendor if none), the tracking part is the vendor unless the item already says it, then the booking /
   order / invoice number. No amount in the name. Aereon's format, 21 Oct 2026; new kinds of item get reviewed with Aereon

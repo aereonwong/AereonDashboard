@@ -264,7 +264,7 @@ export function expensesCsv(rows: Expense[]): string {
   return [head.join(','), ...lines].join('\r\n') + '\r\n'
 }
 
-const clean = (s: string) => s.replace(/→/g, 'to').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim()
+const clean = (s: string) => s.replace(/→/g, 'to').replace(/\//g, '-').replace(/[\\:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim()
 
 /** The name a receipt gets in Drive (Aereon's format, 21 Oct 2026):
  *    YYYYMMDD - <item / product / service name> - <other info that helps tracking: vendor and order id>

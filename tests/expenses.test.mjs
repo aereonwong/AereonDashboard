@@ -96,7 +96,7 @@ test('CSV: header, one line per payment, quotes escaped, receipt link or "not ne
 test('receipt file names: YYYYMMDD - item - vendor / order id, safe characters, no amount', () => {
   assert.equal(
     receiptFilename({ spent_on: '2025-12-19', vendor: 'KLIA Ekspres', description: 'KLIA Transit KLIA (T1/T2) → Bandar Tasik Selatan', reference: 'EC1219PU9XP3MUE' }, 'PDF'),
-    '20251219 - KLIA Transit KLIA (T1 T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf',
+    '20251219 - KLIA Transit KLIA (T1-T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf',
   )
   // the vendor is not repeated when the item already says it
   assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Meta', description: 'Meta Ads — Reel boost', reference: null }, '.jpg'), '20261015 - Meta Ads — Reel boost.jpg')
