@@ -19,7 +19,8 @@
     "property:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/property-import.mjs",
     "quote:import": "node --env-file-if-exists=.env scripts/quote-import.mjs",
     "expense:scan": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/expense-scan.mjs",
-    "expense:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-import.mjs"
+    "expense:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-import.mjs",
+    "expense:receipts": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-receipts.mjs"
   },
   "engines": {
     "node": ">=20"
