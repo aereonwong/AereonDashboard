@@ -99,9 +99,63 @@ async function klia(msg) {
   }
 }
 
+
+// ── Subscriptions: ManyChat invoices, Envato (PayPal receipts), Google Play (Google One) ──────────────────────────
+// These emails ARE the receipt, so the row says `render: true` and scripts/expense-receipts.mjs prints the email to PDF.
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+/** "Jul 11, 2024", "8 Oct 2025" or "October 8, 2024" → 2024-07-11 */
+function parseDate(t) {
+  let m = t.match(/([A-Za-z]{3})[a-z]* (\d{1,2}), (\d{4})/)
+  if (m) return iso(m[3], MONTHS.indexOf(m[1]) + 1, m[2])
+  m = t.match(/(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4})/)
+  return m ? iso(m[3], MONTHS.indexOf(m[2]) + 1, m[1]) : null
+}
+
+async function manychat(msg) {
+  const t = plain(msg.messageText).replace(/ |&#xA0;/g, ' ')
+  const id = t.match(/Invoice ID\s*\n\s*([\d-]+)/)?.[1]
+  const date = parseDate(t.match(/Invoice Date\s*\n\s*([^\n]+)/)?.[1] ?? '')
+  const total = t.match(/\nTotal\s*\n?\s*\$\s?([\d,]+(?:\.\d+)?)/)?.[1]
+  if (!id || !date || !total) return { review: `ManyChat ${msg.messageId}: could not read invoice id / date / total`, ref: msg.messageId }
+  return {
+    row: { spent_on: date, kind: 'subscription', vendor: 'ManyChat', description: 'ManyChat Pro', amount: null, currency: 'USD', original_amount: money(total), doc_type: 'Invoice', recurring: 'monthly', reference: id, source: 'gmail', source_ref: { gmail_id: msg.messageId, render: true } },
+  }
+}
+
+async function envato(msg) {
+  const t = plain(msg.messageText)
+  const usd = t.match(/You paid \$([\d,]+\.\d{2}) USD to Envato/)?.[1]
+  const inv = t.match(/Invoice ID\s*\n\s*(\d+)/)?.[1]
+  const txn = t.match(/Transaction ID\s*\n\s*([A-Z0-9]+)/)?.[1]
+  const date = parseDate(t.match(/Transaction date\s*\n\s*([^\n]+)/)?.[1] ?? '')
+  const plan = t.match(/Description[\s\S]*?\n(Annual|Monthly)[^\n]*/)?.[1] ?? 'Annual'
+  if (!usd || !date || !(inv || txn)) return { review: `Envato ${msg.messageId}: could not read amount / date / invoice`, ref: msg.messageId }
+  return {
+    row: { spent_on: date, kind: 'subscription', vendor: 'Envato', description: `Envato Elements ${plan}`, amount: null, currency: 'USD', original_amount: money(usd), doc_type: 'Receipt', recurring: plan === 'Annual' ? 'yearly' : 'monthly', reference: inv ?? txn, notes: txn ? `PayPal ${txn}` : null, paid_with: 'PayPal', source: 'gmail', source_ref: { gmail_id: msg.messageId, render: true } },
+  }
+}
+
+async function googlePlay(msg) {
+  const t = plain(msg.messageText)
+  const order = t.match(/Order number:\s*(\S+)/)?.[1]
+  const date = parseDate(t.match(/Order date:\s*([^\n]+)/)?.[1] ?? '')
+  const total = t.match(/Total:\s*RM\s?([\d,]+\.\d{2})/)?.[1]
+  const item = clean(t.match(/Item\s*Price\s*\n(.+?)\s+RM\s?[\d,.]+/)?.[1])
+  if (!order || !date || !total) return { skip: 'not a Google Play order receipt' }
+  const one = item.match(/(\d+ [GT]B) \(Google One\)/)
+  const card = t.match(/Payment method:\s*\n?\s*([^\n]+)/)?.[1]
+  return {
+    row: { spent_on: date, kind: 'subscription', vendor: 'Google', description: one ? `Google One ${one[1]}` : item || 'Google Play purchase', amount: money(total), currency: 'MYR', doc_type: 'Receipt', recurring: /Auto-renewing/i.test(t) ? 'monthly' : null, reference: order, paid_with: clean(card) || null, source: 'gmail', source_ref: { gmail_id: msg.messageId, render: true } },
+  }
+}
+
 const SOURCES = [
   { id: 'trip-hotel', query: 'from:MY_HTL_NoReply@trip.com subject:"[Booking confirmation]"', parse: tripHotel, prepare: prepareTripHotel },
   { id: 'klia', query: 'from:eticketing@kliaekspres.com subject:"e-Ticket" has:attachment', parse: klia },
+  { id: 'manychat', query: 'from:noreply@manychat.com subject:"Manychat Invoice"', parse: manychat },
+  { id: 'envato', query: 'from:service@intl.paypal.com subject:"Payment to Envato"', parse: envato },
+  { id: 'google-play', query: 'from:googleplay-noreply@google.com subject:"Order Receipt"', parse: googlePlay },
 ]
 
 async function prepareTripHotel() {
@@ -148,7 +202,7 @@ await mkdir(new URL('../.expense-data/', import.meta.url), { recursive: true })
 const OUT = `scan-${ONLY ?? 'all'}.json`
 await writeFile(new URL(`../.expense-data/${OUT}`, import.meta.url), JSON.stringify(unique, null, 2))
 
-const f = n => n.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const f = n => (n == null ? '—' : n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 console.log(`\n${unique.length} expenses → .expense-data/${OUT}\n`)
 for (const r of unique) console.log(`${r.spent_on}  ${r.kind.padEnd(9)} ${r.vendor.padEnd(14)} ${f(r.amount).padStart(10)}  ${r.description}${r.notes ? `  [${r.notes}]` : ''}`)
 console.log(`\nTotal RM ${f(unique.reduce((a, r) => a + r.amount, 0))}`)

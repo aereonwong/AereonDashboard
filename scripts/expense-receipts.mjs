@@ -4,20 +4,26 @@
 //   npm run expense:receipts -- --vendor "KLIA Ekspres" --dry     # list what would be filed
 //   npm run expense:receipts -- --vendor "KLIA Ekspres" [--limit 1]
 //   npm run expense:receipts -- --vendor "Trip.com" --kind hotel --pick e-receipt   # the attachment whose name matches
+//   npm run expense:receipts -- --vendor Google --folder <driveFolderId>   # another folder; rows marked source_ref.render have no
+//                                                                          # attachment, so the email itself is printed to PDF (headless Chrome)
 // Only rows that have source_ref.gmail_id and no filed receipt yet are touched, so it is safe to run twice.
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises'
+import { promisify } from 'node:util'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import { exec, getMessage } from './_gmail.mjs'
 import { receiptFilename } from '../lib/expenses-math.ts'
 
+const run = promisify(execFile)
 const args = process.argv.slice(2)
 const flag = n => (args.includes(n) ? args[args.indexOf(n) + 1] : null)
 const VENDOR = flag('--vendor')
 const LIMIT = Number(flag('--limit') ?? 1000)
 const DRY = args.includes('--dry')
 const KIND = flag('--kind')
+const FOLDER_ARG = flag('--folder')
 const PICK = flag('--pick') ? new RegExp(flag('--pick'), 'i') : null // which attachment is the receipt, by file name
 if (!VENDOR) {
   console.error('Usage: npm run expense:receipts -- --vendor "<vendor>" [--limit n] [--dry]')
@@ -27,7 +33,7 @@ if (!VENDOR) {
 const db = createClient(process.env.SUPABASE_URL.trim().replace(/\/+$/, '').replace(/\/rest\/v\d+$/i, ''), process.env.SUPABASE_SERVICE_ROLE_KEY.trim(), { auth: { persistSession: false } })
 
 const { data: setting } = await db.from('records').select('meta').eq('category', 'doc').eq('status', 'setting').eq('title', 'setting:expense_export').limit(1)
-const FOLDER = setting?.[0]?.meta?.value?.driveFolderId || '1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N'
+const FOLDER = FOLDER_ARG || setting?.[0]?.meta?.value?.driveFolderId || '1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N'
 
 let q = db.from('expense').select('*').eq('vendor', VENDOR).order('spent_on')
 if (KIND) q = q.eq('kind', KIND)
@@ -36,10 +42,23 @@ if (error) throw new Error(error.message)
 const todo = rows.filter(r => r.source_ref?.gmail_id && r.receipt?.status !== 'filed' && r.receipt?.status !== 'waived').slice(0, LIMIT)
 console.log(`${todo.length} of ${rows.length} ${VENDOR} expenses need a receipt → Drive folder ${FOLDER}`)
 
+const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+const esc = t => String(t ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
+/** The email itself, printed to PDF: a small header (subject, from, date) then the message as it arrived. */
+async function printEmail(msg, htmlPath, pdfPath) {
+  const head = `<div style="font:12px Arial;color:#444;border-bottom:1px solid #ccc;margin-bottom:12px;padding-bottom:8px"><b>${esc(msg.subject)}</b><br>From: ${esc(msg.sender)}<br>Date: ${esc(msg.messageTimestamp)}<br>To: ${esc(msg.to)}</div>`
+  await writeFile(htmlPath, `<!doctype html><meta charset="utf-8">${head}${msg.messageText}`)
+  await run(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--print-to-pdf=${pdfPath}`, `file://${htmlPath}`], { timeout: 60_000 }).catch(() => {})
+  const { size } = await stat(pdfPath).catch(() => ({ size: 0 }))
+  if (!size) throw new Error('could not print the email to PDF')
+  if (size > 5 * 1024 * 1024) throw new Error('printed PDF is over Drive upload limit (5 MB)')
+}
+
 let done = 0
 for (const r of todo) {
   const msg = await getMessage(r.source_ref.gmail_id)
-  const att = (msg.attachmentList ?? []).find(a => (PICK ? PICK.test(a.filename ?? '') : r.source_ref.attachment ? a.filename === r.source_ref.attachment : /pdf/i.test(a.mimeType ?? '')))
+  const render = !!r.source_ref.render
+  const att = render ? { filename: 'receipt.pdf' } : (msg.attachmentList ?? []).find(a => (PICK ? PICK.test(a.filename ?? '') : r.source_ref.attachment ? a.filename === r.source_ref.attachment : /pdf/i.test(a.mimeType ?? '')))
   if (!att) {
     console.log(`  ✗ ${r.spent_on} ${r.reference}: no matching attachment`)
     continue
@@ -52,11 +71,15 @@ for (const r of todo) {
   }
   const dir = await mkdtemp(join(tmpdir(), 'receipt-'))
   try {
-    const got = await exec('GMAIL_GET_ATTACHMENT', { message_id: msg.messageId, attachment_id: att.attachmentId, file_name: att.filename ?? 'receipt.pdf' })
-    const res = await fetch(got.file.s3url)
-    if (!res.ok) throw new Error(`download failed (${res.status})`)
     const path = join(dir, name)
-    await writeFile(path, Buffer.from(await res.arrayBuffer()))
+    if (render) {
+      await printEmail(msg, join(dir, 'mail.html'), path)
+    } else {
+      const got = await exec('GMAIL_GET_ATTACHMENT', { message_id: msg.messageId, attachment_id: att.attachmentId, file_name: att.filename ?? 'receipt.pdf' })
+      const res = await fetch(got.file.s3url)
+      if (!res.ok) throw new Error(`download failed (${res.status})`)
+      await writeFile(path, Buffer.from(await res.arrayBuffer()))
+    }
     // Drive limits requests per minute: wait a little between files, and once more if it still says "quota".
     await new Promise(r => setTimeout(r, 2500))
     const upload = () => exec('GOOGLEDRIVE_UPLOAD_FILE', { file_to_upload: path, folder_to_upload_to: FOLDER })
