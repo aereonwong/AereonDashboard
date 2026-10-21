@@ -264,14 +264,17 @@ export function expensesCsv(rows: Expense[]): string {
   return [head.join(','), ...lines].join('\r\n') + '\r\n'
 }
 
-const clean = (s: string) => s.replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim()
+const clean = (s: string) => s.replace(/→/g, 'to').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim()
 
-/** "2026-10-15 - Trip.com - Bali Bay By Urban Haven - RM 531.16.pdf" — the name a receipt gets in Drive. */
-export function receiptFilename(e: Pick<Expense, 'spent_on' | 'vendor' | 'description' | 'amount'>, ext: string): string {
-  const what = e.description ? clean(e.description).slice(0, 50) : ''
-  const parts = [e.spent_on, clean(e.vendor), what, `RM ${Number(e.amount).toFixed(2)}`].filter(Boolean)
-  return `${parts.join(' - ')}.${ext.replace(/^\./, '').toLowerCase() || 'pdf'}`
+/** The name a receipt gets in Drive (Aereon's format, 21 Oct 2026):
+ *    YYYYMMDD - <item / product / service name> - <other info that helps tracking: vendor and order id>
+ *    "20251219 - KLIA Transit KLIA (T1/T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf"
+ *  The item is the expense's description (the vendor when there is none). The tracking part is the vendor, unless the
+ *  item already says it, then the booking / order / invoice number. The amount is deliberately not in the name. */
+export function receiptFilename(e: Pick<Expense, 'spent_on' | 'vendor' | 'description' | 'reference'>, ext: string): string {
+  const item = clean(e.description ?? '') || clean(e.vendor)
+  const vendor = clean(e.vendor)
+  const info = [item.toLowerCase().includes(vendor.toLowerCase()) ? '' : vendor, clean(e.reference ?? '')].filter(Boolean).join(' ')
+  const name = [e.spent_on.replace(/-/g, ''), item.slice(0, 90), info.slice(0, 60)].filter(Boolean).join(' - ')
+  return `${name}.${ext.replace(/^\./, '').toLowerCase() || 'pdf'}`
 }
-
-/** The Drive sub-folder a receipt goes into: one folder per month, "2026-10". */
-export const monthFolder = (spentOn: string) => spentOn.slice(0, 7)

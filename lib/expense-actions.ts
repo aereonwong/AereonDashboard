@@ -142,7 +142,7 @@ export async function attachReceipt(form: FormData): Promise<Result> {
 
   await saveReceipt(id, { status: 'uploading', started_at: new Date().toISOString(), source: 'dashboard' })
   try {
-    const filed = await fileToDrive(e.spent_on, receiptFilename(e, ext), new Uint8Array(await file.arrayBuffer()))
+    const filed = await fileToDrive(receiptFilename(e, ext), new Uint8Array(await file.arrayBuffer()))
     await saveReceipt(id, { status: 'filed', file_id: filed.fileId, url: filed.url, name: filed.name, uploaded_at: new Date().toISOString(), source: 'dashboard' })
     // The new file went up first; only now is the old one moved to Drive's trash.
     if (previous?.file_id && previous.file_id !== filed.fileId) await trashDriveFile(previous.file_id)
@@ -184,8 +184,8 @@ export async function exportMonth(month: string): Promise<Result> {
 
   const log: Record<string, MonthExport> = await monthExports()
   try {
-    const name = `Expenses ${month}.csv`
-    const filed = await fileToDrive(`${month}-01`, name, new TextEncoder().encode('﻿' + expensesCsv(rows)))
+    const name = `${month.replace('-', '')} - Monthly expenses.csv`
+    const filed = await fileToDrive(name, new TextEncoder().encode('﻿' + expensesCsv(rows)))
     await setSetting('expense_month_exports', { ...log, [month]: { url: filed.url, fileId: filed.fileId, at: new Date().toISOString(), count: rows.length } })
     // A re-export replaces the earlier CSV: the old one goes to Drive's trash only after the new one is filed.
     if (log[month]?.fileId && log[month].fileId !== filed.fileId) await trashDriveFile(log[month].fileId)

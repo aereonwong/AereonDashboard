@@ -93,9 +93,15 @@ test('CSV: header, one line per payment, quotes escaped, receipt link or "not ne
   assert.ok(csv.includes('https://d/x') && csv.includes('not needed'))
 })
 
-test('receipt file names are safe and carry date, vendor, what and amount', () => {
-  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Trip.com', description: 'Bali Bay/Urban: Haven', amount: 531.1 }, 'PDF'), '2026-10-15 - Trip.com - Bali Bay Urban Haven - RM 531.10.pdf')
-  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'KLIA', description: null, amount: 34.6 }, '.jpg'), '2026-10-15 - KLIA - RM 34.60.jpg')
+test('receipt file names: YYYYMMDD - item - vendor / order id, safe characters, no amount', () => {
+  assert.equal(
+    receiptFilename({ spent_on: '2025-12-19', vendor: 'KLIA Ekspres', description: 'KLIA Transit KLIA (T1/T2) → Bandar Tasik Selatan', reference: 'EC1219PU9XP3MUE' }, 'PDF'),
+    '20251219 - KLIA Transit KLIA (T1 T2) to Bandar Tasik Selatan - KLIA Ekspres EC1219PU9XP3MUE.pdf',
+  )
+  // the vendor is not repeated when the item already says it
+  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Meta', description: 'Meta Ads — Reel boost', reference: null }, '.jpg'), '20261015 - Meta Ads — Reel boost.jpg')
+  // no description: the vendor is the item
+  assert.equal(receiptFilename({ spent_on: '2026-10-15', vendor: 'Trip.com', description: null, reference: '1433812397470117' }, 'pdf'), '20261015 - Trip.com - 1433812397470117.pdf')
 })
 
 test('CSV: text that starts like a formula is defused, numbers are left alone', () => {

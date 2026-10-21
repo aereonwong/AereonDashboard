@@ -22,12 +22,15 @@ pages draw inside a v3 frame there, like Facebook.
 - **Privacy:** `lib/expenses.ts` disguises `amount` and `original_amount` while amounts are hidden (same rule as
   Property). Saving, deleting and exporting need the owner AND "Show amounts" on (`moneyLocked`); attaching or waiving
   a receipt only needs a signed-in editor. Demo mode shows invented rows and refuses writes.
-- **Receipts** live in Google Drive, filed like invoices (no model; Composio): `My Drive / 02 SY Creative / Expenses &
-  Receipts / YYYY-MM / <date> - <vendor> - <what> - RM <amount>.<ext>`. The root folder is found or made once and kept in the
-  `expense_export` setting. `expense.receipt` says where it stands: `filed` (file_id, url) / `uploading` / `failed` /
+- **Receipts** live in Google Drive, filed like invoices (no model; Composio), all in ONE folder — Aereon's "Expenses" folder
+  `1ygicuumN8uNIM30WDKr70-INQVVxHrni` (default of the `expense_export` setting; change it there, not in code). No sub-folders.
+  **File name = `YYYYMMDD - <item / product / service> - <vendor and order id>.<ext>`** (`receiptFilename`): the item is the
+  expense's description (vendor if none), the tracking part is the vendor unless the item already says it, then the booking /
+  order / invoice number. No amount in the name. Aereon's format, 21 Oct 2026; new kinds of item get reviewed with Aereon
+  before the names are used. `expense.receipt` says where it stands: `filed` (file_id, url) / `uploading` / `failed` /
   `waived` ("no receipt needed"); no object = missing. Replacing a receipt uploads the new file first, then trashes the old
   one. Deleting an expense never deletes its Drive file. Upload limit 4 MB (Vercel body limit).
-- **Month export** (`exportMonth`): a CSV of one month, receipt links included, filed beside that month's receipts; the
+- **Month export** (`exportMonth`): a CSV of one month, receipt links included, filed in the same Drive folder (`YYYYMM - Monthly expenses.csv`); the
   last export per month is kept in the `expense_month_exports` setting and a re-export replaces the old CSV.
 - **Filters** follow `docs/FILTER-BAR.md`: one sticky bar in the URL (`year`, `month`, `kind`, `receipt`, `trip`, `q`);
   opens on the current year. Charts follow `docs/CHARTS.md` (`data-tip`).
