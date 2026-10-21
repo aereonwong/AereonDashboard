@@ -44,6 +44,7 @@ const clean = rows.map((r, i) => {
     source: r.source ?? 'import',
     source_ref: r.source_ref ?? null,
     notes: r.notes ?? null,
+    receipt: r.receipt ?? null, // a receipt already in Drive can be linked at import time
   }
 })
 if (bad.length) {
