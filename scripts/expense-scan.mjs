@@ -150,6 +150,40 @@ async function googlePlay(msg) {
   }
 }
 
+/** Claude Pro (and any other Anthropic charge): a Stripe receipt, charged in USD with Malaysian SST included, so the RM
+ *  amount stays empty until the card statement shows it. The email carries the Receipt PDF, which is what gets filed. */
+async function anthropic(msg) {
+  const t = plain(msg.messageText).replace(/\s+/g, ' ')
+  const no = t.match(/Receipt #([\d-]{8,})/)?.[1]
+  const total = t.match(/Amount paid \$([\d,]+\.\d{2})/)?.[1]
+  const date = parseDate(t.match(/Paid (?:on )?([A-Za-z]+ \d{1,2}, \d{4})/)?.[1] ?? '')
+  const card = t.match(/(?:Payment method|\d{4} with)\s*-?\s*(\d{4})\b/)?.[1]
+  const item = clean(t.match(/Receipt #[\d-]+ (.+?) Qty \d/)?.[1]?.replace(/^[A-Z][a-z]{2} \d{1,2}, \d{4}\s*[–-]\s*[A-Z][a-z]{2} \d{1,2}, \d{4} /, '').replace(/^[A-Z][a-z]{2} \d{1,2}\s*[–-]\s*[A-Z][a-z]{2} \d{1,2}, \d{4} /, ''))
+  if (!no || !total || !date) return { review: `Anthropic ${msg.messageId}: could not read receipt no. / date / total`, ref: msg.messageId }
+  const att = (msg.attachmentList ?? []).find(a => /^receipt/i.test(a.filename ?? ''))
+  const credits = /credit/i.test(item)
+  return {
+    row: { spent_on: date, kind: credits ? 'other' : 'subscription', vendor: 'Anthropic', description: credits ? 'Anthropic API credits' : item || 'Claude', amount: null, currency: 'USD', original_amount: money(total), doc_type: 'Receipt', recurring: !credits && /pro|max|team/i.test(item) ? 'monthly' : null, reference: no, paid_with: card ? `Card ${card}` : null, notes: 'USD charge incl. 8% SST', source: 'gmail', source_ref: { gmail_id: msg.messageId, ...(att ? { attachment: att.filename } : { render: true }) } },
+  }
+}
+
+/** A domain bought at Cloudflare and paid through PayPal: the PayPal receipt is the proof of payment. The domain's name is
+ *  read from Cloudflare's "Domain registered" email of the same day. */
+async function cloudflare(msg) {
+  const t = plain(msg.messageText).replace(/\s+/g, ' ')
+  const usd = t.match(/You paid \$([\d,]+\.\d{2}) USD to Cloudflare/)?.[1]
+  const txn = t.match(/Transaction ID\s+([A-Z0-9]{10,})/)?.[1]
+  const date = parseDate(t.match(/Transaction date\s+(\d{1,2} [A-Za-z]{3} \d{4})/)?.[1] ?? '')
+  if (!usd || !date || !txn) return { review: `Cloudflare ${msg.messageId}: could not read amount / date / transaction`, ref: msg.messageId }
+  const day = Date.parse(`${date}T00:00:00Z`)
+  const ymd = ms => new Date(ms).toISOString().slice(0, 10).replace(/-/g, '/')
+  const [reg] = await searchIds(`from:noreply@notify.cloudflare.com subject:"Domain registered" after:${ymd(day - 86400_000)} before:${ymd(day + 2 * 86400_000)}`)
+  const domain = reg ? (await getMessage(reg)).subject.match(/Domain registered - (\S+)/i)?.[1] : null
+  return {
+    row: { spent_on: date, kind: 'subscription', vendor: 'Cloudflare', description: domain ? `Domain ${domain}` : 'Domain registration', amount: null, currency: 'USD', original_amount: money(usd), doc_type: 'Receipt', recurring: 'yearly', reference: txn, notes: `PayPal ${txn}`, paid_with: 'PayPal', source: 'gmail', source_ref: { gmail_id: msg.messageId, render: true } },
+  }
+}
+
 // ── Flights ─────────────────────────────────────────────────────────────────────────────────────────────────────
 // Trip.com: the E-receipt PDF attached to "Flight Booking Confirmed" has the total. Ctrip (Chinese) confirmations state the
 // total in yuan, kept as CNY. Royal Brunei states the total in the email itself, which is then printed to PDF as the receipt.
@@ -220,6 +254,8 @@ const SOURCES = [
   { id: 'royal-brunei', query: 'from:noreply@mail.flyroyalbrunei.com subject:"booking confirmation"', parse: royalBrunei },
   { id: 'manychat', query: 'from:noreply@manychat.com subject:"Manychat Invoice"', parse: manychat },
   { id: 'envato', query: 'from:service@intl.paypal.com subject:"Payment to Envato"', parse: envato },
+  { id: 'anthropic', query: 'from:invoice+statements@mail.anthropic.com subject:"Your receipt from Anthropic"', parse: anthropic },
+  { id: 'cloudflare', query: 'from:service@intl.paypal.com subject:"Payment to Cloudflare"', parse: cloudflare },
   { id: 'google-play', query: 'from:googleplay-noreply@google.com subject:"Order Receipt"', parse: googlePlay },
 ]
 
