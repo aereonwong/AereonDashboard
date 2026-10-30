@@ -103,33 +103,35 @@ export function cleanLinks(input: unknown): LinkedPost[] {
 /** Latest stored reach for each post id (from ig_post_metrics) and the day it
  *  was read, for showing linked posts. Looks back 120 days, newest first. */
 export async function reachFor(ids: string[]): Promise<Record<string, { reach: number; at: string }>> {
-  if (!supabaseConfigured || !ids.length) return {}
-  const since = new Date(Date.now() - 120 * 86_400_000).toISOString()
-  const { data } = await supabase
-    .from('ig_post_metrics')
-    .select('media_id, reach, captured_at')
-    .in('media_id', [...new Set(ids)].slice(0, 500))
-    .gte('captured_at', since)
-    .not('reach', 'is', null)
-    .order('captured_at', { ascending: false })
-    .limit(5000)
-  const out: Record<string, { reach: number; at: string }> = {}
-  for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
-  return out
+  return newestReach(ids, new Date(Date.now() - 120 * 86_400_000).toISOString())
 }
 
 /** Latest stored reach for each post id, however old the reading — for the effective-CPM
  *  panel, where a paid post from last year still counts. */
 export async function latestReach(ids: string[]): Promise<Record<string, { reach: number; at: string }>> {
+  return newestReach(ids, null)
+}
+
+// Supabase returns at most 1,000 rows a request and a post has many readings, so page until
+// every post has its newest one (rows come newest first) or the readings run out.
+async function newestReach(ids: string[], since: string | null): Promise<Record<string, { reach: number; at: string }>> {
   if (!supabaseConfigured || !ids.length) return {}
-  const { data } = await supabase
-    .from('ig_post_metrics')
-    .select('media_id, reach, captured_at')
-    .in('media_id', [...new Set(ids)].slice(0, 500))
-    .not('reach', 'is', null)
-    .order('captured_at', { ascending: false })
-    .limit(5000)
+  const want = [...new Set(ids)].slice(0, 500)
   const out: Record<string, { reach: number; at: string }> = {}
-  for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
+  for (let from = 0; from < 50_000; from += 1000) {
+    let q = supabase
+      .from('ig_post_metrics')
+      .select('media_id, reach, captured_at')
+      .in('media_id', want)
+      .not('reach', 'is', null)
+    if (since) q = q.gte('captured_at', since)
+    const { data, error } = await q
+      .order('captured_at', { ascending: false })
+      .order('media_id', { ascending: true })
+      .range(from, from + 999)
+    if (error) break
+    for (const r of data ?? []) if (!out[r.media_id]) out[r.media_id] = { reach: r.reach, at: String(r.captured_at) }
+    if ((data?.length ?? 0) < 1000 || Object.keys(out).length >= want.length) break
+  }
   return out
 }

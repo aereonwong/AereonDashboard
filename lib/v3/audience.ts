@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import {
   latestSnapshot,
@@ -36,17 +37,25 @@ export type Audience = {
 /** How far back the public kits look for their best work (about 3 months). */
 export const BEST_DAYS = 90
 
-export async function readAudience(days = 30): Promise<Audience> {
-  const [snap, account, daily] = await Promise.all([latestSnapshot(), latestAccount(), accountDaily()])
+// cache(): the v3 Dashboard reads this beside readSocial(), whose fallback reads it again — one read per request.
+export const readAudience = cache(async (days = 30): Promise<Audience> => {
+  const [snap, account, daily, snaps] = await Promise.all([
+    latestSnapshot(),
+    latestAccount(),
+    accountDaily(),
+    supabaseConfigured
+      ? supabase
+          .from('ig_snapshots')
+          .select('captured_at, profile')
+          .order('captured_at', { ascending: false })
+          .limit(1000) // the newest 1000, put back in time order below
+          .then(r => r.data)
+      : Promise.resolve(null),
+  ])
   let history: FollowerPoint[] = []
   if (supabaseConfigured) {
-    const { data } = await supabase
-      .from('ig_snapshots')
-      .select('captured_at, profile')
-      .order('captured_at', { ascending: false })
-      .limit(1000) // the newest 1000, put back in time order below
     const byDay = new Map<string, number>()
-    for (const r of [...(data ?? [])].reverse()) {
+    for (const r of [...(snaps ?? [])].reverse()) {
       const f = Number((r.profile as { followers_count?: number } | null)?.followers_count ?? 0)
       // Keyed by the Malaysia date: the 6am MYT refresh is the previous evening in UTC.
       if (f) byDay.set(new Date(Date.parse(String(r.captured_at)) + 8 * 3_600_000).toISOString().slice(0, 10), f)
@@ -73,7 +82,7 @@ export async function readAudience(days = 30): Promise<Audience> {
     view: account ? readAudienceView(account, Number(snap?.profile?.followers_count ?? 0)) : null,
     daily,
   }
-}
+})
 
 /** Countries left off the PUBLIC pages (landing reel, media kits) at Aereon's
  *  request, 6 Oct 2026 — the next country moves up. The Instagram tab still

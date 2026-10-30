@@ -19,8 +19,10 @@ type Result = { ok: true; url?: string } | { ok: false; error: string }
 const text = (v: FormDataEntryValue | null, max: number) => String(v ?? '').trim().slice(0, max) || null
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s))
 const money = (v: FormDataEntryValue | null): number | null | 'bad' => {
-  const s = String(v ?? '').replace(/[,\sA-Za-z]/g, '')
+  // Only a leading RM / MYR is dropped: "1.2k" or "1e3" is refused, never saved as 1.2 or 13.
+  const s = String(v ?? '').replace(/^\s*(RM|MYR)/i, '').replace(/[,\s]/g, '')
   if (!s) return null
+  if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return 'bad'
   const n = Number(s)
   return Number.isFinite(n) && n >= 0 && n < 100_000_000 ? Math.round(n * 100) / 100 : 'bad'
 }

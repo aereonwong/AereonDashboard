@@ -57,33 +57,12 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
   Foreign-currency rows carry `meta.currency` and are never added into RM totals.
   `docs/INVOICE-AUDIT.md` lists what the source documents disagree about — read it before
   changing how invoices are parsed or before designing a new invoice template.
-- Instagram lives in its own `ig_snapshots` table, one row per refresh. Instagram caps a media page
-  at ~40 posts for this field set — asking for 50 silently returns zero, so never raise the cap.
-  History (added 2 Oct 2026, `supabase/instagram-history.sql`): `ig_post_metrics`,
-  `ig_account_snapshots`, `ig_account_daily`. Fetching lives in `lib/ig-fetch.ts` — no runtime
-  imports, so `scripts/ig-refresh.mjs` loads the same file. Insight metrics differ per format
-  (Reels: watch time; posts: follows, profile visits) — asking for an unsupported one fails the call.
-  **Archive (7 Oct 2026, `supabase/instagram-archive.sql`, `npm run ig:backfill`):** every post ever
-  (`ig_posts`) with insights in `ig_post_metrics`, account totals per 30-day window back to Oct 2024
-  (`ig_account_periods`) and daily reach back as far (`ig_account_daily`). For analytics, read these
-  tables first; only ask Instagram again when a refresh is actually needed. Reach and accounts_engaged
-  are unique per window — never add windows' reach together.
-  "Typical post" means the MEDIAN reach (`analyse()` in `lib/instagram.ts`), never the mean.
-- **Privacy mode — real money is hidden by default, on the SERVER** (13–17 Oct 2026, `lib/privacy.ts`): while hidden,
-  `getRecords()`, `readProperty()`, `readSubmeter()`, the paid-reach read and `/approvals` multiply every amount by one
-  secret factor (0.35–0.95, fixed per signed-in person: HMAC of who under the session secret, so reloads can't average it away) and blank money in free text, so no real figure reaches the browser —
-  not in the HTML, not in DevTools — while charts, shares, rankings, growth and sentences stay true. Limit: proportions
-  are real, so knowing one exact amount would reveal that page's factor. Panels built on fixed money bands (Invoice
-  sizes, "Under 1K") show a `.v3-locked` card while hidden — any NEW absolute-threshold panel must do the same.
-  **Only the owner can show amounts** (`canRevealMoney()`: role owner — passcode, ADMIN_EMAILS, open door); for admins
-  and viewers the reveal cookie is ignored, the switch is locked, and money saves are refused.
-  Only signed-in app requests are gated: `proxy.ts` adds `x-cfo-money: gate`; the bot, crons and public pages never
-  carry it and read real figures. The switch is **"Show amounts"** (`MoneyToggle.tsx`): off/grey by default, green when
-  on; it sets cookie `cfo-reveal` (expiry ms, pushed forward by activity incl. mouse movement, 30 min idle) and reloads. Money-saving actions
-  and the invoice PDF routes refuse while hidden (a form drawn hidden holds disguised figures). On screen `MoneyMask.tsx`
-  draws amounts as `RM *****` (bare money numbers need `data-money`; `data-money-off` exempts); for the owner a click
-  on a figure or a `data-money-edit` control shows amounts. Any NEW loader that reads money must disguise it when
-  `moneyHidden()` is true.
+- Instagram: `ig_snapshots` + history/archive tables. Never raise the ~40-post media cap (50 silently
+  returns zero). Reach / accounts_engaged are unique per window — never add windows together.
+  "Typical post" = MEDIAN. Full rules: `docs/SOCIAL.md` (read before touching any social code).
+- **Privacy mode** (`lib/privacy.ts`): real money is disguised ON THE SERVER for signed-in app requests unless
+  the owner turned on "Show amounts". Any NEW loader that reads money must disguise it when `moneyHidden()`
+  is true; any NEW fixed-money-band panel shows `.v3-locked` while hidden. Full rules: `docs/PRIVACY-MODE.md`.
 - Demo mode: `cfo-demo` httpOnly cookie set by `/api/demo` after checking `DEMO_PASSCODE`. It swaps
   in `lib/demo-data.ts` for every tab. The bot and crons never see it (no cookie jar).
 
@@ -117,80 +96,14 @@ Contact Sheet and Flight HUD were removed at Aereon's request. **Only v3 is deve
 stay as they are (they must still build). Analytics or design changes cover Dashboard, Invoice
 Summary, Invoice Details, Instagram and Clients together.
 
-## Facebook — the Aereon Wong Page (added 12 Oct 2026)
+## Social — Instagram, Facebook, TikTok, /social (Oct 2026)
 
-`/facebook` (v3 Social group beside Instagram; classic layouts get the same page in a v3 frame) and a combined
-Instagram + Facebook band on the v3 Dashboard ("Is my audience growing"; the top KPI becomes "Social reach").
-- Connection: Composio project auth config `facebook-dashboard`, user `aereon` (OAuth done by Aereon 12 Oct 2026).
-  Page id `835556219912496` (public; `FB_PAGE_ID` overrides). The connection can also see "Discover Kuala Lumpur" — not used.
-- Tables (`supabase/facebook.sql`): `fb_page_daily` (one row per day: followers, follows, unfollows, views, viewers,
-  engagements, video views — back to Aug 2024 for views), `fb_page_periods` (rolling 28-day totals per day, Facebook's
-  own unique count), `fb_posts`, `fb_post_metrics` (+ view `fb_post_latest`).
-- Meta retired impressions/reach on 15 Nov 2025: **views** = every showing (additive), **viewers** = unique people,
-  true only per day or per 28-day window — never add viewers across days, windows or posts. Typical post = median viewers.
-- Fetch in `lib/fb-fetch.ts` (no imports, shared with `scripts/fb-backfill.mjs`), refresh in `lib/fb-refresh.ts`,
-  read + maths in `lib/facebook.ts`. Two Graph quirks, both answer EMPTY instead of failing: all seven daily
-  metrics in one 89-day call (asked in groups of ≤3), and a heavy page of posts (paging starts at 25 and halves).
-- The daily `cron-instagram` (6am MYT) refreshes Facebook too (last 10 days + posts of the last 30 days); the
-  Refresh button on the page calls `/api/facebook/refresh`. `npm run fb:backfill` (Mac, Composio CLI via
-  `composio dev playground-execute` against the project) fills history: page figures from Aug 2024, posts from 1 Jan 2025.
-- Combined figures add platforms, so someone on both counts twice — the UI says so. Empty in demo mode.
+Pages `/instagram` (Content Lab), `/facebook`, `/tiktok`, `/social`; data via Composio (user `aereon`).
+Platform registry `lib/v3/platforms.ts`; shared maths `buildSocial()` in `lib/v3/social-math.ts` (tested).
+Hard rules: typical post = MEDIAN; never add unique-people figures (reach, viewers) across days, windows or
+posts; combined figures add platforms, so in-app labels say someone on two counts twice. **Read `docs/SOCIAL.md`
+before touching any social, Instagram, Facebook, TikTok or public-number code.**
 
-## TikTok — @aereon.wong (added 17 Oct 2026)
-
-`/tiktok` (v3 Social group after Facebook; classic layouts get it in a v3 frame) and a TikTok block in the v3 Dashboard's
-"Is my audience growing" band (TikTok joins the combined followers and posting figures, never reach).
-- Connection: Aereon's own TikTok developer app "Aereon Dashboard" in **Sandbox** (target user aereon.wong; scopes
-  user.info.basic/profile/stats + video.list) → Composio project custom auth config `tiktok-dashboard`, user `aereon`.
-  If calls start failing, check the sandbox target user first.
-- What TikTok gives: account totals today (followers, following, likes, video_count) and each PUBLIC video's lifetime
-  views/likes/comments/shares. **No reach, watch time, audience or day-by-day history** — history is our own readings.
-- Tables (`supabase/tiktok.sql`): `tt_account_daily` (one row per Malaysia day), `tt_posts`, `tt_post_metrics`
-  (+ view `tt_post_latest`). `cover_url` is a TikTok CDN link that expires within about a day — a convenience only,
-  refreshed for recent videos; older videos show the grey frame.
-- Fetch in `lib/tt-fetch.ts` (no imports, shared with `scripts/tt-backfill.mjs`), refresh in `lib/tt-refresh.ts`, read +
-  maths in `lib/tiktok.ts`. TikTok's envelope: `data.data.{user|videos,cursor,has_more}`, `data.error.code === "ok"`.
-  Videos page 20 at a time; `cursor` is a create time in ms.
-- The daily `cron-instagram` refreshes TikTok after Facebook (account + videos of the last 100 days — the public 90-day total needs every one re-read within the week); the Refresh button
-  calls `/api/tiktok/refresh` (signed-in editors, 10-minute cooldown). `npm run tt:backfill` stores every public video.
-- Typical video = MEDIAN views. Followers' 30-day change shows only once our readings reach back 30 days.
-- Public totals (`socialTotals()`): TikTok adds its followers and, for views/interactions, the videos posted in the last
-  90 days at their latest reading (TikTok has only lifetime counts per video). TikTok sits out of reach totals.
-  Empty in demo mode.
-
-**Social overview — every platform (17 Oct 2026, reworked same day for scale).** `/social` and the v3 Dashboard's
-"Is my audience growing" band share one maths (`buildSocial()` in `lib/v3/social-math.ts`, pure + tested in
-`tests/social.test.mjs`) and one set of parts (`app/_v3/SocialOverview.tsx`, charts in `PlatformChart.tsx`).
-- **Platform registry `lib/v3/platforms.ts`** — the only place a platform is named (id, name, href, noun, whether it has
-  its own unique-people figure). YouTube (`yt`), Threads (`th`), Xiaohongshu (`xhs`) are reserved. Adding one = its
-  fetch/refresh/tables + an adapter in `lib/v3/social.ts` returning a `Source` (see `igSource`/`fbSource`/`ttSource`) +
-  its page and nav lines; every table, chart, legend, filter and total picks it up.
-- **Views & interactions = each platform's OWN count for the window** (Aereon, 18 Oct 2026: Stories and ads are part
-  of the analytics). `Source.reported[days]`: Instagram's account totals for 30 and 90 days (posts, Reels, Stories,
-  ads); Facebook's Page daily totals added over 30/90/365 whole days. A platform/window with no account count (TikTok
-  always; Instagram for 12 months) uses the views of the posts published in the window — `basis: 'posts'`, and the
-  label says so. Engagement rate = those interactions per 100 views. Typical post (median views), hits (2×) and the
-  ranking (lift over the platform's own typical) always read the posts published in the window.
-- People reached = each platform's own unique window (IG 30d, FB 28d), added only as a platform total and only across
-  platforms that measure it. Unread posts sit out of sums and are counted. A reading over a week old is flagged.
-- Dashboard hero's 4th KPI = followers on every platform (+30-day change, naming which platforms have the history).
-- Charts: views by posting month (stacked), followers GAINED in 90 days (indexed to each platform's first reading —
-  absolute lines tens of thousands apart flatten each other), people reached per day, posts per week.
-- **Colour: one fixed slot per platform** (`--p-ig` … `--p-xhs` in `app/_v3/v3.css`, applied with `data-p`), validated
-  with the dataviz validator in light and dark; never coloured text, never a generated 7th hue.
-`readIgPosts()` adds the daily snapshot's newest posts that the `ig_posts` archive hasn't caught up with.
-
-**Instagram — one page since 16 Oct 2026** (`app/_v3/pages/ContentLab.tsx` + `lab.css`, maths in `lib/v3/lab-math.ts`,
-read in `lib/v3/content-lab.ts`; the Studio/Lab view switch and `cfo-ig` cookie are gone). Top to bottom: verdict headline,
-Growth (account-wide, Studio panels, ignores filters), the sticky filter bar, the post analysis, Timing, Audience, the ranked posts.
-Post figures read THIS YEAR's posts only (from 1 Jan, Malaysia time — Aereon's call) with each post's latest
-`ig_post_metrics` reading, filtered in the browser: timeline (opens on the last 90 days — or the year so far when that
-is shorter; also year / 30 days / a month, or click a bar), format, angle, hook. Only "Reach over time" keeps the whole
-year, as context. Hook = the caption's first line, classified by `HOOKS` (first match wins); angle by `angleOf`; brand
-placement by `brandOf`. Typical = median; hit = 2× the slice's typical. Post panels are empty in demo mode.
-Ranked posts show a small cover: the snapshot's own image for its ~40 newest posts, else
-`/api/instagram/cover?code=<shortcode>` (signed-in only, shortcodes in `ig_posts` only, nothing stored, no Composio call),
-else a format tile; tapping a cover plays the post in Instagram's embed player.
 **Every filtered page follows `docs/FILTER-BAR.md`** (one sticky bar, a scope chip on every panel).
 
 **Every chart answers the mouse** (Aereon's rule, 17 Oct 2026): hover a mark → it lights up and a readout says what it is.
@@ -201,69 +114,24 @@ Server-drawn charts just add `data-tip="Heading\nfigure"` (shown by `app/_compon
 the reach skyline and captioned brand wall, always drawn in Studio Standard. Chosen in Settings
 beside v1; `/?preview=kit&kit=v2` previews it when signed in.
 
-## Public proof numbers (16 Oct 2026; one basis + stored since 18 Oct 2026)
+## Public proof numbers
 
-Landing (reel + classic), both media kits, `/hello` and its share card show ONE overall figure per stat across every
-connected platform — `socialTotals()` in `lib/social-totals.ts`. Labels never name platforms or explain double counting
-(Aereon's call). **Same maths as /social and the Dashboard** (`lib/v3/social-math.ts`): views/interactions = each
-platform's own 90-day count (Stories and ads in; TikTok: its videos of the 90 days); engagement = interactions per 100 views (30 days); reach = each
-platform's own latest month of unique people, best reach = its best month in 90 days — added across platforms, never
-across windows. **Stored, not recomputed:** `writeSocialTotals()` writes one row per platform per window (30, 90) plus
-`all` into `social_totals` (`supabase/social-totals.sql`) for 30, 90 and 365 days, and the whole /social picture per
-window into `social_snapshots` (`supabase/social-snapshots.sql`, jsonb of `trimSocial(buildSocial())`) after the 6am cron, after any Refresh button, and from
-`POST /api/social/totals` (editors; reads our tables only). The public pages, /social and the Dashboard's audience band (`readSocial(days)`)
-read the newest stored day — nothing is recalculated on a page load; only if none is under 2 days old do they compute
-on the spot (held 10 minutes, not stored). Demo mode never reads the stored real figures. A stale or unread platform makes that `all` total null → tile hides.
+Public pages show ONE overall figure per stat across every platform (`socialTotals()`, stored in
+`social_totals` / `social_snapshots` after the cron). No platform names, no double-count notes (Aereon's call).
+Details: `docs/SOCIAL.md`.
 
 ## Voice-over (19 Oct 2026)
 
-`/voice` (v3 Studio group): a script in Aereon's cloned voice. The BROWSER calls VoiceStudio on Aereon's Mac
-(`http://127.0.0.1:3900`, `/health`, `/profiles`, `/generate`, `/transcribe`) — no server route, nothing stored, works only on that
-Mac in Chrome with the VoiceStudio app open. VoiceStudio answers only origins in `OMNIVOICE_ALLOWED_ORIGINS`
-(set with `launchctl setenv` before the app starts; keep its defaults `localhost:3901`, `tauri://…`, `app://voicestudio`
-in the list). Recipe, tuned by ear, in `lib/voice-recipe.ts` (tested): profile `11673efe` "Aereon Wong v3", first
-sentence = intro at speed 0.88, rest at 0.92, 32 steps, no `instruct` (VoiceStudio 0.5.6 rejects moods for clones);
-parts are trimmed, volume-matched to the body and joined with a 0.22 s gap in the browser. To test locally, run the
-app on port 3901 — VoiceStudio trusts that origin by default.
-**Auto-check (20 Oct 2026):** "Check each take" (on by default) reads every part back with VoiceStudio's speech-to-text
-and measures it (`judge()` in `lib/voice-recipe.ts`): words ≥ 85%, every `BRANDS` name heard right, pace 2.2–4.5
-words/s on lines of 8+ words, no pause over 1.2 s, no clipping. Failed takes fold under "Didn't pass" with the reason.
-`BRANDS`: `say` = spelling sent to the voice (KLCC → K-L-C-C, Aereon → Aerion — both picked by ear), `heard` = how speech-to-text writes it when said right
-(it hears a good "Aereon" as "Arian"). Same rules and list as `~/Desktop/VoiceStudio/tools/check.py` + `brands.json`
-(Claude skill `voice-over`) — change both together.
-Sign-off, by ear (20 Oct 2026): "Alright, let's go!" or "So let's go!" — "So... let's go!" and CAPS "GO" sound unnatural.
+`/voice` calls VoiceStudio on Aereon's Mac from the browser (nothing stored). Recipe + auto-check in
+`lib/voice-recipe.ts`, shared with `~/Desktop/VoiceStudio/tools/check.py` — change both together.
+Full rules: `docs/VOICE.md`; making a take: the `voice-over` skill.
 
+## Site analytics + /mediakit deck (16–19 Oct 2026)
 
-## Site analytics (16 Oct 2026)
-
-**Site analytics** is its own nav group (after Social): who visits the public pages and what they do —
-`/analytics/landing` (Landing page, `/`) and `/analytics/link` (Link page, `/hello`), 7/30/90 days; `/analytics` redirects. `/links` is setup only. All from `site_visits` via `/api/track` (no IP, daily
-visitor hash, owner and bots never counted). The landing logs `/land/…` events (`LANDING_EVENT` in `lib/site-visits.ts`)
-from `app/_components/LandingTracker.tsx`: version seen, scroll 25–100%, visible time 10s–10m, browser language, and
-every tap — named from `data-t` or the link's target by `lib/landing-taps.ts`, so all landing versions are covered.
-Maths `lib/landing-insights.ts` (tested), read `lib/site-stats.ts`. **Bot filter** (`splitBots` in
-`lib/hello-insights.ts`, both pages, from `CHECKS_FROM` = 17 Oct 2026): a daily visitor counts only if they scrolled,
-stayed 10s+ visible, tapped, or opened the page in an app (Instagram, Facebook…); the rest — crawlers that run JS from
-data-centre cities (Council Bluffs, Ashburn, Boardman) and instant bounces — are shown only as a "left out" count.
-/hello sends the same scroll/time signals (`EngagementTracker`).
-
-## Client media kit deck — /mediakit (18 Oct 2026)
-
-Public and searchable (in the sitemap and llms.txt; Aereon's call, 18 Oct) 9-slide deck at `aereonwong.com/mediakit`:
-static files in `public/mediakit/` (index.html, images, `og.jpg` share card, the PDF), served by a rewrite in
-`next.config.ts` and listed in `PUBLIC_PREFIX` (`lib/agent-site.ts`; bump `KIT_UPDATED` there when the deck changes).
-Built by hand outside the app (HTML → Chrome PDF), so its figures are a dated snapshot, not live; per-platform follower
-numbers are shown here on purpose (Aereon's call for the client deck). To update: edit `index.html`, re-export the PDF.
-Linked from the nav (Social → Media kit), every landing version's top bar (`kit-top`; the classic CTA row has `kit-cta`) and /hello's "Media Kit" link
-(id `kit`, a stored link edited on /links, pointed at `/mediakit?utm_source=hello` on 18 Oct).
-**Analytics:** the page's own inline script sends `/mediakit` + `/kit/…` beacons (`KIT_EVENT` in `lib/site-visits.ts`:
-slides seen, scroll, time, language, taps — `work-<post>`, `pdf`, `mail`, socials); read on Site analytics →
-Media kit (`/analytics/mediakit`, maths `lib/kit-insights.ts`, tested). Keep `KIT_SLIDES` in step with the deck.
-**Private share links (19 Oct 2026):** on that page Aereon types a brand and gets `aereonwong.com/mediakit?r=<6 random
-chars>` (`lib/kit-links-config.ts`: no 0/o/1/l/i). Code → brand lives only in one `records` row (doc / setting /
-title `kit-links`; read `lib/kit-links.ts`, saved by `lib/kit-links-actions.ts`, owner/admin only). The deck sends the
-code in the `utm_source` column; `analyseKit(…, names)` swaps it for the brand under sources and counts each link's
-visitors / reached Contact / posts / PDF / email. Brand names must never reach the public page.
+`/analytics/landing|link|mediakit` from `site_visits` via `/api/track` (no IP, bots filtered). `/mediakit`
+is a static public deck in `public/mediakit/` (bump `KIT_UPDATED` in `lib/agent-site.ts` when it changes;
+keep `KIT_SLIDES` in step). Private share-link brand names must never reach the public page.
+Full rules: `docs/SITE-ANALYTICS.md`.
 
 ## Showcase (5 Oct 2026)
 
@@ -280,31 +148,11 @@ Company spending (hotels, flights, transport, subscriptions, equipment, ads, adm
 sidebar group, table `expense`, Dashboard "Company spend" panel. Full rules: `app/(app)/expenses/CLAUDE.md` (read before touching
 `lib/expenses*`, `lib/expense-*`, `/expenses` or `scripts/expense-*.mjs`).
 
-## Sign-in (Google + backup passcode, added 4 Oct 2026)
+## Sign-in (Google + backup passcode, 4 Oct 2026)
 
-Front door is **Sign in with Google** (`lib/google-auth.ts`, `app/api/auth/google/**`: OIDC code flow +
-PKCE, hand-written, no auth library). Active only when `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` are set;
-until then the login page is the old passcode form. A verified Google account must also be allowed:
-- `ADMIN_EMAILS` (env, comma-separated) — always in, needs no database. This is the break-glass list:
-  keep a second Google account on it.
-- `app_users` table (`supabase/app-users.sql`) — the managed list, edited on the **Users** page (`/users`,
-  `app/(app)/users/`): role owner/admin/viewer, `active` (Lock), `last_login_at`. Owner manages everyone; admin
-  manages viewers only; nobody edits their own row; ADMIN_EMAILS people show read-only (role owner). Since 12 Oct 2026 a
-  viewer is read-only: `requireSession()` (every server action) and `canEdit()` refuse them; they can still open every tab, and v3 hides
-  controls marked `data-edit` for them (`data-view-only` on the shell).
-- Session cookie `cfo_session` = `exp.nonce.who.sig`; `who` = `pw` (passcode) or the Google email.
-  Signed with `AUTH_SECRET` (falls back to `APP_PASSCODE`). Rotating it signs everyone out. `signedIn()`
-  (lib/auth.ts, used by the (app) layout and every server action) re-checks a Google account against the list,
-  so Lock/Remove cuts someone off on their next click. The proxy only checks the cookie signature.
-- On production with no `AUTH_SECRET`/`APP_PASSCODE` the app now fails CLOSED (`openDoor()` in lib/session.ts);
-  local and preview runs still open without a secret.
-- Backup access ladder: second Google account → passcode (`APP_PASSCODE`, behind "Use backup passcode") →
-  edit env vars in Vercel. `PASSCODE_LOGIN=off` retires the passcode and invalidates its sessions.
-  Once `AUTH_SECRET` is set, rotating `APP_PASSCODE` no longer kills existing passcode sessions — rotate
-  `AUTH_SECRET` or set `PASSCODE_LOGIN=off` instead.
-- Google redirects only to one host (`APP_BASE_URL`, default https://aereonwong.com), registered in
-  Google Cloud. `/api/logout` (POST) clears the cookie; Sign out is in the v3 rail, the classic sidebar and Settings → Account.
-  The login page (`app/login/`) is Studio Standard: KLCC photo beside the form, passcode folded under the Google button.
+Google OIDC (hand-written, `lib/google-auth.ts`) + `ADMIN_EMAILS` (break-glass) + `app_users` (Users page,
+roles owner/admin/viewer; viewers read-only). Session cookie `cfo_session` signed with `AUTH_SECRET`.
+Production with no secret fails CLOSED. Full rules: `docs/SIGN-IN.md` — read before touching auth.
 
 ## Quotations (10 Oct 2026)
 
@@ -331,7 +179,7 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
   explain instead of merging.
 
-Last full audit: `docs/REVIEW-2026-10-12.md` — read it before auditing again.
+Last full audit: `docs/REVIEW-2026-10-30.md` — read it before auditing again (recipe: the `/audit` skill).
 
 ## Review agents (`.claude/agents/`)
 
@@ -344,6 +192,9 @@ fix every BLOCK before merging:
 - `invoice-auditor` — invoice/quote numbering, parsing, editing, Canva/Drive export
 - `build-verifier` — any app-code change: builds, starts locally, checks affected pages render
 - `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every palette × light/dark
+
+Project skills: `/ship` (build → review → PR → merge), `/audit` (whole-repo health check),
+`file-receipts` (expense receipts to Drive + `expense` table), `raise-invoice`.
 
 Each opens with **Verdict: SHIP** or **Verdict: BLOCK**. All are read-only.
 

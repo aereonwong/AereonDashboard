@@ -162,13 +162,14 @@ export function fbSource(fb: Facebook, now = Date.now()): Source | null {
   if (!fb.daily.length && !fb.posts.length) return null
   const latest = fb.daily.at(-1)?.day ?? ''
   const fresh = latest >= mytDay(now - STALE)
+  const flow30 = followerFlow(fb.daily, 30, now)
   const windowFresh = !!fb.window && fb.window.until >= mytDay(now - STALE)
   return {
     id: 'fb',
     followers: fb.followers,
     // Only when the 30 days are (nearly) all read — Facebook's newest day lands a day or two late, but a
     // longer gap would shorten the span under a "30 days" label.
-    net30: fresh && followerFlow(fb.daily, 30, now).days >= 27 ? followerFlow(fb.daily, 30, now).net : null,
+    net30: fresh && flow30.days >= 27 ? flow30.net : null,
     fresh,
     followerDays: fb.daily.filter(d => d.followers).map(d => [d.day, d.followers!]),
     peopleDays: fb.daily.filter(d => d.viewers != null).map(d => [d.day, d.viewers!]),
