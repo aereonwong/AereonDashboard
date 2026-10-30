@@ -107,9 +107,11 @@ export function analyseFb(all: FbPostRow[], days: number, now = Date.now()) {
     comments: posts.reduce((s, p) => s + (p.comments ?? 0), 0),
     shares: posts.reduce((s, p) => s + (p.shares ?? 0), 0),
   }
-  // Per 100 viewers, using only posts that have a viewers reading so both sides match.
-  const readViewers = viewers.reduce((s, v) => s + v, 0)
-  const per100 = (f: (p: FbPostRow) => number) => (readViewers ? (read.reduce((s, p) => s + f(p), 0) / readViewers) * 100 : 0)
+  // Per 100 viewers, using only posts with viewers AND all three counts read, so both sides match —
+  // an unread count is missing, not zero, and would drag the rate down.
+  const full = read.filter(fullyRead)
+  const fullViewers = full.reduce((s, p) => s + p.viewers!, 0)
+  const per100 = (f: (p: FbPostRow) => number) => (fullViewers ? (full.reduce((s, p) => s + f(p), 0) / fullViewers) * 100 : 0)
   const rates = {
     reaction: per100(p => p.reactions ?? 0),
     comment: per100(p => p.comments ?? 0),
@@ -140,7 +142,8 @@ export function analyseFb(all: FbPostRow[], days: number, now = Date.now()) {
     byType,
     byWeekday,
     top: top.slice(0, 8),
-    quiet: top.slice(-3).reverse(),
+    // The three quietest from outside the top 8, so no post shows in both lists.
+    quiet: top.slice(8).slice(-3).reverse(),
     hits,
     postsPerWeek: posts.length / (days / 7),
     daysSinceLast: last ? Math.floor((now - Date.parse(last)) / 86_400_000) : null,
@@ -148,14 +151,17 @@ export function analyseFb(all: FbPostRow[], days: number, now = Date.now()) {
   }
 }
 
+const fullyRead = (p: FbPostRow) => p.viewers !== null && p.reactions !== null && p.comments !== null && p.shares !== null
+
 function rateOf(ps: FbPostRow[]) {
-  const v = ps.reduce((s, p) => s + (p.viewers ?? 0), 0)
-  return v ? (ps.reduce((s, p) => s + engagement(p), 0) / v) * 100 : 0
+  const full = ps.filter(fullyRead)
+  const v = full.reduce((s, p) => s + p.viewers!, 0)
+  return v ? (full.reduce((s, p) => s + engagement(p), 0) / v) * 100 : 0
 }
 
-/** Follower change over the last `days` calendar days: follows − unfollows. A missed refresh leaves a gap, never stretches the window. */
+/** Follower change over the last `days` Malaysia days, today included: follows − unfollows. A missed refresh leaves a gap, never stretches the window. */
 export function followerFlow(daily: FbDay[], days = 30, now = Date.now()) {
-  const since = new Date(now - days * 86_400_000).toISOString().slice(0, 10)
+  const since = new Date(now + 8 * 3_600_000 - (days - 1) * 86_400_000).toISOString().slice(0, 10)
   const span = daily.filter(d => d.day >= since)
   const follows = span.reduce((s, d) => s + (d.follows ?? 0), 0)
   const unfollows = span.reduce((s, d) => s + (d.unfollows ?? 0), 0)

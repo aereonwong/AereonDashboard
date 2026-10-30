@@ -77,7 +77,9 @@ export function buildRelationships(
     })
 
   const values = list.map(c => c.lifetime).sort((a, b) => a - b)
-  const median = values.length ? values[Math.floor(values.length / 2)] : 0
+  // The true median (mean of the two middle values on an even count), the same as every other "typical" in the app.
+  const mid = values.length >> 1
+  const median = !values.length ? 0 : values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2
   list = list.map(c => {
     const high = c.lifetime >= median
     const quiet = c.monthsQuiet >= QUIET_MONTHS

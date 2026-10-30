@@ -86,6 +86,7 @@ const quantile = (xs: number[], q: number) => {
   const s = [...xs].sort((a, b) => a - b)
   return s[Math.min(s.length - 1, Math.floor(q * s.length))]
 }
+const fullyRead = (p: TtPostRow) => p.views !== null && p.likes !== null && p.comments !== null && p.shares !== null
 export const interactions = (p: TtPostRow) => (p.likes ?? 0) + (p.comments ?? 0) + (p.shares ?? 0)
 
 export const LENGTHS = [
@@ -118,11 +119,15 @@ export function analyseTt(all: TtPostRow[], days: number, now = Date.now()) {
     comments: read.reduce((s, p) => s + (p.comments ?? 0), 0),
     shares: read.reduce((s, p) => s + (p.shares ?? 0), 0),
   }
-  const per1k = (x: number) => (totals.views ? (x / totals.views) * 1000 : 0)
+  // Rates use only videos with all three counts read: an unread count is missing, not zero.
+  const full = read.filter(fullyRead)
+  const fullViews = full.reduce((s, p) => s + p.views!, 0)
+  const per1k = (f: (p: TtPostRow) => number) => (fullViews ? (full.reduce((s, p) => s + f(p), 0) / fullViews) * 1000 : 0)
   const byLength = LENGTHS.map(l => {
     const ps = read.filter(p => lengthOf(p) === l.id)
-    const v = ps.reduce((s, p) => s + p.views!, 0)
-    return { id: l.id, label: l.label, count: ps.length, typical: median(ps.map(p => p.views!)), rate: v ? (ps.reduce((s, p) => s + interactions(p), 0) / v) * 1000 : 0 }
+    const fs = ps.filter(fullyRead)
+    const v = fs.reduce((s, p) => s + p.views!, 0)
+    return { id: l.id, label: l.label, count: ps.length, typical: median(ps.map(p => p.views!)), rate: v ? (fs.reduce((s, p) => s + interactions(p), 0) / v) * 1000 : 0 }
   }).filter(l => l.count)
   const byWeekday = WEEKDAYS.map((day, i) => {
     const ps = read.filter(p => myDay(p.posted_at!) === i)
@@ -137,11 +142,12 @@ export function analyseTt(all: TtPostRow[], days: number, now = Date.now()) {
     typical,
     p75: quantile(views, 0.75),
     totals,
-    rates: { like: per1k(totals.likes), comment: per1k(totals.comments), share: per1k(totals.shares) },
+    rates: { like: per1k(p => p.likes!), comment: per1k(p => p.comments!), share: per1k(p => p.shares!) },
     byLength,
     byWeekday,
     top: top.slice(0, 10),
-    quiet: top.slice(-3).reverse(),
+    // The three quietest from outside the top 10, so no video shows in both lists.
+    quiet: top.slice(10).slice(-3).reverse(),
     hits: typical ? read.filter(p => p.views! >= 2 * typical) : [],
     postsPerWeek: posts.length / (span / 7),
     daysSinceLast: last ? Math.floor((now - Date.parse(last)) / 86_400_000) : null,

@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { cookies, headers } from 'next/headers'
 import type { Rec } from './records'
 import { createHmac } from 'node:crypto'
+import { scrubText, scrubAmounts } from './privacy-text'
 import { actor } from './auth'
 import { sessionSecret } from './session'
 import { GATE_HEADER, REVEAL_COOKIE } from './privacy-header'
@@ -77,12 +78,8 @@ export async function moneyLocked(): Promise<string | null> {
   return 'Amounts are hidden — switch on "Show amounts", check the figures, then save again.'
 }
 
-// "RM 1,234.50", "USD 2.5K" inside free text (titles, notes, meta strings). Text can't be
-// scaled sensibly, so its money is blanked to 0 (the screen masks it as RM ***** anyway).
-const MONEY_TEXT = /\b(RM|MYR|USD|SGD|EUR|RMB|CNY|GBP|AUD|JPY)\s?[-−]?\d[\d,]*(?:\.\d+)?[KkMm]?/g
-export const scrubText = (s: string) => s.replace(MONEY_TEXT, '$1 0')
-/** Also bare two-decimal amounts ("1,234.50") — for property notes and data-issue text. */
-export const scrubAmounts = (s: string | null) => (s == null ? s : scrubText(s).replace(/\d[\d,]*\.\d{2}\b/g, '0.00'))
+export { scrubText, scrubAmounts }
+
 /** scrubAmounts on the named text fields of each row. */
 export function scrubFields<T extends object>(rows: T[], fields: readonly (keyof T)[]): T[] {
   return rows.map(r => {
