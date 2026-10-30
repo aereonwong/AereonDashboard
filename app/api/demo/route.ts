@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { canEdit } from '@/lib/auth'
+import { clientKey, takeAttempt, lockedFor, recordFail, clearFails, WRONG_DELAY_MS } from '@/lib/login-guard'
 
 // 🔒 The demo-data switch, guarded by its own password.
 //
@@ -25,6 +26,17 @@ export async function POST(req: Request) {
     )
   }
 
+  // Same brake as /api/login (5 wrong tries → 15 min), counted apart from it.
+  const who = `demo|${clientKey(req)}`
+  const burst = takeAttempt(who)
+  const wait = Math.max(burst, await lockedFor(who))
+  if (wait > 0) {
+    return NextResponse.json(
+      { ok: false, reason: 'locked', message: `Too many wrong tries. Wait ${Math.ceil(wait / 60_000)} min.` },
+      { status: 429 },
+    )
+  }
+
   let submitted = ''
   let enable = false
   try {
@@ -38,9 +50,12 @@ export async function POST(req: Request) {
   const a = crypto.createHash('sha256').update(submitted.trim()).digest()
   const b = crypto.createHash('sha256').update(secret).digest()
   if (!crypto.timingSafeEqual(a, b)) {
+    await recordFail(who)
+    await new Promise(r => setTimeout(r, WRONG_DELAY_MS))
     return NextResponse.json({ ok: false, reason: 'wrong_passcode', message: "That demo password didn't match." }, { status: 401 })
   }
 
+  await clearFails(who)
   const res = NextResponse.json({ ok: true, demo: enable })
   if (enable) {
     res.cookies.set('cfo-demo', '1', {
