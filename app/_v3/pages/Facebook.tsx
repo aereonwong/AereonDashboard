@@ -22,8 +22,8 @@ const TYPE_LABEL: Record<string, string> = { VIDEO: 'Videos', PHOTO: 'Photos', L
 const delta = (a: number | null | undefined, b: number | null | undefined) => (a != null && b ? (a - b) / b : null)
 const title = (p: FbPostRow) => (p.message ?? '').split('\n')[0].trim() || TYPE_LABEL[p.type] || 'Post'
 
-function PostList({ posts, lift }: { posts: FbPostRow[]; lift: (p: FbPostRow) => number | null }) {
-  if (!posts.length) return <p className="v3-empty">No posts with view figures in this window.</p>
+function PostList({ posts, lift, empty = 'No posts with view figures in this window.' }: { posts: FbPostRow[]; lift: (p: FbPostRow) => number | null; empty?: string }) {
+  if (!posts.length) return <p className="v3-empty">{empty}</p>
   return (
     <div className="v3-fb-posts">
       {posts.map(p => {
@@ -315,7 +315,7 @@ export default function Facebook({ fb, sp }: { fb: Fb; sp: Params }) {
               Worth a look before making more of the same · {num(s.posts.reduce((x, p) => x + engagement(p), 0))} engagements across the window
             </p>
           </div>
-          <PostList posts={s.read > 3 ? s.quiet : []} lift={s.lift} />
+          <PostList posts={s.read > 3 ? s.quiet : []} lift={s.lift} empty={s.read > 3 ? 'Every post in this window is already in the top list.' : undefined} />
         </section>
       </div>
     </div>

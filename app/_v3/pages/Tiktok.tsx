@@ -27,8 +27,8 @@ const DAY = 86_400_000
 // The page opens on the last 90 days (TtFilters treats the same value as its default).
 const TT_DEFAULT_DAYS = '90'
 
-function VideoList({ posts, typical, now }: { posts: TtPostRow[]; typical: number; now: number }) {
-  if (!posts.length) return <p className="v3-empty">No videos with figures in this slice.</p>
+function VideoList({ posts, typical, now, empty = 'No videos with figures in this slice.' }: { posts: TtPostRow[]; typical: number; now: number; empty?: string }) {
+  if (!posts.length) return <p className="v3-empty">{empty}</p>
   return (
     <div className="v3-fb-posts">
       {posts.map(p => {
@@ -277,7 +277,7 @@ export default function Tiktok({ tt, sp }: { tt: Tt; sp: Params }) {
           note={`Worth a look before making more of the same · ${num(s.posts.reduce((x, p) => x + interactions(p), 0))} likes, comments & shares in the slice`}
           scope="All filters"
         >
-          <VideoList posts={s.read > 3 ? s.quiet : []} typical={s.typical} now={now} />
+          <VideoList posts={s.read > 3 ? s.quiet : []} typical={s.typical} now={now} empty={s.read > 3 ? 'Every video in this slice is already in the top list.' : undefined} />
         </ScopedPanel>
       </div>
     </div>
