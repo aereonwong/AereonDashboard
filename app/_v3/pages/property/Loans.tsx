@@ -54,7 +54,7 @@ export default function Loans({ read, sql, sqlUrl }: { read: PropertyRead; sql: 
       ))}
       <p className="v3-panel-note v3-prop-foot">
         Rate = the bank&rsquo;s published base rate on each day + the fixed spread from the letter of offer. Full-rate interest =
-        what the month would cost with no cash in the flexi account. Flexi saving = full-rate interest − interest charged.
+        what the month would cost with no cash in the flexi account, counting any money put into the loan as cash. Flexi saving = full-rate interest − interest charged.
       </p>
     </div>
   )
@@ -89,7 +89,7 @@ function LoanChapter({ view, year }: { view: LoanView; year: string }) {
         <div className="v3-kpi">
           <div className="v3-kpi-label">Outstanding</div>
           <div className="v3-kpi-value">{rm(last?.outstanding_balance)}</div>
-          <div className="v3-kpi-note">{last ? `after the ${mon(last.month)} instalment` : 'nothing recorded yet'}</div>
+          <div className="v3-kpi-note">{last ? `after the ${mon(last.month)} instalment` : 'nothing recorded yet'}{last?.parked ? `, with ${rm(last.parked)} of your money in it` : ''}</div>
         </div>
         <div className="v3-kpi">
           <div className="v3-kpi-label">Rate now</div>
@@ -213,6 +213,7 @@ function MonthTable({ rows }: { rows: LoanMonth[] }) {
               <td className="num" data-money>
                 {sen(m.outstanding_balance)}
                 {m.added ? <span className="v3-prop-added">+{sen(m.added)} added by bank</span> : null}
+                {m.extraIn ? <span className="v3-prop-added">{m.extraIn > 0 ? '−' : '+'}{sen(Math.abs(m.extraIn))} money {m.extraIn > 0 ? 'in' : 'out'}</span> : null}
               </td>
               <td className="num">{sen(m.instalment)}</td>
               <td className="num">{sen(m.principal)}</td>

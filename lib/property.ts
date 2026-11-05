@@ -49,6 +49,7 @@ export async function readProperty(): Promise<PropertyRead> {
         outstanding_balance: num(m.outstanding_balance),
         instalment: num(m.instalment),
         interest_charged: num(m.interest_charged),
+        extra_in: num(m.extra_in),
       }) as LoanMonthRow),
       rates: (rates.data ?? []).map(r => ({ ...r, base_rate: num(r.base_rate), sbr: num(r.sbr) }) as BankRate),
       issues: (issues.data ?? []) as DataIssue[],
@@ -67,7 +68,7 @@ async function hide(d: Input): Promise<[Input, number]> {
   const k = await moneyFactor()
   return [{
     loans: scrubFields(disguiseFields(d.loans, ['loan_amount'], k), ['notes']),
-    months: scrubFields(disguiseFields(d.months, ['opening_balance', 'outstanding_balance', 'instalment', 'interest_charged'], k), ['note']),
+    months: scrubFields(disguiseFields(d.months, ['opening_balance', 'outstanding_balance', 'instalment', 'interest_charged', 'extra_in'], k), ['note']),
     rates: d.rates,
     issues: scrubFields(d.issues, ['current_value', 'suggested_value', 'explanation', 'resolution']),
     tenancies: scrubFields(disguiseFields(d.tenancies, ['monthly_rent', 'advance_rent', 'security_deposit', 'utility_deposit', 'access_card_deposit', 'deposit_refunded'], k), ['notes']),

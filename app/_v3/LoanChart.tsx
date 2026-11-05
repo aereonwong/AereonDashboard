@@ -109,6 +109,12 @@ export default function LoanChart({ months }: { months: LoanMonth[] }) {
               <dt>Outstanding</dt>
               <dd className="num">{m.outstanding_balance != null ? `RM ${sen(m.outstanding_balance)}` : '—'}</dd>
             </div>
+            {m.parked ? (
+              <div>
+                <dt>Your money in it</dt>
+                <dd className="num">RM {sen(m.parked)}</dd>
+              </div>
+            ) : null}
             <div>
               <dt>Instalment</dt>
               <dd className="num">{m.instalment != null ? `RM ${sen(m.instalment)}` : '—'}</dd>

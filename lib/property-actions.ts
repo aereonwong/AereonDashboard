@@ -20,6 +20,14 @@ const money = (v: FormDataEntryValue | null): number | null | 'bad' => {
   return Number.isFinite(n) && n >= 0 && n < 100_000_000 ? Math.round(n * 100) / 100 : 'bad'
 }
 
+// Money in can be negative: redraws come back out of the loan.
+const signedMoney = (v: FormDataEntryValue | null): number | null | 'bad' => {
+  const s = String(v ?? '').replace(/[,\sRM]/gi, '')
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) && Math.abs(n) < 100_000_000 ? Math.round(n * 100) / 100 : 'bad'
+}
+
 export async function recordLoanMonth(form: FormData): Promise<Result> {
   await requireSession()
   const locked = await moneyLocked() // a form drawn while amounts are hidden holds zeros
@@ -33,8 +41,10 @@ export async function recordLoanMonth(form: FormData): Promise<Result> {
   const outstanding = money(form.get('outstanding'))
   const instalment = money(form.get('instalment'))
   const interest = money(form.get('interest'))
+  const extraIn = signedMoney(form.get('extra_in'))
   if (outstanding === 'bad' || outstanding == null) return { ok: false, error: 'Type the outstanding balance, e.g. 123456.78' }
   if (instalment === 'bad' || interest === 'bad') return { ok: false, error: 'Instalment and interest must be amounts in RM' }
+  if (extraIn === 'bad') return { ok: false, error: 'Money in must be an amount in RM, with a minus if you took more out' }
   const note = String(form.get('note') ?? '').trim().slice(0, 500) || null
 
   const { data: loan } = await supabase.from('property_loan').select('id').eq('id', propertyId).maybeSingle()
@@ -64,6 +74,7 @@ export async function recordLoanMonth(form: FormData): Promise<Result> {
     outstanding_balance: outstanding,
     instalment: carried,
     interest_charged: interest,
+    ...(extraIn != null ? { extra_in: extraIn } : {}), // left blank keeps what the row already holds
     status: 'normal',
     quality: 'statement',
     note,

@@ -1,12 +1,16 @@
 // 👉 Property loan maths: the rules of the old "Interest Rate" Numbers sheet, in one place.
 // Pure functions, no imports, so scripts/property-import.mjs runs the same code as the page.
 //
-//   principal          = opening − outstanding
+//   principal          = opening − outstanding − money in (what the instalment itself repaid)
 //   interest           = statement figure, else instalment − principal
 //   full-rate interest = opening × rate ÷ days in that year (365 or 366), summed day by day over the
 //                        period the row covers; the bank statements prove the 366 in leap years
 //                        (what the month would have cost with no cash in the flexi account)
 //   flexi saving       = full-rate interest − interest
+//
+// Money in: on a loan whose flexi cash goes INTO the loan account, the balance falls by every deposit
+// and rises by every redraw. `extra_in` is that net amount for the row's period. It stays yours to redraw,
+// so the full-rate figure works on the balance as if it had never gone in: opening + money in before this row.
 //
 // A row dated month M pays the interest for the period that ends on M's instalment day: from
 // cycle_day of month M−1 up to the day before cycle_day of M. The bank statements prove this to the
@@ -41,6 +45,7 @@ export type LoanMonthRow = {
   outstanding_balance: number | null
   instalment: number | null
   interest_charged: number | null
+  extra_in?: number | null // net money put into the loan account this period (deposits − redraws)
   status: LoanMonthStatus
   quality: LoanMonthQuality
   note: string | null
@@ -65,6 +70,8 @@ export type DataIssue = {
 export type LoanMonth = LoanMonthRow & {
   opening: number | null // opening_balance, or last month's outstanding when blank
   added: number | null // what the bank added on top of last month's outstanding (e.g. interest after a payment holiday)
+  extraIn: number // net money in during this period
+  parked: number // all money in so far, after this period: what could still be redrawn
   periodFrom: string
   periodTo: string // inclusive
   days: number
@@ -128,6 +135,7 @@ function dailyFactor(rates: BankRate[], loan: Loan, from: string, days: number):
 export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[], unit = 1): LoanMonth[] {
   const sorted = [...rows].sort((a, b) => a.month.localeCompare(b.month))
   const out: LoanMonth[] = []
+  let parked = 0
   for (let i = 0; i < sorted.length; i++) {
     const m = sorted[i]
     const prev = sorted[i - 1]
@@ -140,7 +148,10 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
       m.opening_balance != null && prev?.outstanding_balance != null && m.status !== 'interest_only'
         ? r2(m.opening_balance - prev.outstanding_balance) || null
         : null
-    const principal = opening != null && m.outstanding_balance != null ? r2(opening - m.outstanding_balance) : null
+    const extraIn = m.extra_in ?? 0
+    const principal = opening != null && m.outstanding_balance != null ? r2(opening - m.outstanding_balance - extraIn) : null
+    const before = opening == null ? null : opening + parked // the balance had no money gone in
+    parked = r2(parked + extraIn)
 
     let interest: number | null = null
     if (m.interest_charged != null) interest = m.interest_charged
@@ -148,7 +159,7 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
     else if (principal != null && m.instalment != null) interest = r2(m.instalment - principal)
 
     const live = m.status === 'normal' || m.status === 'interest_only'
-    const fullRate = m.status === 'moratorium' ? 0 : opening != null && factor != null && live ? r2(opening * factor) : null
+    const fullRate = m.status === 'moratorium' ? 0 : before != null && factor != null && live ? r2(before * factor) : null
     // Under RM1 either way is the bank's day-count rounding, not a saving (a loan with no flexi cash
     // lands within a few sen of zero every month), so it reads as 0 rather than −0.24.
     // Paying above the full rate is catching up on earlier interest, also not a (negative) saving:
@@ -156,12 +167,14 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
     const rawSaved = m.status === 'normal' && fullRate != null && interest != null ? r2(fullRate - interest) : null
     const saved = rawSaved != null && rawSaved < unit ? 0 : rawSaved
     const flexiCash =
-      m.status === 'normal' && factor && interest != null && opening != null ? Math.max(0, r2(opening - interest / factor)) : null
+      m.status === 'normal' && factor && interest != null && before != null ? Math.max(0, r2(before - interest / factor)) : null
 
     out.push({
       ...m,
       opening,
       added,
+      extraIn,
+      parked,
       periodFrom: p.from,
       periodTo: p.to,
       days: p.days,

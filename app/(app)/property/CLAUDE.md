@@ -39,5 +39,8 @@ Which properties, banks and spreads they are is private: see `.property-data/loa
 - Everything about the loans is private: it lives in Supabase and `.property-data/` (git-ignored), loaded
   by `npm run property:import` (`-- --dry` works it out offline). The repo is public: never commit
   balances, property or bank names, or spreads, not even in comments or commit messages.
+- **Money in** (`extra_in`, net deposits − redraws for the row's period; signed): for a loan whose flexi cash goes into the loan
+  account itself, so the balance falls by it. Principal leaves it out; full-rate interest and flexi cash work on opening + all
+  earlier money in (`parked`). Deposits offset interest from the day they land. Typed on the record form, disguised while hidden.
 - `property_data_issue` holds what the spreadsheet move found. Aereon approves each fix; don't apply
   open ones without asking.
