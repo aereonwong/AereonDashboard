@@ -44,3 +44,30 @@ test('paying less than the full rate is a real saving', () => {
   const [, m] = computeLoan(loan, [row('2025-03-01', 100_000), row('2025-04-01', 99_900, 300)], rates)
   assert.equal(m.saved, Math.round((m.fullRate - 200) * 100) / 100)
 })
+
+test('money in is not principal: it counts as cash from the next period on', () => {
+  const rows = [row('2025-02-01', 100_000), row('2025-03-01', 99_500), { ...row('2025-04-01', 89_100), extra_in: 10_000 }, row('2025-05-01', 88_300)]
+  const [, , put, after] = computeLoan(loan, rows, rates)
+  assert.equal(put.principal, 400) // 99,500 − 89,100 − 10,000
+  assert.equal(put.interest, 600)
+  assert.equal(put.parked, 10_000)
+  assert.equal(after.parked, 10_000)
+  // The next full-rate works on the balance as if the money had stayed out.
+  assert.equal(after.opening, 89_100)
+  assert.equal(after.fullRate, Math.round((99_100 * 0.04 * 30 / 365) * 100) / 100)
+  assert.equal(after.saved, Math.round((after.fullRate - after.interest) * 100) / 100)
+})
+
+test('a redraw takes money back out', () => {
+  const rows = [row('2025-02-01', 100_000), { ...row('2025-03-01', 90_500), extra_in: 9_000 }, { ...row('2025-04-01', 95_000), extra_in: -5_000 }]
+  const [, , out] = computeLoan(loan, rows, rates)
+  assert.equal(out.parked, 4_000)
+  assert.equal(out.principal, 500)
+})
+
+test('a loan with no money in behaves as before', () => {
+  const [, m] = computeLoan(loan, [row('2025-02-01', 100_000), row('2025-03-01', 99_500)], rates)
+  assert.equal(m.extraIn, 0)
+  assert.equal(m.parked, 0)
+  assert.equal(m.principal, 500)
+})

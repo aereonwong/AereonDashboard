@@ -6,6 +6,7 @@ import { sen } from './pages/property/shared'
 
 // The monthly job in one field: the outstanding balance from the statement. The instalment carries
 // over from last month; the statement's interest figure is optional (worked out when blank).
+// Money in is only for a month with deposits or redraws on top of the instalment.
 
 type Option = { month: string; label: string; instalment: number | null }
 
@@ -54,6 +55,10 @@ export default function LoanRecord({
       <label>
         <span>Outstanding balance (RM)</span>
         <input className="v3-select num" name="outstanding" inputMode="decimal" autoComplete="off" placeholder="e.g. 123,456.78" required />
+      </label>
+      <label>
+        <span>Money put in this month, less redraws (RM)</span>
+        <input className="v3-select num" name="extra_in" data-money inputMode="decimal" autoComplete="off" placeholder="blank if none" />
       </label>
       {last ? (
         <p className="v3-panel-note">

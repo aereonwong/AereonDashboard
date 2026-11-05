@@ -36,6 +36,9 @@ create table if not exists property_loan_month (
   primary key (property_id, month)
 );
 
+-- Net money put into the loan account in a month (deposits − redraws), for a loan that keeps its flexi cash inside.
+alter table property_loan_month add column if not exists extra_in numeric(12,2) not null default 0;
+
 -- The banks' published reference rates, so the rate is never typed by hand.
 create table if not exists property_bank_rate (
   bank           text not null,
