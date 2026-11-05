@@ -46,7 +46,7 @@ test('paying less than the full rate is a real saving', () => {
 })
 
 test('money in is not principal: it counts as cash from the next period on', () => {
-  const rows = [row('2025-02-01', 100_000), row('2025-03-01', 99_500), { ...row('2025-04-01', 89_100), extra_in: 10_000 }, row('2025-05-01', 88_500)]
+  const rows = [row('2025-02-01', 100_000), row('2025-03-01', 99_500), { ...row('2025-04-01', 89_100), extra_in: 10_000 }, row('2025-05-01', 88_300)]
   const [, , put, after] = computeLoan(loan, rows, rates)
   assert.equal(put.principal, 400) // 99,500 − 89,100 − 10,000
   assert.equal(put.interest, 600)
