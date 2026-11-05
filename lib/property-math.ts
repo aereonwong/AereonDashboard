@@ -3,7 +3,8 @@
 //
 //   principal          = opening − outstanding
 //   interest           = statement figure, else instalment − principal
-//   full-rate interest = opening × rate ÷ 365, summed day by day over the period the row covers
+//   full-rate interest = opening × rate ÷ days in that year (365 or 366), summed day by day over the
+//                        period the row covers; the bank statements prove the 366 in leap years
 //                        (what the month would have cost with no cash in the flexi account)
 //   flexi saving       = full-rate interest − interest
 //
@@ -99,16 +100,27 @@ export function referenceRate(rates: BankRate[], bank: string, basis: 'BR' | 'SB
   return hit ? (basis === 'BR' ? hit.base_rate : hit.sbr) : null
 }
 
-/** Sum of the daily rate (as a fraction ÷ 365) over a period: multiply by a balance for that period's interest. */
-function dailyFactor(rates: BankRate[], loan: Loan, from: string, days: number): number | null {
-  let sum = 0
+const daysInYear = (date: string) => {
+  const y = Number(date.slice(0, 4))
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365
+}
+
+/**
+ * Over a period: the sum of each day's rate as a fraction of its year (multiply by a balance for that
+ * period's interest), and the day-weighted yearly rate in %.
+ */
+function dailyFactor(rates: BankRate[], loan: Loan, from: string, days: number): { factor: number; rate: number } | null {
+  let factor = 0
+  let yearly = 0
   const t0 = Date.parse(`${from}T00:00:00Z`)
   for (let i = 0; i < days; i++) {
-    const ref = referenceRate(rates, loan.bank, loan.rate_basis, ymd(t0 + i * DAY))
+    const date = ymd(t0 + i * DAY)
+    const ref = referenceRate(rates, loan.bank, loan.rate_basis, date)
     if (ref == null) return null
-    sum += (ref + loan.spread) / 100 / 365
+    factor += (ref + loan.spread) / 100 / daysInYear(date)
+    yearly += ref + loan.spread
   }
-  return sum
+  return { factor, rate: yearly / days }
 }
 
 /** Every row of one loan, worked out like the sheet. Rows must belong to `loan`. */
@@ -120,7 +132,8 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
     const m = sorted[i]
     const prev = sorted[i - 1]
     const p = period(m.month, loan.cycle_day)
-    const factor = dailyFactor(rates, loan, p.from, p.days)
+    const daily = dailyFactor(rates, loan, p.from, p.days)
+    const factor = daily?.factor ?? null
     const baseRate = referenceRate(rates, loan.bank, loan.rate_basis, p.to)
     const opening = m.opening_balance ?? (prev?.outstanding_balance ?? null)
     const added =
@@ -138,8 +151,10 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
     const fullRate = m.status === 'moratorium' ? 0 : opening != null && factor != null && live ? r2(opening * factor) : null
     // Under RM1 either way is the bank's day-count rounding, not a saving (a loan with no flexi cash
     // lands within a few sen of zero every month), so it reads as 0 rather than −0.24.
+    // Paying above the full rate is catching up on earlier interest, also not a (negative) saving:
+    // it reads as 0 too, and validate() flags the month.
     const rawSaved = m.status === 'normal' && fullRate != null && interest != null ? r2(fullRate - interest) : null
-    const saved = rawSaved != null && Math.abs(rawSaved) < unit ? 0 : rawSaved
+    const saved = rawSaved != null && rawSaved < unit ? 0 : rawSaved
     const flexiCash =
       m.status === 'normal' && factor && interest != null && opening != null ? Math.max(0, r2(opening - interest / factor)) : null
 
@@ -151,7 +166,7 @@ export function computeLoan(loan: Loan, rows: LoanMonthRow[], rates: BankRate[],
       periodTo: p.to,
       days: p.days,
       baseRate,
-      rate: factor == null ? null : r2((factor * 365 * 100) / p.days),
+      rate: daily == null ? null : r2(daily.rate),
       principal,
       interest,
       fullRate,
