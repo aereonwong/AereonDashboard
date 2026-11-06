@@ -96,3 +96,19 @@ photo with **Save / Discard**, and only on Save commits the design and files the
 (`fileInvoice(draft, { no, meta })`). A saved invoice offers a **☁️ Upload PDF to Google Drive** button
 (`inv:drive:<id>`); quotations don't. If the server has no Composio key it falls back to the old
 file-now, render-later behaviour, so `/pending` only matters for older rows.
+
+## Deposit + balance as two invoices (7 Nov 2026)
+
+When a client wants each payment on its own invoice (first case: SYCP-202610-006 / SYCP-202611-003,
+Sime Darby, RM 1,000 job), split it so **each invoice's TOTAL is only what that invoice asks for** —
+never the full contract on both (the client's AP pays the total box, and our books count every row).
+- Line item: PRICE = full contract, QTY = `50%`, AMOUNT / SUBTOTAL / TOTAL = the part.
+- Under Payment Terms, three lines: `Contract value: MYR X` and either
+  `Deposit 50%: MYR Y — PAID <date>` + `Balance 50%: billed on Invoice <no>` (deposit invoice) or
+  `Less deposit paid (<no>): MYR Y` + `Balance due: MYR Y` (balance invoice).
+- Deposit invoice keeps its own number/month; the balance takes the next number in ITS month.
+- Rows: one `cash_in` row per invoice at the part amount (sum = contract), both with the same
+  `quotation_id`, `meta.split = { part, contract_value, deposit_invoice, balance_invoice }`.
+  The paid one: status `paid`, `payment_tracked: true`, `paid_on` = bank date, `payment_ref`.
+- Revising an issued invoice: edit a COPY of its design, move the old design to "TODO: Delete",
+  upload the new PDF and trash the old Drive file (`meta.drive.replaced_file_id`).
