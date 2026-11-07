@@ -11,8 +11,19 @@ const here = dirname(fileURLToPath(import.meta.url))
 // frame-ancestors/X-Frame-Options stop another site framing the dashboard to
 // trick clicks; nosniff stops a file being run as a different type; the
 // referrer policy keeps private paths out of other sites' logs.
+// The CSP also blocks plugins (object-src), stops an injected <base> tag re-pointing
+// every link (base-uri), and only lets forms send to us or Google sign-in (form-action;
+// Chrome checks the redirect after a submit too). Script/connect rules are left out on
+// purpose: Next's inline scripts would need per-request nonces, and /voice calls
+// VoiceStudio on http://127.0.0.1 — don't add upgrade-insecure-requests for that reason.
+const csp = [
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://accounts.google.com",
+].join('; ')
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+  { key: 'Content-Security-Policy', value: csp },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
