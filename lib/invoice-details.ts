@@ -5,6 +5,7 @@ import { driveOf, driveStatus } from './invoice-drive'
 import { quoteLinks, isQuote } from './quotes'
 import { TERMS, type Payment, type DetailRow, type KnownClient, type FormOptions, type EditValues } from './invoice-figures'
 import { todayISO } from './today'
+import { splitOf, balanceBlock } from './invoice-split'
 
 export { statusFigures } from './invoice-figures'
 export type { Payment, DetailRow, StatusFigures, KnownClient, FormOptions } from './invoice-figures'
@@ -47,6 +48,9 @@ export function editBlockOf(r: Pick<Rec, 'meta'>): string | null {
   // as sent (Aereon's call), so never redrawn from the template.
   if (m.source === 'canva_quote')
     return 'Old-format quotation (Canva, before the dashboard) — editing is not possible. Create a new quotation instead.'
+  // A deposit or balance half: a redraw from the template would lose its QTY %
+  // and split lines (lib/invoice-split.ts). Fix those in Canva by hand.
+  if (m.split) return 'Deposit/balance invoice — edit it in Canva by hand, then Re-upload'
   if (m.source === 'canva' || !m.render?.design_id || m.render?.status !== 'done')
     return 'View only — made before the current Canva template'
   if (!m.job || !Array.isArray(m.deliverables) || !m.deliverables.length)
@@ -133,8 +137,21 @@ export function toDetailRows(rows: Rec[], today?: string, reach: Record<string, 
         day: postDay(p.timestamp),
       })),
       quote: quoteOf(m, links.get(r.id), byId),
+      split: splitRowOf(r),
     }
   })
+}
+
+/** Percentages and invoice numbers only — no money — so privacy mode has nothing to hide here. */
+function splitRowOf(r: Rec): DetailRow['split'] {
+  const s = splitOf(r)
+  if (!s) return null
+  // Pairs filed before 12 Nov 2026 stored no percent; they show none rather than
+  // one worked out from amounts (which privacy mode may have disguised).
+  const pct = Number.isFinite(s.percent) && s.percent > 0 && s.percent < 100 ? s.percent : null
+  return s.part === 'deposit'
+    ? { part: 'deposit', percent: pct, other: s.balance_invoice ?? null, block: s.balance_invoice ? null : balanceBlock(r) }
+    : { part: 'balance', percent: pct === null ? null : 100 - pct, other: s.deposit_invoice, block: null }
 }
 
 /** The quote an invoice came from: the linked quote's own number, or — for an

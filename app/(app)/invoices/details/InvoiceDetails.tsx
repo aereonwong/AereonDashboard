@@ -8,6 +8,7 @@ import { markPaid, markUnpaid } from '@/lib/v3/payments'
 import { uploadToDrive, reuploadToDrive, undoEdit } from '../actions'
 import CreateInvoice, { type EditTarget } from '../CreateInvoice'
 import ConfirmDialog, { type ConfirmAsk } from '../ConfirmDialog'
+import BalanceInvoice, { type BalanceTarget } from './BalanceInvoice'
 import LinkPosts from './LinkPosts'
 import { markPaidBefore } from '@/lib/v3/payments'
 import '../invoices.css'
@@ -81,6 +82,7 @@ export default function InvoiceDetails({
   const [editing, setEditing] = useState<EditTarget | null>(null)
   const [ask, setAsk] = useState<ConfirmAsk | null>(null)
   const [linking, setLinking] = useState<DetailRow | null>(null)
+  const [balance, setBalance] = useState<BalanceTarget | null>(null)
   /** Ask first, run on "yes". */
   const confirmThen = (a: Omit<ConfirmAsk, 'onConfirm'>, run: () => void) =>
     setAsk({ ...a, onConfirm: () => (setAsk(null), run()) })
@@ -194,6 +196,19 @@ export default function InvoiceDetails({
       ) : null}
 
       {ask ? <ConfirmDialog ask={ask} onCancel={() => setAsk(null)} /> : null}
+
+      {balance ? (
+        <BalanceInvoice
+          key={balance.id}
+          target={balance}
+          today={options.today}
+          onClose={() => setBalance(null)}
+          onSaved={no => {
+            setToast({ text: `${no} saved as the balance of ${balance.no}. Upload it to Google Drive from its row when you're ready.` })
+            router.refresh()
+          }}
+        />
+      ) : null}
 
       {linking ? (
         <LinkPosts
@@ -385,6 +400,28 @@ export default function InvoiceDetails({
                         <span className="idt-quote" title="Printed on the invoice; that quotation isn't on file">
                           ref {r.quote.no}
                         </span>
+                      )
+                    ) : null}
+                    {r.split ? (
+                      r.split.part === 'balance' ? (
+                        <a className="idt-quote idt-split" href={`?q=${encodeURIComponent(r.split.other ?? '')}`} title="The deposit invoice for this balance">
+                          balance{r.split.percent !== null ? ` ${r.split.percent}%` : ''} · deposit {r.split.other}
+                        </a>
+                      ) : r.split.other ? (
+                        <a className="idt-quote idt-split" href={`?q=${encodeURIComponent(r.split.other)}`} title="The balance invoice for this deposit">
+                          deposit{r.split.percent !== null ? ` ${r.split.percent}%` : ''} · balance {r.split.other}
+                        </a>
+                      ) : (
+                        <button
+                          data-edit=""
+                          type="button"
+                          className="idt-quote idt-split"
+                          disabled={isBusy || !!locked || !ready || !!r.split.block}
+                          onClick={() => r.split?.percent && setBalance({ id: r.id, no: r.no, client: r.client, percent: r.split.percent })}
+                          title={locked ?? offline ?? r.split.block ?? `Raise the ${100 - (r.split.percent ?? 0)}% balance invoice from this deposit`}
+                        >
+                          deposit{r.split.percent !== null ? ` ${r.split.percent}%` : ''} · <Icon name="plus" /> raise balance
+                        </button>
                       )
                     ) : null}
                     {r.igPosts.length ? (

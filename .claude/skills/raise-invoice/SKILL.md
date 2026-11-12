@@ -112,3 +112,31 @@ never the full contract on both (the client's AP pays the total box, and our boo
   The paid one: status `paid`, `payment_tracked: true`, `paid_on` = bank date, `payment_ref`.
 - Revising an issued invoice: edit a COPY of its design, move the old design to "TODO: Delete",
   upload the new PDF and trash the old Drive file (`meta.drive.replaced_file_id`).
+- **Any percent, not just 50%** (second case: SYCP-202610-004, AirAsia MOVE, 30% of MYR 2,500).
+  QTY prints `30%`; `meta.split.percent` is the DEPOSIT's share.
+
+### Raising the balance automatically (12 Nov 2026)
+
+Invoice Details shows `deposit 30% · + raise balance` under a deposit's number. It opens
+`BalanceInvoice.tsx` → `previewBalance` / `saveBalance` (`app/(app)/invoices/actions.ts`), all maths in
+`lib/invoice-split.ts` (tested). It copies the DEPOSIT's own Canva design (so hand fixes carry over),
+takes the next free number for the chosen date's month, and rewrites: number, date, QTY to the rest of
+the %, amount/subtotal/total to contract − deposit, and the two split lines to
+`Less deposit (<no>): …` (or `Less deposit paid (<no>) on DD/MM/YY: …`) + `Balance due 70%: … (payable on this invoice)`.
+Save files the balance row (`split.part = 'balance'`) and sets the deposit's `split.balance_invoice`.
+
+For the button to work, a deposit made by hand MUST record on its row:
+- `meta.split = { part: 'deposit', percent, contract_value, deposit_invoice, balance_invoice: null,
+  terms_locator: '<element holding Payment Terms>', printed: { deposit, balance } }`
+- `printed` = the two lines EXACTLY as printed — use `depositLines()` from `lib/invoice-split.ts`
+  (`Deposit 30%: MYR 750.00 (payable on this invoice)` /
+  `Balance 70%: MYR 1,750.00 (billed on a separate invoice, due by 31 December 2026)`).
+- QTY printed as `<percent>%`, the number line as `INVOICE No. <no>` and `Date: DD/MM/YY`.
+Every rewrite is a find-and-replace on those exact texts. Canva reports a find that matched NOTHING as
+applied (tested 12 Nov 2026), so the drawn result is read back (`checkDrawn`) and the preview refused unless
+the new number, date, %, amounts and both lines are printed and the deposit's lines are gone.
+- The balance inherits tracking: a deposit that is `issued` / `payment_tracked: false` gives an `issued` balance.
+- Refused: a deposit with a `discount`, a deposit whose balance is already filed (checked by
+  `meta.split.deposit_invoice`, not only the deposit's link), and Edit Invoice on either half
+  (a template redraw would drop the split lines — fix in Canva by hand, then Re-upload).
+- Pairs filed before 12 Nov 2026 store no `percent`; Invoice Details shows them without one.

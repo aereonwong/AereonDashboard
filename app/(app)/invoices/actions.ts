@@ -2,10 +2,12 @@
 
 import { requireSession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { supabaseConfigured } from '@/lib/supabase'
+import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
 import { invoiceRow, nextInvoiceNo, fileInvoice, TERMS, type Draft, type Currency } from '@/lib/invoice-intake'
-import { startRender, commitRender, discardRender, type RenderPreview } from '@/lib/invoice-canva'
+import { startRender, renderFrom, commitRender, discardRender, parkForDeletion, designIdOf, type RenderPreview } from '@/lib/invoice-canva'
+import { FIELDS } from '@/lib/invoice-render'
+import { balanceBlock, balanceOps, balanceRow, balanceCheck, checkDrawn } from '@/lib/invoice-split'
 import type { DocKind } from '@/lib/invoice-render'
 import { uploadInvoiceToDrive, reuploadInvoiceToDrive } from '@/lib/invoice-drive-upload'
 import { composioReady } from '@/lib/composio-exec'
@@ -20,6 +22,8 @@ import { moneyLocked } from '@/lib/privacy'
 //   Re-upload:       reuploadToDrive — after a hand fix in Canva, replace the PDF.
 //   Edit Invoice:    previewEdit → (Aereon looks, confirms) → saveEdit | discardInvoice
 //   Undo edit:       undoEdit — puts the row, Canva design and Drive PDF back.
+//   Balance invoice: previewBalance → (Aereon looks) → saveBalance | discardInvoice
+//                    — from a deposit invoice's row (lib/invoice-split.ts).
 
 export type InvoiceForm = {
   /** Invoice (default) or quotation — same form, own number series, template and Canva folder. */
@@ -277,4 +281,87 @@ export async function undoEdit(id: number) {
   const res = await undoLastEdit(id)
   refresh()
   return res
+}
+
+// ------------------------------------------------- balance of a deposit invoice
+
+async function loadDeposit(id: number): Promise<Rec | null> {
+  const { data } = await supabase.from('records').select('*').eq('id', id).maybeSingle()
+  return (data as Rec | null) ?? null
+}
+
+/** Balance step 1: copy the DEPOSIT's Canva design and rewrite it as the
+ *  balance invoice under the next free number. Nothing is saved yet. */
+export async function previewBalance(depositId: number, date: string): Promise<PreviewResult> {
+  await requireSession()
+  const blocked = await guard()
+  if (blocked) return blocked
+  if (!ISO.test(date)) return fail('Pick the balance invoice date')
+  if (!composioReady()) return fail('Canva is not connected on this server yet — add COMPOSIO_API_KEY in Vercel.')
+  const dep = await loadDeposit(depositId)
+  if (!dep) return fail('Deposit invoice not found')
+  const why = balanceBlock(dep)
+  if (why) return fail(why)
+  if (date < String(dep.meta?.invoice_date)) return fail('The balance invoice cannot be dated before its deposit invoice')
+  try {
+    const no = await nextInvoiceNo(date)
+    const check = balanceCheck(dep, no, date)
+    const preview = await renderFrom(designIdOf(dep)!, balanceOps(dep, no, date, FIELDS), edit => checkDrawn(edit, check))
+    return { ok: true, no, preview }
+  } catch (e) {
+    return fail(`Canva could not draw the balance invoice: ${msg(e)}`)
+  }
+}
+
+/** Balance step 2: Aereon approved — commit the design, file the balance row
+ *  and point the deposit row at it. Drive stays a separate click. */
+export async function saveBalance(depositId: number, date: string, no: string, preview: RenderPreview): Promise<SaveResult> {
+  await requireSession()
+  const drop = async (r: Fail) => (await discardRender(preview).catch(() => {}), r)
+  const blocked = await guard()
+  if (blocked) return drop(blocked)
+  // The preview comes back from the browser: only a bare Canva design id is taken.
+  if (!/^D[A-Za-z0-9_-]{10}$/.test(String(preview?.designId)) || !/^[A-Za-z0-9_-]{1,50}$/.test(String(preview?.transactionId)))
+    return fail('That preview is not a Canva design — generate it again.')
+  if (!ISO.test(date)) return drop(fail('Pick the balance invoice date'))
+  const dep = await loadDeposit(depositId)
+  if (!dep) return drop(fail('Deposit invoice not found'))
+  const why = balanceBlock(dep)
+  if (why) return drop(fail(why))
+  if (date < String(dep.meta?.invoice_date)) return drop(fail('The balance invoice cannot be dated before its deposit invoice'))
+  const expected = await nextInvoiceNo(date)
+  if (expected !== no) return drop(fail(`${no} was taken while you were reviewing. Generate the preview again to get ${expected}.`))
+
+  try {
+    await commitRender({ designId: preview.designId, transactionId: preview.transactionId, invoiceDate: date })
+  } catch (e) {
+    return drop(fail(`Canva could not save the design: ${msg(e)}. Generate the preview again.`))
+  }
+  // A second click may have raised the balance while Canva was saving.
+  const again = await loadDeposit(depositId)
+  const raced = again ? balanceBlock(again) : 'Deposit invoice not found'
+  if (raced) return (await parkForDeletion(preview.designId), fail(`${raced}. The new Canva copy was moved to "TODO: Delete".`))
+  // Never bill the same balance twice, even if the deposit's link was lost.
+  const { data: twins } = await supabase
+    .from('records')
+    .select('meta')
+    .eq('category', 'cash_in')
+    .eq('meta->split->>part', 'balance')
+    .eq('meta->split->>deposit_invoice', String(dep.meta?.invoice_no))
+    .limit(1)
+  if (twins?.length)
+    return (await parkForDeletion(preview.designId), fail(`Balance already filed as ${twins[0].meta?.invoice_no}. The new Canva copy was moved to "TODO: Delete".`))
+  const url = /^https:\/\/www\.canva\.com\//.test(String(preview.viewUrl)) ? String(preview.viewUrl) : `https://www.canva.com/design/${preview.designId}/view`
+  const row = balanceRow(dep, no, date, { id: preview.designId, url }, new Date().toISOString())
+  const { data, error } = await supabase.from('records').insert(row).select('id').single()
+  if (error || !data)
+    return (await parkForDeletion(preview.designId), fail(`The balance row could not be filed (${error?.message ?? 'no row'}); its Canva copy was moved to "TODO: Delete".`))
+
+  // Link the pair on the deposit too, re-reading its meta so nothing else is lost.
+  const fresh = await loadDeposit(depositId)
+  const meta = { ...(fresh?.meta ?? dep.meta), split: { ...(fresh?.meta?.split ?? dep.meta?.split), balance_invoice: no } }
+  const { error: linkErr } = await supabase.from('records').update({ meta }).eq('id', depositId)
+  refresh()
+  if (linkErr) return fail(`${no} was filed, but the deposit row could not be linked to it: ${linkErr.message}`)
+  return { ok: true, id: data.id, no }
 }

@@ -51,6 +51,10 @@ export type DetailRow = {
   igPosts: ShownPost[]
   /** The quotation this invoice came from (lib/quotes.ts), or what it prints when that quote isn't on file. */
   quote: { id: number | null; no: string } | null
+  /** One half of a deposit + balance pair (lib/invoice-split.ts): this invoice's
+   *  own share, the other half's number once it exists, and — on a deposit —
+   *  why its balance can't be raised from here yet (null when it can). */
+  split: { part: 'deposit' | 'balance'; percent: number | null; other: string | null; block: string | null } | null
 }
 
 /** An invoice's details as the Create / Edit Invoice form holds them (all strings,

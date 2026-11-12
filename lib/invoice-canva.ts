@@ -30,7 +30,18 @@ export type RenderPreview = {
 }
 
 export async function startRender(rec: Rec, kind: DocKind = 'invoice'): Promise<RenderPreview> {
-  const copy = await composioExec('CANVA_MCP_COPY_DESIGN', { design_id: TEMPLATES[kind], user_intent: intent })
+  return renderFrom(TEMPLATES[kind], buildOperations(rec, kind))
+}
+
+/** Copy `sourceDesignId` (a template, or a filed invoice for a balance invoice),
+ *  apply `ops` in an open transaction and hand back its preview. */
+export async function renderFrom(
+  sourceDesignId: string,
+  ops: Operation[],
+  /** Read the drawn result back: a reason to refuse it, or null to accept. */
+  verify?: (edit: any) => string | null,
+): Promise<RenderPreview> {
+  const copy = await composioExec('CANVA_MCP_COPY_DESIGN', { design_id: sourceDesignId, user_intent: intent })
   const design = copy?.design
   if (!design?.id) throw new Error('Canva did not return a copy of the template')
 
@@ -43,13 +54,18 @@ export async function startRender(rec: Rec, kind: DocKind = 'invoice'): Promise<
       transaction_id: transactionId,
       page_index: 1,
       pages: tx.pages,
-      operations: forComposio(buildOperations(rec, kind)),
+      operations: forComposio(ops),
       user_intent: intent,
     })
     const failed = (edit?.edit_operation_results ?? []).filter((r: any) => r.status !== 'success')
     if (failed.length) {
       await cancelQuietly(transactionId)
       throw new Error(`Canva rejected ${failed.length} edit${failed.length === 1 ? '' : 's'}`)
+    }
+    const wrong = verify?.(edit)
+    if (wrong) {
+      await cancelQuietly(transactionId)
+      throw new Error(`the drawn invoice did not come out right (${wrong})`)
     }
 
     return {
