@@ -282,6 +282,12 @@ a.idt-fig:focus-visible { outline: 2px solid var(--i-accent); outline-offset: -2
 }
 a.idt-quote { color: var(--i-accent); }
 a.idt-quote:hover { text-decoration: underline; }
+/* deposit + balance pair: its own line under the quote reference */
+.idt-quote.idt-split { display: flex; align-items: center; gap: 3px; width: fit-content; }
+button.idt-split { border: 0; padding: 0; background: none; font: inherit; color: var(--i-accent); cursor: pointer; }
+button.idt-split .ico-svg { width: 12px; height: 12px; }
+button.idt-split:hover:not(:disabled) { text-decoration: underline; }
+button.idt-split:disabled { color: var(--i-dim); cursor: default; }
 .idt-pill.open { color: var(--i-warn-text); }
 .idt-pill.won { color: var(--i-pos); }
 .idt-pill.expired, .idt-pill.lost { color: var(--i-dim); font-weight: 500; }
