@@ -48,6 +48,7 @@ re-installed from upstream. They are generic: they assume Remotion and know noth
 | Sound effects | `real-sfx` | — |
 | Dashboard UI motion | `impeccable` + `accessible-animation` + `60fps-animation` | `gsap-web`, `micro-interaction`, `page-transition-animation` for technique |
 | A rendered video from code (HTML → MP4) | `/hyperframes:hyperframes` | the matching pack for structure (`launch-video`, `map-animation`, …); translate its Remotion code |
+| A brand collaboration, start to finish (enquiry, price, reply, quote, report, payment) | `brand-deal` | `creative-brief`, `client-revisions`, `motion-pricing` for wording only |
 | Client paperwork for a video job | `creative-brief`, `client-revisions`, `motion-pricing`, `video-delivery-specs` | prices in RM, and an invoice goes through `raise-invoice` |
 
 Rules that override any pack:
