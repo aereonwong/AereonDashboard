@@ -13,15 +13,13 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 
 ## Live
 
-- App: https://aereonwong.com (public landing at `/`, everything else behind a passcode). Domain bought
-  at Cloudflare on 4 Oct 2026; DNS-only records (A 216.198.79.1 + 64.29.17.1, www CNAME to Vercel).
-  `www.aereonwong.com` serves the same app. The old `aereonwong.vercel.app` and
-  `cashflowos-aereon.vercel.app` were removed from the project on 4 Oct 2026 and now return 404; the
-  Telegram webhook was re-pointed to `https://aereonwong.com/api/telegram` first.
+- App: https://aereonwong.com (public pages: `/`, `/hello`, `/mediakit`, `/about`, `/contact`, `/privacy`;
+  everything else behind sign-in). `www.` serves the same app. Domain at Cloudflare, DNS-only records to
+  Vercel. The old `*.vercel.app` addresses were removed on 4 Oct 2026 and return 404.
 - Repo: https://github.com/aereonwong/AereonDashboard (public, owner-only access; renamed from
-  cashflowos-aereon on 26 Sep 2026 — GitHub redirects the old URL)
-- Hosting: Vercel project `aereondashboard` (Hobby; renamed from cashflowos-aereon, same project ID)
-  · Supabase project `cashflowos-aereon` (free, Singapore — its URL/ref never changes)
+  cashflowos-aereon — GitHub redirects the old URL)
+- Hosting: Vercel project `aereondashboard` (Hobby) · Supabase project `cashflowos-aereon` (free,
+  Singapore — its URL/ref never changes)
 - Telegram bot: @aereon_cashflow_bot — answers only Aereon (owner id in env)
   **Paused since 16 Oct 2026** (Anthropic credits ran out): `/api/telegram` answers 200 and does nothing
   unless env `TELEGRAM_BOT=on` — set it in Vercel and redeploy to resume.
@@ -30,19 +28,22 @@ platform requires lowercase it is `aereondashboard` (the Vercel project, the npm
 
 - Next.js 16 App Router, TypeScript, no CSS framework — one hand-written `app/globals.css`.
 - `app/page.tsx` — public landing page (portrait, bio, live IG numbers, brand strip from invoices).
-- `app/(app)/**` — everything behind the passcode; `app/(app)/layout.tsx` holds sidebar + bottom bar.
-- The Dashboard has two layouts. `app/(app)/dashboard/page.tsx` reads the `cfo-dash` cookie and
-  renders `_v2.tsx` ("Operating picture") or `_v1.tsx` ("Creator view") — but since 2 Oct 2026 the app defaults to **v3** (Studio Standard) when no cookie is set; see `lib/v3/version.ts`. Settings sets the
-  cookie. Both read the same rows, so switching never changes a number.
-- `proxy.ts` — the passcode gate (Next 16 name for middleware). Public paths are listed in its matcher.
+- `app/(app)/**` — everything behind sign-in; `app/(app)/layout.tsx` holds sidebar + bottom bar.
+- Three app versions, one cookie (`cfo-dash`, set in Settings, read by `lib/v3/version.ts`): **v3**
+  (Studio Standard — the default with no cookie, and the only one developed), `v2` (`_v2.tsx`,
+  "Operating picture") and `v1` (`_v1.tsx`, "Creator view"). All read the same rows, so switching
+  never changes a number.
+- `proxy.ts` — the sign-in gate (Next 16 name for middleware). What is public is decided in code:
+  `PUBLIC_EXACT` / `PUBLIC_PREFIX` / `PRIVATE_SEGMENTS` in `lib/agent-site.ts` (tested).
 - `lib/records.ts` — every tab reads ONE Supabase `records` table; `meta` jsonb carries per-tab fields.
 - `lib/invoices.ts` — invoice/client roll-ups. `lib/instagram.ts` — snapshots + analytics.
 - `lib/analytics.ts` — everything Dashboard v2 states: rolling 12-month windows, client
   concentration, dormant clients, movers, seasonality, and the two classifiers (`service()` /
   `sector()`). Order matters in both classifiers — the comments say why. If a figure appears on v2,
   the function that produced it is in here; nothing on that page is estimated.
-- `app/api/` — `telegram` (bot webhook), `cron-daily` (unscheduled since 27 Sep 2026; route kept), `cron-news` (9am digest, unscheduled since 27 Sep 2026; route kept),
-  `instagram/refresh`, `demo` (password-guarded demo switch), `login`.
+- `app/api/` — `telegram` (bot webhook), `cron-instagram`, `cron-daily` and `cron-news` (routes kept,
+  unscheduled — see Scheduled), `instagram/refresh`, `track`, `demo` (password-guarded demo switch),
+  `login`, `auth/google`.
 - Charts are hand-built client components: `InteractiveBars`, `Donut`, `AreaChart`, `RowBars`.
   **Server components may not pass functions to them** — pass `unit`/`suffix` flags instead.
 
@@ -78,14 +79,11 @@ Tokens live at the top of `globals.css`; attributes are `data-theme`, `data-acce
 
 - **`cron-instagram` runs daily at 6:00am MYT** (`0 22 * * *` UTC) — the only cron. It only reads
   Instagram, the Facebook Page and TikTok through Composio and writes history rows; no Claude call, no message.
-- **`cron-daily` is no longer scheduled** — Aereon removed the 8:30am job on 27 Sep 2026. The
-  route (`app/api/cron-daily`) is kept, so adding its line back to `vercel.json` restores it. While
-  it is off, neither the morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which
-  proposes chasers for overdue invoices) runs.
-- **`cron-news` is paused too** — Aereon turned off the 9:00am MYT news digest on 27 Sep 2026
-  (it had been failing on a low Anthropic credit balance, and it was the costliest Claude call:
-  Opus with web search). To restore it, add
-  `{ "path": "/api/cron-news", "schedule": "0 1 * * *" }` back to restore it.
+- **`cron-daily` is off** (8:30am job removed 27 Sep 2026; route kept). While it is off, neither the
+  morning brief nor the scheduled-agent sweep (`overdueInvoiceCheck`, which proposes chasers for
+  overdue invoices) runs. Restore: add its line back to `vercel.json`.
+- **`cron-news` is off too** (9:00am MYT digest, 27 Sep 2026 — the costliest Claude call: Opus with
+  web search). Restore: add `{ "path": "/api/cron-news", "schedule": "0 1 * * *" }` to `vercel.json`.
 - Vercel Hobby fires crons within an hour of the stated time, and allows only 2 — one is free now.
 
 ## Dashboard v3 — the creator studio
@@ -170,33 +168,43 @@ and the Google Drive export step. See the `raise-invoice` skill for the full det
 ## House rules
 
 - Never print Aereon's passwords or keys into chat. Point at the file/line instead.
-- `.env` is gitignored and holds the real secrets; the repo is public, so nothing secret goes in it.
-- Verify before claiming: build locally (`npm run build`), and check a page actually renders.
+- `.env` is gitignored and holds the real secrets; the repo is public, so nothing secret goes in it —
+  and no private business data either (real amounts, client-level findings, property, tenants, expenses).
+- Never `git add -A` / `git add .`: other sessions share this folder. Stage files by name, and do
+  branch work in its own worktree (`.claude/worktrees/<name>`).
+- Never switch on something that spends every day (the bot, a cron) without Aereon's yes.
 - The Telegram bot in group chats only answers when @mentioned, replied to, or sent a /command.
 - **Merge without asking** (Aereon's standing instruction, 26 Sep 2026): once a change is done,
   open the pull request and merge it into `main` yourself — don't hand Aereon a merge button.
   Merging deploys the live app, so only merge after `npm run build` passes (for app code) and the
   pull request's checks are green. If a check fails, fix it first; if it can't be fixed, stop and
-  explain instead of merging.
+  explain instead of merging. The recipe is `/ship`.
+
+**Done means** — say each of these in the final message, or say which one is missing and why:
+1. Built (`npm run build`) and tested (`npm test`) for app code.
+2. The affected page opened and checked, not assumed.
+3. Reviewers run on the diff, every BLOCK fixed.
+4. Merged, and live on aereonwong.com — with the PR link.
 
 Last full audit: `docs/REVIEW-2026-10-30.md` — read it before auditing again (recipe: the `/audit` skill).
 
 ## Review agents (`.claude/agents/`)
 
-Before opening a pull request, run the reviewers whose files the diff touches — in parallel, and
-fix every BLOCK before merging:
+Before opening a pull request, run the reviewers whose files the diff touches — in parallel — and
+fix every BLOCK before merging. All are read-only; each opens with **Verdict: SHIP** or
+**Verdict: BLOCK**, then findings with `file:line`. `/ship` has the full file-to-reviewer table.
 
-- `numbers-guard` — money figures (`lib/records.ts`, `invoices.ts`, `analytics.ts`, `lib/v3/`, dashboard, Cash In, bot tools)
-- `security-reviewer` — `proxy.ts`, `app/api/**`, secrets, login/demo, `vercel.json`, new routes
-- `ig-guard` — Instagram fetch/refresh, snapshots, Media Kit, the landing page's live numbers
+- `numbers-guard` — money figures (`lib/records.ts`, `invoices.ts`, `analytics.ts`, `lib/v3/`, privacy mode, dashboard, Cash In, bot tools)
+- `security-reviewer` — `proxy.ts`, `lib/agent-site.ts`, `app/api/**`, server actions, secrets, sign-in/demo, `vercel.json`, new routes
+- `ig-guard` — Instagram fetch/refresh, snapshots, Media Kit, the public pages' live numbers
 - `invoice-auditor` — invoice/quote numbering, parsing, editing, Canva/Drive export
 - `build-verifier` — any app-code change: builds, starts locally, checks affected pages render
-- `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every palette × light/dark
+- `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every v3 accent / classic palette × light/dark
 
 Project skills: `/ship` (build → review → PR → merge), `/audit` (whole-repo health check),
 `file-receipts` (expense receipts to Drive + `expense` table), `raise-invoice`.
-
-Each opens with **Verdict: SHIP** or **Verdict: BLOCK**. All are read-only.
+Course-template commands (`.claude/commands/`): `/agent-builder`, `/jarvis-setup`, `/team-owner`,
+`/team-crew`, `/team-deputy` — they need the bot on to be tested end to end.
 
 ## Tooling: motion, video, research
 

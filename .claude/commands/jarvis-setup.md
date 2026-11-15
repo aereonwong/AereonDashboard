@@ -22,6 +22,21 @@ questions, then **you write `jarvis/config.ts` yourself** — they never edit a 
 
 ---
 
+## FIRST, FIND WHAT YOU CAN YOURSELF (silent)
+
+Don't ask for what the repo already says.
+
+1. Read `jarvis/config.ts` — if it is already filled in, show the current answers and ask what
+   to change instead of starting from zero.
+2. Read the root `CLAUDE.md` ("About" lines at the top) for the business name, what it does and
+   who it serves. Offer those as the suggested answer to Q1 and Q2 — *"I've got you down as …
+   — right?"* — rather than asking cold. Still a HARD GATE: they confirm or correct.
+3. Check whether the bot is on: the root `CLAUDE.md` says if it is paused (`TELEGRAM_BOT=on`
+   in Vercel resumes it). **If it is paused, say so now** — the config will be saved and shipped,
+   but the "who are you?" proof at the end can only run once the bot is back on.
+
+---
+
 ## OPENING
 
 **Right — let's introduce Jarvis to your business.** 🤖
@@ -99,11 +114,29 @@ Leave anything they skipped as `''` or `[]` — the config degrades gracefully.
 Also update `jarvis/my-jarvis.md` with their answers so they have the filled brief on paper.
 
 Then:
-```bash
-npm run build          # must be green
-git add -A && git commit -m "Teach Jarvis about <business>" && git push
+A filled config looks like this (their words, kept as said):
+
+```ts
+businessName: 'SY Creative Production',
+ownerName: 'Aereon',
+whatYouSell: 'tech and travel content, drone and photo shoots',
+whoYouServe: 'brands and tourism boards that want reels and aerial footage',
+voice: 'short and direct, Malaysian English is fine, skip the pleasantries',
+currency: 'RM',
+watch: ['invoices unpaid past 14 days', 'quotes with no reply after a week', 'shoots booked this week'],
+never: ['never discuss pricing with anyone but me'],
 ```
-Vercel auto-deploys. Wait for it to finish — **the change only lands after the deploy**.
+
+Then ship it the normal way — never straight to `main`, never `git add -A`:
+
+```bash
+npm run build                                   # must be green
+git switch -c jarvis-config
+git add jarvis/config.ts jarvis/my-jarvis.md    # these two files only
+git commit -m "Teach Jarvis about <business>"
+```
+
+…then `/ship` (push, pull request, checks, merge). **The change only lands after the deploy.**
 
 ---
 
@@ -121,6 +154,10 @@ from Q4, in their order.
 
 **If it still says "a small business owner"**, the deploy hasn't finished or the config
 didn't save. Check both, fix it, and have them try again — don't leave them on a bad result.
+
+**If the bot is paused**, nothing will answer and that is not a bug. Finish instead on:
+*"Saved and live. Jarvis is paused right now — turn it on (`TELEGRAM_BOT=on` in Vercel, then
+redeploy) and ask it 'who are you?'."* Never turn it on yourself: it spends credits on every message.
 
 ---
 
@@ -140,8 +177,12 @@ Changed your mind later? Just run `/jarvis-setup` again.
 - **Only edit `jarvis/config.ts` and `jarvis/my-jarvis.md`.** Never touch
   `app/api/telegram/route.ts` — the config is already wired in there.
 - **Their words, not yours.** Don't polish their voice line into marketing copy.
-- **Never put secrets in the config** — it's committed to git. No API keys, no bank details,
-  no customer lists.
+- **Never put secrets or private business data in the config** — it's committed to a **public**
+  repo. No API keys, no bank details, no customer lists, no client names, no real amounts, no
+  property or tenant details. If an answer contains one, keep the idea and drop the detail
+  (*"my biggest client"*, not their name) and say you did.
+- **Never `git add -A`, never push to `main`.** Stage the two files by name; ship through a pull request.
+- **Never switch the bot on or add a cron** to make the proof work.
 - **Context, not permission.** If they ask for a rule that would widen what Jarvis can do
   ("let it send WhatsApps to customers"), explain warmly that those limits live in the code,
   not the config — and they're what makes it safe to leave running.

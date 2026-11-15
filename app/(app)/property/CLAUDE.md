@@ -2,6 +2,20 @@
 
 Loaded when working in this folder. Also applies to `lib/property*`, `lib/tenancy-math.ts`, `lib/submeter*` and `app/_v3/pages/property/`.
 
+## Never
+
+- Never put a balance, a property or bank name, a spread, a tenant name, a rent, a fee or a deposit in code, a test, a
+  comment, a commit message or a PR — the repo is public. They live only in Supabase and `.property-data/` (git-ignored).
+  In examples and tests use invented names and round figures.
+- Never apply an open `property_data_issue` fix without Aereon's approval. Show the issue and the proposed fix, then wait.
+- Never type a rate — it is the bank's published BR for each day of the period plus the loan's spread.
+- Never store a computed figure (rent due, interest, principal, flexi cash). Only raw inputs are stored; maths is in `lib/`.
+- Never feed anything from Property into the studio Dashboard or its totals.
+- Never run `npm run property:import` without `-- --dry` first; `--tenancy` REPLACES all terms.
+- Never show real figures while amounts are hidden — loaders disguise them (`docs/PRIVACY-MODE.md`).
+
+Before shipping a change here: `npm test` (`tests/property-math.test.mjs`), then `numbers-guard`.
+
 ## Property section (own sidebar group since 4 Oct 2026)
 
 Property is its own section, apart from the studio Dashboard — nothing property-related feeds it. v3 sidebar
