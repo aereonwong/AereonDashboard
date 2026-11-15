@@ -202,7 +202,8 @@ fix every BLOCK before merging. All are read-only; each opens with **Verdict: SH
 - `theme-qa` — CSS tokens, v3 CSS, charts, shared UI: screenshots every v3 accent / classic palette × light/dark
 
 Project skills: `/ship` (build → review → PR → merge), `/audit` (whole-repo health check),
-`file-receipts` (expense receipts to Drive + `expense` table), `raise-invoice`.
+`file-receipts` (expense receipts to Drive + `expense` table), `raise-invoice`, `brand-deal` (enquiry →
+quote → deposit → results report → paid; deal files in git-ignored `.deal-data/`).
 Course-template commands (`.claude/commands/`): `/agent-builder`, `/jarvis-setup`, `/team-owner`,
 `/team-crew`, `/team-deputy` — they need the bot on to be tested end to end.
 
