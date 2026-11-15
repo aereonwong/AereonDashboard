@@ -5,7 +5,7 @@ Moved from the root CLAUDE.md (12 Oct 2026). Skills are also listed in each sess
 ## Motion skills (installed 2 Oct 2026)
 
 From https://github.com/kevinbadi/claude-motion-skills (an index of 16 packs by iart.ai, MIT).
-Two packs copied into `.claude/skills/` — load on new chat start:
+Two packs copied into `.claude/skills/` (they appear in each session's skill list):
 
 - **Web motion** (`iart-ai/web-animation-skills`): `gsap-web`, `micro-interaction`,
   `accessible-animation`, `svg-animation`, `lottie-animation`, `page-transition-animation`,
@@ -34,6 +34,31 @@ Ten more packs installed for content/video work (not dashboard UI) — read the 
 
 Skipped as niche: `text-message-video-skills`, `manim-skills`, `generative-illustration-skills`,
 `javascript-animation-skills` — add with `npx skills add iart-ai/<pack-name>`.
+
+### Which skill wins — Aereon's rules sit on top of the packs
+
+The 48 motion skills above are third-party packs (iart-ai, MIT), kept exactly as shipped so they can be
+re-installed from upstream. They are generic: they assume Remotion and know nothing about Aereon's work. So:
+
+| Job | Use first | The packs are for |
+|---|---|---|
+| Editing a reel / Short / TikTok from footage | `video-editing-style` (user skill: style codes, flash cuts, HyperFrames) | reference only — `short-form-video`, `caption-animation`, `beat-sync-editing` |
+| Writing the reel's hook, script, caption | the `ig-*` skills | not the packs |
+| Voice-over | `voice-over` | — |
+| Sound effects | `real-sfx` | — |
+| Dashboard UI motion | `impeccable` + `accessible-animation` + `60fps-animation` | `gsap-web`, `micro-interaction`, `page-transition-animation` for technique |
+| A rendered video from code (HTML → MP4) | `/hyperframes:hyperframes` | the matching pack for structure (`launch-video`, `map-animation`, …); translate its Remotion code |
+| Client paperwork for a video job | `creative-brief`, `client-revisions`, `motion-pricing`, `video-delivery-specs` | prices in RM, and an invoice goes through `raise-invoice` |
+
+Rules that override any pack:
+
+- **No full stop at the end of on-screen text** (captions, titles, end cards). Decimals and names keep theirs.
+- **Flash cuts on every video** — on scene changes and b-roll, never over talking.
+- A sped-up clip keeps its original 1× sound; no freezes.
+- Honour `prefers-reduced-motion` in anything that ships in the app.
+- A pack's "Output checklist" and "Deliver & verify" sections still apply — render stills, look at
+  them, then encode. Never claim a video works from the code alone.
+- Never edit a pack's `SKILL.md` in place; put Aereon-specific rules here or in a user skill.
 
 ## HyperFrames — HTML to MP4 video (installed 2 Oct 2026)
 
@@ -74,8 +99,6 @@ uv tool install "yt-dlp[default]"
 OpenCLI (`opencli`) needs its Chrome "Browser Bridge" extension loaded (chrome://extensions →
 Developer Mode → Load unpacked, from github.com/jackwener/opencli/releases) and Chrome logged in to
 the site. Not connected yet as of 2 Oct 2026. Cookies/logins are Aereon's to provide — never type them.
-
-<!-- BEGIN:nextjs-agent-rules -->
 
 ## Folder move (27 Sep 2026)
 The project folder was renamed from `~/cashflowos-aereon` to `~/AereonDashboard`. A symlink at the old path

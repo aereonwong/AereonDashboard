@@ -26,8 +26,10 @@ pages draw inside a v3 frame there, like Facebook.
 - **Privacy:** `lib/expenses.ts` disguises `amount` and `original_amount` while amounts are hidden (same rule as
   Property). Saving, deleting and exporting need the owner AND "Show amounts" on (`moneyLocked`); attaching or waiving
   a receipt only needs a signed-in editor. Demo mode shows invented rows and refuses writes.
-- **Receipts** live in Google Drive, filed like invoices (no model; Composio), all in ONE folder — Aereon's "To Process" folder
-  `1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N` (the old "Expenses Invoice - Payslip" folder was replaced) (default of the `expense_export` setting; change it there, not in code). No sub-folders.
+- **Receipts** live in Google Drive, filed like invoices (no model; Composio), under Aereon's "To Process" folder
+  `1mUamjl2DttIAQSkIw4_73h8N_pLs_n9N` (the old "Expenses Invoice - Payslip" folder was replaced) (default of the `expense_export` setting; change it there, not in code).
+  The app's own attach button always uploads to To Process itself; bulk filing by Claude sorts recurring vendors into its sub-folders
+  (Meta, Ads Spend, iCloud, App Subscriptions, Google Drive, Adobe) — the map and the steps are the `file-receipts` skill.
   **File name = `YYYYMMDD - <item / product / service> - <vendor and order id> - <Invoice|Receipt|Refund>.<ext>`**
   (`receiptFilename`): the item is the expense's description (vendor if none), the tracking part is the vendor unless the item
   already says it, then the booking / order / invoice number; with neither, a foreign charge shows its own-currency amount
@@ -41,3 +43,5 @@ pages draw inside a v3 frame there, like Facebook.
   opens on the current year. Charts follow `docs/CHARTS.md` (`data-tip`).
 - **Real data is private** (repo is public): `.expense-data/` is git-ignored; hotel names, trips and amounts live only in
   Supabase. Never put real expenses in code, tests, comments or commit messages.
+- **Before shipping a change here:** `npm test` (expenses maths), open `/expenses` and `/expenses/all` with amounts hidden
+  (figures disguised, write buttons locked), then `numbers-guard` — and `security-reviewer` if an action or upload changed.

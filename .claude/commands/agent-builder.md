@@ -27,6 +27,30 @@ You wait. They answer. Then you go.
 
 ---
 
+## THIS INSTALL — check before Step 0 (silent)
+
+This command came with the course template. On Aereon's live app three things differ from the
+script below — check each and adapt, don't follow the script into a wall:
+
+1. **The bot may be paused.** `/api/telegram` does nothing unless `TELEGRAM_BOT=on` is set in
+   Vercel (root `CLAUDE.md`, "Telegram bot"). Paused → the agent can be built, wired and shipped,
+   but `/[key]`, the buttons and the whole PROVE IT / FINAL CHECK section cannot run. Say so
+   **before Q1** and ask whether to build anyway. Never turn the bot on yourself — every message
+   spends Anthropic credits.
+2. **The morning sweep may be off.** `SCHEDULED` agents run from `/api/cron-daily`; if `vercel.json`
+   has no line for it, "every morning" (Q5 option 1) will never fire. Offer option 2 (on demand)
+   as the honest default, and re-adding the cron line as a separate decision for Aereon — it also
+   brings back the morning brief, which is a daily Claude call.
+3. **Shipping goes through a pull request** (`/ship`), never `git add -A` and never a push to
+   `main`. Public routes are declared in `lib/agent-site.ts` (`PUBLIC_PREFIX`), not in a
+   `proxy.ts` matcher — wherever the script below says "add it to the `proxy.ts` matcher", add the
+   path to `PUBLIC_PREFIX` instead and run `npm test` (`tests/agent-site.test.mjs` checks the list).
+
+Also: read `agents/_template/README.md` before building, and never put real client names or
+amounts in an agent's code, prompt or `my-agent.md` — the repo is public.
+
+---
+
 ## STEP 0 — LOOK AROUND FIRST (silent, ~15 seconds, don't narrate)
 
 Before you ask anything, learn **their** setup — every participant's app is different by now.
@@ -143,7 +167,7 @@ This is the one that genuinely keeps itself up to date, with no OAuth and no pai
      no, or a hash of the key columns). Read the existing `source_id`s first and only insert
      new ones — **otherwise every sync duplicates the whole sheet, every day.**
    - **Guard it.** Same fail-closed `Authorization: Bearer $CRON_SECRET` check as `/api/cron-daily`.
-   - **Un-gate it.** Add `api/sync` to the matcher exclusions in `proxy.ts` — miss this and the
+   - **Un-gate it.** Add `/api/sync` to `PUBLIC_PREFIX` in `lib/agent-site.ts` (the gate reads its public list from there; `npm test` checks it) — miss this and the
      route 307-redirects to `/login` and silently never runs.
 5. Schedule it in the **reserved 2nd cron slot** in `vercel.json` (Hobby allows exactly 2, daily only):
    ```json
@@ -165,7 +189,7 @@ Google Sheets and use Route 1.
 Ask: *"Can that app send a webhook, or can you export a CSV from it?"*
 - **Webhook** (Stripe, GHL, Tally, most form tools, Zapier/Make) → build `app/api/intake/route.ts`
   that accepts a POST and writes one record. Same three rules as Route 1 (dedupe on their event
-  id, shared-secret guard, **add `api/intake` to the `proxy.ts` matcher**). Give them the URL to
+  id, shared-secret guard, **add `/api/intake` to `PUBLIC_PREFIX` in `lib/agent-site.ts`**). Give them the URL to
   paste into that app. This refreshes **instantly**, on every event.
 - **Export only** → Route 2, plus add a task so they don't forget: *"add task: re-import
   [source] every Monday"*.
@@ -365,13 +389,20 @@ export const SCHEDULED: ScheduledCheck[] = [overdueInvoiceCheck, <camelKey>Check
 `npm run build`. If it fails, **fix it yourself** — don't hand them an error.
 
 ### 4 · Ship it
+Stage only this agent's files, by name, on a branch — then `/ship` (reviewers, pull request,
+checks, merge). Because it touches `agents/registry.ts` and can create proposals, `/ship` runs
+`security-reviewer` and `numbers-guard` on it.
 ```bash
-git add -A && git commit -m "Add <Name> agent" && git push
+git switch -c agent-<key>
+git add agents/<key> agents/registry.ts
+git commit -m "Add <Name> agent"
 ```
-Vercel auto-deploys. Wait for it to go live. (If they deploy manually, run `vercel --prod`.)
+Merging deploys. Wait for it to go live.
 
 ### 5 · Make the command discoverable (nice touch)
-Register it in Telegram's `/` menu so it autocompletes, keeping any existing commands:
+Register it in Telegram's `/` menu so it autocompletes. **`setMyCommands` replaces the whole
+list**, so call `getMyCommands` first and send back every existing command plus the new one —
+the example below shows only two.
 ```bash
 curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setMyCommands" \
   -H 'content-type: application/json' \
@@ -401,7 +432,7 @@ If it found work, tell them to tap **✅ Approve** on one. Then confirm the thre
 **If nothing arrives**, check in this order (fix silently, don't panic them):
 - Is it in the **SCHEDULED** array? (the #1 cause — `/[key]` reads from there)
 - Does `lookAt` match any rows today? If the drawer is empty, go back to **Q3b** and get real data in — don't just shrug at "nothing needs you right now."
-- If they connected a source: did `/api/sync` get added to the **`proxy.ts` matcher**? (un-excluded routes 307 to `/login` and fail silently)
+- If they connected a source: did `/api/sync` get added to **`PUBLIC_PREFIX` in `lib/agent-site.ts`**? (a route that isn't public is refused — 404 or a redirect to `/login` — and fails silently)
 - Are `TELEGRAM_ALLOWED_USER_IDS` / `OWNER_CHAT_ID` set in Vercel — and did they **redeploy** after adding env vars?
 - Did the deploy actually finish?
 
@@ -467,6 +498,30 @@ approved once · ✅ 5 no duplicate."*
 
 ---
 
+## WHAT A GOOD RESULT LOOKS LIKE
+
+The whole run, compressed — one boring job, their words, the dial on 🟡:
+
+```
+🤖 Chaser   ·   summon with /chaser
+
+WATCHES   — invoices where payment is tracked and the due date passed more than 14 days ago
+PREPARES  — a polite WhatsApp asking for payment, with the client's name and the amount
+WAKES     — only when you call it
+DIAL      — 🟡 asks you first   (graduate to 🟢 when you're ready)
+MEMORY    — bugs the same client at most once a week
+
+🔴 It can NEVER: message a customer on its own · move money · delete anything.
+```
+
+…then: `agents/chaser/` created from the template with only the four knobs changed, three
+registry entries, build green, shipped by pull request, `/chaser` typed by them, one proposal
+approved once, a second `/chaser` answering "already handled today". (Note the filter: invoices
+whose status is `issued` or whose payment isn't tracked must never be chased as overdue —
+`isIssued()` in `lib/records.ts`.)
+
+---
+
 ## CLOSE
 
 **That's your robot.** 🎉
@@ -493,6 +548,9 @@ Say the sentence out loud:
 - **Never let a sync run without dedupe.** A daily sync with no `source_id` check re-inserts the whole source every day. Check before you schedule.
 - **The robot DRAFTS. The human SENDS.** Auto-send to customers is welded shut, on every setting.
 - **Wire all three registry spots.** AGENTS + EXECUTORS + SCHEDULED.
+- **Never `git add -A`, never push to `main`.** Files by name, on a branch, through `/ship`.
+- **Never switch the bot on, add a cron, or re-schedule `cron-daily`** without Aereon's yes — each one spends credits daily.
+- **Never claim it works on a paused bot.** "Built and shipped, untested until the bot is on" is the honest finish.
 - **Default to 🟡** and always offer the graduation path. Never set 🟢 without them choosing it.
 - **Never print secrets** (`CRON_SECRET`, bot token, API keys, service_role) into the chat.
 - **Never hand them an error.** Fix the build yourself, then continue.

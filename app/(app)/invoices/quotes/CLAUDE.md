@@ -21,3 +21,10 @@ no invoice / lost — and a **Convert** button that opens Create Invoice filled 
   (`rowKind`), redrawn from the quotation template, status stays `quotation`, no Drive. Old-format quotes
   (`source: 'canva_quote'`) and quotes without a recorded template design are view only — `editBlockOf` says why.
 - Terms-as-a-separate-PDF and a one-page quote template are the NEXT step (new quotes only).
+
+**Never:** count a quote in any income figure · store a won/open outcome on the quote row · renumber, redraw or
+"fix" an imported Canva quote · put a quotation in an Invoices folder or upload one to Drive · commit anything
+from `.quote-data/` (client-level findings are private; the repo is public).
+
+**Before shipping a change here:** `invoice-auditor`, plus `numbers-guard` if a total could move. Making a
+quotation step by step: the `raise-invoice` skill.
