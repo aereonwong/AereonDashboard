@@ -37,6 +37,8 @@ graphify-out/cost.json
 
 # Property tab: Aereon's real loan figures — loaded into Supabase by scripts/property-import.mjs, never committed (public repo)
 /.property-data/
+# Market research: portal listings + reports — scripts/market/, kept out of the public repo
+/.market-data
 .ig-archive.json
 .ig-backfill.json
 
