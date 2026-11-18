@@ -140,6 +140,12 @@ Landing page + media kits show one tile per kind of work (`lib/showcase.ts`, `np
 Overview, loans, tenancy, costs, submeter — full rules in `app/(app)/property/CLAUDE.md` (read it before touching `lib/property*`, `lib/tenancy-math.ts`, `lib/submeter*` or `app/_v3/pages/property/`).
 **Privacy (repo is public):** loan balances, property/bank names, spreads, tenant names, rents, fees and deposits live only in Supabase and `.property-data/` — never in code, comments or commit messages. `property_data_issue` fixes need Aereon's approval.
 
+## Market research (18 Nov 2026)
+
+Investor research on areas Aereon is researching — list.my
+transactions + PropertyGuru asking prices → git-ignored `.market-data/`, Supabase `market_listing`. Apart from Property;
+never feeds the Dashboard. Full rules: the `property-research` skill (read before touching `scripts/market/` or `lib/market-*`).
+
 ## Expenses (21 Oct 2026)
 
 Company spending (hotels, flights, transport, subscriptions, equipment, ads, admin) with receipts filed in Google Drive — own
