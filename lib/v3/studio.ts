@@ -19,8 +19,9 @@ const sum = (xs: Invoice[]) => xs.reduce((s, i) => s + i.amount, 0)
 
 // `before` is last year's running total at month end (chart line). `beforeAt` is the
 // same, except for the current month, where it stops at today's date — the fair
-// comparison for a month that isn't over yet.
-export type PacePoint = { month: string; now: number | null; before: number; beforeAt: number }
+// comparison for a month that isn't over yet. `nowMonth` / `beforeMonth` are that
+// month's own invoiced total (not running) — the "By month" bars on the same panel.
+export type PacePoint = { month: string; now: number | null; before: number; beforeAt: number; nowMonth: number | null; beforeMonth: number }
 export type MonthFrame = {
   key: string // YYYY-MM
   label: string
@@ -125,13 +126,17 @@ export function buildStudio(rows: Rec[], f: Filters, today = todayISO()): Studio
   let runBefore = 0
   const pace: PacePoint[] = MONTHS.map((label, idx) => {
     const m = idx + 1
-    runBefore += sum(monthTotal(prevYear, m))
-    if (m <= currentMonth) runNow += sum(monthTotal(thisYear, m))
+    const beforeMonth = sum(monthTotal(prevYear, m))
+    const nowMonth = m <= currentMonth ? sum(monthTotal(thisYear, m)) : null
+    runBefore += beforeMonth
+    if (nowMonth !== null) runNow += nowMonth
     return {
       month: label,
       now: m <= currentMonth ? runNow : null,
       before: runBefore,
       beforeAt: isCurrentYear && m === currentMonth ? lastYtd : runBefore,
+      nowMonth,
+      beforeMonth,
     }
   })
 
