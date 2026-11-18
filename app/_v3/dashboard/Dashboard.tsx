@@ -120,7 +120,7 @@ export default function Dashboard({
               On track this year
             </h2>
             <p className="v3-panel-note">
-              Running total, {s.year} against {s.year - 1} on one scale
+              Invoiced, {s.year} against {s.year - 1} on one scale
             </p>
           </div>
           <PaceChart pace={s.pace} year={s.year} />

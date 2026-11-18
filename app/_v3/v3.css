@@ -291,6 +291,17 @@ html[data-theme="dark"] .v3[data-world="canon"] {
 .v3-legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid var(--ink); vertical-align: middle; margin-right: 6px; }
 .v3-legend i.dash { border-top: 1.75px dashed var(--ink-3); }
 .v3[data-world="canon"] .v3-legend i:not(.dash) { border-color: var(--accent); }
+.v3-pace-mode { display: flex; width: fit-content; margin: 0 0 var(--space-3) auto; }
+.v3-pace-bars rect.bar-before { fill: var(--ink-3); opacity: 0.8; }
+.v3-pace-bars rect.bar-now { fill: var(--ink); }
+.v3[data-world="canon"] .v3-pace-bars rect.bar-now { fill: var(--accent); }
+.v3-pace-bars g[data-off] rect { opacity: 0.25; }
+.v3-pace-bars g[data-on] rect.bar-now { filter: brightness(1.15); }
+.v3-pace-bars rect { transition: opacity var(--dur) var(--ease); }
+@media (prefers-reduced-motion: reduce) { .v3-pace-bars rect { transition: none; } }
+.v3-legend i.sq { width: 10px; height: 10px; border: 0; border-radius: 2px; background: var(--ink); vertical-align: -1px; }
+.v3-legend i.sq.before { background: var(--ink-3); opacity: 0.8; }
+.v3[data-world="canon"] .v3-legend i.sq:not(.before) { background: var(--accent); }
 .v3-tip {
   position: absolute; pointer-events: none; z-index: 5; padding: var(--space-2) var(--space-3);
   background: color-mix(in srgb, var(--film-2) 94%, transparent); backdrop-filter: blur(10px);
