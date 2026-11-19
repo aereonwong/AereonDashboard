@@ -51,7 +51,7 @@ export type CashFlow =
       openInvoices: { id: number; no: string; client: string; date: string; amount: number; currency: string }[] // for the link picker
       median: number | null // days from invoice to money in the bank
       year: string
-      ytd: { invoiced: number; clientIn: number; cashIn: number; out: number }
+      ytd: { invoiced: number; clientIn: number; cashIn: number; out: number; net: number } // net = all money in − all money out
       outKinds: ReturnType<typeof outByKind>
     }
 
@@ -118,7 +118,7 @@ export function toTxn(r: Record<string, any>): BankTxn {
 }
 
 function emptyView(demo: boolean): CashFlow {
-  return { ready: true, demo, empty: true, from: '', to: '', balance: null, gaps: [], months: [], invoices: [], toConfirm: [], waiting: [], owed: { rm: 0, count: 0, foreign: 0 }, untracked: 0, markedOnly: [], unmatched: [], txns: [], openInvoices: [], median: null, year: todayISO().slice(0, 4), ytd: { invoiced: 0, clientIn: 0, cashIn: 0, out: 0 }, outKinds: [] }
+  return { ready: true, demo, empty: true, from: '', to: '', balance: null, gaps: [], months: [], invoices: [], toConfirm: [], waiting: [], owed: { rm: 0, count: 0, foreign: 0 }, untracked: 0, markedOnly: [], unmatched: [], txns: [], openInvoices: [], median: null, year: todayISO().slice(0, 4), ytd: { invoiced: 0, clientIn: 0, cashIn: 0, out: 0, net: 0 }, outKinds: [] }
 }
 
 type Lite = InvoiceLite & { paidOn?: string | null }
@@ -162,11 +162,14 @@ export function build(statements: { from: string; to: string; closing: number | 
   }
   const year = today.slice(0, 4)
   const inYear = txns.filter(t => t.txn_date.startsWith(year))
+  const cashInY = r2(inYear.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0))
+  const outY = r2(inYear.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0))
   const ytd = {
     invoiced: r2(invoices.filter(i => i.currency === 'MYR' && i.date.startsWith(year)).reduce((s, i) => s + i.amount, 0)),
     clientIn: r2(inYear.filter(t => t.amount > 0 && flowKind(t) === 'client').reduce((s, t) => s + t.amount, 0)),
-    cashIn: r2(inYear.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)),
-    out: r2(inYear.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0)),
+    cashIn: cashInY,
+    out: outY,
+    net: r2(cashInY - outY),
   }
   const settledIds = new Set([...byInvoice.values()].filter(s => s.full).map(s => s.invoiceId))
   const openInvoices = invoices
@@ -210,7 +213,7 @@ function disguise(v: CashFlow, k: number): CashFlow {
     unmatched: v.unmatched.map(t),
     txns: v.txns.map(t),
     openInvoices: v.openInvoices.map(o => ({ ...o, amount: x(o.amount) })),
-    ytd: { invoiced: x(v.ytd.invoiced), clientIn: x(v.ytd.clientIn), cashIn: x(v.ytd.cashIn), out: x(v.ytd.out) },
+    ytd: { invoiced: x(v.ytd.invoiced), clientIn: x(v.ytd.clientIn), cashIn: x(v.ytd.cashIn), out: x(v.ytd.out), net: x(v.ytd.net) },
     outKinds: v.outKinds.map(o => ({ ...o, total: x(o.total) })),
   }
 }

@@ -9,6 +9,9 @@ and `supabase/bank.sql`.
 The company's Hong Leong current account, line by line, beside what was invoiced. **Revenue** = invoiced, on the
 invoice date (lib/invoices.ts). **Cash in** = what landed in the bank, on the day it landed. They are never mixed.
 Page `/invoices/cash-flow` (sidebar: Cash flow, under Quotations) and the Dashboard panel **Cash in the bank**.
+**Money out** = every withdrawal, on the day it left (salary, claims, statutory, suppliers…). The page shows money in /
+money out / net / balance for the year, a monthly in-vs-out chart, money out by kind and every payment out this year;
+the Dashboard panel carries money out + net. Net = all money in − all money out (`ytd.net`, worked out in `lib/bank.ts`).
 
 ## Where the data comes from
 
