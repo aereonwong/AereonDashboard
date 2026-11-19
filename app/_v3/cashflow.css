@@ -13,7 +13,7 @@
 .v3-cf-pair i.inv, .v3-cf-legend i.inv { background: color-mix(in srgb, var(--accent) 22%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
 .v3-cf-pair i.cash, .v3-cf-legend i.cash { background: var(--accent); }
 /* money out: neutral ink, not a second colour (one accent per screen; red is for status) */
-.v3-cf-pair i.out, .v3-cf-legend i.out { background: var(--ink-3); }
+.v3-cf-pair i.out, .v3-cf-legend i.out { background: repeating-linear-gradient(135deg, var(--ink-3) 0 3px, color-mix(in srgb, var(--ink-3) 60%, transparent) 3px 5px); } /* stripes: told apart from the accent without colour */
 .v3-cf-bars li[data-tip-on] .v3-cf-pair i.inv { background: color-mix(in srgb, var(--accent) 40%, transparent); }
 .v3-cf-label { font: 500 10.5px/1 var(--f-num); text-align: center; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
 @keyframes v3-cf-rise { from { transform: scaleY(0); } }
