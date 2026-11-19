@@ -152,6 +152,12 @@ Company spending (hotels, flights, transport, subscriptions, equipment, ads, adm
 sidebar group, table `expense`, Dashboard "Company spend" panel. Full rules: `app/(app)/expenses/CLAUDE.md` (read before touching
 `lib/expenses*`, `lib/expense-*`, `/expenses` or `scripts/expense-*.mjs`).
 
+## Cash flow — bank statements (18 Nov 2026)
+
+`/invoices/cash-flow` + Dashboard "Cash in the bank": the Hong Leong company account (statements from the accountant's
+Drive, parsed by `npm run bank:parse`) beside what was invoiced — revenue vs cash, which invoices the bank shows paid.
+Tables `bank_statement` / `bank_txn`. Full rules: `app/(app)/invoices/cash-flow/CLAUDE.md` (read before touching `lib/bank*`).
+
 ## Sign-in (Google + backup passcode, 4 Oct 2026)
 
 Google OIDC (hand-written, `lib/google-auth.ts`) + `ADMIN_EMAILS` (break-glass) + `app_users` (Users page,

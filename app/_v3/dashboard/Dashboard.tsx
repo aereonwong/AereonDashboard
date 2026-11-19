@@ -7,6 +7,8 @@ import PaceChart from './PaceChart'
 import Strip from './Strip'
 import Receivables from './Receivables'
 import Spend from './Spend'
+import Bank from './Bank'
+import type { CashFlow } from '@/lib/bank'
 import type { ExpensesRead } from '@/lib/expenses'
 import { ClientRiskCard, ReachAndWork } from './Insights'
 import { clientRisk, reachVsWork, postReach } from '@/lib/v3/insights'
@@ -27,6 +29,7 @@ export default function Dashboard({
   demo = false,
   social,
   expenses,
+  bank,
 }: {
   rows: Rec[]
   filters: Filters
@@ -34,6 +37,7 @@ export default function Dashboard({
   metrics?: MetricRow[] // latest stored reading per post — reach history past the newest 40 posts
   demo?: boolean // demo invoices are invented: never set them against real Instagram reach
   social: Social // every platform, last 30 days (lib/v3/social.ts) — the same maths as /social
+  bank?: CashFlow // the company bank account (lib/bank.ts); the panel draws nothing until supabase/bank.sql has run
   expenses?: ExpensesRead // company spending (lib/expenses.ts); the panel draws nothing until supabase/expenses.sql has run
 }) {
   const s = buildStudio(rows, filters)
@@ -188,6 +192,7 @@ export default function Dashboard({
             )}
           </section>
 
+        <Bank bank={bank} />
         <Spend expenses={expenses} />
 
         <section className="v3-panel v3-span-12" aria-labelledby="t-strip">

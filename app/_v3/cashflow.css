@@ -1,0 +1,41 @@
+/* v3 Invoices → Cash flow — only what the shared v3 classes (panels, tables, rows, KPIs) do not already cover.
+   One accent: invoiced = the accent faint, money in = the accent solid. Green/red only for status. */
+
+.v3-cf-flag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); background: color-mix(in srgb, var(--accent) 7%, transparent); border-radius: var(--radius); font-size: var(--t-sm); }
+.v3-cf-flag b { font-weight: 650; }
+.v3-cf-flag form { margin-left: auto; }
+
+/* Month pairs: drawn on the server, hover readout from data-tip (docs/CHARTS.md). */
+.v3-cf-bars { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; height: 210px; margin: 0; padding: 0; list-style: none; }
+.v3-cf-bars li { display: grid; grid-template-rows: 1fr auto; gap: 6px; min-width: 0; border-radius: var(--radius); cursor: default; }
+.v3-cf-pair { display: flex; align-items: flex-end; gap: 2px; min-height: 0; }
+.v3-cf-pair i { display: block; flex: 1; height: calc(var(--h, 0) * 100%); min-height: 2px; border-radius: 4px 4px 0 0; transform-origin: bottom; animation: v3-cf-rise 700ms var(--ease) both; }
+.v3-cf-pair i.inv, .v3-cf-legend i.inv { background: color-mix(in srgb, var(--accent) 22%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
+.v3-cf-pair i.cash, .v3-cf-legend i.cash { background: var(--accent); }
+.v3-cf-bars li[data-tip-on] .v3-cf-pair i.inv { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-cf-label { font: 500 10.5px/1 var(--f-num); text-align: center; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-3); }
+@keyframes v3-cf-rise { from { transform: scaleY(0); } }
+@media (prefers-reduced-motion: reduce) { .v3-cf-pair i { animation: none; } }
+.v3-cf-legend { display: flex; gap: var(--space-4); margin: var(--space-3) 0 0; font-size: var(--t-xs); color: var(--ink-3); }
+.v3-cf-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.v3-cf-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+
+.v3-cf-how { font-size: var(--t-xs); color: var(--ink-3); }
+.v3-cf-ref { max-width: 22rem; font-size: var(--t-xs); color: var(--ink-3); overflow-wrap: anywhere; }
+.v3-cf-lines td { vertical-align: middle; }
+.v3-cf-form { display: flex; gap: var(--space-2); align-items: center; }
+.v3-cf-form .v3-select { max-width: 18rem; min-width: 0; }
+.v3-cf-note { margin: var(--space-4) 0 0; font-size: var(--t-sm); color: var(--ink-3); }
+
+.v3-cf-state { font-size: var(--t-xs); font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); white-space: nowrap; }
+.v3-cf-state[data-s="part"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v3-cf-state[data-s="unpaid"] { color: var(--neg); border-color: color-mix(in srgb, var(--neg) 40%, transparent); background: color-mix(in srgb, var(--neg) 4%, transparent); }
+:root[data-theme="light"] .v3-cf-state[data-s="unpaid"] { color: color-mix(in srgb, var(--neg) 85%, #000); }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .v3-cf-state[data-s="unpaid"] { color: color-mix(in srgb, var(--neg) 85%, #000); } }
+
+@media (max-width: 700px) {
+  .v3-cf-bars { gap: 3px; height: 170px; }
+  .v3-cf-flag form { margin-left: 0; }
+  .v3-cf-form { flex-wrap: wrap; }
+  .v3-cf-page .v3-kpi-value { font-size: clamp(1.1rem, 5.4vw, 1.6rem); overflow-wrap: anywhere; }
+}
