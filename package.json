@@ -23,6 +23,8 @@
     "quote:import": "node --env-file-if-exists=.env scripts/quote-import.mjs",
     "expense:scan": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/expense-scan.mjs",
     "expense:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-import.mjs",
+    "bank:fetch": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/bank-statements.mjs --fetch",
+    "bank:parse": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/bank-statements.mjs",
     "expense:receipts": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env scripts/expense-receipts.mjs"
   },
   "engines": {
