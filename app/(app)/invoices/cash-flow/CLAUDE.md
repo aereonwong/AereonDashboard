@@ -11,7 +11,15 @@ invoice date (lib/invoices.ts). **Cash in** = what landed in the bank, on the da
 Page `/invoices/cash-flow` (sidebar: Cash flow, under Quotations) and the Dashboard panel **Cash in the bank**.
 **Money out** = every withdrawal, on the day it left (salary, claims, statutory, suppliers…). The page shows money in /
 money out / net / balance for the year, a monthly in-vs-out chart, money out by kind and every payment out this year;
-the Dashboard panel carries money out + net. Net = all money in − all money out (`ytd.net`, worked out in `lib/bank.ts`).
+the Dashboard panel carries money out + net. Net = all money in − all money out (`totals.net`, worked out in `lib/bank.ts`).
+
+**Date filter (19 Nov 2026):** the page uses the Invoice Summary bar (`FilterBar`, `parseFilters`, opens on this year).
+`readCashFlow({ from, to })` works `totals`, `outKinds`, `chart`, `periodBalance` and `median` out over that period
+(start clipped to the first statement); with no period (the Dashboard panel) it means this calendar year. The to-do
+panels (paid says the bank, waiting, unmatched deposits) and "Still to collect" ignore the dates — they are what is
+open now — and say so in their chip. Under the in/out bars a **net strip** shows each month above (status green) or
+below (status red) a zero line. Clicking a kind under Money out adds `?out=<kind>` (checked against `OUT_KINDS`)
+and narrows Payments out to that kind.
 
 ## Where the data comes from
 

@@ -41,3 +41,28 @@
   .v3-cf-form { flex-wrap: wrap; }
   .v3-cf-page .v3-kpi-value { font-size: clamp(1.1rem, 5.4vw, 1.6rem); overflow-wrap: anywhere; }
 }
+
+/* Net per month, under the in/out bars: a line at zero, up (status green) when more came in, down (status red) when more went out. */
+.v3-cf-net { display: grid; gap: 6px; height: 72px; margin: var(--space-2) 0 0; padding: 0; list-style: none; position: relative; background: linear-gradient(color-mix(in srgb, var(--ink-3) 75%, transparent), color-mix(in srgb, var(--ink-3) 75%, transparent)) 0 50% / 100% 1px no-repeat; }
+.v3-cf-net li { position: relative; min-width: 0; border-radius: var(--radius); cursor: default; }
+.v3-cf-net i { position: absolute; left: 15%; right: 15%; height: calc(var(--h, 0) * 50%); min-height: 2px; animation: v3-cf-rise 700ms var(--ease) both; }
+.v3-cf-net li[data-sign="pos"] i { bottom: 50%; background: var(--pos); border-radius: 3px 3px 0 0; transform-origin: bottom; }
+.v3-cf-net li[data-sign="neg"] i { top: 50%; background: var(--neg); border-radius: 0 0 3px 3px; transform-origin: top; }
+.v3-cf-net li[data-sign="none"] i { display: none; }
+.v3-cf-legend i.net-pos { background: var(--pos); }
+.v3-cf-legend i.net-neg { background: var(--neg); }
+.v3-cf-legend { flex-wrap: wrap; }
+.v3-cf-net-value[data-sign="pos"] { color: var(--pos); }
+.v3-cf-net-value[data-sign="neg"] { color: var(--neg); }
+@media (prefers-reduced-motion: reduce) { .v3-cf-net i { animation: none; } }
+@media (max-width: 720px) { .v3-cf-net { gap: 3px; height: 60px; } }
+/* Money out kinds are links that narrow the payments table */
+.v3-cf-kind { color: inherit; border-radius: var(--radius); padding-inline: var(--space-2); margin-inline: calc(var(--space-2) * -1); }
+.v3-cf-kind:hover, .v3-cf-kind:focus-visible { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.v3-cf-kind[aria-current] { background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+.v3-cf-kind[aria-current] .v3-row-title { font-weight: 650; }
+.v3-cf-kind[aria-current] .v3-row-sub { color: var(--ink-2); }
+.v3-cf-kind:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* the "Salary ✕" chip is a link here: keep the chip's own text colour, not the link colour */
+.v3-cf-page a.v3-fbar-chip { color: var(--on-accent); text-decoration: none; align-items: center; gap: 6px; }
+.v3-cf-page a.v3-fbar-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

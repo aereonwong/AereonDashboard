@@ -34,13 +34,13 @@ export default function Bank({ bank }: { bank?: CashFlow }) {
           </div>
           <div>
             <div className="v3-kpi-label">Client money in {bank.year}</div>
-            <div className="v3-kpi-value">{rmFull(bank.ytd.clientIn)}</div>
-            <div className="v3-kpi-note">vs {rmFull(bank.ytd.invoiced)} invoiced</div>
+            <div className="v3-kpi-value">{rmFull(bank.totals.clientIn)}</div>
+            <div className="v3-kpi-note">vs {rmFull(bank.totals.invoiced)} invoiced</div>
           </div>
           <a href="/invoices/cash-flow#t-paid-out">
             <div className="v3-kpi-label">Money out {bank.year}</div>
-            <div className="v3-kpi-value">{rmFull(bank.ytd.out)}</div>
-            <div className="v3-kpi-note">net {signed(bank.ytd.net)} after {rmFull(bank.ytd.cashIn)} in</div>
+            <div className="v3-kpi-value">{rmFull(bank.totals.out)}</div>
+            <div className="v3-kpi-note">net {signed(bank.totals.net)} after {rmFull(bank.totals.cashIn)} in</div>
           </a>
           <a href="/invoices/cash-flow#t-waiting">
             <div className="v3-kpi-label">Still to collect</div>
