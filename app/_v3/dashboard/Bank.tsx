@@ -4,14 +4,15 @@ import { dmy, mon, plural } from '../pages/property/shared'
 import '../cashflow.css'
 
 // 👉 Dashboard → the company bank account in one glance: the balance, money that actually came in this year beside
-// what was invoiced, what is still to collect and how long clients take. Fixed to this calendar year and the
+// what was invoiced, what went out, what is still to collect and how long clients take. Fixed to this calendar year and the
 // latest statement; it ignores the filter bar (the chip says so). Detail is on /invoices/cash-flow.
 // Draws nothing until supabase/bank.sql has run and a statement is loaded.
 
 export default function Bank({ bank }: { bank?: CashFlow }) {
   if (!bank?.ready || bank.empty) return null
   const last6 = bank.months.slice(-6)
-  const max = Math.max(1, ...last6.map(m => Math.max(m.invoiced, m.clientIn)))
+  const max = Math.max(1, ...last6.map(m => Math.max(m.invoiced, m.cashIn, m.out)))
+  const signed = (n: number) => (n < 0 ? `−${rmFull(-n)}` : `+${rmFull(n)}`)
   return (
     <section className="v3-panel v3-span-12" id="bank" aria-labelledby="t-bank">
       <div className="v3-scoped-head">
@@ -36,6 +37,11 @@ export default function Bank({ bank }: { bank?: CashFlow }) {
             <div className="v3-kpi-value">{rmFull(bank.ytd.clientIn)}</div>
             <div className="v3-kpi-note">vs {rmFull(bank.ytd.invoiced)} invoiced</div>
           </div>
+          <a href="/invoices/cash-flow#t-paid-out">
+            <div className="v3-kpi-label">Money out {bank.year}</div>
+            <div className="v3-kpi-value">{rmFull(bank.ytd.out)}</div>
+            <div className="v3-kpi-note">net {signed(bank.ytd.net)} after {rmFull(bank.ytd.cashIn)} in</div>
+          </a>
           <a href="/invoices/cash-flow#t-waiting">
             <div className="v3-kpi-label">Still to collect</div>
             <div className="v3-kpi-value">{rmFull(bank.owed.rm)}</div>
@@ -47,12 +53,13 @@ export default function Bank({ bank }: { bank?: CashFlow }) {
           </a>
         </div>
         <div>
-          <ol className="v3-cf-bars" style={{ gridTemplateColumns: `repeat(${last6.length}, minmax(0, 1fr))`, height: 170 }} aria-label="Invoiced and client money in, last 6 months">
+          <ol className="v3-cf-bars" style={{ gridTemplateColumns: `repeat(${last6.length}, minmax(0, 1fr))`, height: 170 }} aria-label="Invoiced, money in and money out, last 6 months">
             {last6.map(m => (
-              <li key={m.month} data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}\nClient money in ${rmFull(m.clientIn)}${m.closing != null ? `\nBalance at month end ${rmFull(m.closing)}` : ''}`}>
+              <li key={m.month} data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}${m.bank === 'none' ? '\nNo bank statement for this month' : `\nClient money in ${rmFull(m.clientIn)}\nAll money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBalance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}>
                 <span className="v3-cf-pair">
                   <i className="inv" style={{ ['--h' as string]: m.invoiced / max }} />
                   <i className="cash" style={{ ['--h' as string]: m.clientIn / max }} />
+                  <i className="out" style={{ ['--h' as string]: m.out / max }} />
                 </span>
                 <span className="v3-cf-label">{mon(`${m.month}-01`).slice(0, 3)}</span>
               </li>
@@ -61,6 +68,7 @@ export default function Bank({ bank }: { bank?: CashFlow }) {
           <p className="v3-cf-legend">
             <span><i className="inv" /> Invoiced</span>
             <span><i className="cash" /> Client money in</span>
+            <span><i className="out" /> Money out</span>
           </p>
         </div>
       </div>

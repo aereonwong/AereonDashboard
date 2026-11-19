@@ -118,3 +118,9 @@ test('a foreign-currency invoice paid by deposit note stays part-paid', () => {
   const all = t({ note: 'SYCP-202601-009', amount: 2200 })
   assert.equal(matchDeposits([all], [usd]).byInvoice.get(77)?.full, true)
 })
+
+test('monthly marks each month full, part or no statement', () => {
+  const cov = coverage([{ from: '2026-09-01', to: '2026-10-13' }])
+  const rows = monthly([t({ txn_date: '2026-09-05' }), t({ txn_date: '2026-10-02' })], [inv({ date: '2026-11-02' })], cov)
+  assert.deepEqual(rows.map(m => [m.month, m.bank]), [['2026-09', 'full'], ['2026-10', 'part'], ['2026-11', 'none']])
+})

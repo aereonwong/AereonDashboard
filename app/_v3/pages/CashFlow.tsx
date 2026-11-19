@@ -41,8 +41,10 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
 
   const last12 = view.months.slice(-12)
   const max = Math.max(1, ...last12.map(m => Math.max(m.invoiced, m.clientIn)))
+  const maxFlow = Math.max(1, ...last12.map(m => Math.max(m.cashIn, m.out)))
   const maxOut = Math.max(1, ...view.outKinds.map(k => k.total))
   const lines = view.txns.slice(0, 40)
+  const paidOut = view.txns.filter(t => t.amount < 0 && t.date.startsWith(view.year)) // newest first
 
   return (
     <div className="v3-property v3-cf-page">
@@ -68,7 +70,30 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
         </div>
       ) : null}
 
-      <section className="v3-kpis" aria-label="Key figures">
+      <section className="v3-kpis" aria-label="The bank account this year">
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Money in {view.year}</div>
+          <div className="v3-kpi-value">{rmFull(view.ytd.cashIn)}</div>
+          <div className="v3-kpi-note">everything paid into the account — clients, director, interest, refunds</div>
+        </div>
+        <a className="v3-kpi" href="#t-paid-out">
+          <div className="v3-kpi-label">Money out {view.year}</div>
+          <div className="v3-kpi-value">{rmFull(view.ytd.out)}</div>
+          <div className="v3-kpi-note">everything withdrawn — {plural(paidOut.length, 'payment')}</div>
+        </a>
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Net cash flow {view.year}</div>
+          <div className="v3-kpi-value">{signed(view.ytd.net)}</div>
+          <div className="v3-kpi-note">money in minus money out</div>
+        </div>
+        <div className="v3-kpi">
+          <div className="v3-kpi-label">Bank balance</div>
+          <div className="v3-kpi-value">{view.balance == null ? '—' : rmFull(view.balance)}</div>
+          <div className="v3-kpi-note">on {dmy(view.to)}</div>
+        </div>
+      </section>
+
+      <section className="v3-kpis" aria-label="Invoices against the bank" style={{ marginTop: 'var(--space-4)' }}>
         <div className="v3-kpi">
           <div className="v3-kpi-label">Invoiced {view.year}</div>
           <div className="v3-kpi-value">{rmFull(view.ytd.invoiced)}</div>
@@ -94,28 +119,30 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
       </section>
 
       <div className="v3-grid" style={{ marginTop: 'var(--space-5)' }}>
-        <section className="v3-panel v3-span-8" aria-labelledby="t-months">
+        <section className="v3-panel v3-span-8" aria-labelledby="t-inout">
           <div className="v3-panel-head">
-            <h2 className="v3-panel-title" id="t-months">Invoiced vs money in</h2>
-            <p className="v3-panel-note">Last 12 months. The gap is money on its way, or invoices nobody has paid.</p>
+            <h2 className="v3-panel-title" id="t-inout">Money in vs money out</h2>
+            <p className="v3-panel-note">Last 12 months, everything that entered and left the account. Hover a month for the net and the balance.</p>
           </div>
-          <ol className="v3-cf-bars" aria-label="Invoiced and client money in per month">
-            {last12.map(m => (
-              <li
-                key={m.month}
-                data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}\nClient money in ${m.closing == null && !m.cashIn ? '— no statement' : rmFull(m.clientIn)}\nAll money out ${rmFull(m.out)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}`}
-              >
-                <span className="v3-cf-pair">
-                  <i className="inv" style={{ ['--h' as string]: m.invoiced / max }} />
-                  <i className="cash" style={{ ['--h' as string]: m.clientIn / max }} />
-                </span>
-                <span className="v3-cf-label">{mon(`${m.month}-01`).slice(0, 3)}</span>
-              </li>
-            ))}
+          <ol className="v3-cf-bars" aria-label="Money in and money out per month">
+            {last12.map(m => {
+              return (
+                <li
+                  key={m.month}
+                  data-tip={`${mon(`${m.month}-01`)}\n${m.bank === 'none' ? 'No statement for this month' : `Money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}
+                >
+                  <span className="v3-cf-pair">
+                    <i className="cash" style={{ ['--h' as string]: m.cashIn / maxFlow }} />
+                    <i className="out" style={{ ['--h' as string]: m.out / maxFlow }} />
+                  </span>
+                  <span className="v3-cf-label">{mon(`${m.month}-01`).slice(0, 3)}</span>
+                </li>
+              )
+            })}
           </ol>
           <p className="v3-cf-legend">
-            <span><i className="inv" /> Invoiced</span>
-            <span><i className="cash" /> Client money in</span>
+            <span><i className="cash" /> Money in</span>
+            <span><i className="out" /> Money out</span>
           </p>
         </section>
 
@@ -143,6 +170,32 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
             </div>
           )}
         </section>
+
+        <section className="v3-panel v3-span-12" aria-labelledby="t-months">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-months">Invoiced vs money in</h2>
+            <p className="v3-panel-note">Last 12 months of revenue against client payments. The gap is money on its way, or invoices nobody has paid.</p>
+          </div>
+          <ol className="v3-cf-bars" aria-label="Invoiced and client money in per month">
+            {last12.map(m => (
+              <li
+                key={m.month}
+                data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}${m.bank === 'none' ? '\nNo bank statement for this month' : `\nClient money in ${rmFull(m.clientIn)}\nAll money out ${rmFull(m.out)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}
+              >
+                <span className="v3-cf-pair">
+                  <i className="inv" style={{ ['--h' as string]: m.invoiced / max }} />
+                  <i className="cash" style={{ ['--h' as string]: m.clientIn / max }} />
+                </span>
+                <span className="v3-cf-label">{mon(`${m.month}-01`).slice(0, 3)}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="v3-cf-legend">
+            <span><i className="inv" /> Invoiced</span>
+            <span><i className="cash" /> Client money in</span>
+          </p>
+        </section>
+
 
         {view.toConfirm.length ? (
           <section className="v3-panel v3-span-12" aria-labelledby="t-confirm">
@@ -252,6 +305,35 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
           )}
         </section>
 
+        <section className="v3-panel v3-span-12" aria-labelledby="t-paid-out">
+          <div className="v3-panel-head">
+            <h2 className="v3-panel-title" id="t-paid-out">Payments out {view.year}</h2>
+            <p className="v3-panel-note">Every withdrawal this year, newest first — {rmFull(view.ytd.out)} in all.</p>
+          </div>
+          {paidOut.length === 0 ? (
+            <p className="v3-empty">Nothing left the account this year.</p>
+          ) : (
+            <div className="v3-table-wrap">
+              <table className="v3-table v3-cf-lines">
+                <thead>
+                  <tr><th>Date</th><th>To</th><th>Reference</th><th>Kind</th><th className="num">Amount</th></tr>
+                </thead>
+                <tbody>
+                  {paidOut.map(t => (
+                    <tr key={t.id}>
+                      <td>{dmy(t.date)}</td>
+                      <td>{t.party ?? t.type}</td>
+                      <td className="v3-cf-ref">{t.note ?? '—'}</td>
+                      <td>{canEdit ? <KindForm t={t} /> : t.kindLabel}</td>
+                      <td className="num">{rm(-t.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
         <section className="v3-panel v3-span-12" aria-labelledby="t-lines">
           <div className="v3-panel-head">
             <h2 className="v3-panel-title" id="t-lines">Latest bank lines</h2>
@@ -282,6 +364,9 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
     </div>
   )
 }
+
+// "+RM 1,234" / "−RM 1,234" for a net figure (formatting only — the figure comes from lib/bank.ts).
+const signed = (n: number) => (n < 0 ? `−${rmFull(-n)}` : `+${rmFull(n)}`)
 
 function Head({ lede }: { lede: React.ReactNode }) {
   return (
