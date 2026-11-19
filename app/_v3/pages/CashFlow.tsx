@@ -482,12 +482,17 @@ function KindForm({ t }: { t: TxnView }) {
   return (
     <form action={setTxnKind} className="v3-cf-form">
       <input type="hidden" name="txn" value={t.id} />
-      <select className="v3-select" name="kind" defaultValue={t.kindSet ? t.kind : 'auto'} aria-label={`Kind of the ${dmy(t.date)} line`}>
-        <option value="auto">{t.kindSet ? 'Let the app decide' : `${t.kindLabel} (auto)`}</option>
+      <select className="v3-select" name="kind" defaultValue={t.kindSet || t.kindRule ? t.kind : 'auto'} aria-label={`Kind of the ${dmy(t.date)} line`}>
+        <option value="auto">{t.kindSet || t.kindRule ? 'Let the app decide' : `${t.kindLabel} (auto)`}</option>
         {Object.entries(kinds).map(([k, label]) => (
           <option key={k} value={k}>{label}</option>
         ))}
       </select>
+      {t.party ? (
+        <label className="v3-cf-all" title={t.kindRule ? 'A payee rule sets this kind. To drop the rule: keep this ticked, pick “Let the app decide”, Save.' : `Use this kind for every ${t.amount < 0 ? 'payment to' : 'deposit from'} ${t.party}, including future statements`}>
+          <input type="checkbox" name="all" defaultChecked={t.kindRule} /> {t.amount < 0 ? 'all to this payee' : 'all from this payer'}
+        </label>
+      ) : null}
       <button className="v3-btn" type="submit">Save</button>
     </form>
   )

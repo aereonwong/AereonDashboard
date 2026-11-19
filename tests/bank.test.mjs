@@ -1,7 +1,7 @@
 // Unit tests for the bank cash-flow maths (lib/bank-math.ts). Run: npm test. All names and figures are invented.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { coverage, flowKind, invoiceCash, matchDeposits, medianDaysToPay, monthly, outByKind, refsIn, sameParty } from '../lib/bank-math.ts'
+import { applyPayeeRules, coverage, flowKind, ruleKey, invoiceCash, matchDeposits, medianDaysToPay, monthly, outByKind, refsIn, sameParty } from '../lib/bank-math.ts'
 
 let n = 0
 const t = (over = {}) => ({
@@ -123,4 +123,25 @@ test('monthly marks each month full, part or no statement', () => {
   const cov = coverage([{ from: '2026-09-01', to: '2026-10-13' }])
   const rows = monthly([t({ txn_date: '2026-09-05' }), t({ txn_date: '2026-10-02' })], [inv({ date: '2026-11-02' })], cov)
   assert.deepEqual(rows.map(m => [m.month, m.bank]), [['2026-09', 'full'], ['2026-10', 'part'], ['2026-11', 'none']])
+})
+
+test('payee rules: one per direction, a line own kind wins, names never hard-coded', () => {
+  const lines = [
+    { id: 1, amount: -100, party: 'ACME  holdings', kind: null, type: 'CIB', note: 'March', description: '' },
+    { id: 2, amount: -100, party: 'Acme Holdings', kind: 'salary', type: 'CIB', note: '', description: '' },
+    { id: 3, amount: 50, party: 'ACME HOLDINGS', kind: null, type: 'CIB', note: '', description: '' },
+    { id: 4, amount: -10, party: null, kind: null, type: 'CIB', note: '', description: '' },
+  ]
+  const rules = { [ruleKey(lines[0])]: 'rent', 'in:ACME HOLDINGS': 'rent' } // an out-kind on an in-rule is ignored
+  const out = applyPayeeRules(lines, rules)
+  assert.equal(flowKind(out[0]), 'rent')
+  assert.equal(out[0].ruled, true)
+  assert.equal(flowKind(out[1]), 'salary') // its own kind wins
+  assert.equal(out[1].ruled, undefined)
+  assert.equal(flowKind(out[2]), 'client') // the rule's kind is for money going out
+  assert.equal(flowKind(out[3]), 'supplier') // no payee, no rule
+})
+
+test('EPF by its full name counts as statutory', () => {
+  assert.equal(flowKind({ amount: -500, type: 'FPX B2B1', party: 'KUMPULAN WANG SIMPANAN PEKERJA', note: '123', description: '' }), 'statutory')
 })

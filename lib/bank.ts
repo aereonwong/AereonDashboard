@@ -4,7 +4,7 @@ import { demoMode, isIssued, isPaid, type Rec } from './records'
 import { quoteLinks } from './quotes'
 import { moneyFactor, moneyHidden, scrubAmounts } from './privacy'
 import {
-  coverage, flowKind, invoiceCash, KIND_LABEL, matchDeposits, medianDaysToPay, monthly, outByKind,
+  applyPayeeRules, coverage, flowKind, type PayeeRules, invoiceCash, KIND_LABEL, matchDeposits, medianDaysToPay, monthly, outByKind,
   type BankTxn, type FlowMonth, type InvoiceCash, type InvoiceLite,
 } from './bank-math'
 import { todayISO } from './today'
@@ -24,7 +24,8 @@ export type TxnView = {
   type: string
   kind: string
   kindLabel: string
-  kindSet: boolean // the owner chose the kind
+  kindSet: boolean // the owner chose the kind for this line
+  kindRule: boolean // the kind comes from a payee rule ("every payment to this payee")
   invoices: { id: number; no: string }[]
   linkSet: boolean // the owner chose the invoices (or "not an invoice")
 }
@@ -97,10 +98,11 @@ export function toInvoiceLite(rows: Rec[]): InvoiceLite[] {
 export async function readCashFlow(period?: { from: string; to: string }): Promise<CashFlow> {
   if (await demoMode()) return emptyView(true)
   if (!supabaseConfigured) return { ready: false }
-  const [st, tx, recs] = await Promise.all([
+  const [st, tx, recs, rules] = await Promise.all([
     readAll<Record<string, any>>('bank_statement', 'period_to'),
     readAll<Record<string, any>>('bank_txn', 'txn_date'),
     supabase.from('records').select('*').in('category', ['cash_in', 'doc']).limit(5000),
+    readPayeeRules(),
   ])
   if (!st || !tx) return { ready: false }
   const view = build(
@@ -109,8 +111,28 @@ export async function readCashFlow(period?: { from: string; to: string }): Promi
     toInvoiceLite(((recs.data ?? []) as Rec[]).map(r => ({ ...r, meta: r.meta ?? {} }))),
     todayISO(),
     period,
+    rules,
   )
   return (await moneyHidden()) ? disguise(view, await moneyFactor()) : view
+}
+
+// Payee rules live in one records row (doc / setting / 'bank-kinds', meta.rules) — like the /hello settings, no new
+// table, and the payee names stay out of the public repo. Written by setTxnKind (lib/bank-actions.ts).
+export async function payeeRulesRow(): Promise<{ id: number; meta: { rules?: PayeeRules } } | null> {
+  const { data, error } = await supabase.from('records').select('id, meta').eq('category', 'doc').eq('status', 'setting').eq('title', 'bank-kinds').order('id', { ascending: true }).limit(1)
+  if (error) throw new Error(error.message)
+  return (data?.[0] as { id: number; meta: { rules?: PayeeRules } }) ?? null
+}
+/** `strict` (actions that write a paid status) throws when the rules can't be read; the page falls back to none. */
+export async function readPayeeRules(strict = false): Promise<PayeeRules> {
+  try {
+    const r = await payeeRulesRow()
+    const rules = r?.meta?.rules
+    return rules && typeof rules === 'object' ? rules : {}
+  } catch (e) {
+    if (strict) throw e
+    return {}
+  }
 }
 
 export function toTxn(r: Record<string, any>): BankTxn {
@@ -130,22 +152,24 @@ type Lite = InvoiceLite & { paidOn?: string | null }
 
 export function build(
   statements: { from: string; to: string; closing: number | null }[],
-  txns: BankTxn[],
+  rawTxns: BankTxn[],
   invoices: Lite[],
   today: string,
   range: { from: string; to: string } = { from: `${today.slice(0, 4)}-01-01`, to: `${today.slice(0, 4)}-12-31` }, // default: this calendar year
+  rules: PayeeRules = {},
 ): CashFlow {
   if (!statements.length) return emptyView(false)
+  const txns = applyPayeeRules(rawTxns, rules) // a line's own kind wins; otherwise its payee's rule
   const sorted = [...statements].sort((a, b) => a.to.localeCompare(b.to))
   const from = sorted[0].from, to = sorted[sorted.length - 1].to
   const covered = coverage(sorted)
   const { byTxn, byInvoice } = matchDeposits(txns, invoices)
   const noOf = new Map(invoices.map(i => [i.id, i.no]))
-  const view = (t: BankTxn): TxnView => {
+  const view = (t: BankTxn & { ruled?: boolean }): TxnView => {
     const kind = flowKind(t)
     return {
       id: t.id, date: t.txn_date, amount: t.amount, balance: t.balance, party: t.party, note: t.note, type: t.type,
-      kind, kindLabel: KIND_LABEL[kind], kindSet: !!t.kind && t.kind in KIND_LABEL,
+      kind, kindLabel: KIND_LABEL[kind], kindSet: !!t.kind && t.kind in KIND_LABEL && !t.ruled, kindRule: !!t.ruled,
       invoices: (byTxn.get(t.id) ?? []).map(m => ({ id: m.invoiceId, no: noOf.get(m.invoiceId) ?? '' })),
       linkSet: Array.isArray(t.invoice_ids),
     }
