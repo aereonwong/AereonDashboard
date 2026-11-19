@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { requireSession } from '@/lib/auth'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { demoMode, type Rec } from '@/lib/records'
-import { KIND_LABEL } from '@/lib/bank-math'
-import { build, toInvoiceLite, toTxn } from '@/lib/bank'
+import { IN_KINDS, KIND_LABEL, OUT_KINDS, payeeKey, ruleKey } from '@/lib/bank-math'
+import { build, payeeRulesRow, readPayeeRules, toInvoiceLite, toTxn } from '@/lib/bank'
 import { todayISO } from '@/lib/today'
 import { moneyLocked } from '@/lib/privacy'
 
@@ -39,6 +39,12 @@ const fail = (message: string): Result => {
 export async function confirmFromBank(ids?: number[]): Promise<Result> {
   const g = await guard()
   if (g) return g
+  let rules
+  try {
+    rules = await readPayeeRules(true) // never mark paid on a match the owner's rules would have ruled out
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : String(e))
+  }
   const [st, tx, recs] = await Promise.all([
     supabase.from('bank_statement').select('*').limit(5000),
     supabase.from('bank_txn').select('*').limit(50000),
@@ -52,6 +58,8 @@ export async function confirmFromBank(ids?: number[]): Promise<Result> {
     (tx.data ?? []).map(toTxn),
     toInvoiceLite(rows),
     todayISO(),
+    undefined,
+    rules,
   )
   if (!view.ready) return { ok: false, error: 'No bank statements loaded yet.' }
   const want = ids?.length ? new Set(ids.map(Number)) : null
@@ -107,15 +115,41 @@ export async function linkDeposit(form: FormData): Promise<void> {
   refresh()
 }
 
-/** Re-label what a bank line is (salary, crew & suppliers, from director…); "auto" lets the app decide again. */
+/** Re-label what a bank line is (salary, crew & suppliers, from director…); "auto" lets the app decide again.
+ *  With `all` ticked it becomes the payee's rule instead: every line to/from that payee, past and future, in the same
+ *  direction that has no kind of its own (single-line exceptions the owner set stay); "auto" + all removes the rule. */
 export async function setTxnKind(form: FormData): Promise<void> {
   const g = await guard()
   if (g) throw new Error(g.error)
   const txn = Number(form.get('txn'))
   const kind = String(form.get('kind') ?? 'auto')
+  const all = form.get('all') === 'on'
   if (!Number.isInteger(txn) || txn <= 0) throw new Error('Pick a bank line')
-  if (kind !== 'auto' && !(kind in KIND_LABEL)) throw new Error('Unknown kind')
-  const { error } = await supabase.from('bank_txn').update({ kind: kind === 'auto' ? null : kind }).eq('id', txn)
-  if (error) throw new Error(fail(error.message).error)
+  if (kind !== 'auto' && !Object.hasOwn(KIND_LABEL, kind)) throw new Error('Unknown kind')
+  if (!all) {
+    const { error } = await supabase.from('bank_txn').update({ kind: kind === 'auto' ? null : kind }).eq('id', txn)
+    if (error) throw new Error(fail(error.message).error)
+    refresh()
+    return
+  }
+  // The payee and direction come from the stored line, never from the form.
+  const { data: line, error: e1 } = await supabase.from('bank_txn').select('id, amount, party').eq('id', txn).maybeSingle()
+  if (e1) throw new Error(fail(e1.message).error)
+  if (!line?.party || !payeeKey(line.party)) throw new Error('This line has no payee name to make a rule from')
+  const amount = Number(line.amount)
+  if (kind !== 'auto' && !Object.hasOwn(amount < 0 ? OUT_KINDS : IN_KINDS, kind)) throw new Error('That kind is for money going the other way')
+  const row = await payeeRulesRow()
+  const rules = { ...(row?.meta?.rules ?? {}) }
+  const key = ruleKey({ amount, party: line.party })
+  if (kind === 'auto') delete rules[key]
+  else rules[key] = kind
+  const meta = { ...(row?.meta ?? {}), rules }
+  const saved = row
+    ? await supabase.from('records').update({ meta }).eq('id', row.id)
+    : await supabase.from('records').insert({ category: 'doc', status: 'setting', title: 'bank-kinds', amount: 0, notes: 'Cash flow payee rules', meta })
+  if (saved.error) throw new Error(fail(saved.error.message).error)
+  // The line it was set from follows the rule too; other lines' own kinds (exceptions) are left alone.
+  const { error: e2 } = await supabase.from('bank_txn').update({ kind: null }).eq('id', txn)
+  if (e2) throw new Error(fail(e2.message).error)
   refresh()
 }

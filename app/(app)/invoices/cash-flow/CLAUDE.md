@@ -58,6 +58,11 @@ Nothing is written by matching. **"Mark paid on their bank dates"** (`confirmFro
 - "Still to collect" adds RM invoices only; `owed.count` counts those, `owed.foreign` the others.
 - Actions re-read everything server-side; viewers and demo mode cannot write; they need the owner with amounts
   showing (`moneyLocked`), and the page hides the buttons otherwise. None changes an amount.
+- **Payee rules (19 Nov 2026):** the kind picker's "all to this payee" tick saves `out:<PAYEE>` / `in:<PAYEE>` → kind in
+  one records row (`doc` / `setting` / title `bank-kinds`, `meta.rules`). Every line of that payee and direction, past and
+  future statements, takes it unless the line has its own kind (`applyPayeeRules`, tested). Payee names stay in that
+  row — never add a person's or supplier's name to `flowKind`'s patterns (public repo); public bodies (KWSP, PERKESO,
+  LHDN) are fine there.
 - Kinds (`flowKind`): client, from director, interest, refund · salary, claims, EPF/SOCSO/tax, accountant & audit,
   bank charges, rent & utilities, crew & suppliers. Director transfers = salary/claims/capital, never trade.
 - **Before shipping:** `npm test`, open `/invoices/cash-flow` and `/dashboard` with amounts hidden and shown,

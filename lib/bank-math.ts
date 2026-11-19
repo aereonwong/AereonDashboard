@@ -38,10 +38,26 @@ export type InvoiceLite = {
 // ── What kind of money is it? ───────────────────────────────────────────────────────────────────────────────
 export const IN_KINDS = { client: 'Client payment', owner: 'From director', interest: 'Interest', refund: 'Refund', other_in: 'Other in' } as const
 export const OUT_KINDS = {
-  salary: 'Salary', claims: 'Claims & reimbursements', statutory: 'EPF / SOCSO / tax', professional: 'Accountant & audit',
+  salary: 'Salary', claims: 'Claims & reimbursements', statutory: 'EPF / SOCSO / tax', professional: 'Accountant, audit & secretary',
   bank: 'Bank charges', rent: 'Rent & utilities', supplier: 'Crew & suppliers', other_out: 'Other out',
 } as const
 export type FlowKind = keyof typeof IN_KINDS | keyof typeof OUT_KINDS
+
+// Payee rules ("every payment to this payee is rent"), one per direction: "out:<PAYEE>" / "in:<PAYEE>" → a kind of
+// that direction. The payee names live only in Supabase (a records setting row, lib/bank.ts) — never in this public repo.
+export const payeeKey = (party: string | null | undefined) => (party ?? '').toUpperCase().replace(/\s+/g, ' ').trim()
+export const ruleKey = (t: { amount: number; party: string | null }) => `${t.amount < 0 ? 'out' : 'in'}:${payeeKey(t.party)}`
+export type PayeeRules = Record<string, string>
+
+/** Lines with no kind of their own take their payee's rule; `ruled` says the kind came from a rule. */
+export function applyPayeeRules<T extends { amount: number; party: string | null; kind?: string | null }>(txns: T[], rules: PayeeRules): (T & { ruled?: boolean })[] {
+  return txns.map(t => {
+    if (t.kind || !payeeKey(t.party)) return t
+    const k = rules[ruleKey(t)]
+    return k && Object.hasOwn(t.amount < 0 ? OUT_KINDS : IN_KINDS, k) ? { ...t, kind: k, ruled: true } : t
+  })
+}
+
 export const KIND_LABEL: Record<string, string> = { ...IN_KINDS, ...OUT_KINDS }
 
 // The director's name as the bank prints it — transfers to/from him are salary, claims or capital, not trade.
@@ -58,7 +74,7 @@ export function flowKind(t: Pick<BankTxn, 'amount' | 'type' | 'party' | 'note' |
     return 'client'
   }
   if (/Serv(ice)? Charge|Stamp Duty|Cheque Book|Annual Fee/i.test(t.type)) return 'bank'
-  if (/SOCSO|PERKESO|KESELAMATAN SOSIAL|KWSP|EPF|LHDN|HASIL|EIS\b|PCB/i.test(all)) return 'statutory'
+  if (/SOCSO|PERKESO|KESELAMATAN SOSIAL|KWSP|KUMPULAN WANG SIMPANAN|EPF|LHDN|HASIL|EIS\b|PCB/i.test(all)) return 'statutory'
   if (/AUDIT|ACCOUNT|SECRETAR|CAC\b|\bstat\b/i.test(all)) return 'professional'
   if (/TENAGA|TNB|AIR SELANGOR|UNIFI|TM NET|MAXIS|CELCOM|DIGI|rental|rent\b/i.test(all) && !/equip/i.test(all)) return 'rent'
   if (DIRECTOR.test(t.party ?? '')) return /salary|bonus/i.test(all) ? 'salary' : 'claims'
