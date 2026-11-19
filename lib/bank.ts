@@ -49,10 +49,13 @@ export type CashFlow =
       unmatched: TxnView[] // client deposits not linked to any invoice
       txns: TxnView[] // every line, newest first
       openInvoices: { id: number; no: string; client: string; date: string; amount: number; currency: string }[] // for the link picker
-      median: number | null // days from invoice to money in the bank
+      median: number | null // days from invoice to money in the bank, invoices dated in the period
       year: string
-      ytd: { invoiced: number; clientIn: number; cashIn: number; out: number; net: number } // net = all money in − all money out
-      outKinds: ReturnType<typeof outByKind>
+      period: { from: string; to: string; covered: boolean } // the filter's dates, clipped to the statements; covered = a statement overlaps them
+      periodBalance: { amount: number; on: string } | null // closing balance of the last statement ending in the period
+      chart: FlowMonth[] // the months of the period
+      totals: { invoiced: number; clientIn: number; cashIn: number; out: number; net: number } // over the period; net = all money in − all money out
+      outKinds: ReturnType<typeof outByKind> // over the period
     }
 
 const num = (v: unknown) => (v == null ? null : Number(v))
@@ -90,7 +93,8 @@ export function toInvoiceLite(rows: Rec[]): InvoiceLite[] {
     })
 }
 
-export async function readCashFlow(): Promise<CashFlow> {
+/** `period` = the filter's dates (inclusive). Left out it means this calendar year — the Dashboard panel. */
+export async function readCashFlow(period?: { from: string; to: string }): Promise<CashFlow> {
   if (await demoMode()) return emptyView(true)
   if (!supabaseConfigured) return { ready: false }
   const [st, tx, recs] = await Promise.all([
@@ -104,6 +108,7 @@ export async function readCashFlow(): Promise<CashFlow> {
     tx.map(toTxn),
     toInvoiceLite(((recs.data ?? []) as Rec[]).map(r => ({ ...r, meta: r.meta ?? {} }))),
     todayISO(),
+    period,
   )
   return (await moneyHidden()) ? disguise(view, await moneyFactor()) : view
 }
@@ -118,12 +123,18 @@ export function toTxn(r: Record<string, any>): BankTxn {
 }
 
 function emptyView(demo: boolean): CashFlow {
-  return { ready: true, demo, empty: true, from: '', to: '', balance: null, gaps: [], months: [], invoices: [], toConfirm: [], waiting: [], owed: { rm: 0, count: 0, foreign: 0 }, untracked: 0, markedOnly: [], unmatched: [], txns: [], openInvoices: [], median: null, year: todayISO().slice(0, 4), ytd: { invoiced: 0, clientIn: 0, cashIn: 0, out: 0, net: 0 }, outKinds: [] }
+  return { ready: true, demo, empty: true, from: '', to: '', balance: null, gaps: [], months: [], invoices: [], toConfirm: [], waiting: [], owed: { rm: 0, count: 0, foreign: 0 }, untracked: 0, markedOnly: [], unmatched: [], txns: [], openInvoices: [], median: null, year: todayISO().slice(0, 4), period: { from: '', to: '', covered: false }, periodBalance: null, chart: [], totals: { invoiced: 0, clientIn: 0, cashIn: 0, out: 0, net: 0 }, outKinds: [] }
 }
 
 type Lite = InvoiceLite & { paidOn?: string | null }
 
-export function build(statements: { from: string; to: string; closing: number | null }[], txns: BankTxn[], invoices: Lite[], today: string): CashFlow {
+export function build(
+  statements: { from: string; to: string; closing: number | null }[],
+  txns: BankTxn[],
+  invoices: Lite[],
+  today: string,
+  range: { from: string; to: string } = { from: `${today.slice(0, 4)}-01-01`, to: `${today.slice(0, 4)}-12-31` }, // default: this calendar year
+): CashFlow {
   if (!statements.length) return emptyView(false)
   const sorted = [...statements].sort((a, b) => a.to.localeCompare(b.to))
   const from = sorted[0].from, to = sorted[sorted.length - 1].to
@@ -161,16 +172,25 @@ export function build(statements: { from: string; to: string; closing: number | 
     foreign: waiting.filter(i => i.currency !== 'MYR').length,
   }
   const year = today.slice(0, 4)
-  const inYear = txns.filter(t => t.txn_date.startsWith(year))
-  const cashInY = r2(inYear.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0))
-  const outY = r2(inYear.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0))
-  const ytd = {
-    invoiced: r2(invoices.filter(i => i.currency === 'MYR' && i.date.startsWith(year)).reduce((s, i) => s + i.amount, 0)),
-    clientIn: r2(inYear.filter(t => t.amount > 0 && flowKind(t) === 'client').reduce((s, t) => s + t.amount, 0)),
-    cashIn: cashInY,
-    out: outY,
-    net: r2(cashInY - outY),
+  // The period: the filter's dates, never before the first statement (nothing is known about the bank before it).
+  // A period wholly before the statements (or after the last one) has no bank figures: `covered` false, never zeros.
+  const periodCovered = sorted.some(s => s.to >= range.from && s.from <= range.to)
+  const pFrom = range.from < from && periodCovered ? from : range.from
+  const pTo = range.to
+  const inP = (d: string) => d >= pFrom && d <= pTo
+  const inPeriod = txns.filter(t => inP(t.txn_date))
+  const cashInP = r2(inPeriod.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0))
+  const outP = r2(inPeriod.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0))
+  const totals = {
+    invoiced: r2(invoices.filter(i => i.currency === 'MYR' && inP(i.date)).reduce((s, i) => s + i.amount, 0)),
+    clientIn: r2(inPeriod.filter(t => t.amount > 0 && flowKind(t) === 'client').reduce((s, t) => s + t.amount, 0)),
+    cashIn: cashInP,
+    out: outP,
+    net: r2(cashInP - outP),
   }
+  const lastSt = [...sorted].reverse().find(s => s.to <= pTo && s.closing != null)
+  const periodBalance = lastSt && lastSt.to >= pFrom ? { amount: lastSt.closing as number, on: lastSt.to } : null
+  const chart = months.filter(m => m.month >= pFrom.slice(0, 7) && m.month <= pTo.slice(0, 7))
   const settledIds = new Set([...byInvoice.values()].filter(s => s.full).map(s => s.invoiceId))
   const openInvoices = invoices
     .filter(i => !i.paid && !settledIds.has(i.id) && i.date >= shiftDays(from, -60))
@@ -181,7 +201,8 @@ export function build(statements: { from: string; to: string; closing: number | 
     balance: sorted[sorted.length - 1].closing,
     gaps, months, invoices: list, toConfirm, waiting, owed, untracked, markedOnly: list.filter(i => i.state === 'marked-only'),
     unmatched: all.filter(t => t.amount > 0 && t.kind === 'client' && !t.invoices.length && !t.linkSet),
-    txns: all, openInvoices, median: medianDaysToPay(list), year, ytd, outKinds: outByKind(inYear),
+    txns: all, openInvoices, median: medianDaysToPay(list.filter(i => inP(i.date))), year,
+    period: { from: pFrom, to: pTo, covered: periodCovered }, periodBalance, chart, totals, outKinds: outByKind(inPeriod),
   }
 }
 
@@ -200,11 +221,14 @@ function disguise(v: CashFlow, k: number): CashFlow {
   const x = (n: number) => n * k
   const xn = (n: number | null) => (n == null ? null : n * k)
   const inv = (i: InvoiceCash): InvoiceCash => ({ ...i, amount: x(i.amount), bank: i.bank ? { ...i.bank, received: x(i.bank.received) } : null })
+  const month = (m: FlowMonth): FlowMonth => ({ ...m, invoiced: x(m.invoiced), cashIn: x(m.cashIn), clientIn: x(m.clientIn), out: x(m.out), net: x(m.net), closing: xn(m.closing) })
   const t = (r: TxnView): TxnView => ({ ...r, amount: x(r.amount), balance: xn(r.balance), note: r.note ? scrubAmounts(r.note) : r.note })
   return {
     ...v,
     balance: xn(v.balance),
-    months: v.months.map(m => ({ ...m, invoiced: x(m.invoiced), cashIn: x(m.cashIn), clientIn: x(m.clientIn), out: x(m.out), net: x(m.net), closing: xn(m.closing) })),
+    months: v.months.map(month),
+    chart: v.chart.map(month),
+    periodBalance: v.periodBalance ? { ...v.periodBalance, amount: x(v.periodBalance.amount) } : null,
     invoices: v.invoices.map(inv),
     toConfirm: v.toConfirm.map(inv),
     waiting: v.waiting.map(i => ({ ...inv(i), remaining: x(i.remaining), age: i.age })),
@@ -213,7 +237,7 @@ function disguise(v: CashFlow, k: number): CashFlow {
     unmatched: v.unmatched.map(t),
     txns: v.txns.map(t),
     openInvoices: v.openInvoices.map(o => ({ ...o, amount: x(o.amount) })),
-    ytd: { invoiced: x(v.ytd.invoiced), clientIn: x(v.ytd.clientIn), cashIn: x(v.ytd.cashIn), out: x(v.ytd.out), net: x(v.ytd.net) },
+    totals: { invoiced: x(v.totals.invoiced), clientIn: x(v.totals.clientIn), cashIn: x(v.totals.cashIn), out: x(v.totals.out), net: x(v.totals.net) },
     outKinds: v.outKinds.map(o => ({ ...o, total: x(o.total) })),
   }
 }
