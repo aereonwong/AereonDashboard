@@ -126,11 +126,10 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
           </div>
           <ol className="v3-cf-bars" aria-label="Money in and money out per month">
             {last12.map(m => {
-              const none = m.closing == null && !m.cashIn && !m.out
               return (
                 <li
                   key={m.month}
-                  data-tip={`${mon(`${m.month}-01`)}\n${none ? 'No statement for this month' : `Money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}`}`}
+                  data-tip={`${mon(`${m.month}-01`)}\n${m.bank === 'none' ? 'No statement for this month' : `Money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}
                 >
                   <span className="v3-cf-pair">
                     <i className="cash" style={{ ['--h' as string]: m.cashIn / maxFlow }} />
@@ -181,7 +180,7 @@ export default function CashFlow({ view, sql, sqlUrl, canEdit, lockNote = null }
             {last12.map(m => (
               <li
                 key={m.month}
-                data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}\nClient money in ${m.closing == null && !m.cashIn ? '— no statement' : rmFull(m.clientIn)}\nAll money out ${rmFull(m.out)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}`}
+                data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}${m.bank === 'none' ? '\nNo bank statement for this month' : `\nClient money in ${rmFull(m.clientIn)}\nAll money out ${rmFull(m.out)}${m.closing != null ? `\nBank balance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}
               >
                 <span className="v3-cf-pair">
                   <i className="inv" style={{ ['--h' as string]: m.invoiced / max }} />

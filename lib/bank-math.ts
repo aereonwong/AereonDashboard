@@ -189,13 +189,14 @@ export function matchDeposits(txns: BankTxn[], invoices: InvoiceLite[]): { byTxn
 }
 
 // ── The picture ─────────────────────────────────────────────────────────────────────────────────────────────
-export type FlowMonth = { month: string; invoiced: number; cashIn: number; clientIn: number; out: number; net: number; closing: number | null }
+// bank: 'full' = statements cover every day; 'part' = some days only (figures are partial); 'none' = no statement.
+export type FlowMonth = { month: string; invoiced: number; cashIn: number; clientIn: number; out: number; net: number; closing: number | null; bank: 'full' | 'part' | 'none' }
 
 // Month by month: invoiced (RM invoices, by invoice date) beside money in / out of the bank and the balance at
 // month end. A month the statements don't cover has closing = null and no bank figures (not zero).
 export function monthly(txns: BankTxn[], invoices: InvoiceLite[], covered: (month: string) => boolean): FlowMonth[] {
   const map = new Map<string, FlowMonth>()
-  const get = (m: string) => map.get(m) ?? (map.set(m, { month: m, invoiced: 0, cashIn: 0, clientIn: 0, out: 0, net: 0, closing: null }), map.get(m)!)
+  const get = (m: string) => map.get(m) ?? (map.set(m, { month: m, invoiced: 0, cashIn: 0, clientIn: 0, out: 0, net: 0, closing: null, bank: 'none' }), map.get(m)!)
   for (const i of invoices) if (i.currency === 'MYR') get(i.date.slice(0, 7)).invoiced += i.amount
   const sorted = [...txns].sort((a, b) => a.txn_date.localeCompare(b.txn_date) || a.statement.localeCompare(b.statement) || a.seq - b.seq)
   for (const t of sorted) {
@@ -209,7 +210,8 @@ export function monthly(txns: BankTxn[], invoices: InvoiceLite[], covered: (mont
   for (const m of months) {
     for (const k of ['invoiced', 'cashIn', 'clientIn', 'out'] as const) m[k] = Math.round(m[k] * 100) / 100
     m.net = Math.round((m.cashIn - m.out) * 100) / 100
-    if (!covered(m.month)) { m.closing = null; last = null; continue }
+    if (!covered(m.month)) { m.bank = m.cashIn || m.out ? 'part' : 'none'; m.closing = null; last = null; continue }
+    m.bank = 'full'
     if (m.closing == null) m.closing = last // a quiet month keeps last month's balance
     last = m.closing
   }

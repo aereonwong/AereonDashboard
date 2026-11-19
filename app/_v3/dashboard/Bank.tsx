@@ -55,7 +55,7 @@ export default function Bank({ bank }: { bank?: CashFlow }) {
         <div>
           <ol className="v3-cf-bars" style={{ gridTemplateColumns: `repeat(${last6.length}, minmax(0, 1fr))`, height: 170 }} aria-label="Invoiced, money in and money out, last 6 months">
             {last6.map(m => (
-              <li key={m.month} data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}\nClient money in ${rmFull(m.clientIn)}\nAll money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBalance at month end ${rmFull(m.closing)}` : ''}`}>
+              <li key={m.month} data-tip={`${mon(`${m.month}-01`)}\nInvoiced ${rmFull(m.invoiced)}${m.bank === 'none' ? '\nNo bank statement for this month' : `\nClient money in ${rmFull(m.clientIn)}\nAll money in ${rmFull(m.cashIn)}\nMoney out ${rmFull(m.out)}\nNet ${signed(m.net)}${m.closing != null ? `\nBalance at month end ${rmFull(m.closing)}` : ''}${m.bank === 'part' ? '\nStatement covers part of this month only' : ''}`}`}>
                 <span className="v3-cf-pair">
                   <i className="inv" style={{ ['--h' as string]: m.invoiced / max }} />
                   <i className="cash" style={{ ['--h' as string]: m.clientIn / max }} />
